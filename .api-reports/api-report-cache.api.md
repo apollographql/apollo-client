@@ -23,12 +23,14 @@ import { getInMemoryCacheMemoryInternals } from '@apollo/client/utilities/intern
 import type { Incremental } from '@apollo/client/incremental';
 import type { InlineFragmentNode } from 'graphql';
 import type { IsAny } from '@apollo/client/utilities/internal';
+import type { IsLooselyEqual } from '@apollo/client/utilities/internal';
 import { isReference } from '@apollo/client/utilities';
 import type { NoInfer as NoInfer_2 } from '@apollo/client/utilities/internal';
 import { Observable } from 'rxjs';
 import type { OperationVariables } from '@apollo/client';
 import type { Prettify } from '@apollo/client/utilities/internal';
 import { Reference } from '@apollo/client/utilities';
+import type { RemoveIndexSignature } from '@apollo/client/utilities/internal';
 import type { SelectionSetNode } from 'graphql';
 import type { StoreObject } from '@apollo/client/utilities';
 import type { StoreValue } from '@apollo/client/utilities';
@@ -46,8 +48,16 @@ type AllFieldsModifier<Entity extends Record<string, any>> = Modifier<Entity[key
 export namespace ApolloCache {
     export type FromOptionValue<TData> = StoreObject | Reference | FragmentType<NoInfer_2<TData>> | string;
     // (undocumented)
+    export type GetScalarType<TKey extends keyof ApolloCache.Scalars> = ApolloCache.Scalars[TKey] extends ({
+        serialized: infer TSerialized;
+        parsed: infer TParsed;
+    }) ? Scalar<TSerialized, TParsed> : never;
+    // (undocumented)
     export interface ObservableFragment<TData = unknown> extends Observable<ApolloCache.WatchFragmentResult<TData>> {
         getCurrentResult: () => ApolloCache.WatchFragmentResult<TData>;
+    }
+    // (undocumented)
+    export interface Scalars {
     }
     export interface WatchFragmentOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
         fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
@@ -91,6 +101,8 @@ export abstract class ApolloCache {
     gc(): string[];
     // @internal @deprecated
     getMemoryInternals?: typeof getApolloCacheMemoryInternals;
+    // (undocumented)
+    getScalar<TKey extends keyof ApolloCache.Scalars>(key: TKey): ApolloCache.GetScalarType<TKey> | undefined;
     // (undocumented)
     identify(object: StoreObject | Reference): string | undefined;
     // (undocumented)
@@ -554,8 +566,31 @@ export interface IgnoreModifier {
 const _ignoreModifier: unique symbol;
 
 // @public (undocumented)
+export namespace InMemoryCache {
+    // Warning: (ae-forgotten-export) The symbol "KnownScalars" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    export type ScalarsOption = {
+        [ScalarName in keyof KnownScalars as IsLooselyEqual<KnownScalars[ScalarName]["serialized"], KnownScalars[ScalarName]["parsed"]> extends true ? ScalarName : never]?: KnownScalars[ScalarName] extends ({
+            serialized: infer TSerialized;
+            parsed: infer TParsed;
+        }) ? Scalar<TSerialized, TParsed> : never;
+    } & {
+        [ScalarName in keyof KnownScalars as IsLooselyEqual<KnownScalars[ScalarName]["serialized"], KnownScalars[ScalarName]["parsed"]> extends true ? never : ScalarName]: KnownScalars[ScalarName] extends ({
+            serialized: infer TSerialized;
+            parsed: infer TParsed;
+        }) ? Scalar<TSerialized, TParsed> : never;
+    } & (ApolloCache.Scalars extends (Record<string, {
+        serialized: infer TSerialized;
+        parsed: infer TParsed;
+    }>) ? Record<string, Scalar<TSerialized, TParsed>> : {});
+}
+
+// @public (undocumented)
 export class InMemoryCache extends ApolloCache {
-    constructor(config?: InMemoryCacheConfig);
+    constructor(...args: {} extends InMemoryCache.ScalarsOption ? [
+    config?: InMemoryCacheConfig
+    ] : [config: InMemoryCacheConfig]);
     // (undocumented)
     readonly assumeImmutableResults = true;
     batch<TUpdateResult>(options: Cache_2.BatchOptions<InMemoryCache, TUpdateResult>): TUpdateResult;
@@ -579,6 +614,8 @@ export class InMemoryCache extends ApolloCache {
     }): string[];
     // @internal @deprecated
     getMemoryInternals?: typeof getInMemoryCacheMemoryInternals;
+    // (undocumented)
+    getScalar<TKey extends keyof ApolloCache.Scalars>(key: TKey): ApolloCache.GetScalarType<TKey> extends (Scalar<infer TSerialized, infer TParsed>) ? IsLooselyEqual<TSerialized, TParsed> extends true ? ApolloCache.GetScalarType<TKey> | undefined : ApolloCache.GetScalarType<TKey> : never;
     // (undocumented)
     identify(object: StoreObject | Reference): string | undefined;
     // (undocumented)
@@ -618,16 +655,18 @@ export class InMemoryCache extends ApolloCache {
 }
 
 // @public (undocumented)
-export interface InMemoryCacheConfig extends ApolloReducerConfig {
-    // (undocumented)
-    fragments?: FragmentRegistryAPI;
-    // (undocumented)
-    possibleTypes?: PossibleTypesMap;
-    // (undocumented)
+export type InMemoryCacheConfig = ApolloReducerConfig & {
     resultCaching?: boolean;
-    // (undocumented)
+    possibleTypes?: PossibleTypesMap;
     typePolicies?: TypePolicies;
-}
+    fragments?: FragmentRegistryAPI;
+} & ({} extends InMemoryCache.ScalarsOption ? InMemoryCache.ScalarsOption extends Record<string, never> ? {
+    scalars?: Record<string, `Scalar types must be declared in ApolloCache.Scalars before usage. See https://www.apollographql.com/docs/react/data/typescript#declaring-scalar-types.`>;
+} : {
+    scalars?: InMemoryCache.ScalarsOption;
+} : {
+    scalars: InMemoryCache.ScalarsOption;
+});
 
 // @public (undocumented)
 interface InvalidateModifier {
@@ -663,6 +702,9 @@ type KeyFieldsFunction = (object: Readonly<StoreObject>, context: KeyFieldsConte
 
 // @public (undocumented)
 type KeySpecifier = ReadonlyArray<string | KeySpecifier>;
+
+// @public (undocumented)
+type KnownScalars = RemoveIndexSignature<ApolloCache.Scalars>;
 
 // @public (undocumented)
 class Layer extends EntityStore {
@@ -932,6 +974,34 @@ class Root extends EntityStore {
 type SafeReadonly<T> = T extends object ? Readonly<T> : T;
 
 // @public (undocumented)
+export namespace Scalar {
+    // (undocumented)
+    export interface Options<TSerialized, TParsed> {
+        // (undocumented)
+        is?(value: TSerialized | TParsed): boolean;
+        // (undocumented)
+        parse(serializedValue: TSerialized): NoInfer_2<TParsed>;
+        // (undocumented)
+        serialize(parsedValue: TParsed): NoInfer_2<TSerialized>;
+    }
+}
+
+// @public (undocumented)
+export class Scalar<TSerialized, TParsed> {
+    constructor(options: Scalar.Options<TSerialized, TParsed>);
+    // (undocumented)
+    coerceToParsed(value: TSerialized | TParsed): TParsed;
+    // (undocumented)
+    coerceToSerialized(value: TSerialized | TParsed): TSerialized;
+    // (undocumented)
+    is(value: TSerialized | TParsed): value is TParsed;
+    // (undocumented)
+    parse(value: TSerialized): TParsed;
+    // (undocumented)
+    serialize(value: TParsed): TSerialized;
+}
+
+// @public (undocumented)
 type StorageType = Record<string, any>;
 
 export { StoreObject }
@@ -1015,7 +1085,7 @@ interface WriteContext extends ReadMergeModifyContext {
 //
 // src/cache/inmemory/policies.ts:173:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:173:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/types.ts:135:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/types.ts:136:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

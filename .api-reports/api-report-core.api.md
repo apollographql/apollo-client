@@ -87,6 +87,7 @@ import type { Reference as Reference_2 } from '@apollo/client/cache';
 import { RequestHandler } from '@apollo/client/link';
 import { resetCaches } from 'graphql-tag';
 import { rewriteURIForGET } from '@apollo/client/link/http';
+import { Scalar } from '@apollo/client/cache';
 import { selectHttpOptionsAndBody } from '@apollo/client/link/http';
 import { selectHttpOptionsAndBodyInternal } from '@apollo/client/link/http';
 import { selectURI } from '@apollo/client/link/http';
@@ -1243,6 +1244,8 @@ export { RequestHandler }
 export { resetCaches }
 
 export { rewriteURIForGET }
+
+export { Scalar }
 
 export { selectHttpOptionsAndBody }
 

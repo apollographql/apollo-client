@@ -947,17 +947,6 @@ class ClientAwarenessLink extends ApolloLink {
 }
 
 // @public (undocumented)
-type CoerceValueOptions = {
-    typename: string;
-} & ({
-    field: FieldNode;
-    fieldName?: never;
-} | {
-    field?: never;
-    fieldName: string;
-});
-
-// @public (undocumented)
 export namespace CombinedGraphQLErrors {
     // (undocumented)
     export namespace DocumentationTypes {
@@ -2385,12 +2374,6 @@ class Policies {
     hasKeyArgs(typename: string | undefined, fieldName: string): boolean;
     // (undocumented)
     identify(object: StoreObject, partialContext?: Partial<KeyFieldsContext>): [string?, StoreObject?];
-    // Warning: (ae-forgotten-export) The symbol "CoerceValueOptions" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    maybeCoerceToScalarValue(value: StoreValue, options: CoerceValueOptions): StoreValue;
-    // (undocumented)
-    maybeCoerceToSerializedValue(value: StoreValue, options: CoerceValueOptions): StoreValue;
     // Warning: (ae-forgotten-export) The symbol "ReadFieldOptions" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)

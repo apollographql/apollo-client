@@ -278,19 +278,6 @@ export interface FieldMergeFunctionOptions<
   existingData: unknown;
 }
 
-type CoerceValueOptions = {
-  typename: string;
-} & (
-  | {
-      field: FieldNode;
-      fieldName?: never;
-    }
-  | {
-      field?: never;
-      fieldName: string;
-    }
-);
-
 type MergeObjectsFunction = <T extends StoreObject | Reference>(
   existing: T,
   incoming: T
@@ -907,52 +894,6 @@ export class Policies {
     // StoreObject correspond to which original field names.
     return fieldName === fieldNameFromStoreName(storeFieldName) ? storeFieldName
       : fieldName + ":" + storeFieldName;
-  }
-
-  public maybeCoerceToScalarValue(
-    value: StoreValue,
-    options: CoerceValueOptions
-  ): StoreValue {
-    return this.maybeCoerce(value, options, (item, scalar) => {
-      return scalar.coerceToParsed(item);
-    });
-  }
-
-  public maybeCoerceToSerializedValue(
-    value: StoreValue,
-    options: CoerceValueOptions
-  ): StoreValue {
-    return this.maybeCoerce(value, options, (item, scalar) => {
-      return scalar.coerceToSerialized(item);
-    });
-  }
-
-  private maybeCoerce(
-    value: StoreValue,
-    options: CoerceValueOptions,
-    coerce: (value: StoreValue, scalar: Scalar<any, any>) => StoreValue,
-    scalar?: Scalar<any, any>
-  ): StoreValue {
-    // null is never coerced
-    if (value === null) return value;
-
-    const { field, typename } = options;
-
-    // A selection set indicates this is not a scalar field so bail early
-    if (field && field.selectionSet) return value;
-
-    const fieldName = field ? field.name.value : options.fieldName;
-    scalar ||= this.getScalarForField(typename, fieldName);
-
-    if (!scalar) return value;
-
-    if (Array.isArray(value)) {
-      return value.map((item) =>
-        this.maybeCoerce(item, options, coerce, scalar)
-      );
-    }
-
-    return coerce(value, scalar);
   }
 
   public getScalarForField(

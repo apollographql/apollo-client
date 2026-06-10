@@ -49,3 +49,25 @@ test("leaves an already serialized custom scalar variable unchanged", () => {
     startsAt: "2026-01-01T00:00:00.000Z",
   });
 });
+
+test("serializes custom scalar variables whose parsed type is a primitive", () => {
+  const cache = new InMemoryCache({
+    scalars: {
+      Price: priceScalar,
+    },
+  });
+
+  const mutation = gql`
+    mutation PurchaseTicket($price: Price!) {
+      purchaseTicket(price: $price) {
+        id
+      }
+    }
+  `;
+
+  expect(
+    cache.serializeVariables(mutation, { price: "19.99" })
+  ).toStrictEqualTyped({
+    price: 1999,
+  });
+});

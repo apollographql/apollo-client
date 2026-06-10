@@ -179,3 +179,393 @@ test("serializes configured fields in an input object", () => {
     },
   });
 });
+
+test("serializes nested configured input objects", () => {
+  const cache = new InMemoryCache({
+    scalars: {
+      DateTime: dateTimeScalar,
+    },
+    inputObjects: {
+      EventFilter: {
+        fields: {
+          dateRange: "DateRangeInput",
+        },
+      },
+      DateRangeInput: {
+        fields: {
+          start: "DateTime",
+          end: "DateTime",
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query Events($filter: EventFilter) {
+      events(filter: $filter) {
+        id
+      }
+    }
+  `;
+
+  expect(
+    cache.serializeVariables(query, {
+      filter: {
+        search: "keynote",
+        dateRange: {
+          start: new Date("2026-01-01T00:00:00.000Z"),
+          end: new Date("2026-01-02T00:00:00.000Z"),
+        },
+      },
+    })
+  ).toStrictEqualTyped({
+    filter: {
+      search: "keynote",
+      dateRange: {
+        start: "2026-01-01T00:00:00.000Z",
+        end: "2026-01-02T00:00:00.000Z",
+      },
+    },
+  });
+});
+
+test("serializes lists of custom scalars in a configured input object", () => {
+  const cache = new InMemoryCache({
+    scalars: {
+      DateTime: dateTimeScalar,
+    },
+    inputObjects: {
+      AvailabilityInput: {
+        fields: {
+          dates: "DateTime",
+        },
+      },
+    },
+  });
+
+  const mutation = gql`
+    mutation SetAvailability($input: AvailabilityInput!) {
+      setAvailability(input: $input) {
+        id
+      }
+    }
+  `;
+
+  expect(
+    cache.serializeVariables(mutation, {
+      input: {
+        dates: [
+          new Date("2026-01-01T00:00:00.000Z"),
+          null,
+          [new Date("2026-01-02T00:00:00.000Z")],
+        ],
+      },
+    })
+  ).toStrictEqualTyped({
+    input: {
+      dates: ["2026-01-01T00:00:00.000Z", null, ["2026-01-02T00:00:00.000Z"]],
+    },
+  });
+});
+
+test("serializes lists and nested lists of configured input objects", () => {
+  const cache = new InMemoryCache({
+    scalars: {
+      DateTime: dateTimeScalar,
+    },
+    inputObjects: {
+      ScheduleInput: {
+        fields: {
+          sessions: "SessionInput",
+        },
+      },
+      SessionInput: {
+        fields: {
+          startsAt: "DateTime",
+        },
+      },
+    },
+  });
+
+  const mutation = gql`
+    mutation CreateSchedules($schedules: [[ScheduleInput!]!]!) {
+      createSchedules(schedules: $schedules) {
+        id
+      }
+    }
+  `;
+
+  expect(
+    cache.serializeVariables(mutation, {
+      schedules: [
+        [
+          {
+            name: "Day one",
+            sessions: [
+              {
+                title: "Keynote",
+                startsAt: new Date("2026-01-01T09:00:00.000Z"),
+              },
+              null,
+            ],
+          },
+        ],
+      ],
+    })
+  ).toStrictEqualTyped({
+    schedules: [
+      [
+        {
+          name: "Day one",
+          sessions: [
+            {
+              title: "Keynote",
+              startsAt: "2026-01-01T09:00:00.000Z",
+            },
+            null,
+          ],
+        },
+      ],
+    ],
+  });
+});
+
+test("serializes recursive input objects", () => {
+  const cache = new InMemoryCache({
+    scalars: {
+      DateTime: dateTimeScalar,
+    },
+    inputObjects: {
+      EventFilter: {
+        fields: {
+          startsAt: "DateTime",
+          and: "EventFilter",
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query Events($filter: EventFilter!) {
+      events(filter: $filter) {
+        id
+      }
+    }
+  `;
+
+  expect(
+    cache.serializeVariables(query, {
+      filter: {
+        startsAt: new Date("2026-01-01T00:00:00.000Z"),
+        and: [
+          {
+            startsAt: new Date("2026-01-02T00:00:00.000Z"),
+          },
+        ],
+      },
+    })
+  ).toStrictEqualTyped({
+    filter: {
+      startsAt: "2026-01-01T00:00:00.000Z",
+      and: [
+        {
+          startsAt: "2026-01-02T00:00:00.000Z",
+        },
+      ],
+    },
+  });
+});
+
+test("preserves null and omitted input object fields", () => {
+  const cache = new InMemoryCache({
+    scalars: {
+      DateTime: dateTimeScalar,
+    },
+    inputObjects: {
+      EventInput: {
+        fields: {
+          startsAt: "DateTime",
+          endsAt: "DateTime",
+        },
+      },
+    },
+  });
+
+  const mutation = gql`
+    mutation CreateEvent($input: EventInput, $fallback: DateTime) {
+      createEvent(input: $input, fallback: $fallback) {
+        id
+      }
+    }
+  `;
+
+  expect(
+    cache.serializeVariables(mutation, {
+      input: {
+        startsAt: null,
+      },
+    })
+  ).toStrictEqualTyped({
+    input: {
+      startsAt: null,
+    },
+  });
+});
+
+test("leaves built-in scalar fields and unconfigured fields unchanged", () => {
+  const cache = new InMemoryCache({
+    scalars: {
+      DateTime: dateTimeScalar,
+    },
+    inputObjects: {
+      EventInput: {
+        fields: {
+          startsAt: "DateTime",
+        },
+      },
+    },
+  });
+
+  const mutation = gql`
+    mutation CreateEvent(
+      $name: String!
+      $capacity: Int!
+      $published: Boolean!
+      $input: EventInput!
+    ) {
+      createEvent(
+        name: $name
+        capacity: $capacity
+        published: $published
+        input: $input
+      ) {
+        id
+      }
+    }
+  `;
+  const metadata = { source: "import" };
+
+  expect(
+    cache.serializeVariables(mutation, {
+      name: "GraphQL Summit",
+      capacity: 500,
+      published: true,
+      input: {
+        startsAt: new Date("2026-01-01T00:00:00.000Z"),
+        metadata,
+      },
+    })
+  ).toStrictEqualTyped({
+    name: "GraphQL Summit",
+    capacity: 500,
+    published: true,
+    input: {
+      startsAt: "2026-01-01T00:00:00.000Z",
+      metadata,
+    },
+  });
+});
+
+test("leaves an input object unchanged when its type is not configured", () => {
+  const cache = new InMemoryCache({
+    scalars: {
+      DateTime: dateTimeScalar,
+    },
+  });
+
+  const mutation = gql`
+    mutation CreateEvent($input: EventInput!) {
+      createEvent(input: $input) {
+        id
+      }
+    }
+  `;
+  const startsAt = new Date("2026-01-01T00:00:00.000Z");
+
+  expect(
+    cache.serializeVariables(mutation, {
+      input: {
+        startsAt,
+      },
+    })
+  ).toStrictEqualTyped({
+    input: {
+      startsAt,
+    },
+  });
+});
+
+test("does not mutate the provided variables", () => {
+  const cache = new InMemoryCache({
+    scalars: {
+      DateTime: dateTimeScalar,
+    },
+    inputObjects: {
+      EventInput: {
+        fields: {
+          startsAt: "DateTime",
+        },
+      },
+    },
+  });
+
+  const mutation = gql`
+    mutation CreateEvent($input: EventInput!) {
+      createEvent(input: $input) {
+        id
+      }
+    }
+  `;
+  const startsAt = new Date("2026-01-01T00:00:00.000Z");
+  const variables = {
+    input: {
+      name: "GraphQL Summit",
+      startsAt,
+    },
+  };
+
+  cache.serializeVariables(mutation, variables);
+
+  expect(variables).toStrictEqualTyped({
+    input: {
+      name: "GraphQL Summit",
+      startsAt,
+    },
+  });
+  expect(variables.input.startsAt).toBe(startsAt);
+});
+
+test("serializes variables for subscriptions", () => {
+  const cache = new InMemoryCache({
+    scalars: {
+      DateTime: dateTimeScalar,
+    },
+    inputObjects: {
+      EventInput: {
+        fields: {
+          startsAt: "DateTime",
+        },
+      },
+    },
+  });
+
+  const subscription = gql`
+    subscription EventCreated($filter: EventInput!) {
+      eventCreated(filter: $filter) {
+        id
+      }
+    }
+  `;
+
+  expect(
+    cache.serializeVariables(subscription, {
+      filter: {
+        startsAt: new Date("2026-01-01T00:00:00.000Z"),
+      },
+    })
+  ).toStrictEqualTyped({
+    filter: {
+      startsAt: "2026-01-01T00:00:00.000Z",
+    },
+  });
+});

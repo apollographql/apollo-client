@@ -137,7 +137,7 @@ export abstract class EntityStore implements NormalizedCache {
     // deep compare the parsed value with the existing value
     incoming = this.coerceStoreObject(
       incoming,
-      (value, scalar) => scalar.coerceToParsed(value),
+      (scalar, value) => scalar.coerceToParsed(value),
       incoming.__typename ||
         existing?.__typename ||
         this.policies.rootTypenamesById[dataId]
@@ -408,7 +408,7 @@ export abstract class EntityStore implements NormalizedCache {
         storeObject &&
           this.coerceStoreObject(
             storeObject,
-            (value, scalar) => scalar.coerceToSerialized(value),
+            (scalar, value) => scalar.coerceToSerialized(value),
             storeObject?.__typename || this.policies.rootTypenamesById[dataId]
           ),
       ])
@@ -428,7 +428,7 @@ export abstract class EntityStore implements NormalizedCache {
 
   private coerceStoreObject(
     obj: StoreObject,
-    coerce: (value: unknown, scalar: Scalar<any, any>) => unknown,
+    coerce: (scalar: Scalar<any, any>, value: unknown) => unknown,
     typename = obj.__typename
   ): StoreObject {
     if (!typename) {
@@ -454,7 +454,7 @@ export abstract class EntityStore implements NormalizedCache {
 
   private coerceValue(
     value: unknown,
-    coerce: (value: unknown, scalar: Scalar<any, any>) => unknown,
+    coerce: (scalar: Scalar<any, any>, value: unknown) => unknown,
     scalar?: Scalar<any, any>
   ): unknown {
     if (value == null) {
@@ -466,7 +466,7 @@ export abstract class EntityStore implements NormalizedCache {
     }
 
     if (scalar) {
-      return coerce(value, scalar);
+      return coerce(scalar, value);
     }
 
     if (isPlainObject(value) && "__typename" in value) {

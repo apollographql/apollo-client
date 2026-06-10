@@ -224,6 +224,10 @@ export class InMemoryCache extends ApolloCache {
     document: DocumentNode | TypedDocumentNode<any, TVariables>,
     variables: NoInfer<TVariables>
   ): TVariables {
+    if (!this.config.scalars && !this.config.inputObjects) {
+      return variables;
+    }
+
     const variableTypes: Record<string, string> = {};
 
     visit(document, {

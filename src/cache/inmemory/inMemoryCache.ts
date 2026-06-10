@@ -353,9 +353,14 @@ export class InMemoryCache extends ApolloCache {
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(options: Cache.WriteOptions<TData, TVariables>): Reference | undefined {
+    const { query, variables } = options;
+
     try {
       ++this.txCount;
-      return this.storeWriter.writeToStore(this.data, options);
+      return this.storeWriter.writeToStore(this.data, {
+        ...options,
+        variables: this.serializeVariables(query, variables),
+      });
     } finally {
       if (!--this.txCount && options.broadcast !== false) {
         this.broadcastWatches();

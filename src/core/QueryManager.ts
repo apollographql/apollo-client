@@ -909,6 +909,7 @@ export class QueryManager {
     const executeContext: ApolloLink.ExecuteContext = {
       client: this.client,
     };
+    variables = this.cache.serializeVariables(query, variables);
 
     if (serverQuery) {
       const { inFlightLinkObservables, link } = this;

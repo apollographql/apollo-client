@@ -4,10 +4,11 @@ import type {
   FragmentDefinitionNode,
   InlineFragmentNode,
 } from "graphql";
+import { visit } from "graphql";
 import type { OptimisticWrapperFunction } from "optimism";
 import { wrap } from "optimism";
 
-import type { OperationVariables } from "@apollo/client";
+import type { OperationVariables, TypedDocumentNode } from "@apollo/client";
 import type {
   DeepPartial,
   Reference,
@@ -22,8 +23,15 @@ import {
   print,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import type { IsLooselyEqual } from "@apollo/client/utilities/internal";
-import { getInMemoryCacheMemoryInternals } from "@apollo/client/utilities/internal";
+import type {
+  IsLooselyEqual,
+  NoInfer,
+} from "@apollo/client/utilities/internal";
+import {
+  getInMemoryCacheMemoryInternals,
+  isPlainObject,
+  unwrapVariableType,
+} from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
@@ -226,24 +234,51 @@ export class InMemoryCache extends ApolloCache {
 
     let changed = false;
 
-    const entries = Object.entries(variables).map(([name, value]) => {
-      const type = variableTypes[name];
-
-      if (!type) {
-        return [name, value];
+    const serialize = (
+      value: unknown,
+      types: Record<string, string>,
+      scalar?: Scalar<any, any>
+    ): unknown => {
+      if (Array.isArray(value)) {
+        return value.map((item) => serialize(item, types, scalar));
       }
-
-      const scalar = this.getScalar(type);
 
       if (scalar) {
-        changed = true;
-        return [name, scalar.coerceToSerialized(value)];
+        return scalar.coerceToSerialized(value);
       }
 
-      return [name, value];
-    });
+      if (isPlainObject(value)) {
+        const entries = Object.entries(variables).map(([name, value]) => {
+          const type = types[name];
 
-    return changed ? Object.fromEntries(entries) : variables;
+          if (!type) {
+            return [name, value];
+          }
+
+          const scalar = this.getScalar(type);
+
+          if (scalar) {
+            const newValue = serialize(value, types, scalar);
+
+            changed ||= newValue !== value;
+            return [name, newValue];
+          }
+
+          return [name, value];
+        });
+
+        return Object.fromEntries(entries);
+      }
+
+      return value;
+    };
+
+    const serializedVariables = serialize(
+      variables,
+      variableTypes
+    ) as TVariables;
+
+    return changed ? serializedVariables : variables;
   }
 
   public restore(data: NormalizedCacheObject): this {

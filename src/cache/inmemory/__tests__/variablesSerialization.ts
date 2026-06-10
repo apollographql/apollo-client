@@ -6,6 +6,12 @@ const dateTimeScalar = new Scalar<string, Date>({
   parse: (value) => new Date(value),
 });
 
+const priceScalar = new Scalar<number, string>({
+  serialize: (value) => Math.round(parseFloat(value) * 100),
+  parse: (value) => (value / 100).toFixed(2),
+  is: (value) => typeof value === "string",
+});
+
 test("serializes a custom scalar variable", () => {
   const cache = new InMemoryCache({
     scalars: {
@@ -131,4 +137,45 @@ test("leaves lists and nested lists alone when variables are already serialized"
   });
 
   expect(result).toBe(variables);
+});
+
+test("serializes configured fields in an input object", () => {
+  const cache = new InMemoryCache({
+    scalars: {
+      DateTime: dateTimeScalar,
+      Price: priceScalar,
+    },
+    inputObjects: {
+      EventInput: {
+        fields: {
+          startsAt: "DateTime",
+          ticketPrice: "Price",
+        },
+      },
+    },
+  });
+
+  const mutation = gql`
+    mutation CreateEvent($input: EventInput!) {
+      createEvent(input: $input) {
+        id
+      }
+    }
+  `;
+
+  expect(
+    cache.serializeVariables(mutation, {
+      input: {
+        name: "GraphQL Summit",
+        startsAt: new Date("2026-01-01T00:00:00.000Z"),
+        ticketPrice: "19.99",
+      },
+    })
+  ).toStrictEqualTyped({
+    input: {
+      name: "GraphQL Summit",
+      startsAt: "2026-01-01T00:00:00.000Z",
+      ticketPrice: 1999,
+    },
+  });
 });

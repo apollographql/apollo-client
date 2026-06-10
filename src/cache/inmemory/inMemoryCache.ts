@@ -255,11 +255,24 @@ export class InMemoryCache extends ApolloCache {
       }
 
       if (isPlainObject(value)) {
-        const entries = Object.entries(variables).map(([name, value]) => {
+        const entries = Object.entries(value).map(([name, value]) => {
           const type = types[name];
 
           if (!type) {
             return [name, value];
+          }
+
+          const inputObjectName = types[name];
+
+          if (inputObjectName) {
+            const inputObject = this.config.inputObjects?.[inputObjectName];
+
+            if (inputObject) {
+              const newValue = serialize(value, inputObject.fields);
+              changed ||= newValue !== value;
+
+              return [name, newValue];
+            }
           }
 
           const scalar = this.getScalar(type);

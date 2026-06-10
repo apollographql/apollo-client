@@ -139,11 +139,16 @@ export type ApolloReducerConfig = {
   dataIdFromObject?: KeyFieldsFunction;
 };
 
+export interface InputObjectsOption {
+  [key: string]: string | InputObjectsOption;
+}
+
 export type InMemoryCacheConfig = ApolloReducerConfig & {
   resultCaching?: boolean;
   possibleTypes?: PossibleTypesMap;
   typePolicies?: TypePolicies;
   fragments?: FragmentRegistryAPI;
+  inputObjects?: InputObjectsOption;
 } & ({} extends InMemoryCache.ScalarsOption ?
     InMemoryCache.ScalarsOption extends Record<string, never> ?
       {

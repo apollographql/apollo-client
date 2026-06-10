@@ -52,6 +52,7 @@ export type {
   IdGetter,
   IdGetterObj,
   InMemoryCacheConfig,
+  InputObjectsOption,
   MergeInfo,
   MergeTree,
   NormalizedCache,

@@ -58,11 +58,16 @@ test("leaves an already serialized custom scalar variable unchanged", () => {
     }
   `;
 
-  expect(
-    cache.serializeVariables(mutation, { startsAt: "2026-01-01T00:00:00.000Z" })
-  ).toStrictEqualTyped({
+  const variables = {
+    startsAt: "2026-01-01T00:00:00.000Z",
+  };
+
+  const result = cache.serializeVariables(mutation, variables);
+
+  expect(result).toStrictEqualTyped({
     startsAt: "2026-01-01T00:00:00.000Z",
   });
+  expect(result).toBe(variables);
 });
 
 test("serializes custom scalar variables whose parsed type is a primitive", () => {
@@ -455,17 +460,20 @@ test("preserves null and omitted input object fields", () => {
     }
   `;
 
-  expect(
-    cache.serializeVariables(mutation, {
-      input: {
-        startsAt: null,
-      },
-    })
-  ).toStrictEqualTyped({
+  const variables = {
+    input: {
+      startsAt: null,
+    },
+  };
+
+  const result = cache.serializeVariables(mutation, variables);
+
+  expect(result).toStrictEqualTyped({
     input: {
       startsAt: null,
     },
   });
+  expect(result).toBe(variables);
 });
 
 test("leaves built-in scalar fields and unconfigured fields unchanged", () => {
@@ -538,17 +546,20 @@ test("leaves an input object unchanged when its type is not configured", () => {
   `;
   const startsAt = new Date("2026-01-01T00:00:00.000Z");
 
-  expect(
-    cache.serializeVariables(mutation, {
-      input: {
-        startsAt,
-      },
-    })
-  ).toStrictEqualTyped({
+  const variables = {
+    input: {
+      startsAt,
+    },
+  };
+
+  const result = cache.serializeVariables(mutation, variables);
+
+  expect(result).toStrictEqualTyped({
     input: {
       startsAt,
     },
   });
+  expect(result).toBe(variables);
 });
 
 test("does not mutate the provided variables", () => {

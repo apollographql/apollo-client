@@ -562,6 +562,341 @@ test("leaves an input object unchanged when its type is not configured", () => {
   expect(result).toBe(variables);
 });
 
+test("leaves variables unchanged when scalars and input objects are not configured", () => {
+  const cache = new InMemoryCache();
+
+  const mutation = gql`
+    mutation CreateEvent($startsAt: DateTime!, $input: EventInput!) {
+      createEvent(startsAt: $startsAt, input: $input) {
+        id
+      }
+    }
+  `;
+  const startsAt = new Date("2026-01-01T00:00:00.000Z");
+  const variables = {
+    startsAt,
+    input: {
+      startsAt,
+    },
+  };
+
+  const result = cache.serializeVariables(mutation, variables);
+
+  expect(result).toStrictEqualTyped({
+    startsAt,
+    input: {
+      startsAt,
+    },
+  });
+  expect(result).toBe(variables);
+});
+
+test("leaves variables unchanged when input objects are configured without their scalars", () => {
+  const cache = new InMemoryCache({
+    inputObjects: {
+      EventInput: {
+        fields: {
+          startsAt: "DateTime",
+        },
+      },
+    },
+  });
+
+  const mutation = gql`
+    mutation CreateEvent($startsAt: DateTime!, $input: EventInput!) {
+      createEvent(startsAt: $startsAt, input: $input) {
+        id
+      }
+    }
+  `;
+  const startsAt = new Date("2026-01-01T00:00:00.000Z");
+  const variables = {
+    startsAt,
+    input: {
+      startsAt,
+    },
+  };
+
+  const result = cache.serializeVariables(mutation, variables);
+
+  expect(result).toStrictEqualTyped({
+    startsAt,
+    input: {
+      startsAt,
+    },
+  });
+  expect(result).toBe(variables);
+});
+
+test("leaves a nested input object unchanged when its configuration is missing", () => {
+  const cache = new InMemoryCache({
+    scalars: {
+      DateTime: dateTimeScalar,
+    },
+    inputObjects: {
+      EventFilter: {
+        fields: {
+          dateRange: "DateRangeInput",
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query Events($filter: EventFilter!) {
+      events(filter: $filter) {
+        id
+      }
+    }
+  `;
+  const start = new Date("2026-01-01T00:00:00.000Z");
+  const variables = {
+    filter: {
+      dateRange: {
+        start,
+      },
+    },
+  };
+
+  const result = cache.serializeVariables(query, variables);
+
+  expect(result).toStrictEqualTyped({
+    filter: {
+      dateRange: {
+        start,
+      },
+    },
+  });
+  expect(result).toBe(variables);
+});
+
+test("does not use a nested input object configuration when its parent is not configured", () => {
+  const cache = new InMemoryCache({
+    scalars: {
+      DateTime: dateTimeScalar,
+    },
+    inputObjects: {
+      DateRangeInput: {
+        fields: {
+          start: "DateTime",
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query Events($filter: EventFilter!) {
+      events(filter: $filter) {
+        id
+      }
+    }
+  `;
+  const start = new Date("2026-01-01T00:00:00.000Z");
+  const variables = {
+    filter: {
+      dateRange: {
+        start,
+      },
+    },
+  };
+
+  const result = cache.serializeVariables(query, variables);
+
+  expect(result).toStrictEqualTyped({
+    filter: {
+      dateRange: {
+        start,
+      },
+    },
+  });
+  expect(result).toBe(variables);
+});
+
+test("leaves configured input objects unchanged when values are already serialized", () => {
+  const cache = new InMemoryCache({
+    scalars: {
+      DateTime: dateTimeScalar,
+    },
+    inputObjects: {
+      EventFilter: {
+        fields: {
+          dateRange: "DateRangeInput",
+        },
+      },
+      DateRangeInput: {
+        fields: {
+          start: "DateTime",
+          end: "DateTime",
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query Events($filter: EventFilter!) {
+      events(filter: $filter) {
+        id
+      }
+    }
+  `;
+  const variables = {
+    filter: {
+      dateRange: {
+        start: "2026-01-01T00:00:00.000Z",
+        end: "2026-01-02T00:00:00.000Z",
+      },
+    },
+  };
+
+  const result = cache.serializeVariables(query, variables);
+
+  expect(result).toStrictEqualTyped({
+    filter: {
+      dateRange: {
+        start: "2026-01-01T00:00:00.000Z",
+        end: "2026-01-02T00:00:00.000Z",
+      },
+    },
+  });
+  expect(result).toBe(variables);
+});
+
+test("preserves unchanged references when another input field is serialized", () => {
+  const cache = new InMemoryCache({
+    scalars: {
+      DateTime: dateTimeScalar,
+    },
+    inputObjects: {
+      EventInput: {
+        fields: {
+          startsAt: "DateTime",
+        },
+      },
+    },
+  });
+
+  const mutation = gql`
+    mutation CreateEvent($input: EventInput!, $context: JSONObject) {
+      createEvent(input: $input, context: $context) {
+        id
+      }
+    }
+  `;
+  const metadata = { source: "import" };
+  const tags = ["conference"];
+  const context = { requestId: "1" };
+  const variables = {
+    input: {
+      startsAt: new Date("2026-01-01T00:00:00.000Z"),
+      metadata,
+      tags,
+    },
+    context,
+  };
+
+  const result = cache.serializeVariables(mutation, variables);
+
+  expect(result).toStrictEqualTyped({
+    input: {
+      startsAt: "2026-01-01T00:00:00.000Z",
+      metadata,
+      tags,
+    },
+    context,
+  });
+  expect(result).not.toBe(variables);
+  expect(result.input).not.toBe(variables.input);
+  expect(result.input.metadata).toBe(metadata);
+  expect(result.input.tags).toBe(tags);
+  expect(result.context).toBe(context);
+});
+
+test("leaves an empty variables object unchanged", () => {
+  const cache = new InMemoryCache({
+    scalars: {
+      DateTime: dateTimeScalar,
+    },
+  });
+
+  const mutation = gql`
+    mutation CreateEvent($startsAt: DateTime) {
+      createEvent(startsAt: $startsAt) {
+        id
+      }
+    }
+  `;
+  const variables = {};
+
+  const result = cache.serializeVariables(mutation, variables);
+
+  expect(result).toStrictEqualTyped({});
+  expect(result).toBe(variables);
+});
+
+test("leaves an empty configured input object unchanged", () => {
+  const cache = new InMemoryCache({
+    scalars: {
+      DateTime: dateTimeScalar,
+    },
+    inputObjects: {
+      EventInput: {
+        fields: {
+          startsAt: "DateTime",
+        },
+      },
+    },
+  });
+
+  const mutation = gql`
+    mutation CreateEvent($input: EventInput!) {
+      createEvent(input: $input) {
+        id
+      }
+    }
+  `;
+  const input = {};
+  const variables = { input };
+
+  const result = cache.serializeVariables(mutation, variables);
+
+  expect(result).toStrictEqualTyped({ input: {} });
+  expect(result).toBe(variables);
+  expect(result.input).toBe(input);
+});
+
+test("leaves empty scalar and input object lists unchanged", () => {
+  const cache = new InMemoryCache({
+    scalars: {
+      DateTime: dateTimeScalar,
+    },
+    inputObjects: {
+      EventInput: {
+        fields: {
+          startsAt: "DateTime",
+        },
+      },
+    },
+  });
+
+  const mutation = gql`
+    mutation CreateEvents($startsAt: [DateTime!]!, $inputs: [EventInput!]!) {
+      createEvents(startsAt: $startsAt, inputs: $inputs) {
+        id
+      }
+    }
+  `;
+  const startsAt: Date[] = [];
+  const inputs: Array<{ startsAt: Date }> = [];
+  const variables = { startsAt, inputs };
+
+  const result = cache.serializeVariables(mutation, variables);
+
+  expect(result).toStrictEqualTyped({ startsAt: [], inputs: [] });
+  expect(result).toBe(variables);
+  expect(result.startsAt).toBe(startsAt);
+  expect(result.inputs).toBe(inputs);
+});
+
 test("does not mutate the provided variables", () => {
   const cache = new InMemoryCache({
     scalars: {

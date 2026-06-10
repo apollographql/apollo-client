@@ -12,6 +12,15 @@ const priceScalar = new Scalar<number, string>({
   is: (value) => typeof value === "string",
 });
 
+const jsonObjectScalar = new Scalar<
+  Record<string, unknown>,
+  Map<string, unknown>
+>({
+  serialize: (value) => Object.fromEntries(value),
+  parse: (value) => new Map(Object.entries(value)),
+  is: (value) => value instanceof Map,
+});
+
 test("serializes a custom scalar variable", () => {
   const cache = new InMemoryCache({
     scalars: {
@@ -76,6 +85,53 @@ test("serializes custom scalar variables whose parsed type is a primitive", () =
   ).toStrictEqualTyped({
     price: 1999,
   });
+});
+
+test("serializes a scalar object variable in parsed or serialized form", () => {
+  const cache = new InMemoryCache({
+    scalars: {
+      JSONObject: jsonObjectScalar,
+    },
+  });
+
+  const mutation = gql`
+    mutation CreateEvent($metadata: JSONObject!) {
+      createEvent(metadata: $metadata) {
+        id
+      }
+    }
+  `;
+
+  expect(
+    cache.serializeVariables(mutation, {
+      metadata: new Map<string, unknown>([
+        ["location", "Denver"],
+        ["capacity", 500],
+      ]),
+    })
+  ).toStrictEqualTyped({
+    metadata: {
+      location: "Denver",
+      capacity: 500,
+    },
+  });
+
+  const variables = {
+    metadata: {
+      location: "Denver",
+      capacity: 500,
+    },
+  };
+
+  const result = cache.serializeVariables(mutation, variables);
+
+  expect(result).toStrictEqualTyped({
+    metadata: {
+      location: "Denver",
+      capacity: 500,
+    },
+  });
+  expect(result).toBe(variables);
 });
 
 test("serializes lists and nested lists of custom scalars", () => {

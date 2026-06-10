@@ -410,13 +410,6 @@ export class StoreWriter {
           };
         } else {
           maybeRecycleChildMergeTree(mergeTree, storeFieldName);
-
-          if (typename) {
-            incomingValue = this.cache.policies.maybeCoerceToScalarValue(
-              incomingValue,
-              { field, typename }
-            );
-          }
         }
 
         incoming = context.merge(incoming, {
@@ -765,22 +758,13 @@ export class StoreWriter {
     }
 
     if (mergeTree.info) {
-      incoming = this.cache.policies.runMergeFunction(
+      return this.cache.policies.runMergeFunction(
         existing,
         incoming,
         mergeTree.info,
         context,
         getStorageArgs && context.store.getStorage(...getStorageArgs)
       );
-    }
-
-    if (mergeTree.info?.typename) {
-      const { field, typename } = mergeTree.info;
-
-      return this.cache.policies.maybeCoerceToScalarValue(incoming, {
-        field,
-        typename,
-      }) as T;
     }
 
     return incoming;

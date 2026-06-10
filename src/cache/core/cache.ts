@@ -267,7 +267,7 @@ export abstract class ApolloCache {
     TVariables extends OperationVariables = OperationVariables,
   >(
     document: DocumentNode | TypedDocumentNode<any, TVariables>,
-    variables: TVariables
+    variables: NoInfer<TVariables>
   ): TVariables {
     return variables;
   }

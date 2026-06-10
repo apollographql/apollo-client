@@ -5,7 +5,6 @@
 ```ts
 
 import type { ApolloCache } from '@apollo/client/cache';
-import type { ApolloCache as ApolloCache_2 } from '@apollo/client';
 import type { ApolloClient } from '@apollo/client';
 import type { Cache as Cache_2 } from '@apollo/client/cache';
 import type { DataState } from '@apollo/client';
@@ -131,16 +130,16 @@ type MakeRequiredVariablesOptional<TVariables extends OperationVariables, TConfi
 } & Omit<TVariables, keyof TConfiguredVariables>>;
 
 // @public @deprecated (undocumented)
-export type MutationFunctionOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables, _TContext = DefaultContext, TCache extends ApolloCache_2 = ApolloCache_2> = useMutation.MutationFunctionOptions<TData, TVariables, TCache>;
+export type MutationFunctionOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables, _TContext = DefaultContext, TCache extends Cache_2.Implementation = Cache_2.Implementation> = useMutation.MutationFunctionOptions<TData, TVariables, TCache>;
 
 // @public @deprecated (undocumented)
-export type MutationHookOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables, _TContext = DefaultContext, TCache extends ApolloCache_2 = ApolloCache_2> = useMutation.Options<TData, TVariables, TCache>;
+export type MutationHookOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables, _TContext = DefaultContext, TCache extends Cache_2.Implementation = Cache_2.Implementation> = useMutation.Options<TData, TVariables, TCache>;
 
 // @public @deprecated (undocumented)
 export type MutationResult<TData = unknown> = useMutation.Result<TData>;
 
 // @public @deprecated (undocumented)
-export type MutationTuple<TData, TVariables extends OperationVariables, _TContext = DefaultContext, TCache extends ApolloCache_2 = ApolloCache_2> = useMutation.ResultTuple<TData, TVariables, TCache>;
+export type MutationTuple<TData, TVariables extends OperationVariables, _TContext = DefaultContext, TCache extends Cache_2.Implementation = Cache_2.Implementation> = useMutation.ResultTuple<TData, TVariables, TCache>;
 
 // @public @deprecated (undocumented)
 export type OnDataOptions<TData = unknown> = useSubscription.OnDataOptions<TData>;

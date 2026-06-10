@@ -232,15 +232,22 @@ export class InMemoryCache extends ApolloCache {
       },
     });
 
-    let changed = false;
-
     const serialize = (
       value: unknown,
       types: Record<string, string>,
       scalar?: Scalar<any, any>
     ): unknown => {
+      let changed = false;
+
       if (Array.isArray(value)) {
-        return value.map((item) => serialize(item, types, scalar));
+        const newValue = value.map((item) => {
+          const newItem = serialize(item, types, scalar);
+          changed ||= newItem !== item;
+
+          return newItem;
+        });
+
+        return changed ? newValue : value;
       }
 
       if (scalar) {
@@ -267,18 +274,13 @@ export class InMemoryCache extends ApolloCache {
           return [name, value];
         });
 
-        return Object.fromEntries(entries);
+        return changed ? Object.fromEntries(entries) : value;
       }
 
       return value;
     };
 
-    const serializedVariables = serialize(
-      variables,
-      variableTypes
-    ) as TVariables;
-
-    return changed ? serializedVariables : variables;
+    return serialize(variables, variableTypes) as TVariables;
   }
 
   public restore(data: NormalizedCacheObject): this {

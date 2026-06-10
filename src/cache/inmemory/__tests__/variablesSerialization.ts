@@ -102,3 +102,33 @@ test("serializes lists and nested lists of custom scalars", () => {
     schedule: [["2026-01-02T00:00:00.000Z", "2026-01-03T00:00:00.000Z"]],
   });
 });
+
+test("leaves lists and nested lists alone when variables are already serialized", () => {
+  const cache = new InMemoryCache({
+    scalars: {
+      DateTime: dateTimeScalar,
+    },
+  });
+
+  const mutation = gql`
+    mutation ScheduleEvents($startsAt: [DateTime], $schedule: [[DateTime!]!]!) {
+      scheduleEvents(startsAt: $startsAt, schedule: $schedule) {
+        id
+      }
+    }
+  `;
+
+  const variables = {
+    startsAt: ["2026-01-01T00:00:00.000Z", null],
+    schedule: [["2026-01-02T00:00:00.000Z", "2026-01-03T00:00:00.000Z"]],
+  };
+
+  const result = cache.serializeVariables(mutation, variables);
+
+  expect(result).toStrictEqualTyped({
+    startsAt: ["2026-01-01T00:00:00.000Z", null],
+    schedule: [["2026-01-02T00:00:00.000Z", "2026-01-03T00:00:00.000Z"]],
+  });
+
+  expect(result).toBe(variables);
+});

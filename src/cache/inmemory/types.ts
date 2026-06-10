@@ -18,6 +18,7 @@ import type {
 
 import type { FieldValueGetter } from "./entityStore.js";
 import type { FragmentRegistryAPI } from "./fragmentRegistry.js";
+import type { InMemoryCache } from "./inMemoryCache.js";
 import type {
   FieldMergeFunction,
   KeyFieldsFunction,
@@ -135,12 +136,21 @@ export type ApolloReducerConfig = {
   dataIdFromObject?: KeyFieldsFunction;
 };
 
-export interface InMemoryCacheConfig extends ApolloReducerConfig {
+export type InMemoryCacheConfig = ApolloReducerConfig & {
   resultCaching?: boolean;
   possibleTypes?: PossibleTypesMap;
   typePolicies?: TypePolicies;
   fragments?: FragmentRegistryAPI;
-}
+} & ({} extends InMemoryCache.ScalarsOption ?
+    InMemoryCache.ScalarsOption extends Record<string, never> ?
+      {
+        scalars?: Record<
+          string,
+          `Scalar types must be declared in ApolloCache.Scalars before usage. See https://www.apollographql.com/docs/react/data/typescript#declaring-scalar-types.`
+        >;
+      }
+    : { scalars?: InMemoryCache.ScalarsOption }
+  : { scalars: InMemoryCache.ScalarsOption });
 
 export interface MergeInfo {
   field: FieldNode;

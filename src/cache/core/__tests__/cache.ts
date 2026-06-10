@@ -4,7 +4,7 @@ import { gql } from "graphql-tag";
 
 import type { OperationVariables, Unmasked } from "@apollo/client";
 import type { Cache } from "@apollo/client/cache";
-import { ApolloCache } from "@apollo/client/cache";
+import { ApolloCache, Scalar } from "@apollo/client/cache";
 
 import type { Reference } from "../../../utilities/graphql/storeUtils.js";
 
@@ -356,6 +356,32 @@ describe("abstract cache", () => {
       test.updateFragment({ id: fragmentId, fragment }, (data) => {
         expect(data).toBe("foo");
       });
+    });
+  });
+
+  describe("getScalar", () => {
+    it("returns undefined by default", () => {
+      const cache = new TestCache();
+
+      expect(cache.getScalar("DateTime")).toBeUndefined();
+    });
+
+    it("returns the scalar from a cache that overrides getScalar", () => {
+      const dateTime = new Scalar<string, Date>({
+        serialize: (value) => value.toISOString(),
+        parse: (value) => new Date(value),
+        is: (value) => value instanceof Date,
+      });
+
+      class ScalarCache extends TestCache {
+        getScalar<TKey extends keyof ApolloCache.Scalars>(
+          key: TKey
+        ): ApolloCache.GetScalarType<TKey> | undefined {
+          return dateTime as ApolloCache.GetScalarType<TKey>;
+        }
+      }
+
+      expect(new ScalarCache().getScalar("DateTime")).toBe(dateTime);
     });
   });
 });

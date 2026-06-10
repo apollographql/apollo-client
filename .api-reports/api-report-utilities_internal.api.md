@@ -370,6 +370,13 @@ export function isDocumentNode(value: unknown): value is DocumentNode;
 // @internal @deprecated (undocumented)
 export function isField(selection: SelectionNode): selection is FieldNode;
 
+// @public
+export type IsLooselyEqual<A, B> = [
+A
+] extends [B] ? [
+B
+] extends [A] ? true : false : false;
+
 // @internal @deprecated (undocumented)
 export function isNonEmptyArray<T>(value: ArrayLike<T> | null | undefined): value is Array<T>;
 

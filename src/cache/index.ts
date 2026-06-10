@@ -4,6 +4,7 @@ export type {
   WatchFragmentResult,
 } from "./deprecated.js";
 export { ApolloCache } from "./core/cache.js";
+export { Scalar } from "./core/Scalar.js";
 export type { Cache } from "./core/types/Cache.js";
 export type {
   IgnoreModifier,

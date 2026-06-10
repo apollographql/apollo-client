@@ -104,6 +104,7 @@ export {
   InMemoryCache,
   makeVar,
   MissingFieldError,
+  Scalar,
 } from "@apollo/client/cache";
 
 /* Link */

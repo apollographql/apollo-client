@@ -1,4 +1,4 @@
-import type { InternalTypes } from "@apollo/client";
+import type { ApolloCache, InternalTypes } from "@apollo/client";
 
 declare module "@apollo/client" {
   // in our own codebase, we have to account for all possible `defaultOptions`s
@@ -8,5 +8,10 @@ declare module "@apollo/client" {
       interface Query {}
       interface Mutate {}
     }
+  }
+
+  export namespace ApolloCache {
+    export interface Scalars
+      extends Record<string, { serialized: any; parsed: any }> {}
   }
 }

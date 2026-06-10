@@ -22,11 +22,16 @@ import {
   print,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
+import type {
+  IsLooselyEqual,
+  RemoveIndexSignature,
+} from "@apollo/client/utilities/internal";
 import { getInMemoryCacheMemoryInternals } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 import { ApolloCache } from "../core/cache.js";
+import type { Scalar } from "../core/Scalar.js";
 import type { Cache } from "../core/types/Cache.js";
 
 import { EntityStore, supportsResultCaching } from "./entityStore.js";
@@ -41,6 +46,38 @@ type BroadcastOptions = Pick<
   Cache.BatchOptions<InMemoryCache>,
   "optimistic" | "onWatchUpdated"
 >;
+
+type KnownScalars = RemoveIndexSignature<ApolloCache.Scalars>;
+
+export declare namespace InMemoryCache {
+  export type ScalarsOption = {
+    [ScalarName in keyof KnownScalars as IsLooselyEqual<
+      KnownScalars[ScalarName]["serialized"],
+      KnownScalars[ScalarName]["parsed"]
+    > extends true ?
+      ScalarName
+    : never]?: KnownScalars[ScalarName] extends (
+      { serialized: infer TSerialized; parsed: infer TParsed }
+    ) ?
+      Scalar<TSerialized, TParsed>
+    : never;
+  } & {
+    [ScalarName in keyof KnownScalars as IsLooselyEqual<
+      KnownScalars[ScalarName]["serialized"],
+      KnownScalars[ScalarName]["parsed"]
+    > extends true ?
+      never
+    : ScalarName]: KnownScalars[ScalarName] extends (
+      { serialized: infer TSerialized; parsed: infer TParsed }
+    ) ?
+      Scalar<TSerialized, TParsed>
+    : never;
+  } & (ApolloCache.Scalars extends (
+      Record<string, { serialized: infer TSerialized; parsed: infer TParsed }>
+    ) ?
+      Record<string, Scalar<TSerialized, TParsed>>
+    : {});
+}
 
 export class InMemoryCache extends ApolloCache {
   private data!: EntityStore;
@@ -70,9 +107,13 @@ export class InMemoryCache extends ApolloCache {
 
   public readonly makeVar = makeVar;
 
-  constructor(config: InMemoryCacheConfig = {}) {
+  constructor(
+    ...args: {} extends InMemoryCache.ScalarsOption ?
+      [config?: InMemoryCacheConfig]
+    : [config: InMemoryCacheConfig]
+  ) {
     super();
-    this.config = normalizeConfig(config);
+    this.config = normalizeConfig(args[0] ?? {});
 
     this.policies = new Policies({
       cache: this,
@@ -154,6 +195,20 @@ export class InMemoryCache extends ApolloCache {
     new Set([this.data.group, this.optimisticData.group]).forEach((group) =>
       group.resetCaching()
     );
+  }
+
+  public getScalar<TKey extends keyof ApolloCache.Scalars>(
+    key: TKey
+  ): ApolloCache.GetScalarType<TKey> extends (
+    Scalar<infer TSerialized, infer TParsed>
+  ) ?
+    IsLooselyEqual<TSerialized, TParsed> extends true ?
+      // We don't require scalars where the serialized/parsed types are equal, so we
+      // can't guarantee we will get a value
+      ApolloCache.GetScalarType<TKey> | undefined
+    : ApolloCache.GetScalarType<TKey>
+  : never {
+    return this.config.scalars?.[key as string] as any;
   }
 
   public restore(data: NormalizedCacheObject): this {

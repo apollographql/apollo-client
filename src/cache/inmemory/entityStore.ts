@@ -431,7 +431,7 @@ export abstract class EntityStore implements NormalizedCache {
     coerce: (scalar: Scalar<any, any>, value: unknown) => unknown,
     typename = obj.__typename
   ): StoreObject {
-    if (!typename) {
+    if (!typename || !this.policies.cache["config"].scalars) {
       return obj;
     }
 

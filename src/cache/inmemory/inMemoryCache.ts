@@ -331,6 +331,8 @@ export class InMemoryCache extends ApolloCache {
     options: Cache.ReadOptions<TData, OperationVariables>
   ): TData | DeepPartial<TData> | null {
     const {
+      query,
+      variables,
       // Since read returns data or null, without any additional metadata
       // about whether/where there might have been missing fields, the
       // default behavior cannot be returnPartialData = true (like it is
@@ -343,6 +345,7 @@ export class InMemoryCache extends ApolloCache {
 
     return this.storeReader.diffQueryAgainstStore<TData>({
       ...options,
+      variables: this.serializeVariables(query, variables),
       store: options.optimistic ? this.optimisticData : this.data,
       config: this.config,
       returnPartialData,

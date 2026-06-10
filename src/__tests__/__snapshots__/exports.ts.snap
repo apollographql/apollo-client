@@ -492,6 +492,7 @@ Array [
   "streamInfoSymbol",
   "stringifyForDisplay",
   "toQueryResult",
+  "unwrapVariableType",
   "variablesUnknownSymbol",
 ]
 `;

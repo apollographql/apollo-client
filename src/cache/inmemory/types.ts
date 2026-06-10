@@ -140,7 +140,9 @@ export type ApolloReducerConfig = {
 };
 
 export interface InputObjectsOption {
-  [key: string]: string | InputObjectsOption;
+  [inputObjectName: string]: {
+    fields: Record<string, string>;
+  };
 }
 
 export type InMemoryCacheConfig = ApolloReducerConfig & {

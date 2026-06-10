@@ -1,4 +1,4 @@
-import { ApolloCache, InMemoryCache, Scalar } from "@apollo/client/cache";
+import { InMemoryCache, Scalar } from "@apollo/client/cache";
 import { expectTypeOf } from "expect-type";
 
 declare function test(name: string, fn: () => void): void;
@@ -151,4 +151,24 @@ test("getScalar returns the resolved scalar or undefined", () => {
   expectTypeOf(cache.getScalar("Unknown")).toEqualTypeOf<
     Scalar<any, any> | undefined
   >();
+});
+
+test("allows any scalar name in field policies", () => {
+  new InMemoryCache({
+    typePolicies: {
+      Event: {
+        fields: {
+          startDate: {
+            scalar: "DateTime",
+          },
+          metadata: {
+            scalar: "JSONObject",
+          },
+          unknown: {
+            scalar: "Unknown",
+          },
+        },
+      },
+    },
+  });
 });

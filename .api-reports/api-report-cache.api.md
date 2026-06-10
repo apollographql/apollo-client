@@ -500,6 +500,7 @@ export type FieldPolicy<TExisting = any, TIncoming = TExisting, TReadResult = TI
     keyArgs?: KeySpecifier | KeyArgsFunction | false;
     read?: FieldReadFunction<TExisting, TReadResult, TReadOptions>;
     merge?: FieldMergeFunction<TExisting, TIncoming, TMergeOptions> | boolean;
+    scalar?: ScalarNames;
 };
 
 // @public (undocumented)
@@ -869,6 +870,8 @@ export class Policies {
     getMergeFunction(parentTypename: string | undefined, fieldName: string, childTypename: string | undefined): FieldMergeFunction | undefined;
     // (undocumented)
     getReadFunction(typename: string | undefined, fieldName: string): FieldReadFunction | undefined;
+    // (undocumented)
+    getScalarForField(typename: string, fieldName: string): Scalar<any, any> | undefined;
     // Warning: (ae-forgotten-export) The symbol "FieldSpecifier" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -1002,6 +1005,9 @@ export class Scalar<TSerialized, TParsed> {
 }
 
 // @public (undocumented)
+type ScalarNames = keyof KnownScalars | (string extends keyof ApolloCache.Scalars ? string & {} : never);
+
+// @public (undocumented)
 type StorageType = Record<string, any>;
 
 export { StoreObject }
@@ -1083,9 +1089,10 @@ interface WriteContext extends ReadMergeModifyContext {
 
 // Warnings were encountered during analysis:
 //
-// src/cache/inmemory/policies.ts:173:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:173:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/types.ts:136:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:176:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:176:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:179:3 - (ae-forgotten-export) The symbol "ScalarNames" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/types.ts:139:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

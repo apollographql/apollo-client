@@ -182,3 +182,24 @@ test("getScalar returns the resolved scalar or undefined", () => {
   // @ts-expect-error not a declared scalar
   cache.getScalar("Unknown");
 });
+
+test("allows only defined scalars in field policies", () => {
+  new InMemoryCache({
+    typePolicies: {
+      Event: {
+        fields: {
+          startDate: {
+            scalar: "RelativeDate",
+          },
+          metadata: {
+            scalar: "JSONObject",
+          },
+          unknown: {
+            // @ts-expect-error scalar not registered
+            scalar: "DateTime",
+          },
+        },
+      },
+    },
+  });
+});

@@ -38,3 +38,34 @@ test("a transforming scalar conflicting with the index blocks configuration", ()
     },
   });
 });
+
+test("allows any scalar name in field policies", () => {
+  new InMemoryCache({
+    // @ts-expect-error `DateTime` is not assignable to index signature
+    scalars: {
+      DateTime: new Scalar({
+        serialize: (value) => value.toISOString(),
+        parse: (value) => new Date(value),
+      }),
+      RelativeDate: new Scalar({
+        serialize: (value) => value,
+        parse: (value) => value,
+      }),
+    },
+    typePolicies: {
+      Event: {
+        fields: {
+          startDate: {
+            scalar: "DateTime",
+          },
+          endDate: {
+            scalar: "RelativeDate",
+          },
+          metadata: {
+            scalar: "Unknown",
+          },
+        },
+      },
+    },
+  });
+});

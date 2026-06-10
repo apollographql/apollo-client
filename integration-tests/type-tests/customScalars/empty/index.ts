@@ -20,3 +20,18 @@ test("getScalar cannot be called without a declared scalar", () => {
   // @ts-expect-error no scalars are declared
   cache.getScalar("DateTime");
 });
+
+test("does not allow any scalar name in field policies", () => {
+  new InMemoryCache({
+    typePolicies: {
+      Event: {
+        fields: {
+          startDate: {
+            // @ts-expect-error no scalars are declared
+            scalar: "DateTime",
+          },
+        },
+      },
+    },
+  });
+});

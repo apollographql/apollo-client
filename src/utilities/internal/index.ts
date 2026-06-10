@@ -69,6 +69,7 @@ export { shouldInclude } from "./shouldInclude.js";
 export { storeKeyNameFromField } from "./storeKeyNameFromField.js";
 export { stringifyForDisplay } from "./stringifyForDisplay.js";
 export { toQueryResult } from "./toQueryResult.js";
+export { unwrapVariableType } from "./unwrapVariableType.js";
 export { filterMap } from "./filterMap.js";
 export { equalByQuery } from "./equalByQuery.js";
 export { canonicalStringify } from "./canonicalStringify.js";

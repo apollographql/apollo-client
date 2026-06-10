@@ -222,9 +222,9 @@ export class InMemoryCache extends ApolloCache {
     TVariables extends OperationVariables = OperationVariables,
   >(
     document: DocumentNode | TypedDocumentNode<any, TVariables>,
-    variables: NoInfer<TVariables>
-  ): TVariables {
-    if (!this.config.scalars && !this.config.inputObjects) {
+    variables: NoInfer<TVariables> | undefined
+  ): TVariables | undefined {
+    if ((!this.config.scalars && !this.config.inputObjects) || !variables) {
       return variables;
     }
 

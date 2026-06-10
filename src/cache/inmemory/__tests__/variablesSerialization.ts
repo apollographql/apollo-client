@@ -27,3 +27,25 @@ test("serializes a custom scalar variable", () => {
     })
   ).toStrictEqualTyped({ startsAt: "2026-01-01T00:00:00.000Z" });
 });
+
+test("leaves an already serialized custom scalar variable unchanged", () => {
+  const cache = new InMemoryCache({
+    scalars: {
+      DateTime: dateTimeScalar,
+    },
+  });
+
+  const mutation = gql`
+    mutation CreateEvent($startsAt: DateTime!) {
+      createEvent(startsAt: $startsAt) {
+        id
+      }
+    }
+  `;
+
+  expect(
+    cache.serializeVariables(mutation, { startsAt: "2026-01-01T00:00:00.000Z" })
+  ).toStrictEqualTyped({
+    startsAt: "2026-01-01T00:00:00.000Z",
+  });
+});

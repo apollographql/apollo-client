@@ -244,7 +244,7 @@ export class QueryManager {
     return this.client.link;
   }
 
-  get cache() {
+  get cache(): Cache.Implementation {
     return this.client.cache;
   }
 

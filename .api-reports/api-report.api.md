@@ -2467,7 +2467,7 @@ class QueryManager {
     // (undocumented)
     broadcastQueries(): void;
     // (undocumented)
-    get cache(): ApolloCache;
+    get cache(): Cache_2.Implementation;
     // (undocumented)
     clearStore(options?: Cache_2.ResetOptions): Promise<void>;
     // (undocumented)

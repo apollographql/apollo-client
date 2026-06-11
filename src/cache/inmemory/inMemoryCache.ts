@@ -243,6 +243,15 @@ export class InMemoryCache extends ApolloCache {
     return this.serializeVariablesValue(variables, variableTypes) as TVariables;
   }
 
+  private safeSerializeVariables<
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    document: DocumentNode | TypedDocumentNode<any, TVariables>,
+    variables: NoInfer<TVariables> | undefined
+  ): TVariables | undefined {
+    return variables ? this.serializeVariables(document, variables) : variables;
+  }
+
   private serializeVariablesValue(
     value: unknown,
     variableTypes: Record<string, string>,
@@ -365,8 +374,7 @@ export class InMemoryCache extends ApolloCache {
 
     return this.storeReader.diffQueryAgainstStore<TData>({
       ...options,
-      variables:
-        variables ? this.serializeVariables(query, variables) : variables,
+      variables: this.safeSerializeVariables(query, variables),
       store: options.optimistic ? this.optimisticData : this.data,
       config: this.config,
       returnPartialData,
@@ -383,8 +391,7 @@ export class InMemoryCache extends ApolloCache {
       ++this.txCount;
       return this.storeWriter.writeToStore(this.data, {
         ...options,
-        variables:
-          variables ? this.serializeVariables(query, variables) : variables,
+        variables: this.safeSerializeVariables(query, variables),
       });
     } finally {
       if (!--this.txCount && options.broadcast !== false) {
@@ -432,10 +439,7 @@ export class InMemoryCache extends ApolloCache {
 
     return this.storeReader.diffQueryAgainstStore({
       ...options,
-      variables:
-        variables ?
-          this.serializeVariables(options.query, variables)
-        : variables,
+      variables: this.safeSerializeVariables(options.query, variables),
       store: options.optimistic ? this.optimisticData : this.data,
       rootId: options.id || "ROOT_QUERY",
       config: this.config,

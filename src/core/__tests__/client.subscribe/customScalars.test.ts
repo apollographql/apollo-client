@@ -2,16 +2,8 @@ import { of } from "rxjs";
 
 import type { OperationVariables } from "@apollo/client";
 import { ApolloClient, ApolloLink, gql } from "@apollo/client";
-import { InMemoryCache, Scalar } from "@apollo/client/cache";
-import { ObservableStream } from "@apollo/client/testing/internal";
-
-const dateScalar = new Scalar<string, Date>({
-  serialize: (date) =>
-    `${date.getFullYear()}-${(date.getMonth() + 1)
-      .toString()
-      .padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`,
-  parse: (value) => new Date(value),
-});
+import { InMemoryCache } from "@apollo/client/cache";
+import { dateScalar, ObservableStream } from "@apollo/client/testing/internal";
 
 test("serializes scalar variables used in field arguments", async () => {
   let requestVariables!: OperationVariables;

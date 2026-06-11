@@ -1,25 +1,10 @@
 import { gql } from "@apollo/client";
-import { InMemoryCache, Scalar } from "@apollo/client/cache";
-
-const dateTimeScalar = new Scalar<string, Date>({
-  serialize: (value) => value.toISOString(),
-  parse: (value) => new Date(value),
-});
-
-const priceScalar = new Scalar<number, string>({
-  serialize: (value) => Math.round(parseFloat(value) * 100),
-  parse: (value) => (value / 100).toFixed(2),
-  is: (value) => typeof value === "string",
-});
-
-const jsonObjectScalar = new Scalar<
-  Record<string, unknown>,
-  Map<string, unknown>
->({
-  serialize: (value) => Object.fromEntries(value),
-  parse: (value) => new Map(Object.entries(value)),
-  is: (value) => value instanceof Map,
-});
+import { InMemoryCache } from "@apollo/client/cache";
+import {
+  dateTimeScalar,
+  jsonObjectScalar,
+  priceScalar,
+} from "@apollo/client/testing/internal";
 
 test("serializes a custom scalar variable", () => {
   const cache = new InMemoryCache({

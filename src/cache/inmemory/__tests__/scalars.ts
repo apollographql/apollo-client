@@ -4,31 +4,14 @@ import type { TypedDocumentNode } from "@apollo/client";
 import { gql } from "@apollo/client";
 import { InMemoryCache, Scalar } from "@apollo/client/cache";
 import {
+  dateTimeScalar,
+  jsonObjectScalar,
   ObservableStream,
+  priceScalar,
   spyOnConsole,
 } from "@apollo/client/testing/internal";
 
 const IS_GRAPHQL_17 = graphqlVersion.startsWith("17");
-
-const dateTimeScalar = new Scalar<string, Date>({
-  serialize: (value) => value.toISOString(),
-  parse: (value) => new Date(value),
-});
-
-const priceScalar = new Scalar<number, string>({
-  serialize: (dollars) => Math.round(parseFloat(dollars) * 100),
-  parse: (cents) => `${(cents / 100).toFixed(2)}`,
-  is: (value) => typeof value === "string",
-});
-
-const jsonObjectScalar = new Scalar<
-  Record<string, unknown>,
-  Map<string, unknown>
->({
-  serialize: (value) => Object.fromEntries(value),
-  parse: (value) => new Map(Object.entries(value)),
-  is: (value) => value instanceof Map,
-});
 
 test("creates a scalar from a GraphQLScalarType", () => {
   const graphQLScalar = new GraphQLScalarType<Date, string>({

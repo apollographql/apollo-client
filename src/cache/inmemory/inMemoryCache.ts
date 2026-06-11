@@ -261,7 +261,7 @@ export class InMemoryCache extends ApolloCache {
       return this.serializeInputArray(value, variableTypes, scalar);
     }
 
-    if (scalar) {
+    if (scalar && value != null) {
       return scalar.coerceToSerialized(value);
     }
 

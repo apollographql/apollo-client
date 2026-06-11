@@ -1,5 +1,5 @@
 import { gql } from "@apollo/client";
-import { InMemoryCache } from "@apollo/client/cache";
+import { InMemoryCache, Scalar } from "@apollo/client/cache";
 import {
   dateTimeScalar,
   jsonObjectScalar,
@@ -55,10 +55,15 @@ test("leaves an already serialized custom scalar variable unchanged", () => {
   expect(result).toBe(variables);
 });
 
-test("leaves a null custom scalar variable unchanged", () => {
+test("does not coerce a null custom scalar variable", () => {
   const cache = new InMemoryCache({
     scalars: {
-      DateTime: dateTimeScalar,
+      DateTime: new Scalar<string, Date>({
+        serialize: (value) => value.toISOString(),
+        parse: (value) => new Date(value),
+        // Allow nulls through to ensure we don't call serialize.
+        is: (value) => value === null || value instanceof Date,
+      }),
     },
   });
 

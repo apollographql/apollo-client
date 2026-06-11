@@ -1,5 +1,6 @@
 import { InMemoryCache, Scalar } from "@apollo/client/cache";
 import { expectTypeOf } from "expect-type";
+import { GraphQLScalarType } from "graphql";
 
 declare function test(name: string, fn: () => void): void;
 declare const maybeDate: string | Date;
@@ -61,6 +62,35 @@ test("serialize receives the parsed type and parse receives the serialized type"
       }),
     },
   });
+});
+
+test("fromGraphQLScalarType infers the serialized and parsed types", () => {
+  const graphQLScalar = new GraphQLScalarType<Date, string>({
+    name: "DateTime",
+    serialize: (value) => {
+      if (!(value instanceof Date)) {
+        throw new TypeError("Expected a Date");
+      }
+
+      return value.toISOString();
+    },
+    parseValue: (value) => {
+      if (typeof value !== "string") {
+        throw new TypeError("Expected a string");
+      }
+
+      return new Date(value);
+    },
+  });
+
+  const scalar = Scalar.fromGraphQLScalarType(graphQLScalar, {
+    is: (value) => {
+      expectTypeOf(value).toEqualTypeOf<string | Date>();
+      return value instanceof Date;
+    },
+  });
+
+  expectTypeOf(scalar).toEqualTypeOf<Scalar<string, Date>>();
 });
 
 test("serialize must return the serialized type", () => {

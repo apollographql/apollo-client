@@ -313,8 +313,8 @@ export class InMemoryCache extends ApolloCache {
           variableTypes,
           scalar
         );
-
         changed ||= newValue !== value;
+
         return [name, newValue];
       }
 

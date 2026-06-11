@@ -1159,24 +1159,6 @@ test("leaves an empty variables object unchanged", () => {
   expect(result).toBe(variables);
 });
 
-test("leaves undefined variables unchanged", () => {
-  const cache = new InMemoryCache({
-    scalars: {
-      DateTime: dateTimeScalar,
-    },
-  });
-
-  const mutation = gql`
-    mutation CreateEvent($startsAt: DateTime) {
-      createEvent(startsAt: $startsAt) {
-        id
-      }
-    }
-  `;
-
-  expect(cache.serializeVariables(mutation, undefined)).toBeUndefined();
-});
-
 test("does not add an omitted variable with a default value", () => {
   const cache = new InMemoryCache({
     scalars: {

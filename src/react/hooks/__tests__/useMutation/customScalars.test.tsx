@@ -444,3 +444,243 @@ test.failing(
     });
   }
 );
+
+test("parses parsed custom scalar fields in optimistic responses", async () => {
+  const mutation = gql`
+    mutation CreateEvent {
+      createEvent {
+        id
+        startDate
+      }
+    }
+  `;
+  const fragment = gql`
+    fragment EventFragment on Event {
+      id
+      startDate
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          createEvent: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-02-02",
+          },
+        },
+      }).pipe(delay(20))
+    ),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot, getCurrentSnapshot } = await renderHookToSnapshotStream(
+    () => useMutation(mutation),
+    { wrapper: createClientWrapper(client) }
+  );
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: undefined,
+      error: undefined,
+      called: false,
+      loading: false,
+    });
+  }
+
+  const [mutate] = getCurrentSnapshot();
+  const promise = mutate({
+    optimisticResponse: {
+      createEvent: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+      },
+    },
+  });
+
+  expect(
+    client.cache.readFragment({
+      id: "Event:1",
+      fragment,
+      optimistic: true,
+    })
+  ).toStrictEqualTyped({
+    __typename: "Event",
+    id: "1",
+    startDate: new Date(2026, 0, 1),
+  });
+
+  await expect(promise).resolves.toStrictEqualTyped({
+    data: {
+      createEvent: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 1, 2),
+      },
+    },
+  });
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: undefined,
+      error: undefined,
+      called: true,
+      loading: true,
+    });
+  }
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: {
+        createEvent: {
+          __typename: "Event",
+          id: "1",
+          startDate: new Date(2026, 1, 2),
+        },
+      },
+      error: undefined,
+      called: true,
+      loading: false,
+    });
+  }
+
+  await expect(takeSnapshot).not.toRerender();
+});
+
+test("parses serialized custom scalar fields in optimistic responses", async () => {
+  const mutation = gql`
+    mutation CreateEvent {
+      createEvent {
+        id
+        startDate
+      }
+    }
+  `;
+  const fragment = gql`
+    fragment EventFragment on Event {
+      id
+      startDate
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          createEvent: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-02-02",
+          },
+        },
+      }).pipe(delay(20))
+    ),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot, getCurrentSnapshot } = await renderHookToSnapshotStream(
+    () => useMutation(mutation),
+    { wrapper: createClientWrapper(client) }
+  );
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: undefined,
+      error: undefined,
+      called: false,
+      loading: false,
+    });
+  }
+
+  const [mutate] = getCurrentSnapshot();
+  const promise = mutate({
+    optimisticResponse: {
+      createEvent: {
+        __typename: "Event",
+        id: "1",
+        startDate: "2026-01-01",
+      },
+    },
+  });
+
+  expect(
+    client.cache.readFragment({
+      id: "Event:1",
+      fragment,
+      optimistic: true,
+    })
+  ).toStrictEqualTyped({
+    __typename: "Event",
+    id: "1",
+    startDate: new Date(2026, 0, 1),
+  });
+
+  await expect(promise).resolves.toStrictEqualTyped({
+    data: {
+      createEvent: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 1, 2),
+      },
+    },
+  });
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: undefined,
+      error: undefined,
+      called: true,
+      loading: true,
+    });
+  }
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: {
+        createEvent: {
+          __typename: "Event",
+          id: "1",
+          startDate: new Date(2026, 1, 2),
+        },
+      },
+      error: undefined,
+      called: true,
+      loading: false,
+    });
+  }
+
+  await expect(takeSnapshot).not.toRerender();
+});

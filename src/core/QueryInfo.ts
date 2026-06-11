@@ -610,6 +610,22 @@ export class QueryInfo<
           variables: variables,
           extensions: result.extensions,
         });
+
+        // Re-read from the cache to get parsed scalar values
+        const diff = this.cache.diff({
+          // The cache complains if passed a mutation where it expects a
+          // query, so we transform mutations and subscriptions to queries
+          // (only once, thanks to this.transformCache).
+          query: this.queryManager.getDocumentInfo(document).asQuery,
+          id: "ROOT_SUBSCRIPTION",
+          variables,
+          optimistic: false,
+          returnPartialData: true,
+        });
+
+        if (diff.complete) {
+          result.data = diff.result as any;
+        }
       }
 
       this.queryManager.broadcastQueries();

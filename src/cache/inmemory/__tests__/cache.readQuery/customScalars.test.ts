@@ -150,3 +150,44 @@ test("serializes scalar fields in input object variables", () => {
     },
   });
 });
+
+test("returns parsed custom scalar fields", () => {
+  const cache = new InMemoryCache({
+    scalars: {
+      Date: dateScalar,
+    },
+    typePolicies: {
+      Event: {
+        fields: {
+          startDate: {
+            scalar: "Date",
+          },
+        },
+      },
+    },
+  });
+  const query = gql`
+    query Event {
+      event {
+        startDate
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        startDate: "2026-01-01",
+      },
+    },
+  });
+
+  expect(cache.readQuery({ query })).toStrictEqualTyped({
+    event: {
+      __typename: "Event",
+      startDate: new Date(2026, 0, 1),
+    },
+  });
+});

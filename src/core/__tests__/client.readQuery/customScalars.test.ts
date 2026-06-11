@@ -118,3 +118,47 @@ test("serializes scalar fields in input object variables", () => {
     event: { __typename: "Event", name: "GraphQL Summit" },
   });
 });
+
+test("returns parsed custom scalar fields", () => {
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: {
+        Date: dateScalar,
+      },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: {
+              scalar: "Date",
+            },
+          },
+        },
+      },
+    }),
+    link: ApolloLink.empty(),
+  });
+  const query = gql`
+    query Event {
+      event {
+        startDate
+      }
+    }
+  `;
+
+  client.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        startDate: "2026-01-01",
+      },
+    },
+  });
+
+  expect(client.readQuery({ query })).toStrictEqualTyped({
+    event: {
+      __typename: "Event",
+      startDate: new Date(2026, 0, 1),
+    },
+  });
+});

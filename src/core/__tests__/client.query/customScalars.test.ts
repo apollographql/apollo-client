@@ -1,4 +1,4 @@
-import { of } from "rxjs";
+import { delay, of } from "rxjs";
 
 import type { OperationVariables } from "@apollo/client";
 import { ApolloClient, ApolloLink, gql } from "@apollo/client";
@@ -205,3 +205,241 @@ test("serializes scalar fields in input object variables", async () => {
     },
   });
 });
+
+test("parses cached custom scalar fields with a cache-only fetch policy", async () => {
+  const query = gql`
+    query Event {
+      event {
+        id
+        startDate
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: ApolloLink.empty(),
+  });
+
+  client.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: "2026-01-01",
+      },
+    },
+  });
+
+  await expect(
+    client.query({ query, fetchPolicy: "cache-only" })
+  ).resolves.toStrictEqualTyped({
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+      },
+    },
+  });
+});
+
+test("parses cached custom scalar fields with a cache-first fetch policy", async () => {
+  const query = gql`
+    query Event {
+      event {
+        id
+        startDate
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: ApolloLink.empty(),
+  });
+
+  client.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: "2026-01-01",
+      },
+    },
+  });
+
+  await expect(
+    client.query({ query, fetchPolicy: "cache-first" })
+  ).resolves.toStrictEqualTyped({
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+      },
+    },
+  });
+});
+
+test("parses network custom scalar fields with a cache-first fetch policy", async () => {
+  const query = gql`
+    query Event {
+      event {
+        id
+        startDate
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          event: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+          },
+        },
+      }).pipe(delay(20))
+    ),
+  });
+
+  await expect(
+    client.query({ query, fetchPolicy: "cache-first" })
+  ).resolves.toStrictEqualTyped({
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+      },
+    },
+  });
+});
+
+test("parses network custom scalar fields with a network-only fetch policy", async () => {
+  const query = gql`
+    query Event {
+      event {
+        id
+        startDate
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          event: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+          },
+        },
+      }).pipe(delay(20))
+    ),
+  });
+
+  await expect(
+    client.query({ query, fetchPolicy: "network-only" })
+  ).resolves.toStrictEqualTyped({
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+      },
+    },
+  });
+});
+
+test.failing(
+  "parses custom scalar fields with a no-cache fetch policy",
+  async () => {
+    const query = gql`
+      query Event {
+        event {
+          id
+          startDate
+        }
+      }
+    `;
+    const client = new ApolloClient({
+      cache: new InMemoryCache({
+        scalars: { Date: dateScalar },
+        typePolicies: {
+          Event: {
+            fields: {
+              startDate: { scalar: "Date" },
+            },
+          },
+        },
+      }),
+      link: new ApolloLink(() =>
+        of({
+          data: {
+            event: {
+              __typename: "Event",
+              id: "1",
+              startDate: "2026-01-01",
+            },
+          },
+        }).pipe(delay(20))
+      ),
+    });
+
+    await expect(
+      client.query({
+        query,
+        fetchPolicy: "no-cache",
+      })
+    ).resolves.toStrictEqualTyped({
+      data: {
+        event: {
+          __typename: "Event",
+          id: "1",
+          startDate: new Date(2026, 0, 1),
+        },
+      },
+    });
+  }
+);

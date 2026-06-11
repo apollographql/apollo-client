@@ -476,7 +476,7 @@ test("serializes scalar variables passed to subscribeToMore", async () => {
     document: subscription,
     variables: { date: new Date(2026, 0, 1) },
     updateQuery: (_, { subscriptionData }) => ({
-      event: subscriptionData.data.eventUpdated,
+      event: (subscriptionData.data as any).eventUpdated,
     }),
   });
 

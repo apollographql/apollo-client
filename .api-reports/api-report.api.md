@@ -1680,15 +1680,13 @@ export type InMemoryCacheConfig = ApolloReducerConfig & {
 });
 
 // @public (undocumented)
-interface InputObjectConfig {
+export interface InputObjectConfig {
     // (undocumented)
     fields: Record<string, string>;
 }
 
 // @public (undocumented)
-interface InputObjectsOption {
-    // Warning: (ae-forgotten-export) The symbol "InputObjectConfig" needs to be exported by the entry point index.d.ts
-    //
+export interface InputObjectsOption {
     // (undocumented)
     [inputObjectName: string]: InputObjectConfig;
 }
@@ -3176,7 +3174,6 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/policies.ts:179:3 - (ae-forgotten-export) The symbol "ScalarNames" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:139:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:154:3 - (ae-forgotten-export) The symbol "FragmentRegistryAPI" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/types.ts:155:3 - (ae-forgotten-export) The symbol "InputObjectsOption" needs to be exported by the entry point index.d.ts
 // src/core/ApolloClient.ts:201:5 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 // src/core/ApolloClient.ts:635:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:375:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts

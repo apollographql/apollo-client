@@ -52,6 +52,8 @@ import type { IgnoreModifier } from '@apollo/client/cache';
 import type { Incremental } from '@apollo/client/incremental';
 import { InMemoryCache } from '@apollo/client/cache';
 import { InMemoryCacheConfig } from '@apollo/client/cache';
+import { InputObjectConfig } from '@apollo/client/cache';
+import { InputObjectsOption } from '@apollo/client/cache';
 import type { InternalTypes as InternalTypes_2 } from '@apollo/client';
 import type { InteropObservable } from 'rxjs';
 import type { IsAny } from '@apollo/client/utilities/internal';
@@ -659,6 +661,10 @@ export { IdGetterObj }
 export { InMemoryCache }
 
 export { InMemoryCacheConfig }
+
+export { InputObjectConfig }
+
+export { InputObjectsOption }
 
 // Warning: (ae-forgotten-export) The symbol "RefetchQueriesIncludeShorthand" needs to be exported by the entry point index.d.ts
 //

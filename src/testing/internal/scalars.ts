@@ -12,7 +12,10 @@ export const dateScalar = new Scalar<string, Date>({
     `${date.getFullYear()}-${(date.getMonth() + 1)
       .toString()
       .padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`,
-  parse: (value) => new Date(value),
+  parse: (value) => {
+    const [year, month, day] = value.split("-").map(Number);
+    return new Date(year, month - 1, day);
+  },
 });
 
 // Used for testing primitive -> primitive tests

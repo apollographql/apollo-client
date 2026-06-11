@@ -277,20 +277,16 @@ export class InMemoryCache extends ApolloCache {
           return [name, value];
         }
 
-        const inputObjectName = variableTypes[name];
+        const inputObject = this.config.inputObjects?.[type];
 
-        if (inputObjectName) {
-          const inputObject = this.config.inputObjects?.[inputObjectName];
+        if (inputObject) {
+          const newValue = this.serializeVariablesValue(
+            value,
+            inputObject.fields
+          );
+          changed ||= newValue !== value;
 
-          if (inputObject) {
-            const newValue = this.serializeVariablesValue(
-              value,
-              inputObject.fields
-            );
-            changed ||= newValue !== value;
-
-            return [name, newValue];
-          }
+          return [name, newValue];
         }
 
         const scalar = this.getScalar(type);

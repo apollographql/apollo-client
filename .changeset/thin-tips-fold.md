@@ -9,7 +9,7 @@ For more complex input objects, a new `inputObjects` option is available to `InM
 ```ts
 const cache = new InMemoryCache({
   scalars: {
-    Date: new Scalar({
+    DateTime: new Scalar({
       parse: (value) => new Date(value),
       serialize: (value) => value.toISOString(),
       is: (value) => value instanceof Date,
@@ -42,5 +42,5 @@ await client.query({
 });
 
 // The link receives:
-// { filter: { date: "2026-01-01T:00:00:00.000Z" } }
+// { filter: { date: "2026-01-01T00:00:00.000Z" } }
 ```

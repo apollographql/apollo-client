@@ -240,68 +240,79 @@ export class InMemoryCache extends ApolloCache {
       return variables;
     }
 
-    const serialize = (
-      value: unknown,
-      types: Record<string, string>,
-      scalar?: Scalar<any, any>
-    ): unknown => {
-      let changed = false;
+    return this.serializeVariablesValue(variables, variableTypes) as TVariables;
+  }
 
-      if (Array.isArray(value)) {
-        const newValue = value.map((item) => {
-          const newItem = serialize(item, types, scalar);
-          changed ||= newItem !== item;
+  private serializeVariablesValue(
+    value: unknown,
+    variableTypes: Record<string, string>,
+    scalar?: Scalar<any, any>
+  ): unknown {
+    let changed = false;
 
-          return newItem;
-        });
+    if (Array.isArray(value)) {
+      const newValue = value.map((item) => {
+        const newItem = this.serializeVariablesValue(
+          item,
+          variableTypes,
+          scalar
+        );
+        changed ||= newItem !== item;
 
-        return changed ? newValue : value;
-      }
+        return newItem;
+      });
 
-      if (scalar) {
-        return scalar.coerceToSerialized(value);
-      }
+      return changed ? newValue : value;
+    }
 
-      if (isPlainObject(value)) {
-        const entries = Object.entries(value).map(([name, value]) => {
-          const type = types[name];
+    if (scalar) {
+      return scalar.coerceToSerialized(value);
+    }
 
-          if (!type) {
-            return [name, value];
-          }
+    if (isPlainObject(value)) {
+      const entries = Object.entries(value).map(([name, value]) => {
+        const type = variableTypes[name];
 
-          const inputObjectName = types[name];
+        if (!type) {
+          return [name, value];
+        }
 
-          if (inputObjectName) {
-            const inputObject = this.config.inputObjects?.[inputObjectName];
+        const inputObjectName = variableTypes[name];
 
-            if (inputObject) {
-              const newValue = serialize(value, inputObject.fields);
-              changed ||= newValue !== value;
+        if (inputObjectName) {
+          const inputObject = this.config.inputObjects?.[inputObjectName];
 
-              return [name, newValue];
-            }
-          }
-
-          const scalar = this.getScalar(type);
-
-          if (scalar) {
-            const newValue = serialize(value, types, scalar);
-
+          if (inputObject) {
+            const newValue = this.serializeVariablesValue(
+              value,
+              inputObject.fields
+            );
             changed ||= newValue !== value;
+
             return [name, newValue];
           }
+        }
 
-          return [name, value];
-        });
+        const scalar = this.getScalar(type);
 
-        return changed ? Object.fromEntries(entries) : value;
-      }
+        if (scalar) {
+          const newValue = this.serializeVariablesValue(
+            value,
+            variableTypes,
+            scalar
+          );
 
-      return value;
-    };
+          changed ||= newValue !== value;
+          return [name, newValue];
+        }
 
-    return serialize(variables, variableTypes) as TVariables;
+        return [name, value];
+      });
+
+      return changed ? Object.fromEntries(entries) : value;
+    }
+
+    return value;
   }
 
   public restore(data: NormalizedCacheObject): this {

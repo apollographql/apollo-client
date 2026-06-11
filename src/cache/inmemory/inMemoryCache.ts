@@ -428,8 +428,14 @@ export class InMemoryCache extends ApolloCache {
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(options: Cache.DiffOptions<TData, TVariables>): Cache.DiffResult<TData> {
+    const { variables } = options;
+
     return this.storeReader.diffQueryAgainstStore({
       ...options,
+      variables:
+        variables ?
+          this.serializeVariables(options.query, variables)
+        : variables,
       store: options.optimistic ? this.optimisticData : this.data,
       rootId: options.id || "ROOT_QUERY",
       config: this.config,

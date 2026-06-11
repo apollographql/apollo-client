@@ -130,6 +130,7 @@ export abstract class ApolloCache {
     abstract reset(options?: Cache_2.ResetOptions): Promise<void>;
     resolvesClientField?(typename: string, fieldName: string): boolean;
     abstract restore(serializedState: unknown): this;
+    serializeVariables<TVariables extends OperationVariables = OperationVariables>(document: DocumentNode | TypedDocumentNode<any, TVariables>, variables: NoInfer_2<TVariables>): TVariables;
     // (undocumented)
     transformDocument(document: DocumentNode): DocumentNode;
     // (undocumented)
@@ -649,6 +650,8 @@ export class InMemoryCache extends ApolloCache {
     // (undocumented)
     retain(rootId: string, optimistic?: boolean): number;
     // (undocumented)
+    serializeVariables<TVariables extends OperationVariables = OperationVariables>(document: DocumentNode | TypedDocumentNode<any, TVariables>, variables: NoInfer_2<TVariables>): TVariables;
+    // (undocumented)
     transformDocument(document: DocumentNode): DocumentNode;
     // (undocumented)
     watch<TData = unknown, TVariables extends OperationVariables = OperationVariables>(watch: Cache_2.WatchOptions<TData, TVariables>): () => void;
@@ -662,6 +665,7 @@ export type InMemoryCacheConfig = ApolloReducerConfig & {
     possibleTypes?: PossibleTypesMap;
     typePolicies?: TypePolicies;
     fragments?: FragmentRegistryAPI;
+    inputObjects?: InputObjectsOption;
 } & ({} extends InMemoryCache.ScalarsOption ? InMemoryCache.ScalarsOption extends Record<string, never> ? {
     scalars?: Record<string, `Scalar types must be declared in ApolloCache.Scalars before usage. See https://www.apollographql.com/docs/react/data/typescript#declaring-scalar-types.`>;
 } : {
@@ -669,6 +673,14 @@ export type InMemoryCacheConfig = ApolloReducerConfig & {
 } : {
     scalars: InMemoryCache.ScalarsOption;
 });
+
+// @public (undocumented)
+export interface InputObjectsOption {
+    // (undocumented)
+    [inputObjectName: string]: {
+        fields: Record<string, string>;
+    };
+}
 
 // @public (undocumented)
 interface InvalidateModifier {

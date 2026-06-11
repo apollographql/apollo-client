@@ -33,6 +33,7 @@ import type { SelectionSetNode } from 'graphql';
 import { StrongCache } from '@wry/caches';
 import type { Subscription } from 'rxjs';
 import type { Trie } from '@wry/trie';
+import type { TypeNode } from 'graphql';
 import type { TypeOverrides } from '@apollo/client';
 import { WeakCache } from '@wry/caches';
 
@@ -531,6 +532,9 @@ export function toQueryResult<TData = unknown>(value: ObservableQuery.Result<TDa
 
 // @public (undocumented)
 type TupleToIntersection<T extends any[]> = T extends [infer A] ? A : T extends [infer A, infer B] ? A & B : T extends [infer A, infer B, infer C] ? A & B & C : T extends [infer A, infer B, infer C, infer D] ? A & B & C & D : T extends [infer A, infer B, infer C, infer D, infer E] ? A & B & C & D & E : T extends (infer U)[] ? U : any;
+
+// @internal @deprecated (undocumented)
+export function unwrapVariableType(node: TypeNode): string;
 
 // @internal @deprecated (undocumented)
 export type VariablesOption<TVariables extends OperationVariables> = {} extends TVariables ? {

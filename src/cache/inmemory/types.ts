@@ -139,10 +139,12 @@ export type ApolloReducerConfig = {
   dataIdFromObject?: KeyFieldsFunction;
 };
 
+export interface InputObjectConfig {
+  fields: Record<string, string>;
+}
+
 export interface InputObjectsOption {
-  [inputObjectName: string]: {
-    fields: Record<string, string>;
-  };
+  [inputObjectName: string]: InputObjectConfig;
 }
 
 export type InMemoryCacheConfig = ApolloReducerConfig & {

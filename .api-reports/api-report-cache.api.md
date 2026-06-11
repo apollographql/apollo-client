@@ -675,11 +675,15 @@ export type InMemoryCacheConfig = ApolloReducerConfig & {
 });
 
 // @public (undocumented)
+export interface InputObjectConfig {
+    // (undocumented)
+    fields: Record<string, string>;
+}
+
+// @public (undocumented)
 export interface InputObjectsOption {
     // (undocumented)
-    [inputObjectName: string]: {
-        fields: Record<string, string>;
-    };
+    [inputObjectName: string]: InputObjectConfig;
 }
 
 // @public (undocumented)

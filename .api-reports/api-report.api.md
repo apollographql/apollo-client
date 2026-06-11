@@ -1680,11 +1680,17 @@ export type InMemoryCacheConfig = ApolloReducerConfig & {
 });
 
 // @public (undocumented)
-interface InputObjectsOption {
+interface InputObjectConfig {
     // (undocumented)
-    [inputObjectName: string]: {
-        fields: Record<string, string>;
-    };
+    fields: Record<string, string>;
+}
+
+// @public (undocumented)
+interface InputObjectsOption {
+    // Warning: (ae-forgotten-export) The symbol "InputObjectConfig" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    [inputObjectName: string]: InputObjectConfig;
 }
 
 // Warning: (ae-forgotten-export) The symbol "RefetchQueriesIncludeShorthand" needs to be exported by the entry point index.d.ts
@@ -3169,8 +3175,8 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/policies.ts:176:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:179:3 - (ae-forgotten-export) The symbol "ScalarNames" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:139:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/types.ts:152:3 - (ae-forgotten-export) The symbol "FragmentRegistryAPI" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/types.ts:153:3 - (ae-forgotten-export) The symbol "InputObjectsOption" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/types.ts:154:3 - (ae-forgotten-export) The symbol "FragmentRegistryAPI" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/types.ts:155:3 - (ae-forgotten-export) The symbol "InputObjectsOption" needs to be exported by the entry point index.d.ts
 // src/core/ApolloClient.ts:201:5 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 // src/core/ApolloClient.ts:635:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:375:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts

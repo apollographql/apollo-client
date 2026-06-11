@@ -480,43 +480,39 @@ export class QueryInfo<
             // Determine whether result is a SingleExecutionResult,
             // or the final ExecutionPatchResult.
 
-            if (update) {
-              if (!skipCache) {
-                // Re-read the ROOT_MUTATION data we just wrote into the cache
-                // (the first cache.write call in the cacheWrites.forEach loop
-                // above), so field read functions have a chance to run for
-                // fields within mutation result objects.
-                const diff = cache.diff<TData>({
-                  id: "ROOT_MUTATION",
-                  // The cache complains if passed a mutation where it expects a
-                  // query, so we transform mutations and subscriptions to queries
-                  // (only once, thanks to this.transformCache).
-                  query: this.queryManager.getDocumentInfo(mutation.document)
-                    .asQuery,
+            // Re-read from the cache after writing to it to update `result`
+            // with any parsed scalar values that might have been written.
+            if (!skipCache) {
+              const diff = cache.diff<TData>({
+                id: "ROOT_MUTATION",
+                // The cache complains if passed a mutation where it expects a
+                // query, so we transform mutations and subscriptions to queries
+                // (only once, thanks to this.transformCache).
+                query: this.queryManager.getDocumentInfo(mutation.document)
+                  .asQuery,
+                variables: mutation.variables,
+                optimistic: false,
+                returnPartialData: true,
+              });
+
+              if (diff.complete) {
+                result = {
+                  ...result,
+                  data: diff.result,
+                };
+              }
+            }
+
+            // If we've received the whole response, call the update function.
+            if (update && !this.hasNext) {
+              update(
+                cache as TCache,
+                result as FormattedExecutionResult<Unmasked<TData>>,
+                {
+                  context: mutation.context,
                   variables: mutation.variables,
-                  optimistic: false,
-                  returnPartialData: true,
-                });
-
-                if (diff.complete) {
-                  result = {
-                    ...result,
-                    data: diff.result,
-                  };
                 }
-              }
-
-              // If we've received the whole response, call the update function.
-              if (!this.hasNext) {
-                update(
-                  cache as TCache,
-                  result as FormattedExecutionResult<Unmasked<TData>>,
-                  {
-                    context: mutation.context,
-                    variables: mutation.variables,
-                  }
-                );
-              }
+              );
             }
 
             // TODO Do this with cache.evict({ id: 'ROOT_MUTATION' }) but make it

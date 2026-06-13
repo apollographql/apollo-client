@@ -1663,7 +1663,7 @@ export class ApolloClient {
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: ApolloClient.ReadFragmentOptions<TData, TVariables>,
-    optimistic: boolean = false
+    optimistic: boolean = !!options.optimistic
   ): Unmasked<TData> | null {
     return this.cache.readFragment<TData, TVariables>(
       { ...options, fragment: this.transform(options.fragment) },

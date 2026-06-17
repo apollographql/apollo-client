@@ -49,7 +49,7 @@ test("creates a scalar from a GraphQLScalarType", () => {
     },
   });
 
-  const scalar = Scalar.fromGraphQLScalarType(graphQLScalar, {});
+  const scalar = Scalar.fromGraphQLScalarType(graphQLScalar);
 
   expect(scalar.parse("2026-01-01T00:00:00.000Z")).toEqual(
     new Date("2026-01-01T00:00:00.000Z")
@@ -79,7 +79,7 @@ if (IS_GRAPHQL_17) {
       },
     });
 
-    const scalar = Scalar.fromGraphQLScalarType(graphQLScalar, {});
+    const scalar = Scalar.fromGraphQLScalarType(graphQLScalar);
 
     expect(scalar.parse("2026-01-01T00:00:00.000Z")).toEqual(
       new Date("2026-01-01T00:00:00.000Z")
@@ -161,7 +161,7 @@ test("preserves errors thrown by the GraphQLScalarType", () => {
     },
   });
 
-  const scalar = Scalar.fromGraphQLScalarType(graphQLScalar, {});
+  const scalar = Scalar.fromGraphQLScalarType(graphQLScalar);
 
   expect(() => scalar.parse("invalid")).toThrow("Unable to parse DateTime");
   expect(() => scalar.serialize(new Date())).toThrow(
@@ -181,7 +181,7 @@ if (IS_GRAPHQL_17) {
       },
     });
 
-    const scalar = Scalar.fromGraphQLScalarType(graphQLScalar, {});
+    const scalar = Scalar.fromGraphQLScalarType(graphQLScalar);
 
     expect(() => scalar.parse("invalid")).toThrow("Unable to parse DateTime");
     expect(() => scalar.serialize(new Date())).toThrow(

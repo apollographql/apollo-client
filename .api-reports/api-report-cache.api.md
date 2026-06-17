@@ -998,7 +998,7 @@ export class Scalar<TSerialized, TParsed> {
     // (undocumented)
     coerceToSerialized(value: TSerialized | TParsed): TSerialized;
     // (undocumented)
-    static fromGraphQLScalarType<TSerialized, TParsed>(scalarType: GraphQLScalarType<TParsed, TSerialized>, options: Pick<Scalar.Options<NoInfer_2<TSerialized>, NoInfer_2<TParsed>>, "is">): Scalar<TSerialized, TParsed>;
+    static fromGraphQLScalarType<TSerialized, TParsed>(scalarType: GraphQLScalarType<TParsed, TSerialized>, options?: Pick<Scalar.Options<NoInfer_2<TSerialized>, NoInfer_2<TParsed>>, "is">): Scalar<TSerialized, TParsed>;
     // (undocumented)
     is(value: TSerialized | TParsed): value is TParsed;
     // (undocumented)

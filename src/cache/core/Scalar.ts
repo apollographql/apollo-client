@@ -19,7 +19,7 @@ export class Scalar<TSerialized, TParsed> {
 
   static fromGraphQLScalarType<TSerialized, TParsed>(
     scalarType: GraphQLScalarType<TParsed, TSerialized>,
-    options: Pick<Scalar.Options<NoInfer<TSerialized>, NoInfer<TParsed>>, "is">
+    options?: Pick<Scalar.Options<NoInfer<TSerialized>, NoInfer<TParsed>>, "is">
   ): Scalar<TSerialized, TParsed> {
     return new Scalar<TSerialized, TParsed>({
       ...options,

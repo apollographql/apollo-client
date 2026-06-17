@@ -4055,7 +4055,9 @@ describe("useQuery Hook", () => {
       const query = gql`
         query {
           goodField
-          badField
+          badField {
+            subField
+          }
         }
       `;
 

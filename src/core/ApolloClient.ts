@@ -1506,7 +1506,7 @@ export class ApolloClient {
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: ApolloClient.ReadQueryOptions<TData, TVariables>,
-    optimistic: boolean = false
+    optimistic = !!options.optimistic
   ): Unmasked<TData> | null {
     return this.cache.readQuery<TData, TVariables>(
       { ...options, query: this.transform(options.query) },

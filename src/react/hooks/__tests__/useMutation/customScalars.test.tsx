@@ -4,7 +4,7 @@ import {
 } from "@testing-library/react-render-stream";
 import { delay, of } from "rxjs";
 
-import type { OperationVariables } from "@apollo/client";
+import type { OperationVariables, TypedDocumentNode } from "@apollo/client";
 import { ApolloClient, ApolloLink, gql } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { useMutation } from "@apollo/client/react";
@@ -683,4 +683,136 @@ test("parses serialized custom scalar fields in optimistic responses", async () 
   }
 
   await expect(takeSnapshot).not.toRerender();
+});
+
+test("passes parsed custom scalar fields to mutation updater callbacks", async () => {
+  const mutation: TypedDocumentNode<{
+    createEvent: { __typename: "Event"; id: string; startDate: Date };
+  }> = gql`
+    mutation CreateEvent {
+      createEvent {
+        id
+        startDate
+      }
+    }
+  `;
+  const query = gql`
+    query LastCreatedEvent {
+      lastCreatedEvent {
+        id
+        startDate
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          createEvent: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+          },
+        },
+      }).pipe(delay(20))
+    ),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot, getCurrentSnapshot } = await renderHookToSnapshotStream(
+    () => useMutation(mutation),
+    { wrapper: createClientWrapper(client) }
+  );
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: undefined,
+      error: undefined,
+      called: false,
+      loading: false,
+    });
+  }
+
+  const [mutate] = getCurrentSnapshot();
+
+  await expect(
+    mutate({
+      update(cache, result) {
+        expect(result).toStrictEqualTyped({
+          data: {
+            createEvent: {
+              __typename: "Event",
+              id: "1",
+              startDate: new Date(2026, 0, 1),
+            },
+          },
+        });
+
+        cache.writeQuery({
+          query,
+          data: {
+            lastCreatedEvent: result.data!.createEvent,
+          },
+        });
+      },
+    })
+  ).resolves.toStrictEqualTyped({
+    data: {
+      createEvent: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+      },
+    },
+  });
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: undefined,
+      error: undefined,
+      called: true,
+      loading: true,
+    });
+  }
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: {
+        createEvent: {
+          __typename: "Event",
+          id: "1",
+          startDate: new Date(2026, 0, 1),
+        },
+      },
+      error: undefined,
+      called: true,
+      loading: false,
+    });
+  }
+
+  await expect(takeSnapshot).not.toRerender();
+
+  expect(client.readQuery({ query })).toStrictEqualTyped({
+    lastCreatedEvent: {
+      __typename: "Event",
+      id: "1",
+      startDate: new Date(2026, 0, 1),
+    },
+  });
 });

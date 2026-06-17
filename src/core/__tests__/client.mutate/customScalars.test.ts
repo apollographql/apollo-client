@@ -1,9 +1,10 @@
 import { delay, of } from "rxjs";
 
 import type { OperationVariables, TypedDocumentNode } from "@apollo/client";
-import { ApolloClient, ApolloLink, gql } from "@apollo/client";
+import { ApolloClient, ApolloLink, gql, NetworkStatus } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
-import { dateScalar } from "@apollo/client/testing/internal";
+import { MockLink } from "@apollo/client/testing";
+import { dateScalar, ObservableStream } from "@apollo/client/testing/internal";
 
 test("serializes scalar variables used in field arguments", async () => {
   let requestVariables!: OperationVariables;
@@ -506,6 +507,154 @@ test("passes parsed custom scalar fields to mutation updater callbacks", async (
       __typename: "Event",
       id: "1",
       startDate: new Date(2026, 0, 1),
+    },
+  });
+});
+
+test("parses custom scalar fields in queries triggered by refetchQueries", async () => {
+  const query = gql`
+    query Event {
+      event {
+        id
+        startDate
+      }
+    }
+  `;
+  const mutation = gql`
+    mutation CreateEvent {
+      createEvent {
+        id
+        startDate
+      }
+    }
+  `;
+  let requestCount = 0;
+  const link = new MockLink([
+    {
+      request: { query },
+      maxUsageCount: 2,
+      delay: 20,
+      result: () => {
+        requestCount++;
+
+        return {
+          data: {
+            event: {
+              __typename: "Event",
+              id: "1",
+              startDate: requestCount === 1 ? "2026-01-01" : "2026-03-03",
+            },
+          },
+        };
+      },
+    },
+    {
+      request: { query: mutation },
+      delay: 20,
+      result: {
+        data: {
+          createEvent: {
+            __typename: "Event",
+            id: "2",
+            startDate: "2026-02-02",
+          },
+        },
+      },
+    },
+  ]);
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: {
+        Date: dateScalar,
+      },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: {
+              scalar: "Date",
+            },
+          },
+        },
+      },
+    }),
+    link,
+  });
+
+  using stream = new ObservableStream(client.watchQuery({ query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(
+    client.mutate({
+      mutation,
+      refetchQueries: [query],
+      awaitRefetchQueries: true,
+    })
+  ).resolves.toStrictEqualTyped({
+    data: {
+      createEvent: {
+        __typename: "Event",
+        id: "2",
+        startDate: new Date(2026, 1, 2),
+      },
+    },
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+      },
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.refetch,
+    partial: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 2, 3),
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+
+  expect(client.readQuery({ query })).toStrictEqualTyped({
+    event: {
+      __typename: "Event",
+      id: "1",
+      startDate: new Date(2026, 2, 3),
     },
   });
 });

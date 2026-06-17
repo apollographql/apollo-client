@@ -5,9 +5,10 @@ import {
 import { delay, of } from "rxjs";
 
 import type { OperationVariables, TypedDocumentNode } from "@apollo/client";
-import { ApolloClient, ApolloLink, gql } from "@apollo/client";
+import { ApolloClient, ApolloLink, gql, NetworkStatus } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
-import { useMutation } from "@apollo/client/react";
+import { useMutation, useQuery } from "@apollo/client/react";
+import { MockLink } from "@apollo/client/testing";
 import {
   createClientWrapper,
   dateScalar,
@@ -813,6 +814,296 @@ test("passes parsed custom scalar fields to mutation updater callbacks", async (
       __typename: "Event",
       id: "1",
       startDate: new Date(2026, 0, 1),
+    },
+  });
+});
+
+test("parses custom scalar fields in queries triggered by refetchQueries", async () => {
+  const query = gql`
+    query Event {
+      event {
+        id
+        startDate
+      }
+    }
+  `;
+  const mutation = gql`
+    mutation CreateEvent {
+      createEvent {
+        id
+        startDate
+      }
+    }
+  `;
+  let requestCount = 0;
+  const link = new MockLink([
+    {
+      request: { query },
+      maxUsageCount: 2,
+      delay: 20,
+      result: () => {
+        requestCount++;
+
+        return {
+          data: {
+            event: {
+              __typename: "Event",
+              id: "1",
+              startDate: requestCount === 1 ? "2026-01-01" : "2026-03-03",
+            },
+          },
+        };
+      },
+    },
+    {
+      request: { query: mutation },
+      delay: 20,
+      result: {
+        data: {
+          createEvent: {
+            __typename: "Event",
+            id: "2",
+            startDate: "2026-02-02",
+          },
+        },
+      },
+    },
+  ]);
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link,
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot, getCurrentSnapshot } = await renderHookToSnapshotStream(
+    () => ({
+      query: useQuery(query),
+      mutation: useMutation(mutation),
+    }),
+    { wrapper: createClientWrapper(client) }
+  );
+
+  {
+    const {
+      query,
+      mutation: [, mutation],
+    } = await takeSnapshot();
+
+    expect(query).toStrictEqualTyped({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      previousData: undefined,
+      variables: {},
+    });
+
+    expect(mutation).toStrictEqualTyped({
+      data: undefined,
+      error: undefined,
+      called: false,
+      loading: false,
+    });
+  }
+
+  {
+    const {
+      query,
+      mutation: [, mutation],
+    } = await takeSnapshot();
+
+    expect(query).toStrictEqualTyped({
+      data: {
+        event: {
+          __typename: "Event",
+          id: "1",
+          startDate: new Date(2026, 0, 1),
+        },
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: {},
+    });
+
+    expect(mutation).toStrictEqualTyped({
+      data: undefined,
+      error: undefined,
+      called: false,
+      loading: false,
+    });
+  }
+
+  const {
+    mutation: [mutate],
+  } = getCurrentSnapshot();
+
+  await expect(
+    mutate({
+      refetchQueries: [query],
+      awaitRefetchQueries: true,
+    })
+  ).resolves.toStrictEqualTyped({
+    data: {
+      createEvent: {
+        __typename: "Event",
+        id: "2",
+        startDate: new Date(2026, 1, 2),
+      },
+    },
+  });
+
+  {
+    const {
+      query,
+      mutation: [, mutation],
+    } = await takeSnapshot();
+
+    expect(query).toStrictEqualTyped({
+      data: {
+        event: {
+          __typename: "Event",
+          id: "1",
+          startDate: new Date(2026, 0, 1),
+        },
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: {},
+    });
+
+    expect(mutation).toStrictEqualTyped({
+      data: undefined,
+      error: undefined,
+      called: true,
+      loading: true,
+    });
+  }
+
+  {
+    const {
+      query,
+      mutation: [, mutation],
+    } = await takeSnapshot();
+
+    expect(query).toStrictEqualTyped({
+      data: {
+        event: {
+          __typename: "Event",
+          id: "1",
+          startDate: new Date(2026, 0, 1),
+        },
+      },
+      dataState: "complete",
+      loading: true,
+      networkStatus: NetworkStatus.refetch,
+      previousData: undefined,
+      variables: {},
+    });
+
+    expect(mutation).toStrictEqualTyped({
+      data: undefined,
+      error: undefined,
+      called: true,
+      loading: true,
+    });
+  }
+
+  {
+    const {
+      query,
+      mutation: [, mutation],
+    } = await takeSnapshot();
+
+    expect(query).toStrictEqualTyped({
+      data: {
+        event: {
+          __typename: "Event",
+          id: "1",
+          startDate: new Date(2026, 2, 3),
+        },
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: {
+        event: {
+          __typename: "Event",
+          id: "1",
+          startDate: new Date(2026, 0, 1),
+        },
+      },
+      variables: {},
+    });
+
+    expect(mutation).toStrictEqualTyped({
+      data: undefined,
+      error: undefined,
+      called: true,
+      loading: true,
+    });
+  }
+
+  {
+    const {
+      query,
+      mutation: [, mutation],
+    } = await takeSnapshot();
+
+    expect(query).toStrictEqualTyped({
+      data: {
+        event: {
+          __typename: "Event",
+          id: "1",
+          startDate: new Date(2026, 2, 3),
+        },
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: {
+        event: {
+          __typename: "Event",
+          id: "1",
+          startDate: new Date(2026, 0, 1),
+        },
+      },
+      variables: {},
+    });
+
+    expect(mutation).toStrictEqualTyped({
+      data: {
+        createEvent: {
+          __typename: "Event",
+          id: "2",
+          startDate: new Date(2026, 1, 2),
+        },
+      },
+      error: undefined,
+      called: true,
+      loading: false,
+    });
+  }
+
+  await expect(takeSnapshot).not.toRerender();
+
+  expect(client.readQuery({ query })).toStrictEqualTyped({
+    event: {
+      __typename: "Event",
+      id: "1",
+      startDate: new Date(2026, 2, 3),
     },
   });
 });

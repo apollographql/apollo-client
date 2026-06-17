@@ -15,6 +15,7 @@ import type { FormattedExecutionResult } from 'graphql';
 import type { FragmentDefinitionNode } from 'graphql';
 import { gql } from 'graphql-tag';
 import type { GraphQLFormattedError } from 'graphql';
+import type { GraphQLScalarType } from 'graphql';
 import type { InlineFragmentNode } from 'graphql';
 import type { InteropObservable } from 'rxjs';
 import type { NextNotification } from 'rxjs';
@@ -2822,6 +2823,8 @@ export class Scalar<TSerialized, TParsed> {
     coerceToParsed(value: TSerialized | TParsed): TParsed;
     // (undocumented)
     coerceToSerialized(value: TSerialized | TParsed): TSerialized;
+    // (undocumented)
+    static fromGraphQLScalarType<TSerialized, TParsed>(scalarType: GraphQLScalarType<TParsed, TSerialized>, options?: Pick<Scalar.Options<NoInfer_2<TSerialized>, NoInfer_2<TParsed>>, "is">): Scalar<TSerialized, TParsed>;
     // (undocumented)
     is(value: TSerialized | TParsed): value is TParsed;
     // (undocumented)

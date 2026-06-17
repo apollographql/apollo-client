@@ -1,3 +1,5 @@
+import { GraphQLScalarType, version as graphqlVersion } from "graphql";
+
 import type { TypedDocumentNode } from "@apollo/client";
 import { gql } from "@apollo/client";
 import { InMemoryCache, Scalar } from "@apollo/client/cache";
@@ -5,6 +7,8 @@ import {
   ObservableStream,
   spyOnConsole,
 } from "@apollo/client/testing/internal";
+
+const IS_GRAPHQL_17 = graphqlVersion.startsWith("17");
 
 const dateTimeScalar = new Scalar<string, Date>({
   serialize: (value) => value.toISOString(),
@@ -25,6 +29,166 @@ const jsonObjectScalar = new Scalar<
   parse: (value) => new Map(Object.entries(value)),
   is: (value) => value instanceof Map,
 });
+
+test("creates a scalar from a GraphQLScalarType", () => {
+  const graphQLScalar = new GraphQLScalarType<Date, string>({
+    name: "DateTime",
+    serialize: (value) => {
+      if (!(value instanceof Date)) {
+        throw new TypeError("Expected a Date");
+      }
+
+      return value.toISOString();
+    },
+    parseValue: (value) => {
+      if (typeof value !== "string") {
+        throw new TypeError("Expected a string");
+      }
+
+      return new Date(value);
+    },
+  });
+
+  const scalar = Scalar.fromGraphQLScalarType(graphQLScalar);
+
+  expect(scalar.parse("2026-01-01T00:00:00.000Z")).toEqual(
+    new Date("2026-01-01T00:00:00.000Z")
+  );
+  expect(scalar.serialize(new Date("2026-01-01T00:00:00.000Z"))).toBe(
+    "2026-01-01T00:00:00.000Z"
+  );
+});
+
+if (IS_GRAPHQL_17) {
+  test("creates a scalar from a GraphQLScalarType using GraphQL 17 initializer", () => {
+    const graphQLScalar = new GraphQLScalarType<Date, string>({
+      name: "DateTime",
+      coerceOutputValue: (value) => {
+        if (!(value instanceof Date)) {
+          throw new TypeError("Expected a Date");
+        }
+
+        return value.toISOString();
+      },
+      coerceInputValue: (value) => {
+        if (typeof value !== "string") {
+          throw new TypeError("Expected a string");
+        }
+
+        return new Date(value);
+      },
+    });
+
+    const scalar = Scalar.fromGraphQLScalarType(graphQLScalar);
+
+    expect(scalar.parse("2026-01-01T00:00:00.000Z")).toEqual(
+      new Date("2026-01-01T00:00:00.000Z")
+    );
+    expect(scalar.serialize(new Date("2026-01-01T00:00:00.000Z"))).toBe(
+      "2026-01-01T00:00:00.000Z"
+    );
+  });
+}
+
+test("uses the configured type guard when coercing values", () => {
+  const graphQLScalar = new GraphQLScalarType<number, string>({
+    name: "Price",
+    serialize: (value) => {
+      if (typeof value !== "number") {
+        throw new TypeError("Expected a number");
+      }
+
+      return value.toFixed(2);
+    },
+    parseValue: (value) => {
+      if (typeof value !== "string") {
+        throw new TypeError("Expected a string");
+      }
+
+      return Number(value);
+    },
+  });
+
+  const scalar = Scalar.fromGraphQLScalarType(graphQLScalar, {
+    is: (value) => typeof value === "number",
+  });
+
+  expect(scalar.coerceToParsed("12.34")).toBe(12.34);
+  expect(scalar.coerceToParsed(12.34)).toBe(12.34);
+  expect(scalar.coerceToSerialized(12.34)).toBe("12.34");
+  expect(scalar.coerceToSerialized("12.34")).toBe("12.34");
+});
+
+if (IS_GRAPHQL_17) {
+  test("uses the configured type guard with a GraphQL 17 initializer", () => {
+    const graphQLScalar = new GraphQLScalarType<number, string>({
+      name: "Price",
+      coerceOutputValue: (value) => {
+        if (typeof value !== "number") {
+          throw new TypeError("Expected a number");
+        }
+
+        return value.toFixed(2);
+      },
+      coerceInputValue: (value) => {
+        if (typeof value !== "string") {
+          throw new TypeError("Expected a string");
+        }
+
+        return Number(value);
+      },
+    });
+
+    const scalar = Scalar.fromGraphQLScalarType(graphQLScalar, {
+      is: (value) => typeof value === "number",
+    });
+
+    expect(scalar.coerceToParsed("12.34")).toBe(12.34);
+    expect(scalar.coerceToParsed(12.34)).toBe(12.34);
+    expect(scalar.coerceToSerialized(12.34)).toBe("12.34");
+    expect(scalar.coerceToSerialized("12.34")).toBe("12.34");
+  });
+}
+
+test("preserves errors thrown by the GraphQLScalarType", () => {
+  const graphQLScalar = new GraphQLScalarType<Date, string>({
+    name: "DateTime",
+    serialize: () => {
+      throw new TypeError("Unable to serialize DateTime");
+    },
+    parseValue: () => {
+      throw new TypeError("Unable to parse DateTime");
+    },
+  });
+
+  const scalar = Scalar.fromGraphQLScalarType(graphQLScalar);
+
+  expect(() => scalar.parse("invalid")).toThrow("Unable to parse DateTime");
+  expect(() => scalar.serialize(new Date())).toThrow(
+    "Unable to serialize DateTime"
+  );
+});
+
+if (IS_GRAPHQL_17) {
+  test("preserves errors thrown by a GraphQL 17 initializer", () => {
+    const graphQLScalar = new GraphQLScalarType<Date, string>({
+      name: "DateTime",
+      coerceOutputValue: () => {
+        throw new TypeError("Unable to serialize DateTime");
+      },
+      coerceInputValue: () => {
+        throw new TypeError("Unable to parse DateTime");
+      },
+    });
+
+    const scalar = Scalar.fromGraphQLScalarType(graphQLScalar);
+
+    expect(() => scalar.parse("invalid")).toThrow("Unable to parse DateTime");
+    expect(() => scalar.serialize(new Date())).toThrow(
+      "Unable to serialize DateTime"
+    );
+  });
+}
 
 test("getScalar returns a scalar object for a configured scalar", () => {
   const cache = new InMemoryCache({

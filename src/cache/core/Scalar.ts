@@ -1,3 +1,5 @@
+import type { GraphQLScalarType } from "graphql";
+
 import type { NoInfer } from "@apollo/client/utilities/internal";
 
 export declare namespace Scalar {
@@ -14,6 +16,17 @@ export declare namespace Scalar {
 
 export class Scalar<TSerialized, TParsed> {
   private options: Scalar.Options<TSerialized, TParsed>;
+
+  static fromGraphQLScalarType<TSerialized, TParsed>(
+    scalarType: GraphQLScalarType<TParsed, TSerialized>,
+    options?: Pick<Scalar.Options<NoInfer<TSerialized>, NoInfer<TParsed>>, "is">
+  ): Scalar<TSerialized, TParsed> {
+    return new Scalar<TSerialized, TParsed>({
+      ...options,
+      parse: scalarType.parseValue,
+      serialize: scalarType.serialize,
+    });
+  }
 
   constructor(options: Scalar.Options<TSerialized, TParsed>) {
     this.options = options;

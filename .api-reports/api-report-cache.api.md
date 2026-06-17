@@ -20,6 +20,7 @@ import type { FragmentType } from '@apollo/client/masking';
 import { getApolloCacheMemoryInternals } from '@apollo/client/utilities/internal';
 import type { GetDataState } from '@apollo/client';
 import { getInMemoryCacheMemoryInternals } from '@apollo/client/utilities/internal';
+import type { GraphQLScalarType } from 'graphql';
 import type { Incremental } from '@apollo/client/incremental';
 import type { InlineFragmentNode } from 'graphql';
 import type { IsAny } from '@apollo/client/utilities/internal';
@@ -996,6 +997,8 @@ export class Scalar<TSerialized, TParsed> {
     coerceToParsed(value: TSerialized | TParsed): TParsed;
     // (undocumented)
     coerceToSerialized(value: TSerialized | TParsed): TSerialized;
+    // (undocumented)
+    static fromGraphQLScalarType<TSerialized, TParsed>(scalarType: GraphQLScalarType<TParsed, TSerialized>, options?: Pick<Scalar.Options<NoInfer_2<TSerialized>, NoInfer_2<TParsed>>, "is">): Scalar<TSerialized, TParsed>;
     // (undocumented)
     is(value: TSerialized | TParsed): value is TParsed;
     // (undocumented)

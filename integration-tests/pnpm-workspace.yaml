@@ -7,3 +7,4 @@ packages:
   - node
   - wrapping-library
   - shared
+  - type-tests

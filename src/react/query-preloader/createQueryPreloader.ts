@@ -4,6 +4,7 @@ import type {
   DocumentNode,
   ErrorPolicy,
   OperationVariables,
+  RefetchOn,
   RefetchWritePolicy,
   TypedDocumentNode,
   WatchQueryFetchPolicy,
@@ -17,6 +18,8 @@ import {
 } from "@apollo/client/react/internal";
 import type {
   NoInfer,
+  OptionWithFallback,
+  SignatureStyle,
   VariablesOption,
 } from "@apollo/client/utilities/internal";
 import { FinalizationRegistry } from "@apollo/client/utilities/internal/ponyfills";
@@ -41,6 +44,8 @@ export type PreloadQueryOptions<
   returnPartialData?: boolean;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy:member} */
   refetchWritePolicy?: RefetchWritePolicy;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchOn:member} */
+  refetchOn?: RefetchOn.Option;
 } & VariablesOption<TVariables>;
 
 /**
@@ -70,44 +75,8 @@ export type PreloadQueryOptions<
  * }
  * ```
  */
-export interface PreloadQueryFunction {
-  /** {@inheritDoc @apollo/client/react!PreloadQueryFunction:interface} */
-  <TData = unknown, TVariables extends OperationVariables = OperationVariables>(
-    query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-    options: PreloadQueryOptions<NoInfer<TVariables>> & {
-      returnPartialData: true;
-      errorPolicy: "ignore" | "all";
-    }
-  ): PreloadedQueryRef<
-    TData,
-    TVariables,
-    "complete" | "streaming" | "partial" | "empty"
-  >;
-
-  /** {@inheritDoc @apollo/client/react!PreloadQueryFunction:interface} */
-  <TData = unknown, TVariables extends OperationVariables = OperationVariables>(
-    query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-    options: PreloadQueryOptions<NoInfer<TVariables>> & {
-      errorPolicy: "ignore" | "all";
-    }
-  ): PreloadedQueryRef<TData, TVariables, "complete" | "streaming" | "empty">;
-
-  /** {@inheritDoc @apollo/client/react!PreloadQueryFunction:interface} */
-  <TData = unknown, TVariables extends OperationVariables = OperationVariables>(
-    query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-    options: PreloadQueryOptions<NoInfer<TVariables>> & {
-      returnPartialData: true;
-    }
-  ): PreloadedQueryRef<TData, TVariables, "complete" | "streaming" | "partial">;
-
-  /** {@inheritDoc @apollo/client/react!PreloadQueryFunction:interface} */
-  <TData = unknown, TVariables extends OperationVariables = OperationVariables>(
-    query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-    ...[options]: {} extends TVariables ?
-      [options?: PreloadQueryOptions<NoInfer<TVariables>>]
-    : [options: PreloadQueryOptions<NoInfer<TVariables>>]
-  ): PreloadedQueryRef<TData, TVariables, "complete" | "streaming">;
-
+export interface PreloadQueryFunction
+  extends PreloadQueryFunction.Signatures.Evaluated {
   /**
    * A function that returns a promise that resolves when the query has finished
    * loading. The promise resolves with the `QueryReference` itself.
@@ -147,6 +116,214 @@ export interface PreloadQueryFunction {
   toPromise<TQueryRef extends PreloadedQueryRef<any, any, any>>(
     queryRef: TQueryRef
   ): Promise<TQueryRef>;
+}
+
+export declare namespace PreloadQueryFunction {
+  export interface DefaultOptions
+    extends ApolloClient.DefaultOptions.WatchQuery.Calculated {}
+
+  export namespace DocumentationTypes {
+    /**
+     * @deprecated Avoid manually specifying generics on `preloadQuery`.
+     * Instead, rely on TypeScript's type inference along with a correctly typed `TypedDocumentNode` to get accurate types for your query results.
+     *
+     * {@inheritDoc @apollo/client/react!PreloadQueryFunction:interface}
+     */
+    export interface PreloadQueryFunction_Deprecated
+      extends PreloadQueryFunction {}
+  }
+
+  export type ResultForOptions<
+    TData,
+    TVariables extends OperationVariables,
+    TOptions extends Record<string, never> | PreloadQueryOptions<TVariables>,
+  > = TOptions extends any ?
+    PreloadedQueryRef<
+      TData,
+      TVariables,
+      ResultForOptions.States<TOptions, DefaultOptions>
+    >
+  : never;
+
+  export namespace ResultForOptions {
+    export type States<
+      TOptions,
+      TDefaultOptions extends DefaultOptions = DefaultOptions,
+    > =
+      | "complete"
+      | "streaming"
+      | (OptionWithFallback<TOptions, TDefaultOptions, "errorPolicy"> extends (
+          "none"
+        ) ?
+          never
+        : "empty")
+      | (OptionWithFallback<
+          TOptions,
+          TDefaultOptions,
+          "returnPartialData"
+        > extends false ?
+          never
+        : "partial");
+  }
+
+  export namespace Signatures {
+    export interface Classic {
+      // _INFERENCE_ONLY_DO_NOT_SPECIFY is used to distinguish between inferred
+      // generics arguments and explicit generic arguments so that we can
+      // provide a `@deprecated` signature for explicit generic arguments. As
+      // soon as a user provides a generic arg (e.g. preloadQuery<TData>(query))`,
+      // the overload falls through to the overloads without
+      // _INFERENCE_ONLY_DO_NOT_SPECIFY.
+
+      /** {@inheritDoc @apollo/client/react!PreloadQueryFunction:interface} */
+      <
+        TData,
+        TVariables extends OperationVariables,
+        _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
+      >(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        options: PreloadQueryOptions<NoInfer<TVariables>> & {
+          returnPartialData: true;
+          errorPolicy: "ignore" | "all";
+        }
+      ): PreloadedQueryRef<
+        TData,
+        TVariables,
+        "complete" | "streaming" | "partial" | "empty"
+      >;
+
+      /** {@inheritDoc @apollo/client/react!PreloadQueryFunction:interface} */
+      <
+        TData,
+        TVariables extends OperationVariables,
+        _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
+      >(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        options: PreloadQueryOptions<NoInfer<TVariables>> & {
+          errorPolicy: "ignore" | "all";
+        }
+      ): PreloadedQueryRef<
+        TData,
+        TVariables,
+        "complete" | "streaming" | "empty"
+      >;
+
+      /** {@inheritDoc @apollo/client/react!PreloadQueryFunction:interface} */
+      <
+        TData,
+        TVariables extends OperationVariables,
+        _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
+      >(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        options: PreloadQueryOptions<NoInfer<TVariables>> & {
+          returnPartialData: true;
+        }
+      ): PreloadedQueryRef<
+        TData,
+        TVariables,
+        "complete" | "streaming" | "partial"
+      >;
+
+      /** {@inheritDoc @apollo/client/react!PreloadQueryFunction:interface} */
+      <
+        TData,
+        TVariables extends OperationVariables,
+        _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
+      >(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        ...[options]: {} extends TVariables ?
+          [options?: PreloadQueryOptions<NoInfer<TVariables>>]
+        : [options: PreloadQueryOptions<NoInfer<TVariables>>]
+      ): PreloadedQueryRef<TData, TVariables, "complete" | "streaming">;
+
+      /** {@inheritDoc @apollo/client/react!PreloadQueryFunction.DocumentationTypes.PreloadQueryFunction_Deprecated:interface} */
+      <TData, TVariables extends OperationVariables = OperationVariables>(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        options: PreloadQueryOptions<NoInfer<TVariables>> & {
+          returnPartialData: true;
+          errorPolicy: "ignore" | "all";
+        }
+      ): PreloadedQueryRef<
+        TData,
+        TVariables,
+        "complete" | "streaming" | "partial" | "empty"
+      >;
+
+      /** {@inheritDoc @apollo/client/react!PreloadQueryFunction.DocumentationTypes.PreloadQueryFunction_Deprecated:interface} */
+      <TData, TVariables extends OperationVariables = OperationVariables>(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        options: PreloadQueryOptions<NoInfer<TVariables>> & {
+          errorPolicy: "ignore" | "all";
+        }
+      ): PreloadedQueryRef<
+        TData,
+        TVariables,
+        "complete" | "streaming" | "empty"
+      >;
+
+      /** {@inheritDoc @apollo/client/react!PreloadQueryFunction.DocumentationTypes.PreloadQueryFunction_Deprecated:interface} */
+      <TData, TVariables extends OperationVariables = OperationVariables>(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        options: PreloadQueryOptions<NoInfer<TVariables>> & {
+          returnPartialData: true;
+        }
+      ): PreloadedQueryRef<
+        TData,
+        TVariables,
+        "complete" | "streaming" | "partial"
+      >;
+
+      /** {@inheritDoc @apollo/client/react!PreloadQueryFunction.DocumentationTypes.PreloadQueryFunction_Deprecated:interface} */
+      <TData, TVariables extends OperationVariables = OperationVariables>(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        ...[options]: {} extends TVariables ?
+          [options?: PreloadQueryOptions<NoInfer<TVariables>>]
+        : [options: PreloadQueryOptions<NoInfer<TVariables>>]
+      ): PreloadedQueryRef<TData, TVariables, "complete" | "streaming">;
+    }
+
+    /** {@inheritDoc @apollo/client/react!PreloadQueryFunction:interface} */
+    export interface Modern {
+      /** {@inheritDoc @apollo/client/react!PreloadQueryFunction:interface} */
+      <
+        TData,
+        TVariables extends OperationVariables,
+        // this overload should never be manually defined, it should always be inferred
+        TOptions extends never,
+      >(
+        query: {} extends TVariables ?
+          DocumentNode | TypedDocumentNode<TData, TVariables>
+        : // this overload should only be accessible if all `TVariables` are optional
+          never
+      ): PreloadQueryFunction.ResultForOptions<
+        TData,
+        TVariables,
+        Record<string, never>
+      >;
+
+      /** {@inheritDoc @apollo/client/react!PreloadQueryFunction:interface} */
+      <
+        TData,
+        TVariables extends OperationVariables,
+        // this overload should never be manually defined, it should always be inferred
+        TOptions extends PreloadQueryOptions<NoInfer<TVariables>> &
+          VariablesOption<
+            TVariables & {
+              [K in Exclude<
+                keyof TOptions["variables"],
+                keyof TVariables
+              >]?: never;
+            }
+          >,
+      >(
+        query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+        ...[options]: {} extends TVariables ? [options?: TOptions]
+        : [options: TOptions]
+      ): PreloadQueryFunction.ResultForOptions<TData, TVariables, TOptions>;
+    }
+
+    export type Evaluated = SignatureStyle extends "classic" ? Classic : Modern;
+  }
 }
 
 /**

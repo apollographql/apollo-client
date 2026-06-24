@@ -708,7 +708,7 @@ export class QueryManager {
         const oq = new ObservableQuery({
           queryManager: this,
           options: {
-            ...mergeOptions(this.defaultOptions.watchQuery, options),
+            ...mergeOptions(this.defaultOptions.watchQuery as any, options),
             fetchPolicy: "network-only",
           },
         });

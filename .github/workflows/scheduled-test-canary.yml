@@ -14,6 +14,9 @@ on:
         description: "React and React-DOM versions"
         required: true
         default: '["canary", "experimental"]'
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -26,12 +29,15 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           ref: ${{ matrix.branch }}
+          persist-credentials: false
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
           node-version: ">=23.6.0"
-      - uses: bahmutov/npm-install@v1
+      - run: npm ci
       - run: |
-          npm install react@${{ matrix.tag }} react-dom@${{ matrix.tag }}
+          npm install react@${MATRIX_TAG} react-dom@${MATRIX_TAG}
+        env:
+          MATRIX_TAG: ${{ matrix.tag }}
       # tests can be flaky, this runs only once a day and we want to minimize false negatives - retry up to three times
       - run: |
           node -e 'console.log("\n\nReact %s, React-DOM %s\n\n", require("react").version, require("react-dom").version)'

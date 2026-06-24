@@ -165,6 +165,7 @@ workflows:
                 [
                   "Core Tests",
                   "Core Tests - RxJS min version",
+                  "Core Tests - GraphQL 16",
                   "ReactDOM 17",
                   "ReactDOM 18",
                   "ReactDOM 19",
@@ -188,6 +189,7 @@ workflows:
                 - vite
                 - vite-swc
                 - wrapping-library
+                - type-tests
                 # -browser-esm would need a package publish to npm/CDNs
               react:
                 - "18.3.0"
@@ -209,6 +211,11 @@ workflows:
                 react: next
               - framework: node
                 react: "18.3.0"
+              # we only test AC-internal types
+              - framework: type-tests
+                react: next
+              - framework: type-tests
+                react: "18.3.0"
       - TestPeerDepTypes:
           name: Test external types for << matrix.externalPackage >>
           requires:
@@ -216,9 +223,8 @@ workflows:
           matrix:
             parameters:
               externalPackage:
-                - "graphql@15"
                 - "graphql@16"
-                - "graphql@^17.0.0-alpha"
+                - "graphql@^17.0.0-rc"
                 - "@types/react@17 @types/react-dom@17"
                 - "@types/react@18 @types/react-dom@18"
                 - "@types/react@19 @types/react-dom@19"

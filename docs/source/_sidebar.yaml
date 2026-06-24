@@ -29,6 +29,8 @@ items:
         href: ./data/typescript
       - label: Refetching
         href: ./data/refetching
+      - label: Event-based refetching
+        href: ./data/event-based-refetching
       - label: Subscriptions
         href: ./data/subscriptions
       - label: Directives

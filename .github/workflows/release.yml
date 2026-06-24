@@ -9,6 +9,8 @@ on:
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
+permissions: {}
+
 jobs:
   release:
     name: Changesets Release
@@ -32,6 +34,7 @@ jobs:
           # Fetch entire git history so  Changesets can generate changelogs
           # with the correct commits
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Check for pre.json file existence
         id: check_files
@@ -46,6 +49,10 @@ jobs:
           registry-url: "https://registry.npmjs.org"
           # deliberately not using a cache for action with elevated permissions, see https://tanstack.com/blog/npm-supply-chain-compromise-postmortem
           package-manager-cache: false
+
+      # `npm stage publish` (https://docs.npmjs.com/staged-publishing) requires
+      # npm >= 11.15.0. Node 24.x currently bundles at most 11.13.0, so upgrade.
+      - run: npm install -g npm@11.15.0
 
       - run: npm ci
 
@@ -73,59 +80,59 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ""
 
-  slack-notification:
-    name: Postrelease Slack Notification
-    runs-on: ubuntu-latest
-    needs: release
-    if: needs.release.result == 'success' && needs.release.outputs.published == 'true'
-    strategy:
-      matrix:
-        package: ${{ fromJSON(needs.release.outputs.publishedPackages) }}
-    steps:
-      - name: Send a Slack notification on publish
-        id: slack
-        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3
-        with:
-          # Slack channel id, channel name, or user id to post message
-          # See also: https://api.slack.com/methods/chat.postMessage#channels
-          # You can pass in multiple channels to post to by providing
-          # a comma-delimited list of channel IDs
-          channel-id: "C01PS0CB41G"
-          payload: |
-            {
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "A new version of `{{ matrix.package.name }}` was released :rocket:"
-                  }
-                },
-                {
-                  "type": "section",
-                  "fields": [
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Version:*\n`${{ matrix.package.version }}`"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Tag:*\n`${{ github.ref_name == 'main' && 'latest' || 'next' }}`"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*GitHub release:*\n<https://github.com/apollographql/apollo-client/releases/tag/${{ matrix.package.name }}@${{ matrix.package.version }}|link>"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*npm releases:*\n<https://www.npmjs.com/package/@apollo/client?activeTab=versions|link>"
-                    }
-                  ]
-                }
-              ]
-            }
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+  # slack-notification:
+  #   name: Postrelease Slack Notification
+  #   runs-on: ubuntu-latest
+  #   needs: release
+  #   if: needs.release.result == 'success' && needs.release.outputs.published == 'true'
+  #   strategy:
+  #     matrix:
+  #       package: ${{ fromJSON(needs.release.outputs.publishedPackages) }}
+  #   steps:
+  #     - name: Send a Slack notification on publish
+  #       id: slack
+  #       uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3
+  #       with:
+  #         # Slack channel id, channel name, or user id to post message
+  #         # See also: https://api.slack.com/methods/chat.postMessage#channels
+  #         # You can pass in multiple channels to post to by providing
+  #         # a comma-delimited list of channel IDs
+  #         channel-id: "C01PS0CB41G"
+  #         payload: |
+  #           {
+  #             "blocks": [
+  #               {
+  #                 "type": "section",
+  #                 "text": {
+  #                   "type": "mrkdwn",
+  #                   "text": "A new version of `{{ matrix.package.name }}` was released :rocket:"
+  #                 }
+  #               },
+  #               {
+  #                 "type": "section",
+  #                 "fields": [
+  #                   {
+  #                     "type": "mrkdwn",
+  #                     "text": "*Version:*\n`${{ matrix.package.version }}`"
+  #                   },
+  #                   {
+  #                     "type": "mrkdwn",
+  #                     "text": "*Tag:*\n`${{ github.ref_name == 'main' && 'latest' || 'next' }}`"
+  #                   },
+  #                   {
+  #                     "type": "mrkdwn",
+  #                     "text": "*GitHub release:*\n<https://github.com/apollographql/apollo-client/releases/tag/${{ matrix.package.name }}@${{ matrix.package.version }}|link>"
+  #                   },
+  #                   {
+  #                     "type": "mrkdwn",
+  #                     "text": "*npm releases:*\n<https://www.npmjs.com/package/@apollo/client?activeTab=versions|link>"
+  #                   }
+  #                 ]
+  #               }
+  #             ]
+  #           }
+  #       env:
+  #         SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
 
   tag-next:
     name: Postrelease Tag Next Release
@@ -140,6 +147,8 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
 
       - name: Setup Node.js
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
@@ -156,3 +165,22 @@ jobs:
           if NEXT=$(npm show ${{ matrix.package.name }}@next version) node -e 'process.exit(require("semver").gt("${{ matrix.package.version }}",process.env.NEXT)?0:1)'; then
             npm dist-tag add ${{ matrix.package.name }}@${{ matrix.package.version }} next;
           fi
+
+  devtools-errorcodes:
+    name: Trigger Devtools Error Code Update
+    needs: release
+    if: needs.release.result == 'success' && needs.release.outputs.published == 'true'
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3
+        id: github-actions-bot-app-token
+        with:
+          app-id: 819772
+          private-key: ${{ secrets.APOLLO_GITHUB_ACTIONS_BOT_PRIVATE_KEY }}
+          repositories: apollo-client-devtools
+      - uses: benc-uk/workflow-dispatch@7a027648b88c2413826b6ddd6c76114894dc5ec4 # v1
+        with:
+          workflow: update-errorcodes.yml
+          repo: apollographql/apollo-client-devtools
+          token: ${{ steps.github-actions-bot-app-token.outputs.token }}

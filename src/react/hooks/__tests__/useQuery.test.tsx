@@ -11,7 +11,6 @@ import {
   renderHookToSnapshotStream,
 } from "@testing-library/react-render-stream";
 import { userEvent } from "@testing-library/user-event";
-import { expectTypeOf } from "expect-type";
 import type { DocumentNode, GraphQLFormattedError } from "graphql";
 import { GraphQLError } from "graphql";
 import { gql } from "graphql-tag";
@@ -20,7 +19,6 @@ import React, { Fragment, useEffect, useState } from "react";
 import { asapScheduler, EMPTY, Observable, observeOn, of, Subject } from "rxjs";
 
 import type {
-  DataValue,
   ErrorPolicy,
   FetchPolicy,
   OperationVariables,
@@ -46,10 +44,7 @@ import {
   useQuery,
 } from "@apollo/client/react";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
-import type {
-  SimpleCaseData,
-  VariablesCaseVariables,
-} from "@apollo/client/testing/internal";
+import type { VariablesCaseVariables } from "@apollo/client/testing/internal";
 import {
   createClientWrapper,
   enableFakeTimers,
@@ -61,7 +56,7 @@ import {
   wait,
 } from "@apollo/client/testing/internal";
 import { MockedProvider } from "@apollo/client/testing/react";
-import type { DeepPartial, Reference } from "@apollo/client/utilities";
+import type { Reference } from "@apollo/client/utilities";
 import { concatPagination } from "@apollo/client/utilities";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
@@ -4950,7 +4945,10 @@ describe("useQuery Hook", () => {
       using _disabledAct = disableActEnvironment();
       const { takeSnapshot, getCurrentSnapshot } =
         await renderHookToSnapshotStream(
-          () => useQuery<any>(query, { variables: { limit: 2 } }),
+          () =>
+            useQuery<any>(query, {
+              variables: { limit: 2 },
+            }),
           { wrapper }
         );
 
@@ -11871,6 +11869,341 @@ describe("useQuery Hook", () => {
         });
       }
     });
+
+    // https://github.com/apollographql/apollo-client/issues/13181
+    it("preserves referential equality of masked data on refetch with identical results", async () => {
+      type UserFieldsFragment = {
+        __typename: "User";
+        age: number;
+      } & { " $fragmentName"?: "UserFieldsFragment" };
+
+      interface Query {
+        currentUser: {
+          __typename: "User";
+          id: number;
+          name: string;
+        } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+      }
+
+      const query: TypedDocumentNode<Query, Record<string, never>> = gql`
+        query MaskedQuery {
+          currentUser {
+            id
+            name
+            ...UserFields
+          }
+        }
+
+        fragment UserFields on User {
+          age
+        }
+      `;
+
+      const mocks = [
+        {
+          request: { query },
+          result: {
+            data: {
+              currentUser: {
+                __typename: "User",
+                id: 1,
+                name: "Test User",
+                age: 30,
+              },
+            },
+          },
+          maxUsageCount: 2,
+        },
+      ];
+
+      const client = new ApolloClient({
+        dataMasking: true,
+        cache: new InMemoryCache(),
+        link: new MockLink(mocks),
+      });
+
+      using _disabledAct = disableActEnvironment();
+      const renderStream = await renderHookToSnapshotStream(
+        () => useQuery(query),
+        { wrapper: createClientWrapper(client) }
+      );
+
+      const { takeSnapshot, getCurrentSnapshot } = renderStream;
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { currentUser: { __typename: "User", id: 1, name: "Test User" } },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      const { refetch, data: initialData } = getCurrentSnapshot();
+
+      await expect(refetch()).resolves.toStrictEqualTyped({
+        data: { currentUser: { __typename: "User", id: 1, name: "Test User" } },
+      });
+
+      await expect(renderStream).toRerenderWithSimilarSnapshot({
+        expected: (previous) => ({
+          ...previous,
+          loading: true,
+          networkStatus: NetworkStatus.refetch,
+        }),
+      });
+
+      await expect(renderStream).toRerenderWithSimilarSnapshot({
+        expected: (previous) => ({
+          ...previous,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+        }),
+      });
+
+      await expect(renderStream).not.toRerender();
+
+      expect(getCurrentSnapshot().data).toBe(initialData);
+    });
+
+    // https://github.com/apollographql/apollo-client/issues/13181
+    it("preserves referential equality of masked data on refetch when only masked field changes on refetch", async () => {
+      type UserFieldsFragment = {
+        __typename: "User";
+        age: number;
+      } & { " $fragmentName"?: "UserFieldsFragment" };
+
+      interface Query {
+        currentUser: {
+          __typename: "User";
+          id: number;
+          name: string;
+        } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+      }
+
+      const query: TypedDocumentNode<Query, Record<string, never>> = gql`
+        query MaskedQuery {
+          currentUser {
+            id
+            name
+            ...UserFields
+          }
+        }
+
+        fragment UserFields on User {
+          age
+        }
+      `;
+
+      const mocks = [
+        {
+          request: { query },
+          result: {
+            data: {
+              currentUser: {
+                __typename: "User",
+                id: 1,
+                name: "Test User",
+                age: 30,
+              },
+            },
+          },
+        },
+        {
+          request: { query },
+          result: {
+            data: {
+              currentUser: {
+                __typename: "User",
+                id: 1,
+                name: "Test User",
+                age: 31,
+              },
+            },
+          },
+        },
+      ];
+
+      const client = new ApolloClient({
+        dataMasking: true,
+        cache: new InMemoryCache(),
+        link: new MockLink(mocks),
+      });
+
+      using _disabledAct = disableActEnvironment();
+      const renderStream = await renderHookToSnapshotStream(
+        () => useQuery(query),
+        { wrapper: createClientWrapper(client) }
+      );
+
+      const { takeSnapshot, getCurrentSnapshot } = renderStream;
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { currentUser: { __typename: "User", id: 1, name: "Test User" } },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      const { refetch, data: initialData } = getCurrentSnapshot();
+
+      await expect(refetch()).resolves.toStrictEqualTyped({
+        data: { currentUser: { __typename: "User", id: 1, name: "Test User" } },
+      });
+
+      await expect(renderStream).toRerenderWithSimilarSnapshot({
+        expected: (previous) => ({
+          ...previous,
+          loading: true,
+          networkStatus: NetworkStatus.refetch,
+        }),
+      });
+
+      await expect(renderStream).toRerenderWithSimilarSnapshot({
+        expected: (previous) => ({
+          ...previous,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+        }),
+      });
+
+      await expect(renderStream).not.toRerender();
+
+      expect(getCurrentSnapshot().data).toBe(initialData);
+    });
+
+    // https://github.com/apollographql/apollo-client/issues/13181
+    it("preserves referential equality of masked array data on refetch with identical results", async () => {
+      type UserFieldsFragment = {
+        __typename: "User";
+        age: number;
+      } & { " $fragmentName"?: "UserFieldsFragment" };
+
+      interface Query {
+        currentUsers: Array<
+          {
+            __typename: "User";
+            id: number;
+            name: string;
+          } & {
+            " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment };
+          }
+        >;
+      }
+
+      const query: TypedDocumentNode<Query, Record<string, never>> = gql`
+        query MaskedArrayQuery {
+          currentUsers {
+            id
+            name
+            ...UserFields
+          }
+        }
+
+        fragment UserFields on User {
+          age
+        }
+      `;
+
+      const mockData = {
+        currentUsers: [
+          { __typename: "User" as const, id: 1, name: "User One", age: 25 },
+          { __typename: "User" as const, id: 2, name: "User Two", age: 30 },
+        ],
+      };
+
+      const mocks = [
+        { request: { query }, result: { data: mockData }, maxUsageCount: 2 },
+      ];
+
+      const client = new ApolloClient({
+        dataMasking: true,
+        cache: new InMemoryCache(),
+        link: new MockLink(mocks),
+      });
+
+      using _disabledAct = disableActEnvironment();
+      const renderStream = await renderHookToSnapshotStream(
+        () => useQuery(query),
+        { wrapper: createClientWrapper(client) }
+      );
+
+      const { takeSnapshot, getCurrentSnapshot } = renderStream;
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: {
+          currentUsers: [
+            { __typename: "User", id: 1, name: "User One" },
+            { __typename: "User", id: 2, name: "User Two" },
+          ],
+        },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      const { refetch, data: initialData } = getCurrentSnapshot();
+
+      await expect(refetch()).resolves.toStrictEqualTyped({
+        data: {
+          currentUsers: [
+            { __typename: "User", id: 1, name: "User One" },
+            { __typename: "User", id: 2, name: "User Two" },
+          ],
+        },
+      });
+
+      await expect(renderStream).toRerenderWithSimilarSnapshot({
+        expected: (previous) => ({
+          ...previous,
+          loading: true,
+          networkStatus: NetworkStatus.refetch,
+        }),
+      });
+
+      await expect(renderStream).toRerenderWithSimilarSnapshot({
+        expected: (previous) => ({
+          ...previous,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+        }),
+      });
+
+      await expect(renderStream).not.toRerender();
+
+      expect(getCurrentSnapshot().data).toBe(initialData);
+    });
   });
 
   // https://github.com/apollographql/apollo-client/issues/12229
@@ -13184,381 +13517,3 @@ test("rerenders if changing variables returns same result for different variable
     }
   );
 }
-
-describe.skip("Type Tests", () => {
-  test("returns narrowed TData in default case", () => {
-    const { query } = setupSimpleCase();
-
-    const { data, dataState } = useQuery(query);
-
-    expectTypeOf(dataState).toEqualTypeOf<"empty" | "streaming" | "complete">();
-
-    if (dataState === "complete") {
-      expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
-    }
-
-    if (dataState === "streaming") {
-      expectTypeOf(data).toEqualTypeOf<DataValue.Streaming<SimpleCaseData>>();
-    }
-
-    if (dataState === "empty") {
-      expectTypeOf(data).toEqualTypeOf<undefined>();
-    }
-  });
-
-  test("returns DeepPartial<TData> with returnPartialData: true", () => {
-    const { query } = setupSimpleCase();
-
-    const { data, dataState } = useQuery(query, { returnPartialData: true });
-
-    expectTypeOf(dataState).toEqualTypeOf<
-      "empty" | "streaming" | "complete" | "partial"
-    >();
-
-    if (dataState === "complete") {
-      expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
-    }
-
-    if (dataState === "partial") {
-      expectTypeOf(data).toEqualTypeOf<DeepPartial<SimpleCaseData>>();
-    }
-
-    if (dataState === "streaming") {
-      expectTypeOf(data).toEqualTypeOf<DataValue.Streaming<SimpleCaseData>>();
-    }
-
-    if (dataState === "empty") {
-      expectTypeOf(data).toEqualTypeOf<undefined>();
-    }
-  });
-
-  test("NoInfer prevents adding arbitrary additional variables", () => {
-    const typedNode = {} as TypedDocumentNode<{ foo: string }, { bar: number }>;
-    const { variables } = useQuery(typedNode, {
-      variables: {
-        bar: 4,
-        // @ts-expect-error
-        nonExistingVariable: "string",
-      },
-    });
-    variables?.bar;
-    // @ts-expect-error
-    variables?.nonExistingVariable;
-  });
-
-  test("variables are optional and can be anything with an DocumentNode", () => {
-    const query = gql``;
-
-    useQuery(query);
-    useQuery(query, {});
-    useQuery(query, { variables: {} });
-    useQuery(query, { variables: { foo: "bar" } });
-    useQuery(query, { variables: { bar: "baz" } });
-
-    let skip!: boolean;
-    useQuery(query, skip ? skipToken : undefined);
-    useQuery(query, skip ? skipToken : {});
-    useQuery(query, skip ? skipToken : { variables: {} });
-    useQuery(query, skip ? skipToken : { variables: { foo: "bar" } });
-    useQuery(query, skip ? skipToken : { variables: { bar: "baz" } });
-  });
-
-  test("variables are optional and can be anything with unspecified TVariables on a TypedDocumentNode", () => {
-    const query: TypedDocumentNode<{ greeting: string }> = gql``;
-
-    useQuery(query);
-    useQuery(query, {});
-    useQuery(query, { variables: {} });
-    useQuery(query, { variables: { foo: "bar" } });
-    useQuery(query, { variables: { bar: "baz" } });
-
-    let skip!: boolean;
-    useQuery(query, skip ? skipToken : undefined);
-    useQuery(query, skip ? skipToken : {});
-    useQuery(query, skip ? skipToken : { variables: {} });
-    useQuery(query, skip ? skipToken : { variables: { foo: "bar" } });
-    useQuery(query, skip ? skipToken : { variables: { bar: "baz" } });
-  });
-
-  test("variables are optional when TVariables are empty", () => {
-    const query: TypedDocumentNode<
-      { greeting: string },
-      Record<string, never>
-    > = gql``;
-
-    useQuery(query);
-    useQuery(query, {});
-    useQuery(query, { variables: {} });
-    useQuery(query, {
-      variables: {
-        // @ts-expect-error unknown variables
-        foo: "bar",
-      },
-    });
-
-    let skip!: boolean;
-    useQuery(query, skip ? skipToken : undefined);
-    useQuery(query, skip ? skipToken : {});
-    useQuery(query, skip ? skipToken : { variables: {} });
-    useQuery(
-      query,
-      // @ts-expect-error unknown variables
-      skip ? skipToken : { variables: { foo: "bar" } }
-    );
-  });
-
-  test("is invalid when TVariables is `never`", () => {
-    const query: TypedDocumentNode<{ greeting: string }, never> = gql``;
-
-    // @ts-expect-error
-    useQuery(query);
-    // @ts-expect-error
-    useQuery(query, {});
-    useQuery(query, {
-      // @ts-expect-error
-      variables: {},
-    });
-    useQuery(query, {
-      // @ts-expect-error
-      variables: undefined,
-    });
-    useQuery(query, {
-      // @ts-expect-error
-      variables: {
-        foo: "bar",
-      },
-    });
-
-    let skip!: boolean;
-    // @ts-expect-error
-    useQuery(query, skip ? skipToken : undefined);
-    useQuery(
-      query,
-      // @ts-expect-error
-      skip ? skipToken : {}
-    );
-    useQuery(
-      query,
-      // @ts-expect-error
-      skip ? skipToken : { variables: {} }
-    );
-    useQuery(
-      query,
-      // @ts-expect-error
-      skip ? skipToken : { variables: undefined }
-    );
-    useQuery(
-      query,
-      // @ts-expect-error unknown variables
-      skip ? skipToken : { variables: { foo: "bar" } }
-    );
-  });
-
-  test("optional variables are optional", () => {
-    const query: TypedDocumentNode<{ posts: string[] }, { limit?: number }> =
-      gql``;
-
-    useQuery(query);
-    useQuery(query, {});
-    useQuery(query, { variables: {} });
-    useQuery(query, { variables: { limit: 10 } });
-    useQuery(query, {
-      variables: {
-        // @ts-expect-error unknown variables
-        foo: "bar",
-      },
-    });
-    useQuery(query, {
-      variables: {
-        limit: 10,
-        // @ts-expect-error unknown variables
-        foo: "bar",
-      },
-    });
-
-    let skip!: boolean;
-    useQuery(query, skip ? skipToken : undefined);
-    useQuery(query, skip ? skipToken : {});
-    useQuery(query, skip ? skipToken : { variables: {} });
-    useQuery(query, skip ? skipToken : { variables: { limit: 10 } });
-    useQuery(
-      query,
-      skip ? skipToken : (
-        {
-          variables: {
-            // @ts-expect-error unknown variables
-            foo: "bar",
-          },
-        }
-      )
-    );
-    useQuery(
-      query,
-      skip ? skipToken : (
-        {
-          variables: {
-            limit: 10,
-            // @ts-expect-error unknown variables
-            foo: "bar",
-          },
-        }
-      )
-    );
-  });
-
-  test("enforces required variables when TVariables includes required variables", () => {
-    const query: TypedDocumentNode<{ character: string }, { id: string }> =
-      gql``;
-
-    // @ts-expect-error empty variables
-    useQuery(query);
-    // @ts-expect-error empty variables
-    useQuery(query, {});
-    // @ts-expect-error empty variables
-    useQuery(query, { variables: {} });
-    useQuery(query, { variables: { id: "1" } });
-    useQuery(query, {
-      variables: {
-        // @ts-expect-error unknown variables
-        foo: "bar",
-      },
-    });
-    useQuery(query, {
-      variables: {
-        id: "1",
-        // @ts-expect-error unknown variables
-        foo: "bar",
-      },
-    });
-
-    let skip!: boolean;
-    // @ts-expect-error missing variables option
-    useQuery(query, skip ? skipToken : undefined);
-    useQuery(
-      query,
-      // @ts-expect-error missing variables option
-      skip ? skipToken : {}
-    );
-    useQuery(
-      query,
-      // @ts-expect-error missing required variables
-      skip ? skipToken : { variables: {} }
-    );
-    useQuery(query, skip ? skipToken : { variables: { id: "1" } });
-    useQuery(
-      query,
-      skip ? skipToken : (
-        {
-          variables: {
-            // @ts-expect-error unknown variables
-            foo: "bar",
-          },
-        }
-      )
-    );
-    useQuery(
-      query,
-      skip ? skipToken : (
-        {
-          variables: {
-            id: "1",
-            // @ts-expect-error unknown variables
-            foo: "bar",
-          },
-        }
-      )
-    );
-  });
-
-  test("requires variables with mixed TVariables", () => {
-    const query: TypedDocumentNode<
-      { character: string },
-      { id: string; language?: string }
-    > = gql``;
-
-    // @ts-expect-error empty variables
-    useQuery(query);
-    // @ts-expect-error empty variables
-    useQuery(query, {});
-    // @ts-expect-error empty variables
-    useQuery(query, { variables: {} });
-    useQuery(query, { variables: { id: "1" } });
-    useQuery(query, {
-      // @ts-expect-error missing required variables
-      variables: { language: "en" },
-    });
-    useQuery(query, { variables: { id: "1", language: "en" } });
-    useQuery(query, {
-      variables: {
-        id: "1",
-        // @ts-expect-error unknown variables
-        foo: "bar",
-      },
-    });
-    useQuery(query, {
-      variables: {
-        id: "1",
-        language: "en",
-        // @ts-expect-error unknown variables
-        foo: "bar",
-      },
-    });
-
-    let skip!: boolean;
-    // @ts-expect-error missing variables option
-    useQuery(query, skip ? skipToken : undefined);
-    useQuery(
-      query,
-      // @ts-expect-error missing variables option
-      skip ? skipToken : {}
-    );
-    useQuery(
-      query,
-      // @ts-expect-error missing required variables
-      skip ? skipToken : { variables: {} }
-    );
-    useQuery(query, skip ? skipToken : { variables: { id: "1" } });
-    useQuery(
-      query,
-      skip ? skipToken : { variables: { id: "1", language: "en" } }
-    );
-    useQuery(
-      query,
-      skip ? skipToken : (
-        {
-          variables: {
-            id: "1",
-            // @ts-expect-error unknown variables
-            foo: "bar",
-          },
-        }
-      )
-    );
-    useQuery(
-      query,
-      skip ? skipToken : (
-        {
-          variables: {
-            id: "1",
-            language: "en",
-            // @ts-expect-error unknown variables
-            foo: "bar",
-          },
-        }
-      )
-    );
-  });
-
-  test("always returns empty data/dataState with unconditional skipToken", () => {
-    const query: TypedDocumentNode<
-      { character: string },
-      { id: string; language?: string }
-    > = gql``;
-
-    const { data, dataState, variables } = useQuery(query, skipToken);
-
-    expectTypeOf(data).toEqualTypeOf<undefined>();
-    expectTypeOf(dataState).toEqualTypeOf<"empty">();
-    expectTypeOf(variables).toEqualTypeOf<Record<string, never>>();
-  });
-});

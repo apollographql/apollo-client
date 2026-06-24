@@ -23,6 +23,7 @@ test("uses defaultOptions from `query` key", async () => {
     ]),
     defaultOptions: {
       query: {
+        // @ts-expect-error - default options types not declared
         errorPolicy: "all",
       },
     },
@@ -54,6 +55,7 @@ test("does not use defaultOptions from `watchQuery` key", async () => {
     ]),
     defaultOptions: {
       watchQuery: {
+        // @ts-expect-error - default options types not declared
         errorPolicy: "all",
       },
     },

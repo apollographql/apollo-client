@@ -16,6 +16,9 @@ export type {
 } from "./deprecated.js";
 export { ApolloClient } from "./ApolloClient.js";
 export { ObservableQuery } from "./ObservableQuery.js";
+export { RefetchEventManager } from "./RefetchEventManager.js";
+export { onlineSource } from "./refetchSources/onlineSource.js";
+export { windowFocusSource } from "./refetchSources/windowFocusSource.js";
 export type {
   ErrorPolicy,
   FetchPolicy,
@@ -45,6 +48,8 @@ export type {
   NormalizedExecutionResult,
   OnQueryUpdated,
   OperationVariables,
+  RefetchEvents,
+  RefetchOn,
   RefetchQueriesInclude,
   RefetchQueriesPromiseResults,
   RefetchQueryDescriptor,
@@ -186,9 +191,18 @@ export {
 export { build, version } from "../version.js";
 
 // internal types
+import type {
+  DefaultOptionsParentObject,
+  PossibleDefaultOptions,
+} from "./defaultOptions.js";
 import type { QueryManager } from "./QueryManager.js";
 import type { NextFetchPolicyContext } from "./watchQueryOptions.js";
 /** @internal */
 export declare namespace InternalTypes {
-  export type { NextFetchPolicyContext, QueryManager };
+  export type {
+    DefaultOptionsParentObject,
+    NextFetchPolicyContext,
+    PossibleDefaultOptions,
+    QueryManager,
+  };
 }

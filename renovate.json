@@ -39,10 +39,13 @@
     "glob",
     "prettier",
     "eslint-plugin-react-compiler",
-    "graphql-17-alpha-2",
-    "graphql-17-alpha-9"
+    "graphql-17-alpha2",
+    "graphql-17-alpha9",
+    "rxjs-min",
+    "jsdom"
   ],
   "reviewers": [],
   "reviewersFromCodeOwners": false,
-  "ignoreReviewers": ["team:@apollographql/client-typescript"]
+  "ignoreReviewers": ["team:@apollographql/client-typescript"],
+  "minimumReleaseAge": "7 days"
 }

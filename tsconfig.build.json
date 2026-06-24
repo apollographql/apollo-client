@@ -2,6 +2,7 @@
   "compilerOptions": {
     "noEmit": false,
     "types": [
+      "./src/declarations.d.ts"
       // we don't want to include our types for `jest`, our custom matchers etc.
       // if one of those is referenced in our production code, we want a
       // build error, so we can fix it

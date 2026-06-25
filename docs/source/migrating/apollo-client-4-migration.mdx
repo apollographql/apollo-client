@@ -997,7 +997,7 @@ As a result of this change, the definitions for _active_ and _inactive_ queries 
 
 A query is in standby if it is skipped with the `skip` option or `skipToken` in a React hook, or if the `fetchPolicy` is set to `standby`.
 
-Although both `skip` and `skipToken` put a query in standby, `client.refetchQueries({ include: [QUERY] })` handles them differently before the first execution. Queries you create with `skip: true` can still be refetched because Apollo Client already has their options, including any variables that might be needed for refetching. 
+Although both `skip` and `skipToken` put a query in standby, `client.refetchQueries({ include: [QUERY] })` handles them differently before the first execution. Queries you create with `skip: true` can still be refetched because Apollo Client already has their options, including any variables that might be needed for refetching.
 Queries you create with `skipToken` are excluded until after their first execution because Apollo Client doesn't know which variables to use yet. This behavior was introduced in Apollo Client v4.0.11.
 
 </Note>

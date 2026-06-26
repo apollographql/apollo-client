@@ -287,8 +287,8 @@ Test it by wrapping `render` in `await act()`:
 
 ```jsx title="greeting.test.jsx"
 import "@testing-library/jest-dom";
-import { act, render, screen } from "@testing-library/react";
 import { Suspense } from "react";
+import { act, render, screen } from "@testing-library/react";
 import { MockedProvider } from "@apollo/client/testing/react";
 import { GET_GREETING_QUERY, Greeting } from "./greeting";
 

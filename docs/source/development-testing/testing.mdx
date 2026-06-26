@@ -258,7 +258,7 @@ it("should render dog", async () => {
 
 ## Testing with Suspense
 
-When testing components that use `useSuspenseQuery` or other [suspense hooks](../data/suspense/), wrap your `render` call in `await act()` from React Testing Library.
+When testing components that use `useSuspenseQuery` or other [suspense hooks](../data/suspense/), wrap your React Testing Library `render` call in `await act()`.
 
 Unlike `useQuery`, which keeps the component mounted in a loading state while the request is in flight, `useSuspenseQuery` suspends the component immediately. Without `await act()`, the component stays suspended in your test environment and the test times out.
 

@@ -43,6 +43,6 @@
   "peerDependencies": {
     "@graphql-codegen/plugin-helpers": "^6.0.0",
     "@graphql-codegen/typescript": "^5.0.0",
-    "@graphql-codegen/visitor-plugin-common": "^6.0.0"
+    "@graphql-codegen/visitor-plugin-common": "^6.0.0 || ^7.0.0"
   }
 }

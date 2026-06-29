@@ -469,6 +469,7 @@ Array [
   "getOperationName",
   "getQueryDefinition",
   "getStoreKeyName",
+  "getUnwrappedType",
   "graphQLResultHasError",
   "hasDirectives",
   "hasForcedResolvers",
@@ -496,7 +497,6 @@ Array [
   "streamInfoSymbol",
   "stringifyForDisplay",
   "toQueryResult",
-  "unwrapVariableType",
   "variablesUnknownSymbol",
 ]
 `;

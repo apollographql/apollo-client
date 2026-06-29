@@ -29,8 +29,8 @@ import type {
 import {
   getInMemoryCacheMemoryInternals,
   getOperationDefinition,
+  getUnwrappedType,
   isPlainObject,
-  unwrapVariableType,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
@@ -255,7 +255,7 @@ export class InMemoryCache extends ApolloCache {
     const variableTypes = getOperationDefinition(
       document
     )?.variableDefinitions?.reduce<Record<string, string>>((memo, node) => {
-      memo[node.variable.name.value] = unwrapVariableType(node.type);
+      memo[node.variable.name.value] = getUnwrappedType(node.type);
 
       return memo;
     }, {});

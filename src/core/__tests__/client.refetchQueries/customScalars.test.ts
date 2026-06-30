@@ -1,6 +1,6 @@
 import { of } from "rxjs";
 
-import type { OperationVariables, TypedDocumentNode } from "@apollo/client";
+import type { OperationVariables } from "@apollo/client";
 import { ApolloClient, ApolloLink, gql, NetworkStatus } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { MockLink } from "@apollo/client/testing";

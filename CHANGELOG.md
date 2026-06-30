@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 4.2.4
+
+### Patch Changes
+
+- [#13281](https://github.com/apollographql/apollo-client/pull/13281) [`e4df809`](https://github.com/apollographql/apollo-client/commit/e4df809e87a1d2b72728df53327f531f65411ed3) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fixes an issue where `client.readFragment` and `client.readQuery` ignored the `optimistic` option when passed in the options object.
+
 ## 4.2.3
 
 ### Patch Changes

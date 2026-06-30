@@ -31,6 +31,8 @@ import {
   newInvariantError,
 } from "@apollo/client/utilities/invariant";
 
+import type { ApolloCache } from "../core/cache.js";
+import type { Scalar } from "../core/Scalar.js";
 import type {
   CanReadFunction,
   FieldSpecifier,
@@ -59,6 +61,7 @@ import type {
   MergeInfo,
   NormalizedCache,
   ReadMergeModifyContext,
+  ScalarNames,
 } from "./types.js";
 import type { WriteContext } from "./writeToStore.js";
 
@@ -173,6 +176,7 @@ export type FieldPolicy<
   keyArgs?: KeySpecifier | KeyArgsFunction | false;
   read?: FieldReadFunction<TExisting, TReadResult, TReadOptions>;
   merge?: FieldMergeFunction<TExisting, TIncoming, TMergeOptions> | boolean;
+  scalar?: ScalarNames;
 };
 
 export type StorageType = Record<string, any>;
@@ -354,6 +358,7 @@ type InternalFieldPolicy = {
   keyFn?: KeyArgsFunction;
   read?: FieldReadFunction<any>;
   merge?: FieldMergeFunction<any>;
+  scalar?: keyof ApolloCache.Scalars;
 };
 
 export class Policies {
@@ -565,7 +570,11 @@ export class Policies {
         if (typeof incoming === "function") {
           existing.read = incoming;
         } else {
-          const { keyArgs, read, merge } = incoming;
+          const { keyArgs, read, merge, scalar } = incoming;
+
+          if (scalar) {
+            existing.scalar = scalar;
+          }
 
           existing.keyFn =
             // Pass false to disable argument-based differentiation of
@@ -885,6 +894,15 @@ export class Policies {
     // StoreObject correspond to which original field names.
     return fieldName === fieldNameFromStoreName(storeFieldName) ? storeFieldName
       : fieldName + ":" + storeFieldName;
+  }
+
+  public getScalarForField(
+    typename: string,
+    fieldName: string
+  ): Scalar<any, any> | undefined {
+    const policy = this.getFieldPolicy(typename, fieldName);
+
+    return policy?.scalar ? this.cache.getScalar(policy.scalar) : undefined;
   }
 
   public readField<V = StoreValue>(

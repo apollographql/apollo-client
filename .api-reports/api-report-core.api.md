@@ -52,6 +52,8 @@ import type { IgnoreModifier } from '@apollo/client/cache';
 import type { Incremental } from '@apollo/client/incremental';
 import { InMemoryCache } from '@apollo/client/cache';
 import { InMemoryCacheConfig } from '@apollo/client/cache';
+import { InputObjectConfig } from '@apollo/client/cache';
+import { InputObjectsOption } from '@apollo/client/cache';
 import type { InternalTypes as InternalTypes_2 } from '@apollo/client';
 import type { InteropObservable } from 'rxjs';
 import type { IsAny } from '@apollo/client/utilities/internal';
@@ -87,6 +89,7 @@ import type { Reference as Reference_2 } from '@apollo/client/cache';
 import { RequestHandler } from '@apollo/client/link';
 import { resetCaches } from 'graphql-tag';
 import { rewriteURIForGET } from '@apollo/client/link/http';
+import { Scalar } from '@apollo/client/cache';
 import { selectHttpOptionsAndBody } from '@apollo/client/link/http';
 import { selectHttpOptionsAndBodyInternal } from '@apollo/client/link/http';
 import { selectURI } from '@apollo/client/link/http';
@@ -659,6 +662,10 @@ export { InMemoryCache }
 
 export { InMemoryCacheConfig }
 
+export { InputObjectConfig }
+
+export { InputObjectsOption }
+
 // Warning: (ae-forgotten-export) The symbol "RefetchQueriesIncludeShorthand" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
@@ -1000,7 +1007,7 @@ class QueryManager {
     // (undocumented)
     broadcastQueries(): void;
     // (undocumented)
-    get cache(): ApolloCache;
+    get cache(): Cache_2.Implementation;
     // (undocumented)
     clearStore(options?: Cache_2.ResetOptions): Promise<void>;
     // (undocumented)
@@ -1243,6 +1250,8 @@ export { RequestHandler }
 export { resetCaches }
 
 export { rewriteURIForGET }
+
+export { Scalar }
 
 export { selectHttpOptionsAndBody }
 

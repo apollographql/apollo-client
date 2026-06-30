@@ -1,0 +1,164 @@
+import { ApolloClient, ApolloLink, gql } from "@apollo/client";
+import { InMemoryCache } from "@apollo/client/cache";
+import { dateScalar } from "@apollo/client/testing/internal";
+
+test("serializes scalar variables used in field arguments", () => {
+  const client = new ApolloClient({
+    cache: new InMemoryCache({ scalars: { Date: dateScalar } }),
+    link: ApolloLink.empty(),
+  });
+  const query = gql`
+    query Event($date: Date!) {
+      event(date: $date) {
+        name
+      }
+    }
+  `;
+
+  client.writeQuery({
+    query,
+    variables: { date: "2026-01-01" },
+    data: {
+      event: { __typename: "Event", name: "GraphQL Summit" },
+    },
+  });
+
+  expect(
+    client.readQuery({
+      query,
+      variables: { date: new Date(2026, 0, 1) },
+    })
+  ).toStrictEqualTyped({
+    event: { __typename: "Event", name: "GraphQL Summit" },
+  });
+});
+
+test("serializes scalar variables used in directive arguments", () => {
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Query: {
+          fields: {
+            event: {
+              keyArgs: ["@on", ["date"]],
+            },
+          },
+        },
+      },
+    }),
+    link: ApolloLink.empty(),
+  });
+  const query = gql`
+    query Event($date: Date!) {
+      event @on(date: $date) {
+        name
+      }
+    }
+  `;
+
+  client.writeQuery({
+    query,
+    variables: { date: "2026-01-01" },
+    data: {
+      event: { __typename: "Event", name: "GraphQL Summit" },
+    },
+  });
+
+  expect(
+    client.readQuery({
+      query,
+      variables: { date: new Date(2026, 0, 1) },
+    })
+  ).toStrictEqualTyped({
+    event: { __typename: "Event", name: "GraphQL Summit" },
+  });
+});
+
+test("serializes scalar fields in input object variables", () => {
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      inputObjects: {
+        EventFilter: {
+          fields: {
+            date: "Date",
+          },
+        },
+      },
+    }),
+    link: ApolloLink.empty(),
+  });
+  const query = gql`
+    query Event($filter: EventFilter!) {
+      event(filter: $filter) {
+        name
+      }
+    }
+  `;
+
+  client.writeQuery({
+    query,
+    variables: { filter: { date: "2026-01-01" } },
+    data: {
+      event: { __typename: "Event", name: "GraphQL Summit" },
+    },
+  });
+
+  expect(
+    client.readQuery({
+      query,
+      variables: {
+        filter: {
+          date: new Date(2026, 0, 1),
+        },
+      },
+    })
+  ).toStrictEqualTyped({
+    event: { __typename: "Event", name: "GraphQL Summit" },
+  });
+});
+
+test("returns parsed custom scalar fields", () => {
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: {
+        Date: dateScalar,
+      },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: {
+              scalar: "Date",
+            },
+          },
+        },
+      },
+    }),
+    link: ApolloLink.empty(),
+  });
+  const query = gql`
+    query Event {
+      event {
+        startDate
+      }
+    }
+  `;
+
+  client.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        startDate: "2026-01-01",
+      },
+    },
+  });
+
+  expect(client.readQuery({ query })).toStrictEqualTyped({
+    event: {
+      __typename: "Event",
+      startDate: new Date(2026, 0, 1),
+    },
+  });
+});

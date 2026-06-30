@@ -361,6 +361,25 @@ export class StoreReader {
         } else if (!selection.selectionSet) {
           // do nothing
         } else if (fieldValue != null) {
+          if (__DEV__) {
+            const typename = context.store.getFieldValue<string>(
+              objectOrReference,
+              "__typename"
+            );
+            const fieldName = selection.name.value;
+
+            if (typename) {
+              const policy = policies["getFieldPolicy"](typename, fieldName);
+
+              if (policy?.scalar) {
+                invariant.warn(
+                  "The field policy for '%s' is configured as a '%s' scalar, but the field is not a scalar field because it contains a selection set. The field value remains unchanged.",
+                  `${typename}.${fieldName}`,
+                  policy.scalar
+                );
+              }
+            }
+          }
           // In this case, because we know the field has a selection set,
           // it must be trying to query a GraphQLObjectType, which is why
           // fieldValue must be != null.

@@ -9,6 +9,10 @@ declare module "@apollo/client" {
       interface Mutate {}
     }
   }
+  export namespace ApolloCache {
+    export interface Scalars
+      extends Record<string, { serialized: any; parsed: any }> {}
+  }
 
   export interface TypeOverrides {
     cache: ApolloCache;

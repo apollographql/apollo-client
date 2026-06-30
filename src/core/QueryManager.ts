@@ -244,7 +244,7 @@ export class QueryManager {
     return this.client.link;
   }
 
-  get cache() {
+  get cache(): Cache.Implementation {
     return this.client.cache;
   }
 
@@ -314,7 +314,7 @@ export class QueryManager {
       this.mutationStore &&
       (this.mutationStore[queryInfo.id] = {
         mutation,
-        variables,
+        variables: this.cache.serializeVariables(mutation, variables),
         loading: true,
         error: null,
       } as MutationStoreValue);
@@ -909,6 +909,7 @@ export class QueryManager {
     const executeContext: ApolloLink.ExecuteContext = {
       client: this.client,
     };
+    variables = this.cache.serializeVariables(query, variables);
 
     if (serverQuery) {
       const { inFlightLinkObservables, link } = this;

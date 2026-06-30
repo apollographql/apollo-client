@@ -260,7 +260,7 @@ export declare namespace useLazyQuery {
       /**
        * A hook for imperatively executing queries in an Apollo application, e.g. in response to user interaction.
        *
-       * > Refer to the [Queries - Manual execution with useLazyQuery](https://www.apollographql.com/docs/react/data/queries#manual-execution-with-uselazyquery) section for a more in-depth overview of `useLazyQuery`.
+       * > Refer to the [Queries - Fetching in response to user interaction](https://www.apollographql.com/docs/react/data/queries#fetching-in-response-to-user-interaction) section for a more in-depth overview of `useLazyQuery`.
        *
        * @example
        *

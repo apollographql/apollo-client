@@ -210,6 +210,35 @@ describe("ApolloClient", () => {
         })
       ).toEqual({ a: 1, b: 2 });
     });
+
+    it("reads optimistic data when optimistic is passed in options", () => {
+      const cache = new InMemoryCache();
+      const client = new ApolloClient({
+        link: ApolloLink.empty(),
+        cache,
+      });
+
+      const query = gql`
+        query {
+          a
+          b
+        }
+      `;
+
+      cache.recordOptimisticTransaction((proxy) => {
+        proxy.writeQuery({
+          query,
+          data: { a: 1, b: 2 },
+        });
+      }, "1");
+
+      expect(
+        client.readQuery({
+          query,
+          optimistic: true,
+        })
+      ).toEqual({ a: 1, b: 2 });
+    });
   });
 
   it("will read some data from the store with default values", () => {
@@ -554,6 +583,48 @@ describe("ApolloClient", () => {
           `,
         })
       ).toEqual({ __typename: "Foo", a: 1, b: 2, c: 3 });
+    });
+
+    it("reads optimistic data when optimistic is passed in options", () => {
+      const cache = new InMemoryCache();
+      const client = new ApolloClient({
+        link: ApolloLink.empty(),
+        cache,
+      });
+
+      const fragment = gql`
+        fragment NameFragment on Person {
+          id
+          firstName
+          lastName
+        }
+      `;
+
+      cache.recordOptimisticTransaction((proxy) => {
+        proxy.writeFragment({
+          from: { __typename: "Person", id: 1 },
+          fragment,
+          data: {
+            __typename: "Person",
+            id: 1,
+            firstName: "Test",
+            lastName: "User",
+          },
+        });
+      }, "1");
+
+      expect(
+        client.readFragment({
+          from: { __typename: "Person", id: 1 },
+          fragment,
+          optimistic: true,
+        })
+      ).toEqual({
+        __typename: "Person",
+        id: 1,
+        firstName: "Test",
+        lastName: "User",
+      });
     });
   });
 

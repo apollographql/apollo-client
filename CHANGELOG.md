@@ -1,5 +1,129 @@
 # @apollo/client
 
+## 4.3.0-alpha.2
+
+### Minor Changes
+
+- [#13274](https://github.com/apollographql/apollo-client/pull/13274) [`7b10078`](https://github.com/apollographql/apollo-client/commit/7b10078f4bcd8d82890ca438bf7355677fe2f841) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Adds `Scalar.fromGraphQLScalarType` helper to create a `Scalar` instance from an existing graphql.js `GraphQLScalarType`.
+
+  ```ts
+  import { GraphQLScalarType } from "graphql";
+  import { Scalar } from "@apollo/client";
+
+  const dateTimeScalarType = new GraphQLScalarType<Date, string>({
+    // ...
+  });
+
+  const dateTimeScalar = Scalar.fromGraphQLScalarType(dateTimeScalarType, {
+    is: (value) => value instanceof Date,
+  });
+  ```
+
+- [#13252](https://github.com/apollographql/apollo-client/pull/13252) [`ed86234`](https://github.com/apollographql/apollo-client/commit/ed8623485683c38982c87278d1381412ef39a9db) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Adds the plumbing and types implementation for declaring custom scalars and configuring custom scalars in `InMemoryCache`.
+
+  You can declare custom scalar types with declaration merging on the `ApolloCache.Scalars` interface:
+
+  ```ts
+  // apollo.d.ts
+  import "@apollo/client";
+
+  declare module "@apollo/client" {
+    namespace ApolloCache {
+      interface Scalars {
+        Date: { serialized: string; parsed: Date };
+      }
+    }
+  }
+  ```
+
+  This enables the `scalars` option in `InMemoryCache`:
+
+  ```ts
+  import { Scalar } from "@apollo/client";
+
+  const cache = new InMemoryCache({
+    scalars: {
+      Date: new Scalar({
+        parse: (dateString) => new Date(dateString),
+        serialize: (date) => date.toISOString(),
+        is: (value) => value instanceof Date,
+      }),
+    },
+  });
+  ```
+
+- [#13259](https://github.com/apollographql/apollo-client/pull/13259) [`ccaf686`](https://github.com/apollographql/apollo-client/commit/ccaf6867be15e413f08594b54b3516003e28c108) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Adds a `scalar` option to `InMemoryCache` field policies that tells the cache which scalar to use when parsing or serializing the field value.
+
+  ```ts
+  import { Scalar } from "@apollo/client";
+
+  new InMemoryCache({
+    scalars: {
+      DateTime: new Scalar({
+        parse: (dateString) => new Date(dateString),
+        serialize: (date) => date.toISOString(),
+      }),
+    },
+    typePolicies: {
+      Event: {
+        fields: {
+          startTime: {
+            // Parse this field using the DateTime scalar
+            scalar: "DateTime",
+          },
+        },
+      },
+    },
+  });
+  ```
+
+  This scalar definition is now used to properly parse or serialize the field value for cache reads and writes as well as `cache.extract()` and `cache.restore()`.
+
+- [#13273](https://github.com/apollographql/apollo-client/pull/13273) [`0886de1`](https://github.com/apollographql/apollo-client/commit/0886de19ed67ca24bbcc075dcf5a94ba01589902) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Automatically serialize variables that include custom scalar values. This includes cache reads and writes as well as requests to the network.
+
+  For more complex input objects, a new `inputObjects` option is available to `InMemoryCache` that specifies where nested scalar fields are found.
+
+  ```ts
+  const cache = new InMemoryCache({
+    scalars: {
+      DateTime: new Scalar({
+        parse: (value) => new Date(value),
+        serialize: (value) => value.toISOString(),
+        is: (value) => value instanceof Date,
+      }),
+    },
+    inputObjects: {
+      EventFilter: {
+        fields: {
+          date: "DateTime",
+        },
+      },
+    },
+  });
+
+  const client = new ApolloClient({ cache, link });
+
+  await client.query({
+    query: gql`
+      query Event($filter: EventFilter!) {
+        event(filter: $filter) {
+          name
+        }
+      }
+    `,
+    variables: {
+      filter: {
+        date: new Date("2026-01-01T00:00:00.000Z"),
+      },
+    },
+  });
+
+  // The link receives:
+  // { filter: { date: "2026-01-01T00:00:00.000Z" } }
+  ```
+
+- [#13252](https://github.com/apollographql/apollo-client/pull/13252) [`ed86234`](https://github.com/apollographql/apollo-client/commit/ed8623485683c38982c87278d1381412ef39a9db) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Adds the `getScalar` abstract method to `ApolloCache` that cache subclasses override to provide scalar behavior to Apollo Client. Defaults to unconditionally return `undefined` if not specified.
+
 ## 4.3.0-alpha.1
 
 ### Patch Changes

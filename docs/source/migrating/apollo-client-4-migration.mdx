@@ -1002,6 +1002,21 @@ Queries you create with `skipToken` are excluded until after their first executi
 
 </Note>
 
+<Tip>
+
+To keep Apollo Client 3 behavior when you call
+`client.refetchQueries({ include: ["queryName"] })`, use `onQueryUpdated`
+to skip queries in standby:
+
+```ts
+client.refetchQueries({
+  include: ["queryName"],
+  onQueryUpdated: (observable) => observable.options.fetchPolicy !== "standby",
+});
+```
+
+</Tip>
+
 This change affects the queries returned by `client.getObservableQueries` or the queries fetched by `refetchQueries` when using the `"active"` or `"all"` keywords, as these no longer include `ObservableQuery` instances without subscribers.
 
 ### Removal of the `canonizeResults` option

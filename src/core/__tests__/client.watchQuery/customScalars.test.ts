@@ -1,4 +1,4 @@
-import { of } from "rxjs";
+import { delay, of } from "rxjs";
 
 import type { OperationVariables } from "@apollo/client";
 import { ApolloClient, ApolloLink, gql, NetworkStatus } from "@apollo/client";
@@ -496,3 +496,427 @@ test("serializes scalar variables passed to subscribeToMore", async () => {
 
   expect(requestVariables).toStrictEqualTyped({ date: "2026-01-01" });
 });
+
+test("parses cached custom scalar fields with a cache-only fetch policy", async () => {
+  const query = gql`
+    query Event {
+      event {
+        id
+        startDate
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: ApolloLink.empty(),
+  });
+
+  client.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: "2026-01-01",
+      },
+    },
+  });
+  using stream = new ObservableStream(
+    client.watchQuery({ query, fetchPolicy: "cache-only" })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+  await expect(stream).not.toEmitAnything();
+});
+
+test("parses cached custom scalar fields with a cache-first fetch policy", async () => {
+  const query = gql`
+    query Event {
+      event {
+        id
+        startDate
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: ApolloLink.empty(),
+  });
+
+  client.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: "2026-01-01",
+      },
+    },
+  });
+  using stream = new ObservableStream(
+    client.watchQuery({ query, fetchPolicy: "cache-first" })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+  await expect(stream).not.toEmitAnything();
+});
+
+test("parses network custom scalar fields with a cache-first fetch policy", async () => {
+  const query = gql`
+    query Event {
+      event {
+        id
+        startDate
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          event: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+          },
+        },
+      }).pipe(delay(20))
+    ),
+  });
+  using stream = new ObservableStream(
+    client.watchQuery({ query, fetchPolicy: "cache-first" })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+  await expect(stream).toEmitTypedValue({
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+  await expect(stream).not.toEmitAnything();
+});
+
+test("parses cached and network custom scalar fields with a cache-and-network fetch policy", async () => {
+  const query = gql`
+    query Event {
+      event {
+        id
+        startDate
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          event: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-02-02",
+          },
+        },
+      }).pipe(delay(20))
+    ),
+  });
+
+  client.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: "2026-01-01",
+      },
+    },
+  });
+  using stream = new ObservableStream(
+    client.watchQuery({ query, fetchPolicy: "cache-and-network" })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+      },
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: false,
+  });
+  await expect(stream).toEmitTypedValue({
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 1, 2),
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+  await expect(stream).not.toEmitAnything();
+});
+
+test("parses network custom scalar fields with a cache-and-network fetch policy", async () => {
+  const query = gql`
+    query Event {
+      event {
+        id
+        startDate
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          event: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+          },
+        },
+      }).pipe(delay(20))
+    ),
+  });
+  using stream = new ObservableStream(
+    client.watchQuery({ query, fetchPolicy: "cache-and-network" })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+  await expect(stream).toEmitTypedValue({
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+  await expect(stream).not.toEmitAnything();
+});
+
+test("parses network custom scalar fields with a network-only fetch policy", async () => {
+  const query = gql`
+    query Event {
+      event {
+        id
+        startDate
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          event: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+          },
+        },
+      }).pipe(delay(20))
+    ),
+  });
+  using stream = new ObservableStream(
+    client.watchQuery({ query, fetchPolicy: "network-only" })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+  await expect(stream).toEmitTypedValue({
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+  await expect(stream).not.toEmitAnything();
+});
+
+test.failing(
+  "parses custom scalar fields with a no-cache fetch policy",
+  async () => {
+    const query = gql`
+      query Event {
+        event {
+          id
+          startDate
+        }
+      }
+    `;
+    const client = new ApolloClient({
+      cache: new InMemoryCache({
+        scalars: { Date: dateScalar },
+        typePolicies: {
+          Event: {
+            fields: {
+              startDate: { scalar: "Date" },
+            },
+          },
+        },
+      }),
+      link: new ApolloLink(() =>
+        of({
+          data: {
+            event: {
+              __typename: "Event",
+              id: "1",
+              startDate: "2026-01-01",
+            },
+          },
+        }).pipe(delay(20))
+      ),
+    });
+
+    using stream = new ObservableStream(
+      client.watchQuery({
+        query,
+        fetchPolicy: "no-cache",
+      })
+    );
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+    await expect(stream).toEmitTypedValue({
+      data: {
+        event: {
+          __typename: "Event",
+          id: "1",
+          startDate: new Date(2026, 0, 1),
+        },
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+  }
+);

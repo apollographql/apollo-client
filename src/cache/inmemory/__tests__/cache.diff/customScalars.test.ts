@@ -31,16 +31,21 @@ test("serializes scalar variables used in field arguments", () => {
   });
 
   expect(
-    cache.readQuery({
+    cache.diff({
       query,
+      optimistic: false,
       variables: {
         date: new Date(2026, 0, 1),
       },
     })
   ).toStrictEqualTyped({
-    event: {
-      __typename: "Event",
-      name: "GraphQL Summit",
+    complete: true,
+    missing: undefined,
+    result: {
+      event: {
+        __typename: "Event",
+        name: "GraphQL Summit",
+      },
     },
   });
 });
@@ -83,16 +88,21 @@ test("serializes scalar variables used in directive arguments", () => {
   });
 
   expect(
-    cache.readQuery({
+    cache.diff({
       query,
+      optimistic: false,
       variables: {
         date: new Date(2026, 0, 1),
       },
     })
   ).toStrictEqualTyped({
-    event: {
-      __typename: "Event",
-      name: "GraphQL Summit",
+    complete: true,
+    missing: undefined,
+    result: {
+      event: {
+        __typename: "Event",
+        name: "GraphQL Summit",
+      },
     },
   });
 });
@@ -135,8 +145,9 @@ test("serializes scalar fields in input object variables", () => {
   });
 
   expect(
-    cache.readQuery({
+    cache.diff({
       query,
+      optimistic: false,
       variables: {
         filter: {
           date: new Date(2026, 0, 1),
@@ -144,9 +155,13 @@ test("serializes scalar fields in input object variables", () => {
       },
     })
   ).toStrictEqualTyped({
-    event: {
-      __typename: "Event",
-      name: "GraphQL Summit",
+    complete: true,
+    missing: undefined,
+    result: {
+      event: {
+        __typename: "Event",
+        name: "GraphQL Summit",
+      },
     },
   });
 });
@@ -184,10 +199,14 @@ test("returns parsed custom scalar fields", () => {
     },
   });
 
-  expect(cache.readQuery({ query })).toStrictEqualTyped({
-    event: {
-      __typename: "Event",
-      startDate: new Date(2026, 0, 1),
+  expect(cache.diff({ query, optimistic: false })).toStrictEqualTyped({
+    complete: true,
+    missing: undefined,
+    result: {
+      event: {
+        __typename: "Event",
+        startDate: new Date(2026, 0, 1),
+      },
     },
   });
 });

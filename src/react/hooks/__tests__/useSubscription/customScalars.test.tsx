@@ -203,3 +203,270 @@ test("serializes scalar fields in input object variables", async () => {
     filter: { date: "2026-01-01" },
   });
 });
+
+test("parses custom scalar fields with a cache-only fetch policy", async () => {
+  const subscription = gql`
+    subscription EventCreated {
+      eventCreated {
+        id
+        startDate
+      }
+    }
+  `;
+  const link = new MockSubscriptionLink();
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link,
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot } = await renderHookToSnapshotStream(
+    () => useSubscription(subscription, { fetchPolicy: "cache-only" }),
+    { wrapper: createClientWrapper(client) }
+  );
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: undefined,
+    error: undefined,
+    loading: true,
+  });
+
+  link.simulateResult(
+    {
+      result: {
+        data: {
+          eventCreated: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+          },
+        },
+      },
+    },
+    true
+  );
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: {
+      eventCreated: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+      },
+    },
+    error: undefined,
+    loading: false,
+  });
+
+  await expect(takeSnapshot).not.toRerender();
+});
+
+test("parses custom scalar fields with a cache-first fetch policy", async () => {
+  const subscription = gql`
+    subscription EventCreated {
+      eventCreated {
+        id
+        startDate
+      }
+    }
+  `;
+  const link = new MockSubscriptionLink();
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link,
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot } = await renderHookToSnapshotStream(
+    () => useSubscription(subscription, { fetchPolicy: "cache-first" }),
+    { wrapper: createClientWrapper(client) }
+  );
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: undefined,
+    error: undefined,
+    loading: true,
+  });
+
+  link.simulateResult(
+    {
+      result: {
+        data: {
+          eventCreated: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+          },
+        },
+      },
+    },
+    true
+  );
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: {
+      eventCreated: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+      },
+    },
+    error: undefined,
+    loading: false,
+  });
+
+  await expect(takeSnapshot).not.toRerender();
+});
+
+test("parses custom scalar fields with a network-only fetch policy", async () => {
+  const subscription = gql`
+    subscription EventCreated {
+      eventCreated {
+        id
+        startDate
+      }
+    }
+  `;
+  const link = new MockSubscriptionLink();
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link,
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot } = await renderHookToSnapshotStream(
+    () => useSubscription(subscription, { fetchPolicy: "network-only" }),
+    { wrapper: createClientWrapper(client) }
+  );
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: undefined,
+    error: undefined,
+    loading: true,
+  });
+
+  link.simulateResult(
+    {
+      result: {
+        data: {
+          eventCreated: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+          },
+        },
+      },
+    },
+    true
+  );
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: {
+      eventCreated: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+      },
+    },
+    error: undefined,
+    loading: false,
+  });
+
+  await expect(takeSnapshot).not.toRerender();
+});
+
+test.failing(
+  "parses custom scalar fields with a no-cache fetch policy",
+  async () => {
+    const subscription = gql`
+      subscription EventCreated {
+        eventCreated {
+          id
+          startDate
+        }
+      }
+    `;
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      cache: new InMemoryCache({
+        scalars: { Date: dateScalar },
+        typePolicies: {
+          Event: {
+            fields: {
+              startDate: { scalar: "Date" },
+            },
+          },
+        },
+      }),
+      link,
+    });
+
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
+      () => useSubscription(subscription, { fetchPolicy: "no-cache" }),
+      { wrapper: createClientWrapper(client) }
+    );
+
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+      data: undefined,
+      error: undefined,
+      loading: true,
+    });
+
+    link.simulateResult(
+      {
+        result: {
+          data: {
+            eventCreated: {
+              __typename: "Event",
+              id: "1",
+              startDate: "2026-01-01",
+            },
+          },
+        },
+      },
+      true
+    );
+
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+      data: {
+        eventCreated: {
+          __typename: "Event",
+          id: "1",
+          startDate: new Date(2026, 0, 1),
+        },
+      },
+      error: undefined,
+      loading: false,
+    });
+
+    await expect(takeSnapshot).not.toRerender();
+  }
+);

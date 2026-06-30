@@ -1,4 +1,4 @@
-import { of } from "rxjs";
+import { delay, of } from "rxjs";
 
 import type { OperationVariables } from "@apollo/client";
 import { ApolloClient, ApolloLink, gql } from "@apollo/client";
@@ -170,3 +170,234 @@ test("serializes scalar fields in input object variables", async () => {
     },
   });
 });
+
+test("parses custom scalar fields with a cache-only fetch policy", async () => {
+  const subscription = gql`
+    subscription EventCreated {
+      eventCreated {
+        id
+        startDate
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: {
+        Date: dateScalar,
+      },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: {
+              scalar: "Date",
+            },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          eventCreated: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+          },
+        },
+      }).pipe(delay(20))
+    ),
+  });
+
+  using stream = new ObservableStream(
+    client.subscribe({
+      query: subscription,
+      fetchPolicy: "cache-only",
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      eventCreated: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+      },
+    },
+  });
+
+  await expect(stream).toComplete();
+});
+
+test("parses custom scalar fields with a cache-first fetch policy", async () => {
+  const subscription = gql`
+    subscription EventCreated {
+      eventCreated {
+        id
+        startDate
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: {
+        Date: dateScalar,
+      },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: {
+              scalar: "Date",
+            },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          eventCreated: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+          },
+        },
+      }).pipe(delay(20))
+    ),
+  });
+
+  using stream = new ObservableStream(
+    client.subscribe({
+      query: subscription,
+      fetchPolicy: "cache-first",
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      eventCreated: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+      },
+    },
+  });
+
+  await expect(stream).toComplete();
+});
+
+test("parses custom scalar fields with a network-only fetch policy", async () => {
+  const subscription = gql`
+    subscription EventCreated {
+      eventCreated {
+        id
+        startDate
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: {
+        Date: dateScalar,
+      },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: {
+              scalar: "Date",
+            },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          eventCreated: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+          },
+        },
+      }).pipe(delay(20))
+    ),
+  });
+
+  using stream = new ObservableStream(
+    client.subscribe({
+      query: subscription,
+      fetchPolicy: "network-only",
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      eventCreated: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+      },
+    },
+  });
+
+  await expect(stream).toComplete();
+});
+
+test.failing(
+  "parses custom scalar fields with a no-cache fetch policy",
+  async () => {
+    const subscription = gql`
+      subscription EventCreated {
+        eventCreated {
+          id
+          startDate
+        }
+      }
+    `;
+    const client = new ApolloClient({
+      cache: new InMemoryCache({
+        scalars: {
+          Date: dateScalar,
+        },
+        typePolicies: {
+          Event: {
+            fields: {
+              startDate: {
+                scalar: "Date",
+              },
+            },
+          },
+        },
+      }),
+      link: new ApolloLink(() =>
+        of({
+          data: {
+            eventCreated: {
+              __typename: "Event",
+              id: "1",
+              startDate: "2026-01-01",
+            },
+          },
+        }).pipe(delay(20))
+      ),
+    });
+
+    using stream = new ObservableStream(
+      client.subscribe({
+        query: subscription,
+        fetchPolicy: "no-cache",
+      })
+    );
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        eventCreated: {
+          __typename: "Event",
+          id: "1",
+          startDate: new Date(2026, 0, 1),
+        },
+      },
+    });
+
+    await expect(stream).toComplete();
+  }
+);

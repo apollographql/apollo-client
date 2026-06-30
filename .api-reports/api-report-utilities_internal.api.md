@@ -33,6 +33,7 @@ import type { SelectionSetNode } from 'graphql';
 import { StrongCache } from '@wry/caches';
 import type { Subscription } from 'rxjs';
 import type { Trie } from '@wry/trie';
+import type { TypeNode } from 'graphql';
 import type { TypeOverrides } from '@apollo/client';
 import { WeakCache } from '@wry/caches';
 
@@ -342,6 +343,9 @@ export function getQueryDefinition(doc: DocumentNode): OperationDefinitionNode;
 export const getStoreKeyName: ((fieldName: string, args?: Record<string, any> | null, directives?: Directives) => string) & {
     setStringify(s: typeof storeKeyNameStringify): (value: any) => string;
 };
+
+// @internal @deprecated (undocumented)
+export function getUnwrappedType(node: TypeNode): string;
 
 // @public (undocumented)
 const globalCaches: {

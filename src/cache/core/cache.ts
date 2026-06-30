@@ -260,6 +260,35 @@ export abstract class ApolloCache {
     return;
   }
 
+  /**
+   * Serializes scalar values in the variables object
+   */
+  public serializeVariables<
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    document: DocumentNode | TypedDocumentNode<any, TVariables>,
+    variables: NoInfer<TVariables>
+  ): TVariables;
+
+  /**
+   * {@inheritDoc @apollo/client/cache!ApolloCache#serializeVariables:member(1)}
+   */
+  public serializeVariables<
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    document: DocumentNode | TypedDocumentNode<any, TVariables>,
+    variables: NoInfer<TVariables> | undefined
+  ): TVariables | undefined;
+
+  public serializeVariables<
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    document: DocumentNode | TypedDocumentNode<any, TVariables>,
+    variables: NoInfer<TVariables> | undefined
+  ): TVariables | undefined {
+    return variables;
+  }
+
   // Local state API
 
   /**

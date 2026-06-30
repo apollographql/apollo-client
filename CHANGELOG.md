@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 4.3.0-alpha.1
+
+### Patch Changes
+
+- [#13268](https://github.com/apollographql/apollo-client/pull/13268) [`419e2b5`](https://github.com/apollographql/apollo-client/commit/419e2b5bfe573d1eb4c3a0ff7aa9084e6aaa2f37) Thanks [@DaleSeo](https://github.com/DaleSeo)! - Align the remaining cache generic constraints with `Cache.Implementation`. The deprecated React mutation types (`MutationHookOptions`, `MutationFunctionOptions`, `MutationTuple`) and the internal `InternalRefetchQueriesOptions` and `QueryInfo` types still constrained their cache type parameter to `ApolloCache`, so they now match the rest of the overridable cache API.
+
 ## 4.3.0-alpha.0
 
 ### Minor Changes

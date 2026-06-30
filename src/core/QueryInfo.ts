@@ -96,7 +96,7 @@ const queryInfoIds = new WeakMap<QueryManager, number>();
 export class QueryInfo<
   TData,
   TVariables extends OperationVariables = OperationVariables,
-  TCache extends ApolloCache = ApolloCache,
+  TCache extends Cache.Implementation = Cache.Implementation,
 > {
   // TODO remove soon - this should be able to be handled by cancelling old operations before starting new ones
   lastRequestId = 1;

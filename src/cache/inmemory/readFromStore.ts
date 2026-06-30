@@ -362,10 +362,6 @@ export class StoreReader {
           // do nothing
         } else if (fieldValue != null) {
           if (__DEV__) {
-            const typename = context.store.getFieldValue<string>(
-              objectOrReference,
-              "__typename"
-            );
             const fieldName = selection.name.value;
 
             if (typename) {

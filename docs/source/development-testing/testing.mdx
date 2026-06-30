@@ -256,6 +256,70 @@ it("should render dog", async () => {
 });
 ```
 
+## Testing with Suspense
+
+When testing components that use `useSuspenseQuery` or other [suspense hooks](../data/suspense/), wrap your React Testing Library `render` call in `await act()`.
+
+Unlike `useQuery`, which keeps the component mounted in a loading state while the request is in flight, `useSuspenseQuery` suspends the component immediately. Without `await act()`, the component stays suspended in your test environment and the test times out.
+
+For example, given this `Greeting` component that uses `useSuspenseQuery`:
+
+```jsx title="greeting.jsx"
+import { Suspense } from "react";
+import { gql } from "@apollo/client";
+import { useSuspenseQuery } from "@apollo/client/react";
+
+export const GET_GREETING_QUERY = gql`
+  query GetGreeting {
+    greeting {
+      message
+    }
+  }
+`;
+
+export function Greeting() {
+  const { data } = useSuspenseQuery(GET_GREETING_QUERY);
+  return <div>{data.greeting.message}</div>;
+}
+```
+
+Test it by wrapping `render` in `await act()`:
+
+```jsx title="greeting.test.jsx"
+import "@testing-library/jest-dom";
+import { Suspense } from "react";
+import { act, render, screen } from "@testing-library/react";
+import { MockedProvider } from "@apollo/client/testing/react";
+import { GET_GREETING_QUERY, Greeting } from "./greeting";
+
+const mocks = [
+  {
+    request: { query: GET_GREETING_QUERY },
+    result: {
+      data: {
+        greeting: { __typename: "Greeting", message: "Hello" },
+      },
+    },
+  },
+];
+
+it("should render the greeting", async () => {
+  await act(() =>
+    render(
+      <MockedProvider mocks={mocks}>
+        <Suspense fallback={<div>Loading...</div>}>
+          <Greeting />
+        </Suspense>
+      </MockedProvider>
+    )
+  );
+
+  expect(await screen.findByText("Hello")).toBeInTheDocument();
+});
+```
+
+The `await act()` wrapper allows React to process the suspended component and deliver the mock response before assertions run.
+
 ## Testing error states
 
 Your component's error states are just as important to test as its success state, if not more so. You can use the `MockedProvider` component to simulate both network errors and GraphQL errors.

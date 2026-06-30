@@ -995,11 +995,35 @@ As a result of this change, the definitions for _active_ and _inactive_ queries 
 
 <Note>
 
-A query is in standby if it is skipped with the `skip` option or `skipToken` in a React hook, or if the `fetchPolicy` is set to `standby`.
+A query is in standby if it is skipped with the `skip` option or `skipToken` in a React hook, or if the `fetchPolicy` is set to `standby`.<br /><br />
 
 </Note>
 
 This change affects the queries returned by `client.getObservableQueries` or the queries fetched by `refetchQueries` when using the `"active"` or `"all"` keywords, as these no longer include `ObservableQuery` instances without subscribers.
+
+#### Named queries in standby are refetched
+
+Named queries in standby provided to `client.refetchQueries({ include: ["queryName"] })` or `client.refetchQueries({ include: [QUERY] })` were skipped in Apollo Client 3 and a warning was logged.
+
+Apollo Client 4 now refetches named queries in standby. If you want to keep the Apollo Client 3 behavior, use the `onQueryUpdated` option to skip queries in standby:
+
+```ts
+client.refetchQueries({
+  include: ["queryName"],
+  onQueryUpdated: (observableQuery) =>
+    observableQuery.options.fetchPolicy !== "standby",
+});
+```
+
+<MinVersion version="4.0.11">
+
+#### `skipToken` skips refetches until variables are known
+
+</MinVersion>
+
+Although both `skip` and `skipToken` put a query in standby, `client.refetchQueries()` handles them differently before the first execution. Queries you create with `skip: true` can still be refetched because Apollo Client already has their options, including any variables that might be needed for refetching.
+
+Queries you create with `skipToken` are excluded until after their first execution when variables are known. This prevents situations where refetching inactive queries that contain required variables are guaranteed to fail on the server.
 
 ### Removal of the `canonizeResults` option
 

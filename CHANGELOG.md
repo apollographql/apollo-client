@@ -19,7 +19,7 @@
   });
   ```
 
-- [#13270](https://github.com/apollographql/apollo-client/pull/13270) [`d080f11`](https://github.com/apollographql/apollo-client/commit/d080f1114541475842335dfc77e431f455d45de7) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Adds the plumbing and types implementation for declaring custom scalars and configuring custom scalars in `InMemoryCache`.
+- [#13252](https://github.com/apollographql/apollo-client/pull/13252) [`ed86234`](https://github.com/apollographql/apollo-client/commit/ed8623485683c38982c87278d1381412ef39a9db) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Adds the plumbing and types implementation for declaring custom scalars and configuring custom scalars in `InMemoryCache`.
 
   You can declare custom scalar types with declaration merging on the `ApolloCache.Scalars` interface:
 
@@ -52,7 +52,7 @@
   });
   ```
 
-- [#13270](https://github.com/apollographql/apollo-client/pull/13270) [`6031987`](https://github.com/apollographql/apollo-client/commit/60319870f8f38463ba94c798c91752bf8a15eb91) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Adds a `scalar` option to `InMemoryCache` field policies that tells the cache which scalar to use when parsing or serializing the field value.
+- [#13259](https://github.com/apollographql/apollo-client/pull/13259) [`ccaf686`](https://github.com/apollographql/apollo-client/commit/ccaf6867be15e413f08594b54b3516003e28c108) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Adds a `scalar` option to `InMemoryCache` field policies that tells the cache which scalar to use when parsing or serializing the field value.
 
   ```ts
   import { Scalar } from "@apollo/client";
@@ -122,7 +122,7 @@
   // { filter: { date: "2026-01-01T00:00:00.000Z" } }
   ```
 
-- [#13270](https://github.com/apollographql/apollo-client/pull/13270) [`d080f11`](https://github.com/apollographql/apollo-client/commit/d080f1114541475842335dfc77e431f455d45de7) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Adds the `getScalar` abstract method to `ApolloCache` that cache subclasses override to provide scalar behavior to Apollo Client. Defaults to unconditionally return `undefined` if not specified.
+- [#13252](https://github.com/apollographql/apollo-client/pull/13252) [`ed86234`](https://github.com/apollographql/apollo-client/commit/ed8623485683c38982c87278d1381412ef39a9db) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Adds the `getScalar` abstract method to `ApolloCache` that cache subclasses override to provide scalar behavior to Apollo Client. Defaults to unconditionally return `undefined` if not specified.
 
 ## 4.3.0-alpha.1
 

@@ -402,17 +402,21 @@ export abstract class EntityStore implements NormalizedCache {
   }
 
   public extract(): NormalizedCacheObject {
-    const obj = Object.fromEntries(
-      Object.entries(this.toObject()).map(([dataId, storeObject]) => [
-        dataId,
-        storeObject &&
-          this.coerceStoreObject(
-            storeObject,
-            (scalar, value) => scalar.coerceToSerialized(value),
-            storeObject?.__typename || this.policies.rootTypenamesById[dataId]
-          ),
-      ])
-    );
+    let obj = this.toObject();
+
+    if (this.hasScalarConfig()) {
+      obj = Object.fromEntries(
+        Object.entries(obj).map(([dataId, storeObject]) => [
+          dataId,
+          storeObject &&
+            this.coerceStoreObject(
+              storeObject,
+              (scalar, value) => scalar.coerceToSerialized(value),
+              storeObject?.__typename || this.policies.rootTypenamesById[dataId]
+            ),
+        ])
+      );
+    }
 
     const extraRootIds: string[] = [];
     this.getRootIdSet().forEach((id) => {
@@ -426,12 +430,16 @@ export abstract class EntityStore implements NormalizedCache {
     return obj;
   }
 
+  private hasScalarConfig() {
+    return !!this.policies.cache["config"].scalars;
+  }
+
   private coerceStoreObject(
     obj: StoreObject,
     coerce: (scalar: Scalar<any, any>, value: unknown) => unknown,
     typename = obj.__typename
   ): StoreObject {
-    if (!typename || !this.policies.cache["config"].scalars) {
+    if (!typename || !this.hasScalarConfig()) {
       return obj;
     }
 

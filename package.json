@@ -238,6 +238,7 @@
     "react-dom-18": "npm:react-dom@^18",
     "react-error-boundary": "4.0.13",
     "recast": "0.23.11",
+    "relay-runtime": "^14.1.0",
     "rimraf": "5.0.10",
     "rxjs": "7.8.2",
     "rxjs-min": "npm:rxjs@7.3.0",

@@ -28,6 +28,7 @@ export {
   getMainDefinition,
 } from "@apollo/client/utilities/internal";
 
+export type { RelayFieldPolicy } from "./policies/pagination.js";
 export {
   concatPagination,
   offsetLimitPagination,

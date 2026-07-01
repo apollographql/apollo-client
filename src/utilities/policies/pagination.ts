@@ -92,7 +92,7 @@ type TIncomingRelay<TNode> = {
   pageInfo?: TRelayPageInfo;
 };
 
-type RelayFieldPolicy<TNode> = FieldPolicy<
+export type RelayFieldPolicy<TNode> = FieldPolicy<
   TExistingRelay<TNode> | null,
   TIncomingRelay<TNode> | null,
   TIncomingRelay<TNode> | null

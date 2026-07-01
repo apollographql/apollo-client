@@ -53,12 +53,12 @@ jobs:
       - image: cimg/node:23.9.0
     steps:
       - checkout
+      - attach_workspace:
+          at: /tmp/workspace
       - run: pnpm version
-      - run: ls /tmp/workspace
       - run:
           command: pnpm pkg set "pnpm.overrides[@apollo/client-graphql-codegen]=/tmp/workspace/apollo-client-graphql-codegen.tgz"
           working_directory: integration-tests
-      - run: cat integration-tests/package.json
       - run:
           command: pnpm install --no-frozen-lockfile
           working_directory: integration-tests

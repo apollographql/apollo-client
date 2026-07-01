@@ -636,7 +636,7 @@ const _invalidateModifier: unique symbol;
 export { isReference }
 
 // @public (undocumented)
-type KeyArgsFunction = (args: Record<string, any> | null, context: {
+export type KeyArgsFunction = (args: Record<string, any> | null, context: {
     typename: string;
     fieldName: string;
     field: FieldNode | null;
@@ -1009,7 +1009,6 @@ interface WriteContext extends ReadMergeModifyContext {
 // Warnings were encountered during analysis:
 //
 // src/cache/inmemory/policies.ts:173:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:173:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:135:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)

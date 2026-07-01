@@ -68,7 +68,7 @@ export type ResolversTypes = {
   FoodCategory: FoodCategory;
   ID: Scalars["ID"]["output"];
   Int: Scalars["Int"]["output"];
-  Query: {};
+  Query: Record<PropertyKey, never>;
   String: Scalars["String"]["output"];
   User: User;
 };

@@ -48,6 +48,22 @@ jobs:
       - run: npm ci
       - run: npm run check:format
 
+  Codegen:
+    docker:
+      - image: cimg/node:23.9.0
+    steps:
+      - checkout
+      - run: npm version
+      - run: npm ci
+      - run:
+          name: Install codegen runner
+          command: pnpm install --no-frozen-lockfile --filter codegen
+          working_directory: integration-tests
+      - run: npm run test:codegen
+      - run:
+          name: Verify generated fixtures are up to date
+          command: git diff --exit-code src/local-state/__tests__/LocalState/fixtures
+
   Tests:
     docker:
       - image: cimg/node:23.9.0
@@ -175,6 +191,7 @@ workflows:
       - Attest
       - Formatting
       - Lint
+      - Codegen
       - BuildTarball
       - IntegrationTests:
           name: Integration Test << matrix.framework >> with React << matrix.react >>

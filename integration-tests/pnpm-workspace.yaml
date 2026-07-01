@@ -1,5 +1,6 @@
 packages:
   - browser-esm
+  - codegen
   - cra5
   - next
   - vite

@@ -1,0 +1,26 @@
+{
+  "name": "codegen",
+  "version": "1.0.0",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "codegen": "graphql-codegen --config ./codegen.ts"
+  },
+  "dependencies": {
+    "@apollo/client-graphql-codegen": "file:../../codegen",
+    "@graphql-codegen/add": "^5.0.3",
+    "@graphql-codegen/cli": "^5.0.6",
+    "@graphql-codegen/plugin-helpers": "^6.0.0",
+    "@graphql-codegen/typescript": "^5.0.4",
+    "@graphql-codegen/visitor-plugin-common": "^6.0.0",
+    "graphql": "^16.14.2",
+    "prettier": "3.1.1",
+    "typescript": "^5.8.3"
+  },
+  "dependenciesMeta": {
+    "@apollo/client-graphql-codegen": {
+      "injected": true
+    }
+  }
+}

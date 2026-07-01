@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 4.2.5
+
+### Patch Changes
+
+- [#13302](https://github.com/apollographql/apollo-client/pull/13302) [`bb75dd3`](https://github.com/apollographql/apollo-client/commit/bb75dd3a42bab21a0ff14c4482a5cb99a61843eb) Thanks [@tpict](https://github.com/tpict)! - Export `KeyArgsFunction` and `RelayFieldPolicy` types from public entrypoints.
+
 ## 4.2.4
 
 ### Patch Changes

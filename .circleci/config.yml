@@ -109,11 +109,20 @@ jobs:
       - run: npm version
       - run: npm ci
       - run: npm run build && cd dist && mv "$(npm pack --json | jq --raw-output '.[0].filename')" apollo-client.tgz
-      - run: npm run build -w @apollo/client-graphql-codegen && cd codegen/dist && mv "$(npm pack --json | jq --raw-output '.[0].filename')" apollo-client-graphql-codegen.tgz
       - persist_to_workspace:
           root: dist
           paths:
             - apollo-client.tgz
+
+  BuildCodegenTarball:
+    docker:
+      - image: cimg/node:23.9.0
+    steps:
+      - checkout
+      - run: npm run ci:precheck
+      - run: npm version
+      - run: npm ci
+      - run: npm run build -w @apollo/client-graphql-codegen && cd codegen/dist && mv "$(npm pack --json | jq --raw-output '.[0].filename')" apollo-client-graphql-codegen.tgz
       - persist_to_workspace:
           root: codegen/dist
           paths:
@@ -203,8 +212,9 @@ workflows:
       - Lint
       - Codegen:
           requires:
-            - BuildTarball
+            - BuildCodegenTarball
       - BuildTarball
+      - BuildCodegenTarball
       - IntegrationTests:
           name: Integration Test << matrix.framework >> with React << matrix.react >>
           requires:

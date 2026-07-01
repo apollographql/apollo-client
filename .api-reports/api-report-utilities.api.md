@@ -177,10 +177,8 @@ export interface Reference {
 // Warning: (ae-forgotten-export) The symbol "TIncomingRelay" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-type RelayFieldPolicy<TNode> = FieldPolicy<TExistingRelay<TNode> | null, TIncomingRelay<TNode> | null, TIncomingRelay<TNode> | null>;
+export type RelayFieldPolicy<TNode> = FieldPolicy<TExistingRelay<TNode> | null, TIncomingRelay<TNode> | null, TIncomingRelay<TNode> | null>;
 
-// Warning: (ae-forgotten-export) The symbol "RelayFieldPolicy" needs to be exported by the entry point index.d.ts
-//
 // @public
 export function relayStylePagination<TNode extends Reference_2 = Reference_2>(keyArgs?: KeyArgs): RelayFieldPolicy<TNode>;
 

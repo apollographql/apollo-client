@@ -212,11 +212,11 @@ workflows:
       - Attest
       - Formatting
       - Lint
+      - BuildTarball
+      - BuildCodegenTarball
       - Codegen:
           requires:
             - BuildCodegenTarball
-      - BuildTarball
-      - BuildCodegenTarball
       - IntegrationTests:
           name: Integration Test << matrix.framework >> with React << matrix.react >>
           requires:

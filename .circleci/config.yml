@@ -55,6 +55,8 @@ jobs:
       - checkout
       - attach_workspace:
           at: /tmp/workspace
+      - run: npm version
+      - run: npm ci
       - run: pnpm version
       - run:
           command: pnpm pkg set "pnpm.overrides[@apollo/client-graphql-codegen]=/tmp/workspace/apollo-client-graphql-codegen.tgz"

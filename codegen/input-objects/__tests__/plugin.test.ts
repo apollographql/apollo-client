@@ -259,6 +259,125 @@ export const inputObjects: InputObjectsConfig = {
 `);
 });
 
+test("omits fields on retained input objects that reference input objects without custom scalars", async () => {
+  const schema = parse(/* GraphQL */ `
+    scalar DateTime
+
+    input SearchFilter {
+      dateRange: DateRange
+      pagination: PaginationInput
+    }
+
+    input DateRange {
+      start: DateTime
+      end: DateTime
+    }
+
+    input PaginationInput {
+      limit: Int
+      offset: Int
+    }
+
+    type Query {
+      search(filter: SearchFilter): [Result]
+    }
+
+    type Result {
+      id: ID!
+    }
+  `);
+
+  await expect(runCodegen({ schema })).resolves.toMatchInlineSnapshot(`
+"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
+
+export const inputObjects: InputObjectsConfig = {
+  \\"SearchFilter\\": {
+    \\"fields\\": {
+      \\"dateRange\\": \\"DateRange\\"
+    }
+  },
+  \\"DateRange\\": {
+    \\"fields\\": {
+      \\"start\\": \\"DateTime\\",
+      \\"end\\": \\"DateTime\\"
+    }
+  }
+};"
+`);
+});
+
+test("handles self-referencing input objects", async () => {
+  const schema = parse(/* GraphQL */ `
+    scalar DateTime
+
+    input TaskFilter {
+      and: [TaskFilter!]
+      not: TaskFilter
+      dueBefore: DateTime
+    }
+
+    type Query {
+      tasks(filter: TaskFilter): [Task]
+    }
+
+    type Task {
+      id: ID!
+      name: String!
+    }
+  `);
+
+  await expect(runCodegen({ schema })).resolves.toMatchInlineSnapshot(`
+"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
+
+export const inputObjects: InputObjectsConfig = {
+  \\"TaskFilter\\": {
+    \\"fields\\": {
+      \\"and\\": \\"TaskFilter\\",
+      \\"not\\": \\"TaskFilter\\",
+      \\"dueBefore\\": \\"DateTime\\"
+    }
+  }
+};"
+`);
+});
+
+test("omits enum fields from retained input objects", async () => {
+  const schema = parse(/* GraphQL */ `
+    scalar DateTime
+
+    enum Status {
+      OPEN
+      CLOSED
+    }
+
+    input TicketFilter {
+      status: Status
+      after: DateTime
+    }
+
+    type Query {
+      tickets(filter: TicketFilter): [Ticket]
+    }
+
+    type Ticket {
+      id: ID!
+      status: Status
+    }
+  `);
+
+  await expect(runCodegen({ schema })).resolves.toMatchInlineSnapshot(`
+"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
+
+export const inputObjects: InputObjectsConfig = {
+  \\"TicketFilter\\": {
+    \\"fields\\": {
+      \\"after\\": \\"DateTime\\"
+    }
+  }
+};"
+`);
+});
+
 async function runCodegen(
   options: Partial<Omit<Types.GenerateOptions, "schema">> &
     Pick<Types.GenerateOptions, "schema">

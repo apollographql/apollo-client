@@ -266,7 +266,10 @@ export default defineConfig([
     },
   },
   {
-    files: ["scripts/codemods/ac3-to-ac4/**/__tests__/**/*.ts"],
+    files: [
+      "scripts/codemods/ac3-to-ac4/**/__tests__/**/*.ts",
+      "codegen/**/__tests__/**/*.ts",
+    ],
     // rules for tests only
     rules: {
       "local-rules/no-relative-imports": "off",

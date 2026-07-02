@@ -158,6 +158,7 @@ export default defineConfig([
       sourceType: "script",
 
       parserOptions: {
+        tsconfigRootDir: import.meta.dirname,
         project: [
           "./tsconfig.json",
           "./codegen/tsconfig.json",
@@ -232,8 +233,10 @@ export default defineConfig([
       sourceType: "script",
 
       parserOptions: {
+        tsconfigRootDir: import.meta.dirname,
         project: [
           "./tsconfig.tests.json",
+          "./codegen/tsconfig.json",
           "./eslint-local-rules/tsconfig.json",
           "./scripts/codemods/ac3-to-ac4/tsconfig.tests.json",
         ],

@@ -188,6 +188,77 @@ export const inputObjects: InputObjectsConfig = {};"
 `);
 });
 
+test("handles cyclic references between input objects without custom scalars", async () => {
+  const schema = parse(/* GraphQL */ `
+    input PersonFilter {
+      name: String
+      friends: FriendFilter
+    }
+
+    input FriendFilter {
+      person: PersonFilter
+    }
+
+    type Query {
+      people(filter: PersonFilter): [Person]
+    }
+
+    type Person {
+      id: ID!
+      name: String!
+    }
+  `);
+
+  await expect(runCodegen({ schema })).resolves.toMatchInlineSnapshot(`
+"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
+
+export const inputObjects: InputObjectsConfig = {};"
+`);
+});
+
+test("retains cyclic input objects when a custom scalar is in the cycle", async () => {
+  const schema = parse(/* GraphQL */ `
+    scalar DateTime
+
+    input PersonFilter {
+      name: String
+      friends: FriendFilter
+    }
+
+    input FriendFilter {
+      since: DateTime
+      person: PersonFilter
+    }
+
+    type Query {
+      people(filter: PersonFilter): [Person]
+    }
+
+    type Person {
+      id: ID!
+      name: String!
+    }
+  `);
+
+  await expect(runCodegen({ schema })).resolves.toMatchInlineSnapshot(`
+"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
+
+export const inputObjects: InputObjectsConfig = {
+  \\"PersonFilter\\": {
+    \\"fields\\": {
+      \\"friends\\": \\"FriendFilter\\"
+    }
+  },
+  \\"FriendFilter\\": {
+    \\"fields\\": {
+      \\"since\\": \\"DateTime\\",
+      \\"person\\": \\"PersonFilter\\"
+    }
+  }
+};"
+`);
+});
+
 async function runCodegen(
   options: Partial<Omit<Types.GenerateOptions, "schema">> &
     Pick<Types.GenerateOptions, "schema">

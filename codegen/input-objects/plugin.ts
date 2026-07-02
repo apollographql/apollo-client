@@ -10,8 +10,6 @@ import {
 
 import type { InputObjectsPluginConfig } from "./config.js";
 
-const BUILTIN_SCALARS = new Set(specifiedScalarTypes);
-
 type InputObjectMap = Map<string, Record<string, string>>;
 
 export const plugin: PluginFunction<InputObjectsPluginConfig> = async (
@@ -19,7 +17,7 @@ export const plugin: PluginFunction<InputObjectsPluginConfig> = async (
   documents,
   config
 ) => {
-  const ignoredScalars = new Set(config.ignoreScalars);
+  const { ignoreScalars = [] } = config;
   const types = Object.values(schema.getTypeMap());
   const customScalars = new Set<string>();
   const inputObjects: InputObjectMap = new Map();
@@ -27,8 +25,8 @@ export const plugin: PluginFunction<InputObjectsPluginConfig> = async (
   for (const type of types) {
     if (
       isScalarType(type) &&
-      !BUILTIN_SCALARS.has(type) &&
-      !ignoredScalars.has(type.name)
+      !specifiedScalarTypes.includes(type) &&
+      !ignoreScalars.includes(type.name)
     ) {
       customScalars.add(type.name);
     } else if (isInputObjectType(type)) {

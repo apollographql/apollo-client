@@ -1,5 +1,4 @@
 import type { PluginFunction } from "@graphql-codegen/plugin-helpers";
-import type { GraphQLInputObjectType } from "graphql";
 import {
   getNamedType,
   isInputObjectType,

@@ -3,6 +3,7 @@ import {
   getNamedType,
   isInputObjectType,
   isScalarType,
+  Kind,
   specifiedScalarTypes,
 } from "graphql";
 
@@ -12,10 +13,11 @@ const BUILTIN_SCALARS = new Set(specifiedScalarTypes);
 
 export const plugin: PluginFunction<InputObjectsPluginConfig> = async (
   schema,
-  _documents,
+  documents,
   _config
 ) => {
   const types = Object.values(schema.getTypeMap());
+  const usedVariableTypes = new Set<string>();
   const customScalars = new Set<string>();
   const inputObjects = new Map<string, Record<string, string>>();
 
@@ -30,6 +32,55 @@ export const plugin: PluginFunction<InputObjectsPluginConfig> = async (
       );
 
       inputObjects.set(type.name, fields);
+    }
+  }
+
+  for (const { document } of documents) {
+    if (!document) continue;
+
+    for (const definition of document.definitions) {
+      if (
+        definition.kind === Kind.OPERATION_DEFINITION &&
+        definition.variableDefinitions
+      ) {
+        for (const variableDef of definition.variableDefinitions) {
+          let type = variableDef.type;
+          while (type.kind !== Kind.NAMED_TYPE) {
+            type = type.type;
+          }
+
+          const typeName = type.name.value;
+
+          if (inputObjects.has(typeName)) {
+            usedVariableTypes.add(typeName);
+          }
+        }
+      }
+    }
+  }
+
+  // Usage flows forward from document variable definitions: an input object
+  // is used if a variable references it, or if it appears as a field of
+  // another used input object. Flood forward from the variable types, then
+  // drop unused input objects entirely so the usefulness pass below never
+  // considers them.
+  const used = new Set(usedVariableTypes);
+  const usedQueue = [...used];
+
+  while (usedQueue.length) {
+    const fields = inputObjects.get(usedQueue.pop()!)!;
+
+    for (const typeName of Object.values(fields)) {
+      if (inputObjects.has(typeName) && !used.has(typeName)) {
+        used.add(typeName);
+        usedQueue.push(typeName);
+      }
+    }
+  }
+
+  for (const name of inputObjects.keys()) {
+    if (!used.has(name)) {
+      inputObjects.delete(name);
     }
   }
 

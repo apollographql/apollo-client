@@ -495,6 +495,127 @@ export const inputObjects: InputObjectsConfig = {
 `);
 });
 
+test("omits input objects when no document uses them", async () => {
+  const schema = parse(/* GraphQL */ `
+    scalar DateTime
+
+    input EventInput {
+      startsAt: DateTime
+    }
+
+    type Query {
+      events: [Event]
+    }
+
+    type Mutation {
+      createEvent(input: EventInput!): Event
+    }
+
+    type Event {
+      id: ID!
+      startsAt: DateTime
+    }
+  `);
+
+  const documents = [
+    {
+      document: parse(/* GraphQL */ `
+        query Events {
+          events {
+            id
+          }
+        }
+      `),
+    },
+  ];
+
+  await expect(runCodegen({ schema, documents })).resolves
+    .toMatchInlineSnapshot(`
+"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
+
+export const inputObjects: InputObjectsConfig = {};"
+`);
+});
+
+test("retains only input objects used in document variable definitions", async () => {
+  const schema = parse(/* GraphQL */ `
+    scalar DateTime
+
+    input EventFilter {
+      startsAfter: DateTime
+    }
+
+    input TicketFilter {
+      purchasedAfter: DateTime
+    }
+
+    type Query {
+      events(filter: EventFilter): [Event]
+      tickets(filter: TicketFilter): [Ticket]
+    }
+
+    type Event {
+      id: ID!
+      startsAt: DateTime
+    }
+
+    type Ticket {
+      id: ID!
+      purchasedAt: DateTime
+    }
+  `);
+
+  const documents = [
+    {
+      document: parse(/* GraphQL */ `
+        query Events($filter: EventFilter) {
+          events(filter: $filter) {
+            id
+          }
+        }
+      `),
+    },
+  ];
+
+  await expect(runCodegen({ schema, documents })).resolves
+    .toMatchInlineSnapshot(`
+"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
+
+export const inputObjects: InputObjectsConfig = {
+  \\"EventFilter\\": {
+    \\"fields\\": {
+      \\"startsAfter\\": \\"DateTime\\"
+    }
+  }
+};"
+`);
+});
+
+test("outputs empty object when no documents are provided", async () => {
+  const schema = parse(/* GraphQL */ `
+    scalar DateTime
+
+    input EventInput {
+      startsAt: DateTime
+    }
+
+    type Mutation {
+      createEvent(input: EventInput!): Event
+    }
+
+    type Event {
+      id: ID!
+      startsAt: DateTime
+    }
+  `);
+
+  await expect(runCodegen({ schema })).resolves.toMatchInlineSnapshot(`
+"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
+
+export const inputObjects: InputObjectsConfig = {};"
+`);
+});
+
 async function runCodegen(
   options: Partial<Omit<Types.GenerateOptions, "schema">> &
     Pick<Types.GenerateOptions, "schema">

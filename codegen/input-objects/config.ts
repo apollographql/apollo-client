@@ -4,7 +4,7 @@ export interface InputObjectsPluginConfig {
    * This can reduce the size of the config object by omitting input objects
    * and fields with scalars that won't have an associated scalar transform.
    *
-   * When combined with `includeScalars`, this option takes precedent.
+   * When combined with `includeScalars`, this option takes precedence.
    */
   ignoreScalars?: string[];
 
@@ -13,7 +13,7 @@ export interface InputObjectsPluginConfig {
    * This can reduce the size of the config object by omitting input objects and
    * fields with scalars that won't have an associated scalar transform.
    *
-   * When combined with `ignoreScalars`, `ignoreScalars` takes precedent.
+   * When combined with `ignoreScalars`, `ignoreScalars` takes precedence.
    */
   includeScalars?: string[];
 

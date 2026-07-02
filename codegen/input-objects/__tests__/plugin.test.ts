@@ -59,7 +59,20 @@ test("outputs input object that includes custom scalar", async () => {
     }
   `);
 
-  await expect(runCodegen({ schema })).resolves.toMatchInlineSnapshot(`
+  const documents = [
+    {
+      document: parse(/* GraphQL */ `
+        mutation CreateEvent($input: EventInput!) {
+          createEvent(input: $input) {
+            id
+          }
+        }
+      `),
+    },
+  ];
+
+  await expect(runCodegen({ schema, documents })).resolves
+    .toMatchInlineSnapshot(`
 "import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
 
 export const inputObjects: InputObjectsConfig = {
@@ -94,7 +107,20 @@ test("limits input object to custom scalar types only", async () => {
     }
   `);
 
-  await expect(runCodegen({ schema })).resolves.toMatchInlineSnapshot(`
+  const documents = [
+    {
+      document: parse(/* GraphQL */ `
+        mutation CreateEvent($input: EventInput!) {
+          createEvent(input: $input) {
+            id
+          }
+        }
+      `),
+    },
+  ];
+
+  await expect(runCodegen({ schema, documents })).resolves
+    .toMatchInlineSnapshot(`
 "import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
 
 export const inputObjects: InputObjectsConfig = {
@@ -132,7 +158,20 @@ test("handles references to nested input objects", async () => {
     }
   `);
 
-  await expect(runCodegen({ schema })).resolves.toMatchInlineSnapshot(`
+  const documents = [
+    {
+      document: parse(/* GraphQL */ `
+        query Events($filter: EventFilter) {
+          events(filter: $filter) {
+            id
+          }
+        }
+      `),
+    },
+  ];
+
+  await expect(runCodegen({ schema, documents })).resolves
+    .toMatchInlineSnapshot(`
 "import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
 
 export const inputObjects: InputObjectsConfig = {
@@ -240,7 +279,20 @@ test("retains cyclic input objects when a custom scalar is in the cycle", async 
     }
   `);
 
-  await expect(runCodegen({ schema })).resolves.toMatchInlineSnapshot(`
+  const documents = [
+    {
+      document: parse(/* GraphQL */ `
+        query People($filter: PersonFilter) {
+          people(filter: $filter) {
+            id
+          }
+        }
+      `),
+    },
+  ];
+
+  await expect(runCodegen({ schema, documents })).resolves
+    .toMatchInlineSnapshot(`
 "import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
 
 export const inputObjects: InputObjectsConfig = {
@@ -287,7 +339,20 @@ test("omits fields on retained input objects that reference input objects withou
     }
   `);
 
-  await expect(runCodegen({ schema })).resolves.toMatchInlineSnapshot(`
+  const documents = [
+    {
+      document: parse(/* GraphQL */ `
+        query Search($filter: SearchFilter) {
+          search(filter: $filter) {
+            id
+          }
+        }
+      `),
+    },
+  ];
+
+  await expect(runCodegen({ schema, documents })).resolves
+    .toMatchInlineSnapshot(`
 "import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
 
 export const inputObjects: InputObjectsConfig = {
@@ -326,7 +391,20 @@ test("handles self-referencing input objects", async () => {
     }
   `);
 
-  await expect(runCodegen({ schema })).resolves.toMatchInlineSnapshot(`
+  const documents = [
+    {
+      document: parse(/* GraphQL */ `
+        query Tasks($filter: TaskFilter) {
+          tasks(filter: $filter) {
+            id
+          }
+        }
+      `),
+    },
+  ];
+
+  await expect(runCodegen({ schema, documents })).resolves
+    .toMatchInlineSnapshot(`
 "import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
 
 export const inputObjects: InputObjectsConfig = {
@@ -365,7 +443,20 @@ test("omits enum fields from retained input objects", async () => {
     }
   `);
 
-  await expect(runCodegen({ schema })).resolves.toMatchInlineSnapshot(`
+  const documents = [
+    {
+      document: parse(/* GraphQL */ `
+        query Tickets($filter: TicketFilter) {
+          tickets(filter: $filter) {
+            id
+          }
+        }
+      `),
+    },
+  ];
+
+  await expect(runCodegen({ schema, documents })).resolves
+    .toMatchInlineSnapshot(`
 "import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
 
 export const inputObjects: InputObjectsConfig = {

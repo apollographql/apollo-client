@@ -18,13 +18,13 @@ export const plugin: PluginFunction<InputObjectsPluginConfig> = async (
 ) => {
   const types = Object.values(schema.getTypeMap());
   const customScalars = new Set<string>();
-  const inputObjects = new Set<GraphQLInputObjectType>();
+  const inputObjects = new Map<string, GraphQLInputObjectType>();
 
   for (const type of types) {
     if (isScalarType(type) && !BUILTIN_SCALARS.has(type)) {
       customScalars.add(type.name);
     } else if (isInputObjectType(type)) {
-      inputObjects.add(type);
+      inputObjects.set(type.name, type);
     }
   }
 
@@ -32,7 +32,7 @@ export const plugin: PluginFunction<InputObjectsPluginConfig> = async (
 
   // process input objects after we've gathered all custom scalars so that we
   // avoid unnecessary config for builtin scalars
-  for (const inputObject of inputObjects) {
+  for (const inputObject of inputObjects.values()) {
     const inputObjectConfig = { fields: {} as Record<string, string> };
     const fields = inputObject.getFields();
 
@@ -40,6 +40,8 @@ export const plugin: PluginFunction<InputObjectsPluginConfig> = async (
       const { name: typeName } = getNamedType(field.type);
 
       if (customScalars.has(typeName)) {
+        inputObjectConfig.fields[name] = typeName;
+      } else if (inputObjects.has(typeName)) {
         inputObjectConfig.fields[name] = typeName;
       }
     }

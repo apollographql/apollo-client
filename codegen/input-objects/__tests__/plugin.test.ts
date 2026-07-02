@@ -107,6 +107,50 @@ export const inputObjects: InputObjectsConfig = {
 `);
 });
 
+test("handles references to nested input objects", async () => {
+  const schema = parse(/* GraphQL */ `
+    scalar DateTime
+
+    input EventFilter {
+      dateRange: DateRange
+    }
+
+    input DateRange {
+      start: DateTime!
+      end: DateTime!
+    }
+
+    type Query {
+      events(filter: EventFilter): [Event]
+    }
+
+    type Event {
+      id: ID!
+      name: String!
+      capacity: Int
+      startsAt: DateTime
+    }
+  `);
+
+  await expect(runCodegen({ schema })).resolves.toMatchInlineSnapshot(`
+"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
+
+export const inputObjects: InputObjectsConfig = {
+  \\"EventFilter\\": {
+    \\"fields\\": {
+      \\"dateRange\\": \\"DateRange\\"
+    }
+  },
+  \\"DateRange\\": {
+    \\"fields\\": {
+      \\"start\\": \\"DateTime\\",
+      \\"end\\": \\"DateTime\\"
+    }
+  }
+};"
+`);
+});
+
 async function runCodegen(
   options: Partial<Omit<Types.GenerateOptions, "schema">> &
     Pick<Types.GenerateOptions, "schema">

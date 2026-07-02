@@ -11,9 +11,9 @@ test("outputs empty object with no input objects in schema", async () => {
     }
   `);
 
-  const output = await runCodegen({ schema });
-
-  expect(output).toMatchInlineSnapshot(`"export const inputObjects = {};"`);
+  await expect(runCodegen({ schema })).resolves.toMatchInlineSnapshot(
+    `"export const inputObjects = {};"`
+  );
 });
 
 test("outputs empty object for custom scalars only used as args or field types", async () => {
@@ -31,9 +31,9 @@ test("outputs empty object for custom scalars only used as args or field types",
     }
   `);
 
-  const output = await runCodegen({ schema });
-
-  expect(output).toMatchInlineSnapshot(`"export const inputObjects = {};"`);
+  await expect(runCodegen({ schema })).resolves.toMatchInlineSnapshot(
+    `"export const inputObjects = {};"`
+  );
 });
 
 test("outputs input object that includes custom scalar", async () => {
@@ -55,9 +55,7 @@ test("outputs input object that includes custom scalar", async () => {
     }
   `);
 
-  const output = await runCodegen({ schema });
-
-  expect(output).toMatchInlineSnapshot(`
+  await expect(runCodegen({ schema })).resolves.toMatchInlineSnapshot(`
 "export const inputObjects = {
   \\"EventInput\\": {
     \\"fields\\": {

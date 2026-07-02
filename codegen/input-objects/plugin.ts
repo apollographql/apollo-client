@@ -79,7 +79,7 @@ export const plugin: PluginFunction<InputObjectsPluginConfig> = async (
     inputObjectsConfig[name] = { fields: fieldsConfig };
   }
 
-  const contents = `
+  return `
 import type { InputObjectsConfig } from "@apollo/client/cache";
 
 export const inputObjects: InputObjectsConfig = ${JSON.stringify(
@@ -88,8 +88,6 @@ export const inputObjects: InputObjectsConfig = ${JSON.stringify(
     2
   )};
 `.trim();
-
-  return contents;
 };
 
 function getUsedInputObjectsFromDocuments(

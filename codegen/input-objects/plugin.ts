@@ -17,7 +17,7 @@ export const plugin: PluginFunction<InputObjectsPluginConfig> = async (
   documents,
   config
 ) => {
-  const { ignoreScalars = [] } = config;
+  const { ignoreScalars = [], filterByDocuments = true } = config;
   const types = Object.values(schema.getTypeMap());
   const customScalars = new Set<string>();
   const inputObjects: InputObjectMap = new Map();
@@ -40,16 +40,18 @@ export const plugin: PluginFunction<InputObjectsPluginConfig> = async (
     }
   }
 
-  // Get a list of input objects used by variables in all documents. An input
-  // object is only considered used if a variable definition includes the type,
-  // or the input object is a dependency of a used input object. This allows us
-  // to keep the input config object as small as possible and limit it to only
-  // used input object types.
-  const used = getUsedInputObjectsFromDocuments(documents, inputObjects);
+  if (filterByDocuments) {
+    // Get a list of input objects used by variables in all documents. An input
+    // object is only considered used if a variable definition includes the type,
+    // or the input object is a dependency of a used input object. This allows us
+    // to keep the input config object as small as possible and limit it to only
+    // used input object types.
+    const used = getUsedInputObjectsFromDocuments(documents, inputObjects);
 
-  for (const name of inputObjects.keys()) {
-    if (!used.has(name)) {
-      inputObjects.delete(name);
+    for (const name of inputObjects.keys()) {
+      if (!used.has(name)) {
+        inputObjects.delete(name);
+      }
     }
   }
 

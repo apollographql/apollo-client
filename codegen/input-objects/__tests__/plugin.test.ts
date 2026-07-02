@@ -1160,8 +1160,8 @@ test("retains sibling branches when ignored scalars drop a nested input object",
   ];
 
   await expect(
-  runCodegen({ schema, documents, config: { ignoreScalars: ["JSON"] } })
-).resolves.toMatchInlineSnapshot(`
+    runCodegen({ schema, documents, config: { ignoreScalars: ["JSON"] } })
+  ).resolves.toMatchInlineSnapshot(`
 "import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
 
 export const inputObjects: InputObjectsConfig = {
@@ -1219,6 +1219,165 @@ export const inputObjects: InputObjectsConfig = {
   \\"EventInput\\": {
     \\"fields\\": {
       \\"startsAt\\": \\"DateTime\\"
+    }
+  }
+};"
+`);
+});
+
+test("emits input objects with custom scalars without documents when filterByDocuments is false", async () => {
+  const schema = parse(/* GraphQL */ `
+    scalar DateTime
+
+    input EventInput {
+      startsAt: DateTime
+    }
+
+    type Mutation {
+      createEvent(input: EventInput!): Event
+    }
+
+    type Event {
+      id: ID!
+      startsAt: DateTime
+    }
+  `);
+
+  await expect(runCodegen({ schema, config: { filterByDocuments: false } }))
+    .resolves.toMatchInlineSnapshot(`
+"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
+
+export const inputObjects: InputObjectsConfig = {
+  \\"EventInput\\": {
+    \\"fields\\": {
+      \\"startsAt\\": \\"DateTime\\"
+    }
+  }
+};"
+`);
+});
+
+test("emits input objects unused by documents when filterByDocuments is false", async () => {
+  const schema = parse(/* GraphQL */ `
+    scalar DateTime
+
+    input EventInput {
+      startsAt: DateTime
+    }
+
+    type Query {
+      events: [Event]
+    }
+
+    type Mutation {
+      createEvent(input: EventInput!): Event
+    }
+
+    type Event {
+      id: ID!
+      startsAt: DateTime
+    }
+  `);
+
+  const documents = [
+    {
+      document: parse(/* GraphQL */ `
+        query Events {
+          events {
+            id
+          }
+        }
+      `),
+    },
+  ];
+
+  await expect(
+    runCodegen({ schema, documents, config: { filterByDocuments: false } })
+  ).resolves.toMatchInlineSnapshot(`
+"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
+
+export const inputObjects: InputObjectsConfig = {
+  \\"EventInput\\": {
+    \\"fields\\": {
+      \\"startsAt\\": \\"DateTime\\"
+    }
+  }
+};"
+`);
+});
+
+test("omits input objects without custom scalars when filterByDocuments is false", async () => {
+  const schema = parse(/* GraphQL */ `
+    scalar DateTime
+
+    input EventFilter {
+      startsAfter: DateTime
+    }
+
+    input PaginationInput {
+      limit: Int
+      offset: Int
+    }
+
+    type Query {
+      events(filter: EventFilter, pagination: PaginationInput): [Event]
+    }
+
+    type Event {
+      id: ID!
+      startsAt: DateTime
+    }
+  `);
+
+  await expect(runCodegen({ schema, config: { filterByDocuments: false } }))
+    .resolves.toMatchInlineSnapshot(`
+"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
+
+export const inputObjects: InputObjectsConfig = {
+  \\"EventFilter\\": {
+    \\"fields\\": {
+      \\"startsAfter\\": \\"DateTime\\"
+    }
+  }
+};"
+`);
+});
+
+test("applies ignoreScalars when filterByDocuments is false", async () => {
+  const schema = parse(/* GraphQL */ `
+    scalar DateTime
+    scalar JSON
+
+    input EventFilter {
+      startsAfter: DateTime
+    }
+
+    input MetaInput {
+      data: JSON
+    }
+
+    type Query {
+      events(filter: EventFilter, meta: MetaInput): [Event]
+    }
+
+    type Event {
+      id: ID!
+      startsAt: DateTime
+    }
+  `);
+
+  await expect(
+    runCodegen({
+      schema,
+      config: { filterByDocuments: false, ignoreScalars: ["JSON"] },
+    })
+  ).resolves.toMatchInlineSnapshot(`
+"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
+
+export const inputObjects: InputObjectsConfig = {
+  \\"EventFilter\\": {
+    \\"fields\\": {
+      \\"startsAfter\\": \\"DateTime\\"
     }
   }
 };"

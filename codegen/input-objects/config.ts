@@ -5,4 +5,12 @@ export interface InputObjectsPluginConfig {
    * and fields with scalars that won't have an associated scalar transform.
    */
   ignoreScalars?: string[];
+
+  /**
+   * Determines whether to filter the config object by only input objects used
+   * by GraphQL operations.
+   *
+   * @default true
+   */
+  filterByDocuments?: boolean;
 }

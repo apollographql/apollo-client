@@ -220,7 +220,20 @@ test("avoids configuring nested input objects without custom scalars", async () 
     }
   `);
 
-  await expect(runCodegen({ schema })).resolves.toMatchInlineSnapshot(`
+  const documents = [
+    {
+      document: parse(/* GraphQL */ `
+        query FlightSearch($filter: FlightSearchFilter) {
+          flightSearch(filter: $filter) {
+            code
+          }
+        }
+      `),
+    },
+  ];
+
+  await expect(runCodegen({ schema, documents })).resolves
+    .toMatchInlineSnapshot(`
 "import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
 
 export const inputObjects: InputObjectsConfig = {};"
@@ -248,7 +261,20 @@ test("handles cyclic references between input objects without custom scalars", a
     }
   `);
 
-  await expect(runCodegen({ schema })).resolves.toMatchInlineSnapshot(`
+  const documents = [
+    {
+      document: parse(/* GraphQL */ `
+        query People($filter: PersonFilter) {
+          people(filter: $filter) {
+            id
+          }
+        }
+      `),
+    },
+  ];
+
+  await expect(runCodegen({ schema, documents })).resolves
+    .toMatchInlineSnapshot(`
 "import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
 
 export const inputObjects: InputObjectsConfig = {};"

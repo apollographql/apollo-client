@@ -21,7 +21,7 @@ export interface InputObjectsPluginConfig {
    * Determines whether to filter the config object by only input objects used
    * by GraphQL operations.
    *
-   * @default true
+   * @defaultValue true
    */
   filterByDocuments?: boolean;
 }

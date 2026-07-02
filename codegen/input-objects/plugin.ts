@@ -11,6 +11,7 @@ import {
 import type { InputObjectsPluginConfig } from "./config.js";
 
 type InputObjectMap = Map<string, Record<string, string>>;
+type InputObjectsConfig = Record<string, { fields: Record<string, string> }>;
 
 export const plugin: PluginFunction<InputObjectsPluginConfig> = async (
   schema,
@@ -69,8 +70,7 @@ export const plugin: PluginFunction<InputObjectsPluginConfig> = async (
     customScalars
   );
 
-  const inputObjectsConfig: Record<string, { fields: Record<string, string> }> =
-    {};
+  const inputObjectsConfig: InputObjectsConfig = {};
 
   // process input objects after we've gathered all types so that we can
   // reference nested input objects or custom scalars. We limit the config to
@@ -89,16 +89,20 @@ export const plugin: PluginFunction<InputObjectsPluginConfig> = async (
     inputObjectsConfig[name] = { fields: fieldsConfig };
   }
 
+  return buildOutput(inputObjectsConfig);
+};
+
+function buildOutput(config: InputObjectsConfig) {
   return `
 import type { InputObjectsConfig } from "@apollo/client/cache";
 
 export const inputObjects: InputObjectsConfig = ${JSON.stringify(
-    inputObjectsConfig,
+    config,
     null,
     2
   )};
 `.trim();
-};
+}
 
 function getUsedInputObjectsFromDocuments(
   documents: Types.DocumentFile[],

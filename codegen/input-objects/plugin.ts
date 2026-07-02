@@ -50,40 +50,11 @@ export const plugin: PluginFunction<InputObjectsPluginConfig> = async (
     }
   }
 
-  // An input object is only useful if it transitively reaches a custom scalar
-  // through its fields. Seed with input objects that directly contain a custom
-  // scalar field, then flood usefulness backwards through reverse edges so
-  // cycles and arbitrarily deep nesting are handled in O(total fields).
-  const useful = new Set<string>();
-  const dependents = new Map<string, string[]>();
-  const queue: string[] = [];
-
-  for (const [name, fields] of inputObjects) {
-    for (const typeName of Object.values(fields)) {
-      if (customScalars.has(typeName)) {
-        if (!useful.has(name)) {
-          useful.add(name);
-          queue.push(name);
-        }
-      } else if (inputObjects.has(typeName)) {
-        let deps = dependents.get(typeName);
-        if (!deps) {
-          dependents.set(typeName, (deps = []));
-        }
-        deps.push(name);
-      }
-    }
-  }
-
-  while (queue.length) {
-    const name = queue.pop()!;
-    for (const dependent of dependents.get(name) ?? []) {
-      if (!useful.has(dependent)) {
-        useful.add(dependent);
-        queue.push(dependent);
-      }
-    }
-  }
+  // After filtering input objects used by documents, we need to figure out what
+  // remaining input objects are considered useful. An input object is only
+  // useful if it transitively reaches a custom scalar through its fields. This
+  // ensures we only configure input objects with paths to custom scalars.
+  const useful = getUsefulInputObjects(inputObjects, customScalars);
 
   const config = new Map<string, { fields: Record<string, string> }>();
 
@@ -176,4 +147,42 @@ function eachVariableDef(
       }
     }
   }
+}
+
+function getUsefulInputObjects(
+  inputObjects: InputObjectMap,
+  customScalars: Set<string>
+) {
+  const useful = new Set<string>();
+  const dependents = new Map<string, string[]>();
+  const queue: string[] = [];
+
+  for (const [name, fields] of inputObjects) {
+    for (const typeName of Object.values(fields)) {
+      if (customScalars.has(typeName)) {
+        if (!useful.has(name)) {
+          useful.add(name);
+          queue.push(name);
+        }
+      } else if (inputObjects.has(typeName)) {
+        let deps = dependents.get(typeName);
+        if (!deps) {
+          dependents.set(typeName, (deps = []));
+        }
+        deps.push(name);
+      }
+    }
+  }
+
+  while (queue.length) {
+    const name = queue.pop()!;
+    for (const dependent of dependents.get(name) ?? []) {
+      if (!useful.has(dependent)) {
+        useful.add(dependent);
+        queue.push(dependent);
+      }
+    }
+  }
+
+  return useful;
 }

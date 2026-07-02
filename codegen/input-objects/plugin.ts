@@ -35,7 +35,13 @@ export const plugin: PluginFunction<InputObjectsPluginConfig> = async (
   }
 
   const contents = `
-export const inputObjects = ${JSON.stringify(inputObjects, null, 2)};
+import type { InputObjectsConfig } from "@apollo/client/cache";
+
+export const inputObjects: InputObjectsConfig = ${JSON.stringify(
+    inputObjects,
+    null,
+    2
+  )};
 `.trim();
 
   return contents;

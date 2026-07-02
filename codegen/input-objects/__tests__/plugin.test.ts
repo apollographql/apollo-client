@@ -11,9 +11,11 @@ test("outputs empty object with no input objects in schema", async () => {
     }
   `);
 
-  await expect(runCodegen({ schema })).resolves.toMatchInlineSnapshot(
-    `"export const inputObjects = {};"`
-  );
+  await expect(runCodegen({ schema })).resolves.toMatchInlineSnapshot(`
+"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
+
+export const inputObjects: InputObjectsConfig = {};"
+`);
 });
 
 test("outputs empty object for custom scalars only used as args or field types", async () => {
@@ -31,9 +33,11 @@ test("outputs empty object for custom scalars only used as args or field types",
     }
   `);
 
-  await expect(runCodegen({ schema })).resolves.toMatchInlineSnapshot(
-    `"export const inputObjects = {};"`
-  );
+  await expect(runCodegen({ schema })).resolves.toMatchInlineSnapshot(`
+"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
+
+export const inputObjects: InputObjectsConfig = {};"
+`);
 });
 
 test("outputs input object that includes custom scalar", async () => {
@@ -56,7 +60,9 @@ test("outputs input object that includes custom scalar", async () => {
   `);
 
   await expect(runCodegen({ schema })).resolves.toMatchInlineSnapshot(`
-"export const inputObjects = {
+"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
+
+export const inputObjects: InputObjectsConfig = {
   \\"EventInput\\": {
     \\"fields\\": {
       \\"startsAt\\": \\"DateTime\\"

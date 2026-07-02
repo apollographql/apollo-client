@@ -18,7 +18,7 @@ export const inputObjects: InputObjectsConfig = {};"
 `);
 });
 
-test("outputs empty object for custom scalars only used as args or field types", async () => {
+test("outputs empty object with no input objects in schema with custom scalars", async () => {
   const schema = parse(/* GraphQL */ `
     scalar DateTime
 

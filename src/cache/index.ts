@@ -37,6 +37,7 @@ export type {
   FieldPolicy,
   FieldReadFunction,
   FieldReadFunctionOptions,
+  KeyArgsFunction,
   PossibleTypesMap,
   TypePolicies,
   TypePolicy,

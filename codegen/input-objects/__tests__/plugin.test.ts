@@ -4,16 +4,30 @@ import { parse } from "graphql";
 
 import { plugin } from "../plugin.js";
 
-test("works", async () => {
+test("outputs empty object with no input objects in schema", async () => {
+  const schema = parse(/* GraphQL */ `
+    type Query {
+      foo: String
+    }
+  `);
+
+  const output = await runCodegen({ schema });
+
+  expect(output).toMatchInlineSnapshot(`""`);
+});
+
+test("outputs empty object for custom scalars only used as args or field types", async () => {
   const schema = parse(/* GraphQL */ `
     scalar DateTime
 
     type Query {
-      posts(at: DateTime): Post
+      event(at: DateTime): Event
     }
 
-    type Post {
+    type Event {
       id: ID!
+      name: String!
+      date: DateTime
     }
   `);
 

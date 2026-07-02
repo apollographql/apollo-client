@@ -50,11 +50,14 @@ export const plugin: PluginFunction<InputObjectsPluginConfig> = async (
     }
   }
 
-  // After filtering input objects used by documents, we need to figure out what
-  // remaining input objects are considered useful. An input object is only
-  // useful if it transitively reaches a custom scalar through its fields. This
-  // ensures we only configure input objects with paths to custom scalars.
-  const useful = getUsefulInputObjects(inputObjects, customScalars);
+  // After filtering input objects used by documents, we need to figure out
+  // which remaining input objects contain custom scalars or references to other
+  // input objects with custom scalars. This ensures we keep the config object
+  // as small as possible.
+  const withCustomScalars = getInputObjectsWithCustomScalars(
+    inputObjects,
+    customScalars
+  );
 
   const config = new Map<string, { fields: Record<string, string> }>();
 
@@ -63,14 +66,14 @@ export const plugin: PluginFunction<InputObjectsPluginConfig> = async (
   // only output types with custom scalars to avoid bloating the object with
   // fields that would be unused by the client
   for (const [name, fields] of inputObjects) {
-    if (!useful.has(name)) {
+    if (!withCustomScalars.has(name)) {
       continue;
     }
 
     const fieldsConfig: Record<string, string> = {};
 
     for (const [fieldName, typeName] of Object.entries(fields)) {
-      if (customScalars.has(typeName) || useful.has(typeName)) {
+      if (customScalars.has(typeName) || withCustomScalars.has(typeName)) {
         fieldsConfig[fieldName] = typeName;
       }
     }
@@ -149,7 +152,7 @@ function eachVariableDef(
   }
 }
 
-function getUsefulInputObjects(
+function getInputObjectsWithCustomScalars(
   inputObjects: InputObjectMap,
   customScalars: Set<string>
 ) {

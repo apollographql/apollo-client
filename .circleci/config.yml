@@ -38,7 +38,8 @@ jobs:
       - run: npm ci
       - run: npm run docmodel
       - run: npm run build
-      - run: npm run lint
+      - run: npm run lint:docs
+      - run: npm run lint:src
 
   Formatting:
     docker:

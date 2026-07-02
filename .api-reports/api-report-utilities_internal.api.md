@@ -33,6 +33,7 @@ import type { SelectionSetNode } from 'graphql';
 import { StrongCache } from '@wry/caches';
 import type { Subscription } from 'rxjs';
 import type { Trie } from '@wry/trie';
+import type { TypeNode } from 'graphql';
 import type { TypeOverrides } from '@apollo/client';
 import { WeakCache } from '@wry/caches';
 
@@ -343,6 +344,9 @@ export const getStoreKeyName: ((fieldName: string, args?: Record<string, any> | 
     setStringify(s: typeof storeKeyNameStringify): (value: any) => string;
 };
 
+// @internal @deprecated (undocumented)
+export function getUnwrappedType(node: TypeNode): string;
+
 // @public (undocumented)
 const globalCaches: {
     print?: () => number;
@@ -369,6 +373,13 @@ export function isDocumentNode(value: unknown): value is DocumentNode;
 
 // @internal @deprecated (undocumented)
 export function isField(selection: SelectionNode): selection is FieldNode;
+
+// @public
+export type IsLooselyEqual<A, B> = [
+A
+] extends [B] ? [
+B
+] extends [A] ? true : false : false;
 
 // @internal @deprecated (undocumented)
 export function isNonEmptyArray<T>(value: ArrayLike<T> | null | undefined): value is Array<T>;

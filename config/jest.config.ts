@@ -43,6 +43,7 @@ const reactSharedTestFileIgnoreList = [
   ignoreTSFiles,
   "src/react/hooks/__tests__/useBackgroundQuery/testUtils.tsx",
   "src/react/hooks/__tests__/useSuspenseQuery/testUtils.tsx",
+  "src/react/query-preloader/__tests__/createQueryPreloader/testUtils.tsx",
 ];
 
 const react17TestFileIgnoreList = [
@@ -60,6 +61,7 @@ const react17TestFileIgnoreList = [
   "src/react/hooks/__tests__/useLoadableQuery/*",
   "src/react/hooks/__tests__/useQueryRefHandlers.test.tsx",
   "src/react/query-preloader/__tests__/createQueryPreloader.test.tsx",
+  "src/react/query-preloader/__tests__/createQueryPreloader/*",
   "src/react/ssr/__tests__/prerenderStatic.test.tsx",
   "src/react/ssr/__tests__/useQueryEndToEnd.test.tsx",
 ];

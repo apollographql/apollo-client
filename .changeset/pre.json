@@ -1,0 +1,18 @@
+{
+  "mode": "pre",
+  "tag": "alpha",
+  "initialVersions": {
+    "@apollo/client": "4.2.0",
+    "@apollo/client-graphql-codegen": "2.0.0",
+    "@apollo/client-codemod-migrate-3-to-4": "1.0.2"
+  },
+  "changesets": [
+    "cold-comics-add",
+    "eighty-files-sort",
+    "fuzzy-hairs-tie",
+    "strong-shoes-sell",
+    "thin-tips-fold",
+    "tidy-cache-type-constraints",
+    "wet-experts-end"
+  ]
+}

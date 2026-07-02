@@ -4,9 +4,9 @@
 
 ```ts
 
-import type { ApolloCache } from '@apollo/client';
-import type { ApolloCache as ApolloCache_2 } from '@apollo/client/cache';
+import type { ApolloCache } from '@apollo/client/cache';
 import type { ApolloClient } from '@apollo/client';
+import type { Cache as Cache_2 } from '@apollo/client/cache';
 import type { DataState } from '@apollo/client';
 import type { DataValue } from '@apollo/client';
 import type { DefaultContext } from '@apollo/client';
@@ -130,16 +130,16 @@ type MakeRequiredVariablesOptional<TVariables extends OperationVariables, TConfi
 } & Omit<TVariables, keyof TConfiguredVariables>>;
 
 // @public @deprecated (undocumented)
-export type MutationFunctionOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables, _TContext = DefaultContext, TCache extends ApolloCache = ApolloCache> = useMutation.MutationFunctionOptions<TData, TVariables, TCache>;
+export type MutationFunctionOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables, _TContext = DefaultContext, TCache extends Cache_2.Implementation = Cache_2.Implementation> = useMutation.MutationFunctionOptions<TData, TVariables, TCache>;
 
 // @public @deprecated (undocumented)
-export type MutationHookOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables, _TContext = DefaultContext, TCache extends ApolloCache = ApolloCache> = useMutation.Options<TData, TVariables, TCache>;
+export type MutationHookOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables, _TContext = DefaultContext, TCache extends Cache_2.Implementation = Cache_2.Implementation> = useMutation.Options<TData, TVariables, TCache>;
 
 // @public @deprecated (undocumented)
 export type MutationResult<TData = unknown> = useMutation.Result<TData>;
 
 // @public @deprecated (undocumented)
-export type MutationTuple<TData, TVariables extends OperationVariables, _TContext = DefaultContext, TCache extends ApolloCache = ApolloCache> = useMutation.ResultTuple<TData, TVariables, TCache>;
+export type MutationTuple<TData, TVariables extends OperationVariables, _TContext = DefaultContext, TCache extends Cache_2.Implementation = Cache_2.Implementation> = useMutation.ResultTuple<TData, TVariables, TCache>;
 
 // @public @deprecated (undocumented)
 export type OnDataOptions<TData = unknown> = useSubscription.OnDataOptions<TData>;
@@ -607,7 +607,7 @@ export namespace useFragment {
     export namespace DocumentationTypes {
         export function useFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ fragment, from, fragmentName, variables, optimistic, client, }: useFragment.Options<TData, TVariables>): useFragment.Result<TData>;
     }
-    export type FromOptionValue<TData> = ApolloCache_2.FromOptionValue<TData>;
+    export type FromOptionValue<TData> = ApolloCache.FromOptionValue<TData>;
     // (undocumented)
     export interface Options<TData, TVariables extends OperationVariables> {
         client?: ApolloClient;
@@ -913,7 +913,7 @@ export namespace useMutation {
         }
     }
     // (undocumented)
-    export type MutationFunction<TData, TVariables extends OperationVariables, TCache extends ApolloCache = ApolloCache, TErrorPolicy extends ErrorPolicy | undefined = undefined> = (...[options]: {} extends TVariables ? [
+    export type MutationFunction<TData, TVariables extends OperationVariables, TCache extends Cache_2.Implementation = Cache_2.Implementation, TErrorPolicy extends ErrorPolicy | undefined = undefined> = (...[options]: {} extends TVariables ? [
     options?: MutationFunctionOptions<TData, TVariables, TCache> & {
         variables?: TVariables;
     }
@@ -923,11 +923,11 @@ export namespace useMutation {
     }
     ]) => Promise<ApolloClient.MutateResult<MaybeMasked<TData>, TErrorPolicy>>;
     // (undocumented)
-    export type MutationFunctionOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables, TCache extends ApolloCache = ApolloCache> = Options<TData, TVariables, TCache> & {
+    export type MutationFunctionOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables, TCache extends Cache_2.Implementation = Cache_2.Implementation> = Options<TData, TVariables, TCache> & {
         context?: DefaultContext | ((hookContext: DefaultContext | undefined) => DefaultContext);
     };
     // (undocumented)
-    export interface Options<TData = unknown, TVariables extends OperationVariables = OperationVariables, TCache extends ApolloCache = ApolloCache, TConfiguredVariables extends Partial<TVariables> = Partial<TVariables>> {
+    export interface Options<TData = unknown, TVariables extends OperationVariables = OperationVariables, TCache extends Cache_2.Implementation = Cache_2.Implementation, TConfiguredVariables extends Partial<TVariables> = Partial<TVariables>> {
         awaitRefetchQueries?: boolean;
         client?: ApolloClient;
         context?: DefaultContext;
@@ -952,7 +952,7 @@ export namespace useMutation {
     // Warning: (ae-forgotten-export) The symbol "ExtractConfiguredVariables" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    export type ResultForOptions<TData, TVariables extends OperationVariables, TCache extends ApolloCache, TOptions extends Record<string, never> | Options<TData, TVariables, TCache>, TErrorPolicy extends ErrorPolicy | undefined = undefined> = LazyType<ResultTuple<TData, MakeRequiredVariablesOptional<TVariables, ExtractConfiguredVariables<TOptions, TVariables>>, TCache, [
+    export type ResultForOptions<TData, TVariables extends OperationVariables, TCache extends Cache_2.Implementation, TOptions extends Record<string, never> | Options<TData, TVariables, TCache>, TErrorPolicy extends ErrorPolicy | undefined = undefined> = LazyType<ResultTuple<TData, MakeRequiredVariablesOptional<TVariables, ExtractConfiguredVariables<TOptions, TVariables>>, TCache, [
     TErrorPolicy
     ] extends [undefined] ? DefaultOptions extends {
         errorPolicy: infer D;
@@ -976,7 +976,7 @@ export namespace useMutation {
         };
     };
     // (undocumented)
-    export type ResultTuple<TData, TVariables extends OperationVariables, TCache extends ApolloCache = ApolloCache, TErrorPolicy extends ErrorPolicy | undefined = undefined> = [
+    export type ResultTuple<TData, TVariables extends OperationVariables, TCache extends Cache_2.Implementation = Cache_2.Implementation, TErrorPolicy extends ErrorPolicy | undefined = undefined> = [
     mutate: MutationFunction<TData, TVariables, TCache, TErrorPolicy>,
     result: Result<TData, TErrorPolicy>
     ];
@@ -988,13 +988,13 @@ export namespace useMutation {
         // (undocumented)
         export interface Classic {
             // (undocumented)
-            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TConfiguredVariables extends Partial<TVariables> = {}, TErrorPolicy extends ErrorPolicy | undefined = undefined>(mutation: DocumentNode_2 | TypedDocumentNode<TData, TVariables>, options?: useMutation.Options<NoInfer_2<TData>, NoInfer_2<TVariables>, ApolloCache, {
+            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TConfiguredVariables extends Partial<TVariables> = {}, TErrorPolicy extends ErrorPolicy | undefined = undefined>(mutation: DocumentNode_2 | TypedDocumentNode<TData, TVariables>, options?: useMutation.Options<NoInfer_2<TData>, NoInfer_2<TVariables>, Cache_2.Implementation, {
                 [K in keyof TConfiguredVariables]: K extends keyof TVariables ? TConfiguredVariables[K] : never;
             }> & {
                 errorPolicy?: TErrorPolicy;
-            }): useMutation.ResultTuple<TData, MakeRequiredVariablesOptional<TVariables, TConfiguredVariables>, ApolloCache, TErrorPolicy>;
+            }): useMutation.ResultTuple<TData, MakeRequiredVariablesOptional<TVariables, TConfiguredVariables>, Cache_2.Implementation, TErrorPolicy>;
             // @deprecated (undocumented)
-            <TData, TVariables extends OperationVariables = OperationVariables, TCache extends ApolloCache = ApolloCache, TConfiguredVariables extends Partial<TVariables> = {}, TErrorPolicy extends ErrorPolicy | undefined = undefined>(mutation: DocumentNode_2 | TypedDocumentNode<TData, TVariables>, options?: useMutation.Options<NoInfer_2<TData>, NoInfer_2<TVariables>, TCache, {
+            <TData, TVariables extends OperationVariables = OperationVariables, TCache extends Cache_2.Implementation = Cache_2.Implementation, TConfiguredVariables extends Partial<TVariables> = {}, TErrorPolicy extends ErrorPolicy | undefined = undefined>(mutation: DocumentNode_2 | TypedDocumentNode<TData, TVariables>, options?: useMutation.Options<NoInfer_2<TData>, NoInfer_2<TVariables>, TCache, {
                 [K in keyof TConfiguredVariables]: K extends keyof TVariables ? TConfiguredVariables[K] : never;
             }> & (TErrorPolicy extends undefined ? {} : {
                 errorPolicy: TErrorPolicy;
@@ -1005,15 +1005,15 @@ export namespace useMutation {
         // (undocumented)
         export interface Modern {
             // (undocumented)
-            <TData, TVariables extends OperationVariables, TCache extends ApolloCache, TOptions extends never>(mutation: DocumentNode_2 | TypedDocumentNode<TData, TVariables>): useMutation.ResultForOptions<TData, TVariables, TCache, Record<string, never>>;
+            <TData, TVariables extends OperationVariables, TOptions extends never>(mutation: DocumentNode_2 | TypedDocumentNode<TData, TVariables>): useMutation.ResultForOptions<TData, TVariables, Cache_2.Implementation, Record<string, never>>;
             // (undocumented)
-            <TData, TVariables extends OperationVariables, TCache extends ApolloCache, TOptions extends useMutation.Options<NoInfer_2<TData>, NoInfer_2<TVariables>, TCache> & {
+            <TData, TVariables extends OperationVariables, TOptions extends useMutation.Options<NoInfer_2<TData>, NoInfer_2<TVariables>, Cache_2.Implementation> & {
                 variables?: {
                     [K in Exclude<keyof TOptions["variables"], keyof TVariables>]?: never;
                 };
             }, TErrorPolicy extends ErrorPolicy | undefined = undefined>(mutation: DocumentNode_2 | TypedDocumentNode<TData, TVariables>, options?: TOptions & {
                 errorPolicy?: TErrorPolicy;
-            }): useMutation.ResultForOptions<TData, TVariables, TCache, TOptions, TErrorPolicy>;
+            }): useMutation.ResultForOptions<TData, TVariables, Cache_2.Implementation, TOptions, TErrorPolicy>;
         }
     }
 }
@@ -1384,7 +1384,7 @@ export namespace useSuspenseFragment {
     export namespace DocumentationTypes {
         export function useSuspenseFragment<TData, TVariables extends OperationVariables = OperationVariables>(options: useSuspenseFragment.Options<TData, TVariables>): useSuspenseFragment.Result<TData>;
     }
-    export type FromOptionValue<TData> = ApolloCache_2.FromOptionValue<TData>;
+    export type FromOptionValue<TData> = ApolloCache.FromOptionValue<TData>;
     // (undocumented)
     export type Options<TData, TVariables extends OperationVariables> = Base.Options<TData, TVariables> & VariablesOption<NoInfer_2<TVariables>>;
     // (undocumented)

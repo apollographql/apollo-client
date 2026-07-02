@@ -4,6 +4,21 @@
       "path": "./tsconfig.src.json"
     },
     {
+      "path": "./cacheOverride/classicSignature/tsconfig.json"
+    },
+    {
+      "path": "./cacheOverride/defaults/tsconfig.json"
+    },
+    {
+      "path": "./cacheOverride/invalid/tsconfig.json"
+    },
+    {
+      "path": "./cacheOverride/modernSignature/tsconfig.json"
+    },
+    {
+      "path": "./cacheOverride/shared/tsconfig.json"
+    },
+    {
       "path": "./defaultOptions/shared/tsconfig.json"
     },
     {
@@ -44,6 +59,54 @@
     },
     {
       "path": "./defaultOptions/mutate/errorPolicyIgnore/tsconfig.json"
+    },
+    {
+      "path": "./customScalars/all-unknown/differentTypes/tsconfig.json"
+    },
+    {
+      "path": "./customScalars/all-unknown/empty/tsconfig.json"
+    },
+    {
+      "path": "./customScalars/all-unknown/matchingTypes/tsconfig.json"
+    },
+    {
+      "path": "./customScalars/all-unknown/mixed/tsconfig.json"
+    },
+    {
+      "path": "./customScalars/all-any/differentTypes/tsconfig.json"
+    },
+    {
+      "path": "./customScalars/all-any/empty/tsconfig.json"
+    },
+    {
+      "path": "./customScalars/all-any/matchingTypes/tsconfig.json"
+    },
+    {
+      "path": "./customScalars/all-any/mixed/tsconfig.json"
+    },
+    {
+      "path": "./customScalars/all-structured/differentTypes/tsconfig.json"
+    },
+    {
+      "path": "./customScalars/all-structured/empty/tsconfig.json"
+    },
+    {
+      "path": "./customScalars/all-structured/matchingTypes/tsconfig.json"
+    },
+    {
+      "path": "./customScalars/all-structured/mixed/tsconfig.json"
+    },
+    {
+      "path": "./customScalars/empty/tsconfig.json"
+    },
+    {
+      "path": "./customScalars/differentTypes/tsconfig.json"
+    },
+    {
+      "path": "./customScalars/matchingTypes/tsconfig.json"
+    },
+    {
+      "path": "./customScalars/mixed/tsconfig.json"
     },
     {
       "path": "./signatures/modern/tsconfig.json"

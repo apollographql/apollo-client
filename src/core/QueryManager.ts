@@ -24,7 +24,7 @@ import {
   tap,
 } from "rxjs";
 
-import type { ApolloCache, Cache } from "@apollo/client/cache";
+import type { Cache } from "@apollo/client/cache";
 import { canonicalStringify } from "@apollo/client/cache";
 import {
   CombinedGraphQLErrors,
@@ -244,7 +244,7 @@ export class QueryManager {
     return this.client.link;
   }
 
-  get cache() {
+  get cache(): Cache.Implementation {
     return this.client.cache;
   }
 
@@ -268,7 +268,7 @@ export class QueryManager {
   public async mutate<
     TData,
     TVariables extends OperationVariables,
-    TCache extends ApolloCache,
+    TCache extends Cache.Implementation,
   >({
     mutation,
     variables,
@@ -314,7 +314,7 @@ export class QueryManager {
       this.mutationStore &&
       (this.mutationStore[queryInfo.id] = {
         mutation,
-        variables,
+        variables: this.cache.serializeVariables(mutation, variables),
         loading: true,
         error: null,
       } as MutationStoreValue);
@@ -909,6 +909,7 @@ export class QueryManager {
     const executeContext: ApolloLink.ExecuteContext = {
       client: this.client,
     };
+    variables = this.cache.serializeVariables(query, variables);
 
     if (serverQuery) {
       const { inFlightLinkObservables, link } = this;
@@ -1329,7 +1330,7 @@ export class QueryManager {
     removeOptimistic = optimistic ? makeUniqueId("refetchQueries") : void 0,
     onQueryUpdated,
   }: InternalRefetchQueriesOptions<
-    ApolloCache,
+    Cache.Implementation,
     TResult
   >): InternalRefetchQueriesMap<TResult> {
     const includedQueriesByOq = new Map<

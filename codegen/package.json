@@ -23,7 +23,8 @@
   "homepage": "https://www.apollographql.com/docs/react/",
   "exports": {
     "./custom-scalars": "./dist/custom-scalars/index.js",
-    "./local-state": "./dist/local-state/index.js"
+    "./local-state": "./dist/local-state/index.js",
+    "./scalar-type-policies": "./dist/scalar-type-policies/index.js"
   },
   "files": [
     "dist"

@@ -23,6 +23,11 @@ export const plugin: PluginFunction<InputObjectsPluginConfig> = async (
     filterByDocuments = true,
     includeScalars,
   } = config;
+
+  if (includeScalars?.length === 0) {
+    return buildOutput({});
+  }
+
   const types = Object.values(schema.getTypeMap());
   const customScalars = new Set<string>();
   const inputObjects: InputObjectMap = new Map();
@@ -44,6 +49,10 @@ export const plugin: PluginFunction<InputObjectsPluginConfig> = async (
 
       inputObjects.set(type.name, fields);
     }
+  }
+
+  if (customScalars.size === 0) {
+    return buildOutput({});
   }
 
   if (filterByDocuments) {

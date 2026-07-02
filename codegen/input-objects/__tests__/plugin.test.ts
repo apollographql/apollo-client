@@ -13,7 +13,7 @@ test("outputs empty object with no input objects in schema", async () => {
 
   const output = await runCodegen({ schema });
 
-  expect(output).toMatchInlineSnapshot(`""`);
+  expect(output).toMatchInlineSnapshot(`"export const inputObjects = {};"`);
 });
 
 test("outputs empty object for custom scalars only used as args or field types", async () => {
@@ -27,13 +27,45 @@ test("outputs empty object for custom scalars only used as args or field types",
     type Event {
       id: ID!
       name: String!
-      date: DateTime
+      startsAt: DateTime
     }
   `);
 
   const output = await runCodegen({ schema });
 
-  expect(output).toMatchInlineSnapshot(`""`);
+  expect(output).toMatchInlineSnapshot(`"export const inputObjects = {};"`);
+});
+
+test("outputs input object that includes custom scalar", async () => {
+  const schema = parse(/* GraphQL */ `
+    scalar DateTime
+
+    input EventInput {
+      startsAt: DateTime
+    }
+
+    type Mutation {
+      createEvent(input: EventInput!): Event
+    }
+
+    type Event {
+      id: ID!
+      name: String!
+      startsAt: DateTime
+    }
+  `);
+
+  const output = await runCodegen({ schema });
+
+  expect(output).toMatchInlineSnapshot(`
+"export const inputObjects = {
+  \\"EventInput\\": {
+    \\"fields\\": {
+      \\"startsAt\\": \\"DateTime\\"
+    }
+  }
+};"
+`);
 });
 
 async function runCodegen(

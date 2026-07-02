@@ -151,6 +151,43 @@ export const inputObjects: InputObjectsConfig = {
 `);
 });
 
+test("avoids configuring nested input objects without custom scalars", async () => {
+  const schema = parse(/* GraphQL */ `
+    input DateRange {
+      start: String!
+      end: String!
+    }
+
+    input FlightSearchFilter {
+      dateRange: DateRange
+      destination: DestinationFilter
+    }
+
+    input DestinationFilter {
+      airport: AirportFilter
+    }
+
+    input AirportFilter {
+      city: String
+      code: String
+    }
+
+    type Query {
+      flightSearch(filter: FlightSearchFilter): [Flight]
+    }
+
+    type Flight {
+      code: String!
+    }
+  `);
+
+  await expect(runCodegen({ schema })).resolves.toMatchInlineSnapshot(`
+"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
+
+export const inputObjects: InputObjectsConfig = {};"
+`);
+});
+
 async function runCodegen(
   options: Partial<Omit<Types.GenerateOptions, "schema">> &
     Pick<Types.GenerateOptions, "schema">

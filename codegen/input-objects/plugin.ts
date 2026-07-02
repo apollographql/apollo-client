@@ -59,7 +59,8 @@ export const plugin: PluginFunction<InputObjectsPluginConfig> = async (
     customScalars
   );
 
-  const config: Record<string, { fields: Record<string, string> }> = {};
+  const inputObjectsConfig: Record<string, { fields: Record<string, string> }> =
+    {};
 
   // process input objects after we've gathered all types so that we can
   // reference nested input objects or custom scalars. We limit the config to
@@ -75,14 +76,14 @@ export const plugin: PluginFunction<InputObjectsPluginConfig> = async (
       }
     }
 
-    config[name] = { fields: fieldsConfig };
+    inputObjectsConfig[name] = { fields: fieldsConfig };
   }
 
   const contents = `
 import type { InputObjectsConfig } from "@apollo/client/cache";
 
 export const inputObjects: InputObjectsConfig = ${JSON.stringify(
-    config,
+    inputObjectsConfig,
     null,
     2
   )};

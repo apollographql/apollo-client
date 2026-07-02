@@ -616,6 +616,298 @@ export const inputObjects: InputObjectsConfig = {};"
 `);
 });
 
+test("omits unused input objects on fields with multiple input object arguments", async () => {
+  const schema = parse(/* GraphQL */ `
+    scalar DateTime
+
+    input EventFilter {
+      startsAfter: DateTime
+    }
+
+    input EventOptions {
+      asOf: DateTime
+    }
+
+    type Query {
+      events(filter: EventFilter, options: EventOptions): [Event]
+    }
+
+    type Event {
+      id: ID!
+      startsAt: DateTime
+    }
+  `);
+
+  const documents = [
+    {
+      document: parse(/* GraphQL */ `
+        query Events($filter: EventFilter) {
+          events(filter: $filter) {
+            id
+          }
+        }
+      `),
+    },
+  ];
+
+  await expect(
+  runCodegen({ schema, documents })
+).resolves.toMatchInlineSnapshot(`
+"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
+
+export const inputObjects: InputObjectsConfig = {
+  \\"EventFilter\\": {
+    \\"fields\\": {
+      \\"startsAfter\\": \\"DateTime\\"
+    }
+  }
+};"
+`);
+});
+
+test("collects usage across multiple documents", async () => {
+  const schema = parse(/* GraphQL */ `
+    scalar DateTime
+
+    input EventFilter {
+      startsAfter: DateTime
+    }
+
+    input TicketFilter {
+      purchasedAfter: DateTime
+    }
+
+    input ReportFilter {
+      generatedAfter: DateTime
+    }
+
+    type Query {
+      events(filter: EventFilter): [Event]
+      tickets(filter: TicketFilter): [Ticket]
+      reports(filter: ReportFilter): [Report]
+    }
+
+    type Event {
+      id: ID!
+      startsAt: DateTime
+    }
+
+    type Ticket {
+      id: ID!
+      purchasedAt: DateTime
+    }
+
+    type Report {
+      id: ID!
+      generatedAt: DateTime
+    }
+  `);
+
+  const documents = [
+    {
+      document: parse(/* GraphQL */ `
+        query Events($filter: EventFilter) {
+          events(filter: $filter) {
+            id
+          }
+        }
+      `),
+    },
+    {
+      document: parse(/* GraphQL */ `
+        query Tickets($filter: TicketFilter) {
+          tickets(filter: $filter) {
+            id
+          }
+        }
+      `),
+    },
+  ];
+
+  await expect(
+  runCodegen({ schema, documents })
+).resolves.toMatchInlineSnapshot(`
+"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
+
+export const inputObjects: InputObjectsConfig = {
+  \\"EventFilter\\": {
+    \\"fields\\": {
+      \\"startsAfter\\": \\"DateTime\\"
+    }
+  },
+  \\"TicketFilter\\": {
+    \\"fields\\": {
+      \\"purchasedAfter\\": \\"DateTime\\"
+    }
+  }
+};"
+`);
+});
+
+test("retains input objects used on only one of multiple fields", async () => {
+  const schema = parse(/* GraphQL */ `
+    scalar DateTime
+
+    input DateRangeFilter {
+      start: DateTime
+      end: DateTime
+    }
+
+    type Query {
+      events(filter: DateRangeFilter): [Event]
+      tickets(filter: DateRangeFilter): [Ticket]
+    }
+
+    type Event {
+      id: ID!
+      startsAt: DateTime
+    }
+
+    type Ticket {
+      id: ID!
+      purchasedAt: DateTime
+    }
+  `);
+
+  const documents = [
+    {
+      document: parse(/* GraphQL */ `
+        query Events($filter: DateRangeFilter) {
+          events(filter: $filter) {
+            id
+          }
+        }
+      `),
+    },
+  ];
+
+  await expect(
+  runCodegen({ schema, documents })
+).resolves.toMatchInlineSnapshot(`
+"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
+
+export const inputObjects: InputObjectsConfig = {
+  \\"DateRangeFilter\\": {
+    \\"fields\\": {
+      \\"start\\": \\"DateTime\\",
+      \\"end\\": \\"DateTime\\"
+    }
+  }
+};"
+`);
+});
+
+test("handles list and non-null wrapped variable types", async () => {
+  const schema = parse(/* GraphQL */ `
+    scalar DateTime
+
+    input EventFilter {
+      startsAfter: DateTime
+    }
+
+    type Query {
+      events(filters: [EventFilter!]): [Event]
+    }
+
+    type Event {
+      id: ID!
+      startsAt: DateTime
+    }
+  `);
+
+  const documents = [
+    {
+      document: parse(/* GraphQL */ `
+        query Events($filters: [EventFilter!]!) {
+          events(filters: $filters) {
+            id
+          }
+        }
+      `),
+    },
+  ];
+
+  await expect(
+  runCodegen({ schema, documents })
+).resolves.toMatchInlineSnapshot(`
+"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
+
+export const inputObjects: InputObjectsConfig = {
+  \\"EventFilter\\": {
+    \\"fields\\": {
+      \\"startsAfter\\": \\"DateTime\\"
+    }
+  }
+};"
+`);
+});
+
+test("collects usage from multiple operations in a single document", async () => {
+  const schema = parse(/* GraphQL */ `
+    scalar DateTime
+
+    input EventFilter {
+      startsAfter: DateTime
+    }
+
+    input TicketFilter {
+      purchasedAfter: DateTime
+    }
+
+    type Query {
+      events(filter: EventFilter): [Event]
+      tickets(filter: TicketFilter): [Ticket]
+    }
+
+    type Event {
+      id: ID!
+      startsAt: DateTime
+    }
+
+    type Ticket {
+      id: ID!
+      purchasedAt: DateTime
+    }
+  `);
+
+  const documents = [
+    {
+      document: parse(/* GraphQL */ `
+        query Events($filter: EventFilter) {
+          events(filter: $filter) {
+            id
+          }
+        }
+
+        query Tickets($filter: TicketFilter) {
+          tickets(filter: $filter) {
+            id
+          }
+        }
+      `),
+    },
+  ];
+
+  await expect(
+  runCodegen({ schema, documents })
+).resolves.toMatchInlineSnapshot(`
+"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
+
+export const inputObjects: InputObjectsConfig = {
+  \\"EventFilter\\": {
+    \\"fields\\": {
+      \\"startsAfter\\": \\"DateTime\\"
+    }
+  },
+  \\"TicketFilter\\": {
+    \\"fields\\": {
+      \\"purchasedAfter\\": \\"DateTime\\"
+    }
+  }
+};"
+`);
+});
+
 async function runCodegen(
   options: Partial<Omit<Types.GenerateOptions, "schema">> &
     Pick<Types.GenerateOptions, "schema">

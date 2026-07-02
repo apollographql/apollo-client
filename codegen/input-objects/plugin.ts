@@ -1,4 +1,5 @@
-import type { PluginFunction } from "@graphql-codegen/plugin-helpers";
+import type { PluginFunction, Types } from "@graphql-codegen/plugin-helpers";
+import type { DocumentNode, NamedTypeNode } from "graphql";
 import {
   getNamedType,
   isInputObjectType,
@@ -11,15 +12,16 @@ import type { InputObjectsPluginConfig } from "./config.js";
 
 const BUILTIN_SCALARS = new Set(specifiedScalarTypes);
 
+type InputObjectMap = Map<string, Record<string, string>>;
+
 export const plugin: PluginFunction<InputObjectsPluginConfig> = async (
   schema,
   documents,
   _config
 ) => {
   const types = Object.values(schema.getTypeMap());
-  const usedVariableTypes = new Set<string>();
   const customScalars = new Set<string>();
-  const inputObjects = new Map<string, Record<string, string>>();
+  const inputObjects: InputObjectMap = new Map();
 
   for (const type of types) {
     if (isScalarType(type) && !BUILTIN_SCALARS.has(type)) {
@@ -35,48 +37,12 @@ export const plugin: PluginFunction<InputObjectsPluginConfig> = async (
     }
   }
 
-  for (const { document } of documents) {
-    if (!document) continue;
-
-    for (const definition of document.definitions) {
-      if (
-        definition.kind === Kind.OPERATION_DEFINITION &&
-        definition.variableDefinitions
-      ) {
-        for (const variableDef of definition.variableDefinitions) {
-          let type = variableDef.type;
-          while (type.kind !== Kind.NAMED_TYPE) {
-            type = type.type;
-          }
-
-          const typeName = type.name.value;
-
-          if (inputObjects.has(typeName)) {
-            usedVariableTypes.add(typeName);
-          }
-        }
-      }
-    }
-  }
-
-  // Usage flows forward from document variable definitions: an input object
-  // is used if a variable references it, or if it appears as a field of
-  // another used input object. Flood forward from the variable types, then
-  // drop unused input objects entirely so the usefulness pass below never
-  // considers them.
-  const used = new Set(usedVariableTypes);
-  const usedQueue = [...used];
-
-  while (usedQueue.length) {
-    const fields = inputObjects.get(usedQueue.pop()!)!;
-
-    for (const typeName of Object.values(fields)) {
-      if (inputObjects.has(typeName) && !used.has(typeName)) {
-        used.add(typeName);
-        usedQueue.push(typeName);
-      }
-    }
-  }
+  // Get a list of input objects used by variables in all documents. An input
+  // object is only considered used if a variable definition includes the type,
+  // or the input object is a dependency of a used input object. This allows us
+  // to keep the input config object as small as possible and limit it to only
+  // used input object types.
+  const used = getUsedInputObjectsFromDocuments(documents, inputObjects);
 
   for (const name of inputObjects.keys()) {
     if (!used.has(name)) {
@@ -155,3 +121,59 @@ export const inputObjects: InputObjectsConfig = ${JSON.stringify(
 
   return contents;
 };
+
+function getUsedInputObjectsFromDocuments(
+  documents: Types.DocumentFile[],
+  inputObjects: InputObjectMap
+) {
+  const usedVariableTypes = new Set<string>();
+
+  for (const { document } of documents) {
+    if (!document) continue;
+
+    eachVariableDef(document, (type) => {
+      const typeName = type.name.value;
+
+      if (inputObjects.has(typeName)) {
+        usedVariableTypes.add(typeName);
+      }
+    });
+  }
+
+  const used = new Set(usedVariableTypes);
+  const usedQueue = [...used];
+
+  while (usedQueue.length) {
+    const fields = inputObjects.get(usedQueue.pop()!)!;
+
+    for (const typeName of Object.values(fields)) {
+      if (inputObjects.has(typeName) && !used.has(typeName)) {
+        used.add(typeName);
+        usedQueue.push(typeName);
+      }
+    }
+  }
+
+  return used;
+}
+
+function eachVariableDef(
+  document: DocumentNode,
+  fn: (node: NamedTypeNode) => void
+) {
+  for (const definition of document.definitions) {
+    if (
+      definition.kind === Kind.OPERATION_DEFINITION &&
+      definition.variableDefinitions
+    ) {
+      for (const variableDef of definition.variableDefinitions) {
+        let type = variableDef.type;
+        while (type.kind !== Kind.NAMED_TYPE) {
+          type = type.type;
+        }
+
+        fn(type);
+      }
+    }
+  }
+}

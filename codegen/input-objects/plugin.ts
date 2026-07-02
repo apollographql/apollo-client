@@ -17,14 +17,19 @@ type InputObjectMap = Map<string, Record<string, string>>;
 export const plugin: PluginFunction<InputObjectsPluginConfig> = async (
   schema,
   documents,
-  _config
+  config
 ) => {
+  const ignoredScalars = new Set(config.ignoreScalars);
   const types = Object.values(schema.getTypeMap());
   const customScalars = new Set<string>();
   const inputObjects: InputObjectMap = new Map();
 
   for (const type of types) {
-    if (isScalarType(type) && !BUILTIN_SCALARS.has(type)) {
+    if (
+      isScalarType(type) &&
+      !BUILTIN_SCALARS.has(type) &&
+      !ignoredScalars.has(type.name)
+    ) {
       customScalars.add(type.name);
     } else if (isInputObjectType(type)) {
       const fields = Object.fromEntries(

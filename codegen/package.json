@@ -35,13 +35,13 @@
   },
   "devDependencies": {
     "typescript": "^5.8.3",
-    "@graphql-codegen/plugin-helpers": "^6.0.0",
-    "@graphql-codegen/typescript": "^5.0.4",
-    "@graphql-codegen/visitor-plugin-common": "^6.0.0"
+    "@graphql-codegen/plugin-helpers": "^7.0.1",
+    "@graphql-codegen/typescript": "^6.0.2",
+    "@graphql-codegen/visitor-plugin-common": "^7.1.2"
   },
   "peerDependencies": {
-    "@graphql-codegen/plugin-helpers": "^6.0.0",
-    "@graphql-codegen/typescript": "^5.0.0",
-    "@graphql-codegen/visitor-plugin-common": "^6.0.0"
+    "@graphql-codegen/plugin-helpers": "^6.0.0 || ^7.0.0",
+    "@graphql-codegen/typescript": "^5.0.0 || ^6.0.0",
+    "@graphql-codegen/visitor-plugin-common": "^6.0.0 || ^7.0.0"
   }
 }

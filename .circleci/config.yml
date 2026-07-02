@@ -51,6 +51,14 @@ jobs:
   Codegen:
     docker:
       - image: cimg/node:23.9.0
+    parameters:
+      codegenDeps:
+        type: string
+      # Each codegen major emits slightly different output, so the committed
+      # fixtures are only verified against the most recent major.
+      verify:
+        type: boolean
+        default: false
     steps:
       - checkout
       - attach_workspace:
@@ -62,16 +70,16 @@ jobs:
           command: pnpm pkg set "pnpm.overrides[@apollo/client-graphql-codegen]=/tmp/workspace/apollo-client-graphql-codegen.tgz"
           working_directory: integration-tests
       - run:
-          command: pnpm install --no-frozen-lockfile
-          working_directory: integration-tests
-      - run:
-          name: Install codegen runner
-          command: pnpm install --no-frozen-lockfile --filter codegen
+          name: Install codegen runner with peer deps under test
+          command: pnpm --filter codegen add -D << parameters.codegenDeps >>
           working_directory: integration-tests
       - run: npm run test:codegen
-      - run:
-          name: Verify generated fixtures are up to date
-          command: git diff --exit-code src/local-state/__tests__/LocalState/fixtures
+      - when:
+          condition: << parameters.verify >>
+          steps:
+            - run:
+                name: Verify generated fixtures are up to date
+                command: git diff --exit-code src/local-state/__tests__/LocalState/fixtures
 
   Tests:
     docker:
@@ -217,8 +225,17 @@ workflows:
       - BuildTarball
       - BuildCodegenTarball
       - Codegen:
+          name: Codegen (@graphql-codegen v6)
           requires:
             - BuildCodegenTarball
+          codegenDeps: "@graphql-codegen/plugin-helpers@^6.0.0 @graphql-codegen/typescript@^5.0.0 @graphql-codegen/visitor-plugin-common@^6.0.0"
+      - Codegen:
+          name: Codegen (@graphql-codegen v7)
+          requires:
+            - BuildCodegenTarball
+          codegenDeps: "@graphql-codegen/plugin-helpers@^7.0.0 @graphql-codegen/typescript@^6.0.0 @graphql-codegen/visitor-plugin-common@^7.0.0"
+          verify: true
+
       - IntegrationTests:
           name: Integration Test << matrix.framework >> with React << matrix.react >>
           requires:

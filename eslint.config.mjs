@@ -49,7 +49,7 @@ export default defineConfig([
   {
     files: ["**/*.ts", "**/*.tsx"],
     plugins: tsPlugins,
-    ignores: ["tests.codegen.ts"],
+    ignores: [],
 
     languageOptions: {
       globals: {

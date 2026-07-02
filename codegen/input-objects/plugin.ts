@@ -35,15 +35,10 @@ export const plugin: PluginFunction<InputObjectsPluginConfig, string> = async (
     filterByDocuments = true,
     includeScalars,
   } = config;
-
-  const outputFile = info?.outputFile;
-
-  if (!outputFile) {
-    throw new Error("Could not determine output file.");
-  }
+  const ext = extname(info?.outputFile ?? "").toLowerCase();
 
   if (includeScalars?.length === 0) {
-    return buildOutput({}, outputFile);
+    return buildOutput({}, ext);
   }
 
   const types = Object.values(schema.getTypeMap());
@@ -70,7 +65,7 @@ export const plugin: PluginFunction<InputObjectsPluginConfig, string> = async (
   }
 
   if (customScalars.size === 0) {
-    return buildOutput({}, outputFile);
+    return buildOutput({}, ext);
   }
 
   if (filterByDocuments) {
@@ -116,7 +111,7 @@ export const plugin: PluginFunction<InputObjectsPluginConfig, string> = async (
     inputObjectsConfig[name] = { fields: fieldsConfig };
   }
 
-  return buildOutput(inputObjectsConfig, outputFile);
+  return buildOutput(inputObjectsConfig, ext);
 };
 
 export const validate: PluginValidateFn = (
@@ -137,9 +132,7 @@ export const validate: PluginValidateFn = (
   }
 };
 
-function buildOutput(config: InputObjectsConfig, outputFile: string) {
-  const ext = extname(outputFile).toLowerCase();
-
+function buildOutput(config: InputObjectsConfig, ext: string) {
   if (SUPPORTED_EXTENSIONS.ts.includes(ext)) {
     return buildTsOutput(config);
   }

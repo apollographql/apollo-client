@@ -2,7 +2,7 @@ import { codegen } from "@graphql-codegen/core";
 import type { Types } from "@graphql-codegen/plugin-helpers";
 import { gql } from "graphql-tag";
 
-import { plugin } from "../plugin.js";
+import * as inputObjectsPlugin from "../plugin.js";
 
 test("outputs empty object with no input objects in schema", async () => {
   const schema = gql`
@@ -1625,6 +1625,22 @@ export const inputObjects: InputObjectsConfig = {
 `);
 });
 
+test("throws on unsupported file extensions", async () => {
+  const schema = gql`
+    type Query {
+      foo: String
+    }
+  `;
+
+  await expect(
+    runCodegen({ schema, filename: "input-objects.json" })
+  ).rejects.toThrow(/requires extension to be one of/);
+
+  await expect(
+    runCodegen({ schema, filename: "input-objects" })
+  ).rejects.toThrow(/requires extension to be one of/);
+});
+
 async function runCodegen(
   options: Partial<Omit<Types.GenerateOptions, "schema">> &
     Pick<Types.GenerateOptions, "schema">
@@ -1634,9 +1650,7 @@ async function runCodegen(
     documents: [],
     plugins: [{ "@apollo/client-graphql-codegen/input-objects": {} }],
     pluginMap: {
-      "@apollo/client-graphql-codegen/input-objects": {
-        plugin,
-      },
+      "@apollo/client-graphql-codegen/input-objects": inputObjectsPlugin,
     },
     config: {},
     ...options,

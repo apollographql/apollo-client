@@ -1,4 +1,10 @@
-import type { PluginFunction, Types } from "@graphql-codegen/plugin-helpers";
+import { extname } from "node:path";
+
+import type {
+  PluginFunction,
+  PluginValidateFn,
+  Types,
+} from "@graphql-codegen/plugin-helpers";
 import type { DocumentNode, NamedTypeNode } from "graphql";
 import {
   getNamedType,
@@ -99,6 +105,25 @@ export const plugin: PluginFunction<InputObjectsPluginConfig> = async (
   }
 
   return buildOutput(inputObjectsConfig);
+};
+
+const SUPPORTED_EXTENSIONS = [".ts", ".tsx", ".js", ".jsx"];
+
+export const validate: PluginValidateFn = (
+  _schema,
+  _documents,
+  _config,
+  outputFile
+) => {
+  const ext = extname(outputFile).toLowerCase();
+
+  if (!SUPPORTED_EXTENSIONS.includes(ext)) {
+    throw new Error(
+      `Plugin "@apollo/client-graphql-codegen/input-objects" requires extension to be one of ${SUPPORTED_EXTENSIONS.join(
+        ", "
+      )}.`
+    );
+  }
 };
 
 function buildOutput(config: InputObjectsConfig) {

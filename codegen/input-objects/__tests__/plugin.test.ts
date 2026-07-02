@@ -650,9 +650,8 @@ test("omits unused input objects on fields with multiple input object arguments"
     },
   ];
 
-  await expect(
-  runCodegen({ schema, documents })
-).resolves.toMatchInlineSnapshot(`
+  await expect(runCodegen({ schema, documents })).resolves
+    .toMatchInlineSnapshot(`
 "import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
 
 export const inputObjects: InputObjectsConfig = {
@@ -724,9 +723,8 @@ test("collects usage across multiple documents", async () => {
     },
   ];
 
-  await expect(
-  runCodegen({ schema, documents })
-).resolves.toMatchInlineSnapshot(`
+  await expect(runCodegen({ schema, documents })).resolves
+    .toMatchInlineSnapshot(`
 "import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
 
 export const inputObjects: InputObjectsConfig = {
@@ -781,9 +779,8 @@ test("retains input objects used on only one of multiple fields", async () => {
     },
   ];
 
-  await expect(
-  runCodegen({ schema, documents })
-).resolves.toMatchInlineSnapshot(`
+  await expect(runCodegen({ schema, documents })).resolves
+    .toMatchInlineSnapshot(`
 "import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
 
 export const inputObjects: InputObjectsConfig = {
@@ -827,9 +824,8 @@ test("handles list and non-null wrapped variable types", async () => {
     },
   ];
 
-  await expect(
-  runCodegen({ schema, documents })
-).resolves.toMatchInlineSnapshot(`
+  await expect(runCodegen({ schema, documents })).resolves
+    .toMatchInlineSnapshot(`
 "import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
 
 export const inputObjects: InputObjectsConfig = {
@@ -888,9 +884,8 @@ test("collects usage from multiple operations in a single document", async () =>
     },
   ];
 
-  await expect(
-  runCodegen({ schema, documents })
-).resolves.toMatchInlineSnapshot(`
+  await expect(runCodegen({ schema, documents })).resolves
+    .toMatchInlineSnapshot(`
 "import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
 
 export const inputObjects: InputObjectsConfig = {
@@ -905,6 +900,92 @@ export const inputObjects: InputObjectsConfig = {
     }
   }
 };"
+`);
+});
+
+test("retains input objects when mixed with scalar variable definitions", async () => {
+  const schema = parse(/* GraphQL */ `
+    scalar DateTime
+
+    input EventFilter {
+      startsAfter: DateTime
+    }
+
+    type Query {
+      events(first: Int, after: DateTime, filter: EventFilter): [Event]
+    }
+
+    type Event {
+      id: ID!
+      startsAt: DateTime
+    }
+  `);
+
+  const documents = [
+    {
+      document: parse(/* GraphQL */ `
+        query Events($first: Int, $after: DateTime, $filter: EventFilter) {
+          events(first: $first, after: $after, filter: $filter) {
+            id
+          }
+        }
+      `),
+    },
+  ];
+
+  await expect(runCodegen({ schema, documents })).resolves
+    .toMatchInlineSnapshot(`
+"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
+
+export const inputObjects: InputObjectsConfig = {
+  \\"EventFilter\\": {
+    \\"fields\\": {
+      \\"startsAfter\\": \\"DateTime\\"
+    }
+  }
+};"
+`);
+});
+
+test("omits input objects when documents only use scalar variable definitions", async () => {
+  const schema = parse(/* GraphQL */ `
+    scalar DateTime
+
+    input EventInput {
+      startsAt: DateTime
+    }
+
+    type Query {
+      events(first: Int, after: DateTime): [Event]
+    }
+
+    type Mutation {
+      createEvent(input: EventInput!): Event
+    }
+
+    type Event {
+      id: ID!
+      startsAt: DateTime
+    }
+  `);
+
+  const documents = [
+    {
+      document: parse(/* GraphQL */ `
+        query Events($first: Int, $after: DateTime) {
+          events(first: $first, after: $after) {
+            id
+          }
+        }
+      `),
+    },
+  ];
+
+  await expect(runCodegen({ schema, documents })).resolves
+    .toMatchInlineSnapshot(`
+"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
+
+export const inputObjects: InputObjectsConfig = {};"
 `);
 });
 

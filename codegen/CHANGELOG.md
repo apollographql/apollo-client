@@ -1,5 +1,11 @@
 # @apollo/client-graphql-codegen
 
+## 2.1.0
+
+### Minor Changes
+
+- [#13301](https://github.com/apollographql/apollo-client/pull/13301) [`7e018e8`](https://github.com/apollographql/apollo-client/commit/7e018e8913c6d7443c0c088f8a082bb459fb3654) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add support for latest GraphQL Codegen package major versions used in peer dependencies.
+
 ## 2.0.0
 
 ### Major Changes

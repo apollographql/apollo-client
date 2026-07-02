@@ -1,15 +1,15 @@
 import { codegen } from "@graphql-codegen/core";
 import type { Types } from "@graphql-codegen/plugin-helpers";
-import { parse } from "graphql";
+import { gql } from "graphql-tag";
 
 import { plugin } from "../plugin.js";
 
 test("outputs empty object with no input objects in schema", async () => {
-  const schema = parse(/* GraphQL */ `
+  const schema = gql`
     type Query {
       foo: String
     }
-  `);
+  `;
 
   await expect(runCodegen({ schema })).resolves.toMatchInlineSnapshot(`
 "import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
@@ -19,7 +19,7 @@ export const inputObjects: InputObjectsConfig = {};"
 });
 
 test("outputs empty object with no input objects in schema with custom scalars", async () => {
-  const schema = parse(/* GraphQL */ `
+  const schema = gql`
     scalar DateTime
 
     type Query {
@@ -31,7 +31,7 @@ test("outputs empty object with no input objects in schema with custom scalars",
       name: String!
       startsAt: DateTime
     }
-  `);
+  `;
 
   await expect(runCodegen({ schema })).resolves.toMatchInlineSnapshot(`
 "import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
@@ -41,7 +41,7 @@ export const inputObjects: InputObjectsConfig = {};"
 });
 
 test("outputs input object that includes custom scalar", async () => {
-  const schema = parse(/* GraphQL */ `
+  const schema = gql`
     scalar DateTime
 
     input EventInput {
@@ -57,17 +57,17 @@ test("outputs input object that includes custom scalar", async () => {
       name: String!
       startsAt: DateTime
     }
-  `);
+  `;
 
   const documents = [
     {
-      document: parse(/* GraphQL */ `
+      document: gql`
         mutation CreateEvent($input: EventInput!) {
           createEvent(input: $input) {
             id
           }
         }
-      `),
+      `,
     },
   ];
 
@@ -86,7 +86,7 @@ export const inputObjects: InputObjectsConfig = {
 });
 
 test("limits input object to custom scalar types only", async () => {
-  const schema = parse(/* GraphQL */ `
+  const schema = gql`
     scalar DateTime
 
     input EventInput {
@@ -105,17 +105,17 @@ test("limits input object to custom scalar types only", async () => {
       capacity: Int
       startsAt: DateTime
     }
-  `);
+  `;
 
   const documents = [
     {
-      document: parse(/* GraphQL */ `
+      document: gql`
         mutation CreateEvent($input: EventInput!) {
           createEvent(input: $input) {
             id
           }
         }
-      `),
+      `,
     },
   ];
 
@@ -134,7 +134,7 @@ export const inputObjects: InputObjectsConfig = {
 });
 
 test("handles references to nested input objects", async () => {
-  const schema = parse(/* GraphQL */ `
+  const schema = gql`
     scalar DateTime
 
     input EventFilter {
@@ -156,17 +156,17 @@ test("handles references to nested input objects", async () => {
       capacity: Int
       startsAt: DateTime
     }
-  `);
+  `;
 
   const documents = [
     {
-      document: parse(/* GraphQL */ `
+      document: gql`
         query Events($filter: EventFilter) {
           events(filter: $filter) {
             id
           }
         }
-      `),
+      `,
     },
   ];
 
@@ -191,7 +191,7 @@ export const inputObjects: InputObjectsConfig = {
 });
 
 test("avoids configuring nested input objects without custom scalars", async () => {
-  const schema = parse(/* GraphQL */ `
+  const schema = gql`
     input DateRange {
       start: String!
       end: String!
@@ -218,17 +218,17 @@ test("avoids configuring nested input objects without custom scalars", async () 
     type Flight {
       code: String!
     }
-  `);
+  `;
 
   const documents = [
     {
-      document: parse(/* GraphQL */ `
+      document: gql`
         query FlightSearch($filter: FlightSearchFilter) {
           flightSearch(filter: $filter) {
             code
           }
         }
-      `),
+      `,
     },
   ];
 
@@ -241,7 +241,7 @@ export const inputObjects: InputObjectsConfig = {};"
 });
 
 test("handles cyclic references between input objects without custom scalars", async () => {
-  const schema = parse(/* GraphQL */ `
+  const schema = gql`
     input PersonFilter {
       name: String
       friends: FriendFilter
@@ -259,17 +259,17 @@ test("handles cyclic references between input objects without custom scalars", a
       id: ID!
       name: String!
     }
-  `);
+  `;
 
   const documents = [
     {
-      document: parse(/* GraphQL */ `
+      document: gql`
         query People($filter: PersonFilter) {
           people(filter: $filter) {
             id
           }
         }
-      `),
+      `,
     },
   ];
 
@@ -282,7 +282,7 @@ export const inputObjects: InputObjectsConfig = {};"
 });
 
 test("retains cyclic input objects when a custom scalar is in the cycle", async () => {
-  const schema = parse(/* GraphQL */ `
+  const schema = gql`
     scalar DateTime
 
     input PersonFilter {
@@ -303,17 +303,17 @@ test("retains cyclic input objects when a custom scalar is in the cycle", async 
       id: ID!
       name: String!
     }
-  `);
+  `;
 
   const documents = [
     {
-      document: parse(/* GraphQL */ `
+      document: gql`
         query People($filter: PersonFilter) {
           people(filter: $filter) {
             id
           }
         }
-      `),
+      `,
     },
   ];
 
@@ -338,7 +338,7 @@ export const inputObjects: InputObjectsConfig = {
 });
 
 test("omits fields on retained input objects that reference input objects without custom scalars", async () => {
-  const schema = parse(/* GraphQL */ `
+  const schema = gql`
     scalar DateTime
 
     input SearchFilter {
@@ -363,17 +363,17 @@ test("omits fields on retained input objects that reference input objects withou
     type Result {
       id: ID!
     }
-  `);
+  `;
 
   const documents = [
     {
-      document: parse(/* GraphQL */ `
+      document: gql`
         query Search($filter: SearchFilter) {
           search(filter: $filter) {
             id
           }
         }
-      `),
+      `,
     },
   ];
 
@@ -398,7 +398,7 @@ export const inputObjects: InputObjectsConfig = {
 });
 
 test("handles self-referencing input objects", async () => {
-  const schema = parse(/* GraphQL */ `
+  const schema = gql`
     scalar DateTime
 
     input TaskFilter {
@@ -415,17 +415,17 @@ test("handles self-referencing input objects", async () => {
       id: ID!
       name: String!
     }
-  `);
+  `;
 
   const documents = [
     {
-      document: parse(/* GraphQL */ `
+      document: gql`
         query Tasks($filter: TaskFilter) {
           tasks(filter: $filter) {
             id
           }
         }
-      `),
+      `,
     },
   ];
 
@@ -446,7 +446,7 @@ export const inputObjects: InputObjectsConfig = {
 });
 
 test("omits enum fields from retained input objects", async () => {
-  const schema = parse(/* GraphQL */ `
+  const schema = gql`
     scalar DateTime
 
     enum Status {
@@ -467,17 +467,17 @@ test("omits enum fields from retained input objects", async () => {
       id: ID!
       status: Status
     }
-  `);
+  `;
 
   const documents = [
     {
-      document: parse(/* GraphQL */ `
+      document: gql`
         query Tickets($filter: TicketFilter) {
           tickets(filter: $filter) {
             id
           }
         }
-      `),
+      `,
     },
   ];
 
@@ -496,7 +496,7 @@ export const inputObjects: InputObjectsConfig = {
 });
 
 test("omits input objects when no document uses them", async () => {
-  const schema = parse(/* GraphQL */ `
+  const schema = gql`
     scalar DateTime
 
     input EventInput {
@@ -515,17 +515,17 @@ test("omits input objects when no document uses them", async () => {
       id: ID!
       startsAt: DateTime
     }
-  `);
+  `;
 
   const documents = [
     {
-      document: parse(/* GraphQL */ `
+      document: gql`
         query Events {
           events {
             id
           }
         }
-      `),
+      `,
     },
   ];
 
@@ -538,7 +538,7 @@ export const inputObjects: InputObjectsConfig = {};"
 });
 
 test("retains only input objects used in document variable definitions", async () => {
-  const schema = parse(/* GraphQL */ `
+  const schema = gql`
     scalar DateTime
 
     input EventFilter {
@@ -563,17 +563,17 @@ test("retains only input objects used in document variable definitions", async (
       id: ID!
       purchasedAt: DateTime
     }
-  `);
+  `;
 
   const documents = [
     {
-      document: parse(/* GraphQL */ `
+      document: gql`
         query Events($filter: EventFilter) {
           events(filter: $filter) {
             id
           }
         }
-      `),
+      `,
     },
   ];
 
@@ -592,7 +592,7 @@ export const inputObjects: InputObjectsConfig = {
 });
 
 test("outputs empty object when no documents are provided", async () => {
-  const schema = parse(/* GraphQL */ `
+  const schema = gql`
     scalar DateTime
 
     input EventInput {
@@ -607,7 +607,7 @@ test("outputs empty object when no documents are provided", async () => {
       id: ID!
       startsAt: DateTime
     }
-  `);
+  `;
 
   await expect(runCodegen({ schema })).resolves.toMatchInlineSnapshot(`
 "import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
@@ -617,7 +617,7 @@ export const inputObjects: InputObjectsConfig = {};"
 });
 
 test("omits unused input objects on fields with multiple input object arguments", async () => {
-  const schema = parse(/* GraphQL */ `
+  const schema = gql`
     scalar DateTime
 
     input EventFilter {
@@ -636,17 +636,17 @@ test("omits unused input objects on fields with multiple input object arguments"
       id: ID!
       startsAt: DateTime
     }
-  `);
+  `;
 
   const documents = [
     {
-      document: parse(/* GraphQL */ `
+      document: gql`
         query Events($filter: EventFilter) {
           events(filter: $filter) {
             id
           }
         }
-      `),
+      `,
     },
   ];
 
@@ -665,7 +665,7 @@ export const inputObjects: InputObjectsConfig = {
 });
 
 test("collects usage across multiple documents", async () => {
-  const schema = parse(/* GraphQL */ `
+  const schema = gql`
     scalar DateTime
 
     input EventFilter {
@@ -700,26 +700,26 @@ test("collects usage across multiple documents", async () => {
       id: ID!
       generatedAt: DateTime
     }
-  `);
+  `;
 
   const documents = [
     {
-      document: parse(/* GraphQL */ `
+      document: gql`
         query Events($filter: EventFilter) {
           events(filter: $filter) {
             id
           }
         }
-      `),
+      `,
     },
     {
-      document: parse(/* GraphQL */ `
+      document: gql`
         query Tickets($filter: TicketFilter) {
           tickets(filter: $filter) {
             id
           }
         }
-      `),
+      `,
     },
   ];
 
@@ -743,7 +743,7 @@ export const inputObjects: InputObjectsConfig = {
 });
 
 test("retains input objects used on only one of multiple fields", async () => {
-  const schema = parse(/* GraphQL */ `
+  const schema = gql`
     scalar DateTime
 
     input DateRangeFilter {
@@ -765,17 +765,17 @@ test("retains input objects used on only one of multiple fields", async () => {
       id: ID!
       purchasedAt: DateTime
     }
-  `);
+  `;
 
   const documents = [
     {
-      document: parse(/* GraphQL */ `
+      document: gql`
         query Events($filter: DateRangeFilter) {
           events(filter: $filter) {
             id
           }
         }
-      `),
+      `,
     },
   ];
 
@@ -795,7 +795,7 @@ export const inputObjects: InputObjectsConfig = {
 });
 
 test("handles list and non-null wrapped variable types", async () => {
-  const schema = parse(/* GraphQL */ `
+  const schema = gql`
     scalar DateTime
 
     input EventFilter {
@@ -810,17 +810,17 @@ test("handles list and non-null wrapped variable types", async () => {
       id: ID!
       startsAt: DateTime
     }
-  `);
+  `;
 
   const documents = [
     {
-      document: parse(/* GraphQL */ `
+      document: gql`
         query Events($filters: [EventFilter!]!) {
           events(filters: $filters) {
             id
           }
         }
-      `),
+      `,
     },
   ];
 
@@ -839,7 +839,7 @@ export const inputObjects: InputObjectsConfig = {
 });
 
 test("collects usage from multiple operations in a single document", async () => {
-  const schema = parse(/* GraphQL */ `
+  const schema = gql`
     scalar DateTime
 
     input EventFilter {
@@ -864,11 +864,11 @@ test("collects usage from multiple operations in a single document", async () =>
       id: ID!
       purchasedAt: DateTime
     }
-  `);
+  `;
 
   const documents = [
     {
-      document: parse(/* GraphQL */ `
+      document: gql`
         query Events($filter: EventFilter) {
           events(filter: $filter) {
             id
@@ -880,7 +880,7 @@ test("collects usage from multiple operations in a single document", async () =>
             id
           }
         }
-      `),
+      `,
     },
   ];
 
@@ -904,7 +904,7 @@ export const inputObjects: InputObjectsConfig = {
 });
 
 test("retains input objects when mixed with scalar variable definitions", async () => {
-  const schema = parse(/* GraphQL */ `
+  const schema = gql`
     scalar DateTime
 
     input EventFilter {
@@ -919,17 +919,17 @@ test("retains input objects when mixed with scalar variable definitions", async 
       id: ID!
       startsAt: DateTime
     }
-  `);
+  `;
 
   const documents = [
     {
-      document: parse(/* GraphQL */ `
+      document: gql`
         query Events($first: Int, $after: DateTime, $filter: EventFilter) {
           events(first: $first, after: $after, filter: $filter) {
             id
           }
         }
-      `),
+      `,
     },
   ];
 
@@ -948,7 +948,7 @@ export const inputObjects: InputObjectsConfig = {
 });
 
 test("omits input objects when documents only use scalar variable definitions", async () => {
-  const schema = parse(/* GraphQL */ `
+  const schema = gql`
     scalar DateTime
 
     input EventInput {
@@ -967,17 +967,17 @@ test("omits input objects when documents only use scalar variable definitions", 
       id: ID!
       startsAt: DateTime
     }
-  `);
+  `;
 
   const documents = [
     {
-      document: parse(/* GraphQL */ `
+      document: gql`
         query Events($first: Int, $after: DateTime) {
           events(first: $first, after: $after) {
             id
           }
         }
-      `),
+      `,
     },
   ];
 
@@ -990,7 +990,7 @@ export const inputObjects: InputObjectsConfig = {};"
 });
 
 test("omits ignored scalar fields from input objects", async () => {
-  const schema = parse(/* GraphQL */ `
+  const schema = gql`
     scalar DateTime
     scalar JSON
 
@@ -1007,17 +1007,17 @@ test("omits ignored scalar fields from input objects", async () => {
       id: ID!
       startsAt: DateTime
     }
-  `);
+  `;
 
   const documents = [
     {
-      document: parse(/* GraphQL */ `
+      document: gql`
         mutation CreateEvent($input: EventInput!) {
           createEvent(input: $input) {
             id
           }
         }
-      `),
+      `,
     },
   ];
 
@@ -1037,7 +1037,7 @@ export const inputObjects: InputObjectsConfig = {
 });
 
 test("omits input objects whose only custom scalar is ignored", async () => {
-  const schema = parse(/* GraphQL */ `
+  const schema = gql`
     scalar DateTime
 
     input EventInput {
@@ -1052,17 +1052,17 @@ test("omits input objects whose only custom scalar is ignored", async () => {
       id: ID!
       startsAt: DateTime
     }
-  `);
+  `;
 
   const documents = [
     {
-      document: parse(/* GraphQL */ `
+      document: gql`
         mutation CreateEvent($input: EventInput!) {
           createEvent(input: $input) {
             id
           }
         }
-      `),
+      `,
     },
   ];
 
@@ -1076,7 +1076,7 @@ export const inputObjects: InputObjectsConfig = {};"
 });
 
 test("applies ignored scalars transitively through nested input objects", async () => {
-  const schema = parse(/* GraphQL */ `
+  const schema = gql`
     scalar DateTime
 
     input EventFilter {
@@ -1096,17 +1096,17 @@ test("applies ignored scalars transitively through nested input objects", async 
       id: ID!
       startsAt: DateTime
     }
-  `);
+  `;
 
   const documents = [
     {
-      document: parse(/* GraphQL */ `
+      document: gql`
         query Events($filter: EventFilter) {
           events(filter: $filter) {
             id
           }
         }
-      `),
+      `,
     },
   ];
 
@@ -1120,7 +1120,7 @@ export const inputObjects: InputObjectsConfig = {};"
 });
 
 test("retains sibling branches when ignored scalars drop a nested input object", async () => {
-  const schema = parse(/* GraphQL */ `
+  const schema = gql`
     scalar DateTime
     scalar JSON
 
@@ -1145,17 +1145,17 @@ test("retains sibling branches when ignored scalars drop a nested input object",
     type Result {
       id: ID!
     }
-  `);
+  `;
 
   const documents = [
     {
-      document: parse(/* GraphQL */ `
+      document: gql`
         query Search($filter: SearchFilter) {
           search(filter: $filter) {
             id
           }
         }
-      `),
+      `,
     },
   ];
 
@@ -1181,7 +1181,7 @@ export const inputObjects: InputObjectsConfig = {
 });
 
 test("handles ignored scalars that are not in the schema", async () => {
-  const schema = parse(/* GraphQL */ `
+  const schema = gql`
     scalar DateTime
 
     input EventInput {
@@ -1196,17 +1196,17 @@ test("handles ignored scalars that are not in the schema", async () => {
       id: ID!
       startsAt: DateTime
     }
-  `);
+  `;
 
   const documents = [
     {
-      document: parse(/* GraphQL */ `
+      document: gql`
         mutation CreateEvent($input: EventInput!) {
           createEvent(input: $input) {
             id
           }
         }
-      `),
+      `,
     },
   ];
 
@@ -1226,7 +1226,7 @@ export const inputObjects: InputObjectsConfig = {
 });
 
 test("emits input objects with custom scalars without documents when filterByDocuments is false", async () => {
-  const schema = parse(/* GraphQL */ `
+  const schema = gql`
     scalar DateTime
 
     input EventInput {
@@ -1241,7 +1241,7 @@ test("emits input objects with custom scalars without documents when filterByDoc
       id: ID!
       startsAt: DateTime
     }
-  `);
+  `;
 
   await expect(runCodegen({ schema, config: { filterByDocuments: false } }))
     .resolves.toMatchInlineSnapshot(`
@@ -1258,7 +1258,7 @@ export const inputObjects: InputObjectsConfig = {
 });
 
 test("emits input objects unused by documents when filterByDocuments is false", async () => {
-  const schema = parse(/* GraphQL */ `
+  const schema = gql`
     scalar DateTime
 
     input EventInput {
@@ -1277,17 +1277,17 @@ test("emits input objects unused by documents when filterByDocuments is false", 
       id: ID!
       startsAt: DateTime
     }
-  `);
+  `;
 
   const documents = [
     {
-      document: parse(/* GraphQL */ `
+      document: gql`
         query Events {
           events {
             id
           }
         }
-      `),
+      `,
     },
   ];
 
@@ -1307,7 +1307,7 @@ export const inputObjects: InputObjectsConfig = {
 });
 
 test("omits input objects without custom scalars when filterByDocuments is false", async () => {
-  const schema = parse(/* GraphQL */ `
+  const schema = gql`
     scalar DateTime
 
     input EventFilter {
@@ -1327,7 +1327,7 @@ test("omits input objects without custom scalars when filterByDocuments is false
       id: ID!
       startsAt: DateTime
     }
-  `);
+  `;
 
   await expect(runCodegen({ schema, config: { filterByDocuments: false } }))
     .resolves.toMatchInlineSnapshot(`
@@ -1344,7 +1344,7 @@ export const inputObjects: InputObjectsConfig = {
 });
 
 test("applies ignoreScalars when filterByDocuments is false", async () => {
-  const schema = parse(/* GraphQL */ `
+  const schema = gql`
     scalar DateTime
     scalar JSON
 
@@ -1364,7 +1364,7 @@ test("applies ignoreScalars when filterByDocuments is false", async () => {
       id: ID!
       startsAt: DateTime
     }
-  `);
+  `;
 
   await expect(
     runCodegen({
@@ -1385,7 +1385,7 @@ export const inputObjects: InputObjectsConfig = {
 });
 
 test("omits scalar fields not in includeScalars from input objects", async () => {
-  const schema = parse(/* GraphQL */ `
+  const schema = gql`
     scalar DateTime
     scalar JSON
 
@@ -1402,17 +1402,17 @@ test("omits scalar fields not in includeScalars from input objects", async () =>
       id: ID!
       startsAt: DateTime
     }
-  `);
+  `;
 
   const documents = [
     {
-      document: parse(/* GraphQL */ `
+      document: gql`
         mutation CreateEvent($input: EventInput!) {
           createEvent(input: $input) {
             id
           }
         }
-      `),
+      `,
     },
   ];
 
@@ -1432,7 +1432,7 @@ export const inputObjects: InputObjectsConfig = {
 });
 
 test("omits input objects without included scalars", async () => {
-  const schema = parse(/* GraphQL */ `
+  const schema = gql`
     scalar DateTime
     scalar JSON
 
@@ -1448,17 +1448,17 @@ test("omits input objects without included scalars", async () => {
       id: ID!
       startsAt: DateTime
     }
-  `);
+  `;
 
   const documents = [
     {
-      document: parse(/* GraphQL */ `
+      document: gql`
         mutation CreateEvent($input: EventInput!) {
           createEvent(input: $input) {
             id
           }
         }
-      `),
+      `,
     },
   ];
 
@@ -1472,7 +1472,7 @@ export const inputObjects: InputObjectsConfig = {};"
 });
 
 test("retains sibling branches when non-included scalars drop a nested input object", async () => {
-  const schema = parse(/* GraphQL */ `
+  const schema = gql`
     scalar DateTime
     scalar JSON
 
@@ -1497,17 +1497,17 @@ test("retains sibling branches when non-included scalars drop a nested input obj
     type Result {
       id: ID!
     }
-  `);
+  `;
 
   const documents = [
     {
-      document: parse(/* GraphQL */ `
+      document: gql`
         query Search($filter: SearchFilter) {
           search(filter: $filter) {
             id
           }
         }
-      `),
+      `,
     },
   ];
 
@@ -1533,7 +1533,7 @@ export const inputObjects: InputObjectsConfig = {
 });
 
 test("outputs empty object with an empty includeScalars list", async () => {
-  const schema = parse(/* GraphQL */ `
+  const schema = gql`
     scalar DateTime
 
     input EventInput {
@@ -1548,17 +1548,17 @@ test("outputs empty object with an empty includeScalars list", async () => {
       id: ID!
       startsAt: DateTime
     }
-  `);
+  `;
 
   const documents = [
     {
-      document: parse(/* GraphQL */ `
+      document: gql`
         mutation CreateEvent($input: EventInput!) {
           createEvent(input: $input) {
             id
           }
         }
-      `),
+      `,
     },
   ];
 
@@ -1572,7 +1572,7 @@ export const inputObjects: InputObjectsConfig = {};"
 });
 
 test("applies ignoreScalars alongside includeScalars", async () => {
-  const schema = parse(/* GraphQL */ `
+  const schema = gql`
     scalar DateTime
     scalar JSON
 
@@ -1589,17 +1589,17 @@ test("applies ignoreScalars alongside includeScalars", async () => {
       id: ID!
       startsAt: DateTime
     }
-  `);
+  `;
 
   const documents = [
     {
-      document: parse(/* GraphQL */ `
+      document: gql`
         mutation CreateEvent($input: EventInput!) {
           createEvent(input: $input) {
             id
           }
         }
-      `),
+      `,
     },
   ];
 

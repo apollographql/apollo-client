@@ -4051,6 +4051,78 @@ describe("useQuery Hook", () => {
       await expect(takeSnapshot).not.toRerender();
     });
 
+    it('rerenders with updates to non-errored fields from cache writes after a partial GraphQL error with errorPolicy: "all" and returnPartialData: true', async () => {
+      const query = gql`
+        query {
+          goodField
+          badField {
+            subField
+          }
+        }
+      `;
+
+      const client = new ApolloClient({
+        link: new MockLink([
+          {
+            request: { query },
+            result: {
+              data: { goodField: "initial", badField: null },
+              errors: [{ message: 'Error fetching field "badField".' }],
+            },
+          },
+        ]),
+        cache: new InMemoryCache(),
+      });
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot } = await renderHookToSnapshotStream(
+        () => useQuery(query, { errorPolicy: "all", returnPartialData: true }),
+        { wrapper: createClientWrapper(client) }
+      );
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { goodField: "initial", badField: null },
+        dataState: "complete",
+        error: new CombinedGraphQLErrors({
+          data: { goodField: "initial", badField: null },
+          errors: [{ message: 'Error fetching field "badField".' }],
+        }),
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        previousData: undefined,
+        variables: {},
+      });
+
+      client.writeQuery({
+        query: gql`
+          query {
+            goodField
+          }
+        `,
+        data: { goodField: "updated" },
+      });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { goodField: "updated", badField: null },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { goodField: "initial", badField: null },
+        variables: {},
+      });
+
+      await expect(takeSnapshot).not.toRerender();
+    });
+
     it("should persist errors on re-render if they are still valid", async () => {
       const query = gql`
         {

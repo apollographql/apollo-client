@@ -175,15 +175,15 @@ test("handles references to nested input objects", async () => {
 "import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
 
 export const inputObjects: InputObjectsConfig = {
-  \\"EventFilter\\": {
-    \\"fields\\": {
-      \\"dateRange\\": \\"DateRange\\"
-    }
-  },
   \\"DateRange\\": {
     \\"fields\\": {
       \\"start\\": \\"DateTime\\",
       \\"end\\": \\"DateTime\\"
+    }
+  },
+  \\"EventFilter\\": {
+    \\"fields\\": {
+      \\"dateRange\\": \\"DateRange\\"
     }
   }
 };"
@@ -322,15 +322,15 @@ test("retains cyclic input objects when a custom scalar is in the cycle", async 
 "import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
 
 export const inputObjects: InputObjectsConfig = {
-  \\"PersonFilter\\": {
-    \\"fields\\": {
-      \\"friends\\": \\"FriendFilter\\"
-    }
-  },
   \\"FriendFilter\\": {
     \\"fields\\": {
       \\"since\\": \\"DateTime\\",
       \\"person\\": \\"PersonFilter\\"
+    }
+  },
+  \\"PersonFilter\\": {
+    \\"fields\\": {
+      \\"friends\\": \\"FriendFilter\\"
     }
   }
 };"
@@ -382,15 +382,15 @@ test("omits fields on retained input objects that reference input objects withou
 "import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
 
 export const inputObjects: InputObjectsConfig = {
-  \\"SearchFilter\\": {
-    \\"fields\\": {
-      \\"dateRange\\": \\"DateRange\\"
-    }
-  },
   \\"DateRange\\": {
     \\"fields\\": {
       \\"start\\": \\"DateTime\\",
       \\"end\\": \\"DateTime\\"
+    }
+  },
+  \\"SearchFilter\\": {
+    \\"fields\\": {
+      \\"dateRange\\": \\"DateRange\\"
     }
   }
 };"

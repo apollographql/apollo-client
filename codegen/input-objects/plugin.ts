@@ -65,11 +65,8 @@ export const plugin: PluginFunction<InputObjectsPluginConfig> = async (
   // reference nested input objects or custom scalars. We limit the config to
   // only output types with custom scalars to avoid bloating the object with
   // fields that would be unused by the client
-  for (const [name, fields] of inputObjects) {
-    if (!withCustomScalars.has(name)) {
-      continue;
-    }
-
+  for (const name of withCustomScalars) {
+    const fields = inputObjects.get(name)!;
     const fieldsConfig: Record<string, string> = {};
 
     for (const [fieldName, typeName] of Object.entries(fields)) {

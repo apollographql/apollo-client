@@ -145,7 +145,7 @@ const codegen = {
       "ts-jest",
       {
         // just transpile, no type checking. We type-check in CI by running `tsc` directly.
-        tsconfig: join(import.meta.dirname, "../tsconfig.tests.json"),
+        tsconfig: join(import.meta.dirname, "../codegen/tsconfig.json"),
       },
     ],
   },

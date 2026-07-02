@@ -1,6 +1,7 @@
 import { codegen } from "@graphql-codegen/core";
-import { plugin } from "../plugin.js";
 import { parse } from "graphql";
+
+import { plugin } from "../plugin.js";
 
 test("works", async () => {
   const schema = parse(/* GraphQL */ `

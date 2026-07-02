@@ -1625,6 +1625,129 @@ export const inputObjects: InputObjectsConfig = {
 `);
 });
 
+test("outputs TypeScript format for .tsx files", async () => {
+  const schema = gql`
+    scalar DateTime
+
+    input EventInput {
+      startsAt: DateTime
+    }
+
+    type Mutation {
+      createEvent(input: EventInput!): Boolean
+    }
+  `;
+
+  const documents = [
+    {
+      document: gql`
+        mutation CreateEvent($input: EventInput!) {
+          createEvent(input: $input)
+        }
+      `,
+    },
+  ];
+
+  await expect(runCodegen({ schema, documents, filename: "input-objects.tsx" }))
+    .resolves.toMatchInlineSnapshot(`
+"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
+
+export const inputObjects: InputObjectsConfig = {
+  \\"EventInput\\": {
+    \\"fields\\": {
+      \\"startsAt\\": \\"DateTime\\"
+    }
+  }
+};"
+`);
+});
+
+test("outputs JSDoc format for .js files", async () => {
+  const schema = gql`
+    scalar DateTime
+
+    input EventInput {
+      startsAt: DateTime
+    }
+
+    type Mutation {
+      createEvent(input: EventInput!): Boolean
+    }
+  `;
+
+  const documents = [
+    {
+      document: gql`
+        mutation CreateEvent($input: EventInput!) {
+          createEvent(input: $input)
+        }
+      `,
+    },
+  ];
+
+  await expect(runCodegen({ schema, documents, filename: "input-objects.js" }))
+    .resolves.toMatchInlineSnapshot(`
+"/** @type {import(\\"@apollo/client/cache\\").InputObjectsConfig} */
+export const inputObjects = {
+  \\"EventInput\\": {
+    \\"fields\\": {
+      \\"startsAt\\": \\"DateTime\\"
+    }
+  }
+};"
+`);
+});
+
+test("outputs JSDoc format for .jsx files", async () => {
+  const schema = gql`
+    scalar DateTime
+
+    input EventInput {
+      startsAt: DateTime
+    }
+
+    type Mutation {
+      createEvent(input: EventInput!): Boolean
+    }
+  `;
+
+  const documents = [
+    {
+      document: gql`
+        mutation CreateEvent($input: EventInput!) {
+          createEvent(input: $input)
+        }
+      `,
+    },
+  ];
+
+  await expect(runCodegen({ schema, documents, filename: "input-objects.jsx" }))
+    .resolves.toMatchInlineSnapshot(`
+"/** @type {import(\\"@apollo/client/cache\\").InputObjectsConfig} */
+export const inputObjects = {
+  \\"EventInput\\": {
+    \\"fields\\": {
+      \\"startsAt\\": \\"DateTime\\"
+    }
+  }
+};"
+`);
+});
+
+test("outputs JSDoc format for empty output in .js files", async () => {
+  const schema = gql`
+    type Query {
+      foo: String
+    }
+  `;
+
+  await expect(runCodegen({ schema, filename: "input-objects.js" })).resolves
+    .toMatchInlineSnapshot(`
+"/** @type {import(\\"@apollo/client/cache\\").InputObjectsConfig} */
+export const inputObjects = {};"
+`);
+});
+
 test("throws on unsupported file extensions", async () => {
   const schema = gql`
     type Query {

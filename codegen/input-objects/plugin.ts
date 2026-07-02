@@ -19,10 +19,16 @@ import type { InputObjectsPluginConfig } from "./config.js";
 type InputObjectMap = Map<string, Record<string, string>>;
 type InputObjectsConfig = Record<string, { fields: Record<string, string> }>;
 
-export const plugin: PluginFunction<InputObjectsPluginConfig> = async (
+const SUPPORTED_EXTENSIONS = {
+  ts: [".ts", ".tsx"],
+  js: [".js", ".jsx"],
+};
+
+export const plugin: PluginFunction<InputObjectsPluginConfig, string> = async (
   schema,
   documents,
-  config
+  config,
+  info
 ) => {
   const {
     ignoreScalars = [],
@@ -30,8 +36,14 @@ export const plugin: PluginFunction<InputObjectsPluginConfig> = async (
     includeScalars,
   } = config;
 
+  const outputFile = info?.outputFile;
+
+  if (!outputFile) {
+    throw new Error("Could not determine output file.");
+  }
+
   if (includeScalars?.length === 0) {
-    return buildOutput({});
+    return buildOutput({}, outputFile);
   }
 
   const types = Object.values(schema.getTypeMap());
@@ -58,7 +70,7 @@ export const plugin: PluginFunction<InputObjectsPluginConfig> = async (
   }
 
   if (customScalars.size === 0) {
-    return buildOutput({});
+    return buildOutput({}, outputFile);
   }
 
   if (filterByDocuments) {
@@ -104,10 +116,8 @@ export const plugin: PluginFunction<InputObjectsPluginConfig> = async (
     inputObjectsConfig[name] = { fields: fieldsConfig };
   }
 
-  return buildOutput(inputObjectsConfig);
+  return buildOutput(inputObjectsConfig, outputFile);
 };
-
-const SUPPORTED_EXTENSIONS = [".ts", ".tsx", ".js", ".jsx"];
 
 export const validate: PluginValidateFn = (
   _schema,
@@ -116,17 +126,32 @@ export const validate: PluginValidateFn = (
   outputFile
 ) => {
   const ext = extname(outputFile).toLowerCase();
+  const all = Object.values(SUPPORTED_EXTENSIONS).flat();
 
-  if (!SUPPORTED_EXTENSIONS.includes(ext)) {
+  if (!all.includes(ext)) {
     throw new Error(
-      `Plugin "@apollo/client-graphql-codegen/input-objects" requires extension to be one of ${SUPPORTED_EXTENSIONS.join(
+      `Plugin "@apollo/client-graphql-codegen/input-objects" requires extension to be one of ${all.join(
         ", "
       )}.`
     );
   }
 };
 
-function buildOutput(config: InputObjectsConfig) {
+function buildOutput(config: InputObjectsConfig, outputFile: string) {
+  const ext = extname(outputFile).toLowerCase();
+
+  if (SUPPORTED_EXTENSIONS.ts.includes(ext)) {
+    return buildTsOutput(config);
+  }
+
+  if (SUPPORTED_EXTENSIONS.js.includes(ext)) {
+    return buildJsOutput(config);
+  }
+
+  throw new Error(`Cannot build output for unknown extension '${ext}'.`);
+}
+
+function buildTsOutput(config: InputObjectsConfig) {
   return `
 import type { InputObjectsConfig } from "@apollo/client/cache";
 
@@ -135,6 +160,13 @@ export const inputObjects: InputObjectsConfig = ${JSON.stringify(
     null,
     2
   )};
+`.trim();
+}
+
+function buildJsOutput(config: InputObjectsConfig) {
+  return `
+/** @type {import("@apollo/client/cache").InputObjectsConfig} */
+export const inputObjects = ${JSON.stringify(config, null, 2)};
 `.trim();
 }
 

@@ -72,6 +72,41 @@ export const inputObjects: InputObjectsConfig = {
 `);
 });
 
+test("limits input object to custom scalar types only", async () => {
+  const schema = parse(/* GraphQL */ `
+    scalar DateTime
+
+    input EventInput {
+      name: String!
+      capacity: Int
+      startsAt: DateTime
+    }
+
+    type Mutation {
+      createEvent(input: EventInput!): Event
+    }
+
+    type Event {
+      id: ID!
+      name: String!
+      capacity: Int
+      startsAt: DateTime
+    }
+  `);
+
+  await expect(runCodegen({ schema })).resolves.toMatchInlineSnapshot(`
+"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
+
+export const inputObjects: InputObjectsConfig = {
+  \\"EventInput\\": {
+    \\"fields\\": {
+      \\"startsAt\\": \\"DateTime\\"
+    }
+  }
+};"
+`);
+});
+
 async function runCodegen(
   options: Partial<Omit<Types.GenerateOptions, "schema">> &
     Pick<Types.GenerateOptions, "schema">

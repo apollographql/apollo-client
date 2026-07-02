@@ -36,10 +36,12 @@
     "publint": "publint run --strict ."
   },
   "devDependencies": {
-    "typescript": "^5.8.3",
+    "@graphql-codegen/core": "^6.1.0",
     "@graphql-codegen/plugin-helpers": "^7.0.1",
     "@graphql-codegen/typescript": "^6.0.2",
-    "@graphql-codegen/visitor-plugin-common": "^7.1.2"
+    "@graphql-codegen/visitor-plugin-common": "^7.1.2",
+    "@types/jest": "^30.0.0",
+    "typescript": "^5.8.3"
   },
   "peerDependencies": {
     "@graphql-codegen/plugin-helpers": "^6.0.0 || ^7.0.0",

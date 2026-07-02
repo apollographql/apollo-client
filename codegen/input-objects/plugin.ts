@@ -18,35 +18,47 @@ export const plugin: PluginFunction<InputObjectsPluginConfig> = async (
 ) => {
   const types = Object.values(schema.getTypeMap());
   const customScalars = new Set<string>();
-  const inputObjects = new Map<string, GraphQLInputObjectType>();
+  const inputObjects = new Map<string, Record<string, string>>();
 
   for (const type of types) {
     if (isScalarType(type) && !BUILTIN_SCALARS.has(type)) {
       customScalars.add(type.name);
     } else if (isInputObjectType(type)) {
-      inputObjects.set(type.name, type);
+      const fields = Object.fromEntries(
+        Object.entries(type.getFields()).map(([fieldName, fieldType]) => {
+          return [fieldName, getNamedType(fieldType.type).name];
+        })
+      );
+
+      inputObjects.set(type.name, fields);
     }
   }
 
   const config: Record<string, { fields: Record<string, string> }> = {};
 
-  // process input objects after we've gathered all custom scalars so that we
-  // avoid unnecessary config for builtin scalars
-  for (const inputObject of inputObjects.values()) {
+  // process input objects after we've gathered all types so that we can
+  // reference nested input objects or custom scalars. We limit the config to
+  // only output types with custom scalars to avoid bloating the object with
+  // fields that would be unused by the client
+  for (const [name, fields] of inputObjects) {
     const inputObjectConfig = { fields: {} as Record<string, string> };
-    const fields = inputObject.getFields();
 
-    for (const [name, field] of Object.entries(fields)) {
-      const { name: typeName } = getNamedType(field.type);
-
+    for (const [fieldName, typeName] of Object.entries(fields)) {
       if (customScalars.has(typeName)) {
-        inputObjectConfig.fields[name] = typeName;
-      } else if (inputObjects.has(typeName)) {
-        inputObjectConfig.fields[name] = typeName;
+        inputObjectConfig.fields[fieldName] = typeName;
+        continue;
+      }
+
+      if (!inputObjects.has(typeName)) {
+        continue;
+      }
+
+      if (customScalars.has(typeName) || inputObjects.has(typeName)) {
+        inputObjectConfig.fields[fieldName] = typeName;
       }
     }
 
-    config[inputObject.name] = inputObjectConfig;
+    config[name] = inputObjectConfig;
   }
 
   const contents = `

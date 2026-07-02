@@ -11,11 +11,7 @@ test("outputs empty object with no input objects in schema", async () => {
     }
   `;
 
-  await expect(runCodegen({ schema })).resolves.toMatchInlineSnapshot(`
-"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
-
-export const inputObjects: InputObjectsConfig = {};"
-`);
+  await expect(generateConfig({ schema })).resolves.toStrictEqual({});
 });
 
 test("outputs empty object with no input objects in schema with custom scalars", async () => {
@@ -33,11 +29,7 @@ test("outputs empty object with no input objects in schema with custom scalars",
     }
   `;
 
-  await expect(runCodegen({ schema })).resolves.toMatchInlineSnapshot(`
-"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
-
-export const inputObjects: InputObjectsConfig = {};"
-`);
+  await expect(generateConfig({ schema })).resolves.toStrictEqual({});
 });
 
 test("outputs input object that includes custom scalar", async () => {
@@ -71,18 +63,9 @@ test("outputs input object that includes custom scalar", async () => {
     },
   ];
 
-  await expect(runCodegen({ schema, documents })).resolves
-    .toMatchInlineSnapshot(`
-"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
-
-export const inputObjects: InputObjectsConfig = {
-  \\"EventInput\\": {
-    \\"fields\\": {
-      \\"startsAt\\": \\"DateTime\\"
-    }
-  }
-};"
-`);
+  await expect(generateConfig({ schema, documents })).resolves.toStrictEqual({
+    EventInput: { fields: { startsAt: "DateTime" } },
+  });
 });
 
 test("limits input object to custom scalar types only", async () => {
@@ -119,18 +102,9 @@ test("limits input object to custom scalar types only", async () => {
     },
   ];
 
-  await expect(runCodegen({ schema, documents })).resolves
-    .toMatchInlineSnapshot(`
-"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
-
-export const inputObjects: InputObjectsConfig = {
-  \\"EventInput\\": {
-    \\"fields\\": {
-      \\"startsAt\\": \\"DateTime\\"
-    }
-  }
-};"
-`);
+  await expect(generateConfig({ schema, documents })).resolves.toStrictEqual({
+    EventInput: { fields: { startsAt: "DateTime" } },
+  });
 });
 
 test("handles references to nested input objects", async () => {
@@ -170,24 +144,10 @@ test("handles references to nested input objects", async () => {
     },
   ];
 
-  await expect(runCodegen({ schema, documents })).resolves
-    .toMatchInlineSnapshot(`
-"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
-
-export const inputObjects: InputObjectsConfig = {
-  \\"DateRange\\": {
-    \\"fields\\": {
-      \\"start\\": \\"DateTime\\",
-      \\"end\\": \\"DateTime\\"
-    }
-  },
-  \\"EventFilter\\": {
-    \\"fields\\": {
-      \\"dateRange\\": \\"DateRange\\"
-    }
-  }
-};"
-`);
+  await expect(generateConfig({ schema, documents })).resolves.toStrictEqual({
+    DateRange: { fields: { start: "DateTime", end: "DateTime" } },
+    EventFilter: { fields: { dateRange: "DateRange" } },
+  });
 });
 
 test("avoids configuring nested input objects without custom scalars", async () => {
@@ -232,12 +192,9 @@ test("avoids configuring nested input objects without custom scalars", async () 
     },
   ];
 
-  await expect(runCodegen({ schema, documents })).resolves
-    .toMatchInlineSnapshot(`
-"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
-
-export const inputObjects: InputObjectsConfig = {};"
-`);
+  await expect(generateConfig({ schema, documents })).resolves.toStrictEqual(
+    {}
+  );
 });
 
 test("handles cyclic references between input objects without custom scalars", async () => {
@@ -273,12 +230,9 @@ test("handles cyclic references between input objects without custom scalars", a
     },
   ];
 
-  await expect(runCodegen({ schema, documents })).resolves
-    .toMatchInlineSnapshot(`
-"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
-
-export const inputObjects: InputObjectsConfig = {};"
-`);
+  await expect(generateConfig({ schema, documents })).resolves.toStrictEqual(
+    {}
+  );
 });
 
 test("retains cyclic input objects when a custom scalar is in the cycle", async () => {
@@ -317,24 +271,10 @@ test("retains cyclic input objects when a custom scalar is in the cycle", async 
     },
   ];
 
-  await expect(runCodegen({ schema, documents })).resolves
-    .toMatchInlineSnapshot(`
-"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
-
-export const inputObjects: InputObjectsConfig = {
-  \\"FriendFilter\\": {
-    \\"fields\\": {
-      \\"since\\": \\"DateTime\\",
-      \\"person\\": \\"PersonFilter\\"
-    }
-  },
-  \\"PersonFilter\\": {
-    \\"fields\\": {
-      \\"friends\\": \\"FriendFilter\\"
-    }
-  }
-};"
-`);
+  await expect(generateConfig({ schema, documents })).resolves.toStrictEqual({
+    FriendFilter: { fields: { since: "DateTime", person: "PersonFilter" } },
+    PersonFilter: { fields: { friends: "FriendFilter" } },
+  });
 });
 
 test("omits fields on retained input objects that reference input objects without custom scalars", async () => {
@@ -377,24 +317,10 @@ test("omits fields on retained input objects that reference input objects withou
     },
   ];
 
-  await expect(runCodegen({ schema, documents })).resolves
-    .toMatchInlineSnapshot(`
-"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
-
-export const inputObjects: InputObjectsConfig = {
-  \\"DateRange\\": {
-    \\"fields\\": {
-      \\"start\\": \\"DateTime\\",
-      \\"end\\": \\"DateTime\\"
-    }
-  },
-  \\"SearchFilter\\": {
-    \\"fields\\": {
-      \\"dateRange\\": \\"DateRange\\"
-    }
-  }
-};"
-`);
+  await expect(generateConfig({ schema, documents })).resolves.toStrictEqual({
+    DateRange: { fields: { start: "DateTime", end: "DateTime" } },
+    SearchFilter: { fields: { dateRange: "DateRange" } },
+  });
 });
 
 test("handles self-referencing input objects", async () => {
@@ -429,20 +355,11 @@ test("handles self-referencing input objects", async () => {
     },
   ];
 
-  await expect(runCodegen({ schema, documents })).resolves
-    .toMatchInlineSnapshot(`
-"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
-
-export const inputObjects: InputObjectsConfig = {
-  \\"TaskFilter\\": {
-    \\"fields\\": {
-      \\"and\\": \\"TaskFilter\\",
-      \\"not\\": \\"TaskFilter\\",
-      \\"dueBefore\\": \\"DateTime\\"
-    }
-  }
-};"
-`);
+  await expect(generateConfig({ schema, documents })).resolves.toStrictEqual({
+    TaskFilter: {
+      fields: { and: "TaskFilter", not: "TaskFilter", dueBefore: "DateTime" },
+    },
+  });
 });
 
 test("omits enum fields from retained input objects", async () => {
@@ -481,18 +398,9 @@ test("omits enum fields from retained input objects", async () => {
     },
   ];
 
-  await expect(runCodegen({ schema, documents })).resolves
-    .toMatchInlineSnapshot(`
-"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
-
-export const inputObjects: InputObjectsConfig = {
-  \\"TicketFilter\\": {
-    \\"fields\\": {
-      \\"after\\": \\"DateTime\\"
-    }
-  }
-};"
-`);
+  await expect(generateConfig({ schema, documents })).resolves.toStrictEqual({
+    TicketFilter: { fields: { after: "DateTime" } },
+  });
 });
 
 test("omits input objects when no document uses them", async () => {
@@ -529,12 +437,9 @@ test("omits input objects when no document uses them", async () => {
     },
   ];
 
-  await expect(runCodegen({ schema, documents })).resolves
-    .toMatchInlineSnapshot(`
-"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
-
-export const inputObjects: InputObjectsConfig = {};"
-`);
+  await expect(generateConfig({ schema, documents })).resolves.toStrictEqual(
+    {}
+  );
 });
 
 test("retains only input objects used in document variable definitions", async () => {
@@ -577,18 +482,9 @@ test("retains only input objects used in document variable definitions", async (
     },
   ];
 
-  await expect(runCodegen({ schema, documents })).resolves
-    .toMatchInlineSnapshot(`
-"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
-
-export const inputObjects: InputObjectsConfig = {
-  \\"EventFilter\\": {
-    \\"fields\\": {
-      \\"startsAfter\\": \\"DateTime\\"
-    }
-  }
-};"
-`);
+  await expect(generateConfig({ schema, documents })).resolves.toStrictEqual({
+    EventFilter: { fields: { startsAfter: "DateTime" } },
+  });
 });
 
 test("outputs empty object when no documents are provided", async () => {
@@ -609,11 +505,7 @@ test("outputs empty object when no documents are provided", async () => {
     }
   `;
 
-  await expect(runCodegen({ schema })).resolves.toMatchInlineSnapshot(`
-"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
-
-export const inputObjects: InputObjectsConfig = {};"
-`);
+  await expect(generateConfig({ schema })).resolves.toStrictEqual({});
 });
 
 test("omits unused input objects on fields with multiple input object arguments", async () => {
@@ -650,18 +542,9 @@ test("omits unused input objects on fields with multiple input object arguments"
     },
   ];
 
-  await expect(runCodegen({ schema, documents })).resolves
-    .toMatchInlineSnapshot(`
-"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
-
-export const inputObjects: InputObjectsConfig = {
-  \\"EventFilter\\": {
-    \\"fields\\": {
-      \\"startsAfter\\": \\"DateTime\\"
-    }
-  }
-};"
-`);
+  await expect(generateConfig({ schema, documents })).resolves.toStrictEqual({
+    EventFilter: { fields: { startsAfter: "DateTime" } },
+  });
 });
 
 test("collects usage across multiple documents", async () => {
@@ -723,23 +606,10 @@ test("collects usage across multiple documents", async () => {
     },
   ];
 
-  await expect(runCodegen({ schema, documents })).resolves
-    .toMatchInlineSnapshot(`
-"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
-
-export const inputObjects: InputObjectsConfig = {
-  \\"EventFilter\\": {
-    \\"fields\\": {
-      \\"startsAfter\\": \\"DateTime\\"
-    }
-  },
-  \\"TicketFilter\\": {
-    \\"fields\\": {
-      \\"purchasedAfter\\": \\"DateTime\\"
-    }
-  }
-};"
-`);
+  await expect(generateConfig({ schema, documents })).resolves.toStrictEqual({
+    EventFilter: { fields: { startsAfter: "DateTime" } },
+    TicketFilter: { fields: { purchasedAfter: "DateTime" } },
+  });
 });
 
 test("retains input objects used on only one of multiple fields", async () => {
@@ -779,19 +649,9 @@ test("retains input objects used on only one of multiple fields", async () => {
     },
   ];
 
-  await expect(runCodegen({ schema, documents })).resolves
-    .toMatchInlineSnapshot(`
-"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
-
-export const inputObjects: InputObjectsConfig = {
-  \\"DateRangeFilter\\": {
-    \\"fields\\": {
-      \\"start\\": \\"DateTime\\",
-      \\"end\\": \\"DateTime\\"
-    }
-  }
-};"
-`);
+  await expect(generateConfig({ schema, documents })).resolves.toStrictEqual({
+    DateRangeFilter: { fields: { start: "DateTime", end: "DateTime" } },
+  });
 });
 
 test("handles list and non-null wrapped variable types", async () => {
@@ -824,18 +684,9 @@ test("handles list and non-null wrapped variable types", async () => {
     },
   ];
 
-  await expect(runCodegen({ schema, documents })).resolves
-    .toMatchInlineSnapshot(`
-"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
-
-export const inputObjects: InputObjectsConfig = {
-  \\"EventFilter\\": {
-    \\"fields\\": {
-      \\"startsAfter\\": \\"DateTime\\"
-    }
-  }
-};"
-`);
+  await expect(generateConfig({ schema, documents })).resolves.toStrictEqual({
+    EventFilter: { fields: { startsAfter: "DateTime" } },
+  });
 });
 
 test("collects usage from multiple operations in a single document", async () => {
@@ -884,23 +735,10 @@ test("collects usage from multiple operations in a single document", async () =>
     },
   ];
 
-  await expect(runCodegen({ schema, documents })).resolves
-    .toMatchInlineSnapshot(`
-"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
-
-export const inputObjects: InputObjectsConfig = {
-  \\"EventFilter\\": {
-    \\"fields\\": {
-      \\"startsAfter\\": \\"DateTime\\"
-    }
-  },
-  \\"TicketFilter\\": {
-    \\"fields\\": {
-      \\"purchasedAfter\\": \\"DateTime\\"
-    }
-  }
-};"
-`);
+  await expect(generateConfig({ schema, documents })).resolves.toStrictEqual({
+    EventFilter: { fields: { startsAfter: "DateTime" } },
+    TicketFilter: { fields: { purchasedAfter: "DateTime" } },
+  });
 });
 
 test("retains input objects when mixed with scalar variable definitions", async () => {
@@ -933,18 +771,9 @@ test("retains input objects when mixed with scalar variable definitions", async 
     },
   ];
 
-  await expect(runCodegen({ schema, documents })).resolves
-    .toMatchInlineSnapshot(`
-"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
-
-export const inputObjects: InputObjectsConfig = {
-  \\"EventFilter\\": {
-    \\"fields\\": {
-      \\"startsAfter\\": \\"DateTime\\"
-    }
-  }
-};"
-`);
+  await expect(generateConfig({ schema, documents })).resolves.toStrictEqual({
+    EventFilter: { fields: { startsAfter: "DateTime" } },
+  });
 });
 
 test("omits input objects when documents only use scalar variable definitions", async () => {
@@ -981,12 +810,9 @@ test("omits input objects when documents only use scalar variable definitions", 
     },
   ];
 
-  await expect(runCodegen({ schema, documents })).resolves
-    .toMatchInlineSnapshot(`
-"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
-
-export const inputObjects: InputObjectsConfig = {};"
-`);
+  await expect(generateConfig({ schema, documents })).resolves.toStrictEqual(
+    {}
+  );
 });
 
 test("omits ignored scalar fields from input objects", async () => {
@@ -1022,18 +848,10 @@ test("omits ignored scalar fields from input objects", async () => {
   ];
 
   await expect(
-    runCodegen({ schema, documents, config: { ignoreScalars: ["JSON"] } })
-  ).resolves.toMatchInlineSnapshot(`
-"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
-
-export const inputObjects: InputObjectsConfig = {
-  \\"EventInput\\": {
-    \\"fields\\": {
-      \\"startsAt\\": \\"DateTime\\"
-    }
-  }
-};"
-`);
+    generateConfig({ schema, documents, config: { ignoreScalars: ["JSON"] } })
+  ).resolves.toStrictEqual({
+    EventInput: { fields: { startsAt: "DateTime" } },
+  });
 });
 
 test("omits input objects whose only custom scalar is ignored", async () => {
@@ -1067,12 +885,12 @@ test("omits input objects whose only custom scalar is ignored", async () => {
   ];
 
   await expect(
-    runCodegen({ schema, documents, config: { ignoreScalars: ["DateTime"] } })
-  ).resolves.toMatchInlineSnapshot(`
-"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
-
-export const inputObjects: InputObjectsConfig = {};"
-`);
+    generateConfig({
+      schema,
+      documents,
+      config: { ignoreScalars: ["DateTime"] },
+    })
+  ).resolves.toStrictEqual({});
 });
 
 test("applies ignored scalars transitively through nested input objects", async () => {
@@ -1111,12 +929,12 @@ test("applies ignored scalars transitively through nested input objects", async 
   ];
 
   await expect(
-    runCodegen({ schema, documents, config: { ignoreScalars: ["DateTime"] } })
-  ).resolves.toMatchInlineSnapshot(`
-"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
-
-export const inputObjects: InputObjectsConfig = {};"
-`);
+    generateConfig({
+      schema,
+      documents,
+      config: { ignoreScalars: ["DateTime"] },
+    })
+  ).resolves.toStrictEqual({});
 });
 
 test("retains sibling branches when ignored scalars drop a nested input object", async () => {
@@ -1160,24 +978,11 @@ test("retains sibling branches when ignored scalars drop a nested input object",
   ];
 
   await expect(
-    runCodegen({ schema, documents, config: { ignoreScalars: ["JSON"] } })
-  ).resolves.toMatchInlineSnapshot(`
-"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
-
-export const inputObjects: InputObjectsConfig = {
-  \\"DateRange\\": {
-    \\"fields\\": {
-      \\"start\\": \\"DateTime\\",
-      \\"end\\": \\"DateTime\\"
-    }
-  },
-  \\"SearchFilter\\": {
-    \\"fields\\": {
-      \\"dateRange\\": \\"DateRange\\"
-    }
-  }
-};"
-`);
+    generateConfig({ schema, documents, config: { ignoreScalars: ["JSON"] } })
+  ).resolves.toStrictEqual({
+    DateRange: { fields: { start: "DateTime", end: "DateTime" } },
+    SearchFilter: { fields: { dateRange: "DateRange" } },
+  });
 });
 
 test("handles ignored scalars that are not in the schema", async () => {
@@ -1211,18 +1016,10 @@ test("handles ignored scalars that are not in the schema", async () => {
   ];
 
   await expect(
-    runCodegen({ schema, documents, config: { ignoreScalars: ["JSON"] } })
-  ).resolves.toMatchInlineSnapshot(`
-"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
-
-export const inputObjects: InputObjectsConfig = {
-  \\"EventInput\\": {
-    \\"fields\\": {
-      \\"startsAt\\": \\"DateTime\\"
-    }
-  }
-};"
-`);
+    generateConfig({ schema, documents, config: { ignoreScalars: ["JSON"] } })
+  ).resolves.toStrictEqual({
+    EventInput: { fields: { startsAt: "DateTime" } },
+  });
 });
 
 test("emits input objects with custom scalars without documents when filterByDocuments is false", async () => {
@@ -1243,18 +1040,11 @@ test("emits input objects with custom scalars without documents when filterByDoc
     }
   `;
 
-  await expect(runCodegen({ schema, config: { filterByDocuments: false } }))
-    .resolves.toMatchInlineSnapshot(`
-"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
-
-export const inputObjects: InputObjectsConfig = {
-  \\"EventInput\\": {
-    \\"fields\\": {
-      \\"startsAt\\": \\"DateTime\\"
-    }
-  }
-};"
-`);
+  await expect(
+    generateConfig({ schema, config: { filterByDocuments: false } })
+  ).resolves.toStrictEqual({
+    EventInput: { fields: { startsAt: "DateTime" } },
+  });
 });
 
 test("emits input objects unused by documents when filterByDocuments is false", async () => {
@@ -1292,18 +1082,10 @@ test("emits input objects unused by documents when filterByDocuments is false", 
   ];
 
   await expect(
-    runCodegen({ schema, documents, config: { filterByDocuments: false } })
-  ).resolves.toMatchInlineSnapshot(`
-"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
-
-export const inputObjects: InputObjectsConfig = {
-  \\"EventInput\\": {
-    \\"fields\\": {
-      \\"startsAt\\": \\"DateTime\\"
-    }
-  }
-};"
-`);
+    generateConfig({ schema, documents, config: { filterByDocuments: false } })
+  ).resolves.toStrictEqual({
+    EventInput: { fields: { startsAt: "DateTime" } },
+  });
 });
 
 test("omits input objects without custom scalars when filterByDocuments is false", async () => {
@@ -1329,18 +1111,11 @@ test("omits input objects without custom scalars when filterByDocuments is false
     }
   `;
 
-  await expect(runCodegen({ schema, config: { filterByDocuments: false } }))
-    .resolves.toMatchInlineSnapshot(`
-"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
-
-export const inputObjects: InputObjectsConfig = {
-  \\"EventFilter\\": {
-    \\"fields\\": {
-      \\"startsAfter\\": \\"DateTime\\"
-    }
-  }
-};"
-`);
+  await expect(
+    generateConfig({ schema, config: { filterByDocuments: false } })
+  ).resolves.toStrictEqual({
+    EventFilter: { fields: { startsAfter: "DateTime" } },
+  });
 });
 
 test("applies ignoreScalars when filterByDocuments is false", async () => {
@@ -1367,21 +1142,13 @@ test("applies ignoreScalars when filterByDocuments is false", async () => {
   `;
 
   await expect(
-    runCodegen({
+    generateConfig({
       schema,
       config: { filterByDocuments: false, ignoreScalars: ["JSON"] },
     })
-  ).resolves.toMatchInlineSnapshot(`
-"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
-
-export const inputObjects: InputObjectsConfig = {
-  \\"EventFilter\\": {
-    \\"fields\\": {
-      \\"startsAfter\\": \\"DateTime\\"
-    }
-  }
-};"
-`);
+  ).resolves.toStrictEqual({
+    EventFilter: { fields: { startsAfter: "DateTime" } },
+  });
 });
 
 test("omits scalar fields not in includeScalars from input objects", async () => {
@@ -1417,18 +1184,14 @@ test("omits scalar fields not in includeScalars from input objects", async () =>
   ];
 
   await expect(
-    runCodegen({ schema, documents, config: { includeScalars: ["DateTime"] } })
-  ).resolves.toMatchInlineSnapshot(`
-"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
-
-export const inputObjects: InputObjectsConfig = {
-  \\"EventInput\\": {
-    \\"fields\\": {
-      \\"startsAt\\": \\"DateTime\\"
-    }
-  }
-};"
-`);
+    generateConfig({
+      schema,
+      documents,
+      config: { includeScalars: ["DateTime"] },
+    })
+  ).resolves.toStrictEqual({
+    EventInput: { fields: { startsAt: "DateTime" } },
+  });
 });
 
 test("omits input objects without included scalars", async () => {
@@ -1463,12 +1226,12 @@ test("omits input objects without included scalars", async () => {
   ];
 
   await expect(
-    runCodegen({ schema, documents, config: { includeScalars: ["DateTime"] } })
-  ).resolves.toMatchInlineSnapshot(`
-"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
-
-export const inputObjects: InputObjectsConfig = {};"
-`);
+    generateConfig({
+      schema,
+      documents,
+      config: { includeScalars: ["DateTime"] },
+    })
+  ).resolves.toStrictEqual({});
 });
 
 test("retains sibling branches when non-included scalars drop a nested input object", async () => {
@@ -1512,24 +1275,15 @@ test("retains sibling branches when non-included scalars drop a nested input obj
   ];
 
   await expect(
-    runCodegen({ schema, documents, config: { includeScalars: ["DateTime"] } })
-  ).resolves.toMatchInlineSnapshot(`
-"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
-
-export const inputObjects: InputObjectsConfig = {
-  \\"DateRange\\": {
-    \\"fields\\": {
-      \\"start\\": \\"DateTime\\",
-      \\"end\\": \\"DateTime\\"
-    }
-  },
-  \\"SearchFilter\\": {
-    \\"fields\\": {
-      \\"dateRange\\": \\"DateRange\\"
-    }
-  }
-};"
-`);
+    generateConfig({
+      schema,
+      documents,
+      config: { includeScalars: ["DateTime"] },
+    })
+  ).resolves.toStrictEqual({
+    DateRange: { fields: { start: "DateTime", end: "DateTime" } },
+    SearchFilter: { fields: { dateRange: "DateRange" } },
+  });
 });
 
 test("outputs empty object with an empty includeScalars list", async () => {
@@ -1563,12 +1317,8 @@ test("outputs empty object with an empty includeScalars list", async () => {
   ];
 
   await expect(
-    runCodegen({ schema, documents, config: { includeScalars: [] } })
-  ).resolves.toMatchInlineSnapshot(`
-"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
-
-export const inputObjects: InputObjectsConfig = {};"
-`);
+    generateConfig({ schema, documents, config: { includeScalars: [] } })
+  ).resolves.toStrictEqual({});
 });
 
 test("applies ignoreScalars alongside includeScalars", async () => {
@@ -1604,7 +1354,7 @@ test("applies ignoreScalars alongside includeScalars", async () => {
   ];
 
   await expect(
-    runCodegen({
+    generateConfig({
       schema,
       documents,
       config: {
@@ -1612,7 +1362,36 @@ test("applies ignoreScalars alongside includeScalars", async () => {
         ignoreScalars: ["JSON"],
       },
     })
-  ).resolves.toMatchInlineSnapshot(`
+  ).resolves.toStrictEqual({
+    EventInput: { fields: { startsAt: "DateTime" } },
+  });
+});
+
+test("outputs TypeScript format for .ts files", async () => {
+  const schema = gql`
+    scalar DateTime
+
+    input EventInput {
+      startsAt: DateTime
+    }
+
+    type Mutation {
+      createEvent(input: EventInput!): Boolean
+    }
+  `;
+
+  const documents = [
+    {
+      document: gql`
+        mutation CreateEvent($input: EventInput!) {
+          createEvent(input: $input)
+        }
+      `,
+    },
+  ];
+
+  await expect(runCodegen({ schema, documents, filename: "input-objects.ts" }))
+    .resolves.toMatchInlineSnapshot(`
 "import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
 
 export const inputObjects: InputObjectsConfig = {
@@ -1778,4 +1557,12 @@ async function runCodegen(
     config: {},
     ...options,
   });
+}
+
+async function generateConfig(options: Parameters<typeof runCodegen>[0]) {
+  const output = await runCodegen(options);
+
+  return JSON.parse(
+    output.slice(output.indexOf("= ") + 2, output.lastIndexOf(";"))
+  );
 }

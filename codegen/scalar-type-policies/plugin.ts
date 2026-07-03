@@ -92,7 +92,7 @@ export const plugin: PluginFunction<ScalarTypePoliciesPluginConfig, string> = (
       visit(
         document,
         visitWithTypeInfo(typeInfo, {
-          Field: (node) => {
+          Field(node) {
             const parentType = typeInfo.getParentType();
             const fieldType = getNamedType(typeInfo.getType())?.name;
 

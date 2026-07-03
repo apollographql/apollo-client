@@ -39,8 +39,12 @@ export const plugin: PluginFunction<ScalarTypePoliciesPluginConfig, string> = (
   config,
   info
 ) => {
-  const { ignoreScalars = [] } = config;
+  const { ignoreScalars = [], includeScalars } = config;
   const ext = extname(info?.outputFile ?? "").toLowerCase();
+
+  if (includeScalars?.length === 0) {
+    return buildOutput({}, ext);
+  }
 
   const customScalars = new Set<string>();
   const objectTypes: ObjectTypeMap = new Map();
@@ -49,7 +53,8 @@ export const plugin: PluginFunction<ScalarTypePoliciesPluginConfig, string> = (
     if (
       isScalarType(type) &&
       !specifiedScalarTypes.includes(type) &&
-      !ignoreScalars.includes(type.name)
+      !ignoreScalars.includes(type.name) &&
+      (!includeScalars || includeScalars.includes(type.name))
     ) {
       customScalars.add(type.name);
     } else if (isObjectType(type)) {

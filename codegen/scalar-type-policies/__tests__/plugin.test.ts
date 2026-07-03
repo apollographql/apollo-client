@@ -517,6 +517,182 @@ test("outputs type policies for concrete types when selecting custom scalar fiel
   });
 });
 
+test("omits ignored scalar fields from type policies", async () => {
+  const schema = gql`
+    scalar DateTime
+    scalar JSON
+
+    type Query {
+      event: Event
+    }
+
+    type Event {
+      id: ID!
+      startsAt: DateTime
+      metadata: JSON
+    }
+  `;
+
+  const documents = [
+    {
+      document: gql`
+        query GetEvent {
+          event {
+            id
+            startsAt
+            metadata
+          }
+        }
+      `,
+    },
+  ];
+
+  await expect(
+    generateTypePolicies({
+      schema,
+      documents,
+      config: { ignoreScalars: ["JSON"] },
+    })
+  ).resolves.toStrictEqual({
+    Event: {
+      fields: {
+        startsAt: { scalar: "DateTime" },
+      },
+    },
+  });
+});
+
+test("omits object types whose only custom scalar fields are ignored", async () => {
+  const schema = gql`
+    scalar DateTime
+    scalar JSON
+
+    type Query {
+      event: Event
+      product: Product
+    }
+
+    type Event {
+      id: ID!
+      startsAt: DateTime
+    }
+
+    type Product {
+      id: ID!
+      metadata: JSON
+    }
+  `;
+
+  const documents = [
+    {
+      document: gql`
+        query GetEventAndProduct {
+          event {
+            id
+            startsAt
+          }
+          product {
+            id
+            metadata
+          }
+        }
+      `,
+    },
+  ];
+
+  await expect(
+    generateTypePolicies({
+      schema,
+      documents,
+      config: { ignoreScalars: ["JSON"] },
+    })
+  ).resolves.toStrictEqual({
+    Event: {
+      fields: {
+        startsAt: { scalar: "DateTime" },
+      },
+    },
+  });
+});
+
+test("outputs empty object when all custom scalars are ignored", async () => {
+  const schema = gql`
+    scalar DateTime
+
+    type Query {
+      event: Event
+    }
+
+    type Event {
+      id: ID!
+      startsAt: DateTime
+    }
+  `;
+
+  const documents = [
+    {
+      document: gql`
+        query GetEvent {
+          event {
+            id
+            startsAt
+          }
+        }
+      `,
+    },
+  ];
+
+  await expect(
+    generateTypePolicies({
+      schema,
+      documents,
+      config: { ignoreScalars: ["DateTime"] },
+    })
+  ).resolves.toStrictEqual({});
+});
+
+test("handles ignored scalars that are not in the schema", async () => {
+  const schema = gql`
+    scalar DateTime
+
+    type Query {
+      event: Event
+    }
+
+    type Event {
+      id: ID!
+      startsAt: DateTime
+    }
+  `;
+
+  const documents = [
+    {
+      document: gql`
+        query GetEvent {
+          event {
+            id
+            startsAt
+          }
+        }
+      `,
+    },
+  ];
+
+  await expect(
+    generateTypePolicies({
+      schema,
+      documents,
+      config: { ignoreScalars: ["JSON"] },
+    })
+  ).resolves.toStrictEqual({
+    Event: {
+      fields: {
+        startsAt: { scalar: "DateTime" },
+      },
+    },
+  });
+});
+
 async function runCodegen(
   options: Partial<Omit<Types.GenerateOptions, "schema">> &
     Pick<Types.GenerateOptions, "schema">

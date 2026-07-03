@@ -36,15 +36,21 @@ const SUPPORTED_EXTENSIONS = {
 export const plugin: PluginFunction<ScalarTypePoliciesPluginConfig, string> = (
   schema,
   _documents,
-  _config,
+  config,
   info
 ) => {
+  const { ignoreScalars = [] } = config;
   const ext = extname(info?.outputFile ?? "").toLowerCase();
+
   const customScalars = new Set<string>();
   const objectTypes: ObjectTypeMap = new Map();
 
   for (const type of Object.values(schema.getTypeMap())) {
-    if (isScalarType(type) && !specifiedScalarTypes.includes(type)) {
+    if (
+      isScalarType(type) &&
+      !specifiedScalarTypes.includes(type) &&
+      !ignoreScalars.includes(type.name)
+    ) {
       customScalars.add(type.name);
     } else if (isObjectType(type)) {
       const fields = Object.fromEntries(

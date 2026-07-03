@@ -3,7 +3,9 @@ import { extname } from "node:path";
 import type {
   PluginFunction,
   PluginValidateFn,
+  Types,
 } from "@graphql-codegen/plugin-helpers";
+import type { GraphQLSchema } from "graphql";
 import {
   getNamedType,
   isInterfaceType,
@@ -97,42 +99,10 @@ export const plugin: PluginFunction<ScalarTypePoliciesPluginConfig, string> = (
     }
   }
 
-  const fieldsUsed = new Map<string, Set<string>>();
-
-  if (filterByDocuments) {
-    const typeInfo = new TypeInfo(schema);
-
-    for (const { document } of documents) {
-      if (!document) continue;
-
-      visit(
-        document,
-        visitWithTypeInfo(typeInfo, {
-          Field(node) {
-            const parentType = typeInfo.getParentType();
-            const fieldType = getNamedType(typeInfo.getType())?.name;
-
-            if (!parentType || !fieldType || !customScalars.has(fieldType)) {
-              return;
-            }
-
-            const typenames =
-              isInterfaceType(parentType) ?
-                schema.getPossibleTypes(parentType).map((type) => type.name)
-              : [parentType.name];
-
-            for (const typename of typenames) {
-              let fields = fieldsUsed.get(typename);
-              if (!fields) {
-                fieldsUsed.set(typename, (fields = new Set()));
-              }
-              fields.add(node.name.value);
-            }
-          },
-        })
-      );
-    }
-  }
+  const fieldsUsed =
+    filterByDocuments ?
+      getUsedFields(schema, documents, customScalars)
+    : undefined;
 
   const typePolicies: TypePolicies = {};
 
@@ -140,7 +110,7 @@ export const plugin: PluginFunction<ScalarTypePoliciesPluginConfig, string> = (
     const fieldPolicies: Record<string, FieldPolicy> = {};
 
     for (const [fieldName, type] of Object.entries(fields)) {
-      if (!filterByDocuments || fieldsUsed.get(typename)?.has(fieldName)) {
+      if (!fieldsUsed || fieldsUsed.get(typename)?.has(fieldName)) {
         fieldPolicies[fieldName] = { scalar: type };
       }
     }
@@ -200,4 +170,46 @@ function buildJsOutput(typePolicies: TypePolicies) {
 /** @type {import("@apollo/client/cache").TypePolicies} */
 export const scalarTypePolicies = ${JSON.stringify(typePolicies, null, 2)}
 `.trim();
+}
+
+function getUsedFields(
+  schema: GraphQLSchema,
+  documents: Types.DocumentFile[],
+  customScalars: Set<string>
+) {
+  const fieldsUsed = new Map<string, Set<string>>();
+  const typeInfo = new TypeInfo(schema);
+
+  for (const { document } of documents) {
+    if (!document) continue;
+
+    visit(
+      document,
+      visitWithTypeInfo(typeInfo, {
+        Field(node) {
+          const parentType = typeInfo.getParentType();
+          const fieldType = getNamedType(typeInfo.getType())?.name;
+
+          if (!parentType || !fieldType || !customScalars.has(fieldType)) {
+            return;
+          }
+
+          const typenames =
+            isInterfaceType(parentType) ?
+              schema.getPossibleTypes(parentType).map((type) => type.name)
+            : [parentType.name];
+
+          for (const typename of typenames) {
+            let fields = fieldsUsed.get(typename);
+            if (!fields) {
+              fieldsUsed.set(typename, (fields = new Set()));
+            }
+            fields.add(node.name.value);
+          }
+        },
+      })
+    );
+  }
+
+  return fieldsUsed;
 }

@@ -1346,6 +1346,137 @@ test("applies ignoreScalars when filterByDocuments is false", async () => {
   });
 });
 
+test.each(["ts", "tsx"])(
+  "outputs TypeScript format for .%s files",
+  async (extension) => {
+    const schema = gql`
+      scalar DateTime
+
+      type Query {
+        event: Event
+      }
+
+      type Event {
+        id: ID!
+        startsAt: DateTime
+      }
+    `;
+
+    const documents = [
+      {
+        document: gql`
+          query GetEvent {
+            event {
+              id
+              startsAt
+            }
+          }
+        `,
+      },
+    ];
+
+    await expect(
+      runCodegen({
+        schema,
+        documents,
+        filename: `scalar-type-policies.${extension}`,
+      })
+    ).resolves.toMatchInlineSnapshot(`
+"import type { TypePolicies } from \\"@apollo/client/cache\\";
+
+export const scalarTypePolicies: TypePolicies = {
+  \\"Event\\": {
+    \\"fields\\": {
+      \\"startsAt\\": {
+        \\"scalar\\": \\"DateTime\\"
+      }
+    }
+  }
+};"
+`);
+  }
+);
+
+test.each(["js", "jsx"])(
+  "outputs JSDoc format for .%s files",
+  async (extension) => {
+    const schema = gql`
+      scalar DateTime
+
+      type Query {
+        event: Event
+      }
+
+      type Event {
+        id: ID!
+        startsAt: DateTime
+      }
+    `;
+
+    const documents = [
+      {
+        document: gql`
+          query GetEvent {
+            event {
+              id
+              startsAt
+            }
+          }
+        `,
+      },
+    ];
+
+    await expect(
+      runCodegen({
+        schema,
+        documents,
+        filename: `scalar-type-policies.${extension}`,
+      })
+    ).resolves.toMatchInlineSnapshot(`
+"/** @type {import(\\"@apollo/client/cache\\").TypePolicies} */
+export const scalarTypePolicies = {
+  \\"Event\\": {
+    \\"fields\\": {
+      \\"startsAt\\": {
+        \\"scalar\\": \\"DateTime\\"
+      }
+    }
+  }
+};"
+`);
+  }
+);
+
+test("outputs JSDoc format for empty output in .js files", async () => {
+  const schema = gql`
+    type Query {
+      foo: String
+    }
+  `;
+
+  await expect(runCodegen({ schema, filename: "scalar-type-policies.js" }))
+    .resolves.toMatchInlineSnapshot(`
+"/** @type {import(\\"@apollo/client/cache\\").TypePolicies} */
+export const scalarTypePolicies = {};"
+`);
+});
+
+test("throws on unsupported file extensions", async () => {
+  const schema = gql`
+    type Query {
+      foo: String
+    }
+  `;
+
+  await expect(
+    runCodegen({ schema, filename: "scalar-type-policies.json" })
+  ).rejects.toThrow(/requires extension to be one of/);
+
+  await expect(
+    runCodegen({ schema, filename: "scalar-type-policies" })
+  ).rejects.toThrow(/requires extension to be one of/);
+});
+
 async function runCodegen(
   options: Partial<Omit<Types.GenerateOptions, "schema">> &
     Pick<Types.GenerateOptions, "schema">

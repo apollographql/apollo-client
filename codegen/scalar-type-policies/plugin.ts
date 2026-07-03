@@ -140,10 +140,7 @@ export const plugin: PluginFunction<ScalarTypePoliciesPluginConfig, string> = (
     const fieldPolicies: Record<string, FieldPolicy> = {};
 
     for (const [fieldName, type] of Object.entries(fields)) {
-      if (
-        customScalars.has(type) &&
-        (!filterByDocuments || fieldsUsed.get(typename)?.has(fieldName))
-      ) {
+      if (!filterByDocuments || fieldsUsed.get(typename)?.has(fieldName)) {
         fieldPolicies[fieldName] = { scalar: type };
       }
     }

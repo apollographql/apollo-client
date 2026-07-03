@@ -4,17 +4,28 @@ import type {
   PluginFunction,
   PluginValidateFn,
 } from "@graphql-codegen/plugin-helpers";
-import { isScalarType, specifiedScalarTypes } from "graphql";
+import {
+  getNamedType,
+  isObjectType,
+  isScalarType,
+  specifiedScalarTypes,
+} from "graphql";
 
 import type { ScalarTypePoliciesPluginConfig } from "./config.js";
+
+type ObjectTypeMap = Map<string, Record<string, string>>;
 
 // Use a shim to avoid the need to add `@apollo/client` as a peer dependency
 type TypePolicies = {
   [__typename: string]: {
     fields: {
-      scalar: string;
+      [fieldName: string]: FieldPolicy;
     };
   };
+};
+
+type FieldPolicy = {
+  scalar: string;
 };
 
 const SUPPORTED_EXTENSIONS = {
@@ -30,10 +41,20 @@ export const plugin: PluginFunction<ScalarTypePoliciesPluginConfig, string> = (
 ) => {
   const ext = extname(info?.outputFile ?? "").toLowerCase();
   const customScalars = new Set<string>();
+  const objectTypes: ObjectTypeMap = new Map();
 
   for (const type of Object.values(schema.getTypeMap())) {
     if (isScalarType(type) && !specifiedScalarTypes.includes(type)) {
       customScalars.add(type.name);
+    } else if (isObjectType(type)) {
+      const fields = Object.fromEntries(
+        Object.entries(type.getFields()).map(([name, field]) => [
+          name,
+          getNamedType(field.type).name,
+        ])
+      );
+
+      objectTypes.set(type.name, fields);
     }
   }
 
@@ -42,6 +63,20 @@ export const plugin: PluginFunction<ScalarTypePoliciesPluginConfig, string> = (
   }
 
   const typePolicies: TypePolicies = {};
+
+  for (const [typename, fields] of objectTypes) {
+    const fieldPolicies: Record<string, FieldPolicy> = {};
+
+    for (const [fieldName, type] of Object.entries(fields)) {
+      if (customScalars.has(type)) {
+        fieldPolicies[fieldName] = { scalar: type };
+      }
+    }
+
+    if (Object.keys(fieldPolicies).length > 0) {
+      typePolicies[typename] = { fields: fieldPolicies };
+    }
+  }
 
   return buildOutput(typePolicies, ext);
 };

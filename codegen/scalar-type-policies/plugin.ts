@@ -55,9 +55,10 @@ export const plugin: PluginFunction<ScalarTypePoliciesPluginConfig, string> = (
   }
 
   const customScalars = new Set<string>();
+  const types = Object.values(schema.getTypeMap());
   const objectTypes: ObjectTypeMap = new Map();
 
-  for (const type of Object.values(schema.getTypeMap())) {
+  for (const type of types) {
     if (
       isScalarType(type) &&
       !specifiedScalarTypes.includes(type) &&
@@ -65,20 +66,35 @@ export const plugin: PluginFunction<ScalarTypePoliciesPluginConfig, string> = (
       (!includeScalars || includeScalars.includes(type.name))
     ) {
       customScalars.add(type.name);
-    } else if (isObjectType(type)) {
-      const fields = Object.fromEntries(
-        Object.entries(type.getFields()).map(([name, field]) => [
-          name,
-          getNamedType(field.type).name,
-        ])
-      );
-
-      objectTypes.set(type.name, fields);
     }
   }
 
   if (customScalars.size === 0) {
     return buildOutput({}, ext);
+  }
+
+  // Iterate a 2nd time to gather object types so that we only record object
+  // types for known custom scalars to reduce the memory footprint for large
+  // schemas
+  for (const type of types) {
+    if (isObjectType(type)) {
+      const fields = Object.entries(type.getFields()).reduce(
+        (memo, [name, field]) => {
+          const fieldType = getNamedType(field.type).name;
+
+          if (customScalars.has(fieldType)) {
+            memo[name] = fieldType;
+          }
+
+          return memo;
+        },
+        {} as Record<string, string>
+      );
+
+      if (Object.keys(fields).length) {
+        objectTypes.set(type.name, fields);
+      }
+    }
   }
 
   const fieldsUsed = new Map<string, Set<string>>();

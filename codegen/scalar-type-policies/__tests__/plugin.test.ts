@@ -4,20 +4,43 @@ import { gql } from "graphql-tag";
 
 import * as scalarTypePoliciesPlugin from "../plugin.js";
 
-test("works", async () => {
+test("outputs type policies for object fields with custom scalars", async () => {
   const schema = gql`
     scalar DateTime
 
     type Query {
-      event(at: DateTime): Event
+      event: Event
     }
 
     type Event {
       id: ID!
+      name: String!
+      startsAt: DateTime
     }
   `;
 
-  await expect(runCodegen({ schema })).resolves.toStrictEqual("");
+  const documents = [
+    {
+      document: gql`
+        query GetEvent {
+          event {
+            id
+            startsAt
+          }
+        }
+      `,
+    },
+  ];
+
+  await expect(
+    generateTypePolicies({ schema, documents })
+  ).resolves.toStrictEqual({
+    Event: {
+      fields: {
+        startsAt: { scalar: "DateTime" },
+      },
+    },
+  });
 });
 
 async function runCodegen(
@@ -25,7 +48,7 @@ async function runCodegen(
     Pick<Types.GenerateOptions, "schema">
 ) {
   return await codegen({
-    filename: "input-objects.ts",
+    filename: "scalar-type-policies.ts",
     documents: [],
     plugins: [{ "@apollo/client-graphql-codegen/scalar-type-policies": {} }],
     pluginMap: {
@@ -35,4 +58,12 @@ async function runCodegen(
     config: {},
     ...options,
   });
+}
+
+async function generateTypePolicies(options: Parameters<typeof runCodegen>[0]) {
+  const output = await runCodegen(options);
+
+  return JSON.parse(
+    output.slice(output.indexOf("= ") + 2, output.lastIndexOf(";"))
+  );
 }

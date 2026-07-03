@@ -6,9 +6,13 @@ import type {
 } from "@graphql-codegen/plugin-helpers";
 import {
   getNamedType,
+  isInterfaceType,
   isObjectType,
   isScalarType,
   specifiedScalarTypes,
+  TypeInfo,
+  visit,
+  visitWithTypeInfo,
 } from "graphql";
 
 import type { ScalarTypePoliciesPluginConfig } from "./config.js";
@@ -35,11 +39,15 @@ const SUPPORTED_EXTENSIONS = {
 
 export const plugin: PluginFunction<ScalarTypePoliciesPluginConfig, string> = (
   schema,
-  _documents,
+  documents,
   config,
   info
 ) => {
-  const { ignoreScalars = [], includeScalars } = config;
+  const {
+    ignoreScalars = [],
+    includeScalars,
+    filterByDocuments = true,
+  } = config;
   const ext = extname(info?.outputFile ?? "").toLowerCase();
 
   if (includeScalars?.length === 0) {
@@ -73,13 +81,55 @@ export const plugin: PluginFunction<ScalarTypePoliciesPluginConfig, string> = (
     return buildOutput({}, ext);
   }
 
+  const fieldsUsed = new Map<string, Set<string>>();
+
+  if (filterByDocuments) {
+    const typeInfo = new TypeInfo(schema);
+    const used = new Set<string>();
+
+    for (const { document } of documents) {
+      if (!document) continue;
+
+      visit(
+        document,
+        visitWithTypeInfo(typeInfo, {
+          Field: (node) => {
+            const typename = typeInfo.getParentType()?.name;
+            const fieldName = node.name;
+            const fieldType = getNamedType(typeInfo.getType())?.name;
+
+            if (typename && fieldType) {
+              if (customScalars.has(fieldType)) {
+                used.add(fieldType);
+              }
+              let fields = fieldsUsed.get(typename);
+              if (!fields) {
+                fieldsUsed.set(typename, (fields = new Set()));
+              }
+              fields.add(fieldName.value);
+            }
+          },
+        })
+      );
+    }
+
+    for (const scalar of customScalars) {
+      if (!used.has(scalar)) {
+        customScalars.delete(scalar);
+      }
+    }
+  }
+
   const typePolicies: TypePolicies = {};
 
   for (const [typename, fields] of objectTypes) {
     const fieldPolicies: Record<string, FieldPolicy> = {};
 
     for (const [fieldName, type] of Object.entries(fields)) {
-      if (customScalars.has(type)) {
+      if (
+        customScalars.has(type) &&
+        (!filterByDocuments || fieldsUsed.get(typename)?.has(fieldName))
+      ) {
         fieldPolicies[fieldName] = { scalar: type };
       }
     }

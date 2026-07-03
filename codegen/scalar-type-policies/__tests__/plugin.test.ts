@@ -875,6 +875,477 @@ test("applies ignoreScalars alongside includeScalars", async () => {
   });
 });
 
+test("omits fields not selected in any document", async () => {
+  const schema = gql`
+    scalar DateTime
+
+    type Query {
+      event: Event
+    }
+
+    type Event {
+      id: ID!
+      startsAt: DateTime
+      endsAt: DateTime
+    }
+  `;
+
+  const documents = [
+    {
+      document: gql`
+        query GetEvent {
+          event {
+            id
+            startsAt
+          }
+        }
+      `,
+    },
+  ];
+
+  await expect(
+    generateTypePolicies({ schema, documents })
+  ).resolves.toStrictEqual({
+    Event: {
+      fields: {
+        startsAt: { scalar: "DateTime" },
+      },
+    },
+  });
+});
+
+test("omits object types not used by any document", async () => {
+  const schema = gql`
+    scalar DateTime
+
+    type Query {
+      event: Event
+      speaker: Speaker
+    }
+
+    type Event {
+      id: ID!
+      startsAt: DateTime
+    }
+
+    type Speaker {
+      id: ID!
+      availableFrom: DateTime
+    }
+  `;
+
+  const documents = [
+    {
+      document: gql`
+        query GetEvent {
+          event {
+            id
+            startsAt
+          }
+        }
+      `,
+    },
+  ];
+
+  await expect(
+    generateTypePolicies({ schema, documents })
+  ).resolves.toStrictEqual({
+    Event: {
+      fields: {
+        startsAt: { scalar: "DateTime" },
+      },
+    },
+  });
+});
+
+test("outputs empty object when no documents are provided", async () => {
+  const schema = gql`
+    scalar DateTime
+
+    type Query {
+      event: Event
+    }
+
+    type Event {
+      id: ID!
+      startsAt: DateTime
+    }
+  `;
+
+  await expect(generateTypePolicies({ schema })).resolves.toStrictEqual({});
+});
+
+test("collects usage across multiple documents", async () => {
+  const schema = gql`
+    scalar DateTime
+
+    type Query {
+      event: Event
+      speaker: Speaker
+    }
+
+    type Event {
+      id: ID!
+      startsAt: DateTime
+    }
+
+    type Speaker {
+      id: ID!
+      availableFrom: DateTime
+    }
+  `;
+
+  const documents = [
+    {
+      document: gql`
+        query GetEvent {
+          event {
+            id
+            startsAt
+          }
+        }
+      `,
+    },
+    {
+      document: gql`
+        query GetSpeaker {
+          speaker {
+            id
+            availableFrom
+          }
+        }
+      `,
+    },
+  ];
+
+  await expect(
+    generateTypePolicies({ schema, documents })
+  ).resolves.toStrictEqual({
+    Event: {
+      fields: {
+        startsAt: { scalar: "DateTime" },
+      },
+    },
+    Speaker: {
+      fields: {
+        availableFrom: { scalar: "DateTime" },
+      },
+    },
+  });
+});
+
+test("collects usage from multiple operations in a single document", async () => {
+  const schema = gql`
+    scalar DateTime
+
+    type Query {
+      event: Event
+      speaker: Speaker
+    }
+
+    type Event {
+      id: ID!
+      startsAt: DateTime
+    }
+
+    type Speaker {
+      id: ID!
+      availableFrom: DateTime
+    }
+  `;
+
+  const documents = [
+    {
+      document: gql`
+        query GetEvent {
+          event {
+            id
+            startsAt
+          }
+        }
+
+        query GetSpeaker {
+          speaker {
+            id
+            availableFrom
+          }
+        }
+      `,
+    },
+  ];
+
+  await expect(
+    generateTypePolicies({ schema, documents })
+  ).resolves.toStrictEqual({
+    Event: {
+      fields: {
+        startsAt: { scalar: "DateTime" },
+      },
+    },
+    Speaker: {
+      fields: {
+        availableFrom: { scalar: "DateTime" },
+      },
+    },
+  });
+});
+
+test("collects usage through fragment spreads", async () => {
+  const schema = gql`
+    scalar DateTime
+
+    type Query {
+      event: Event
+    }
+
+    type Event {
+      id: ID!
+      startsAt: DateTime
+    }
+  `;
+
+  const documents = [
+    {
+      document: gql`
+        query GetEvent {
+          event {
+            ...EventFields
+          }
+        }
+
+        fragment EventFields on Event {
+          id
+          startsAt
+        }
+      `,
+    },
+  ];
+
+  await expect(
+    generateTypePolicies({ schema, documents })
+  ).resolves.toStrictEqual({
+    Event: {
+      fields: {
+        startsAt: { scalar: "DateTime" },
+      },
+    },
+  });
+});
+
+test("uses the field name instead of the alias when determining usage", async () => {
+  const schema = gql`
+    scalar DateTime
+
+    type Query {
+      event: Event
+    }
+
+    type Event {
+      id: ID!
+      startsAt: DateTime
+    }
+  `;
+
+  const documents = [
+    {
+      document: gql`
+        query GetEvent {
+          event {
+            id
+            start: startsAt
+          }
+        }
+      `,
+    },
+  ];
+
+  await expect(
+    generateTypePolicies({ schema, documents })
+  ).resolves.toStrictEqual({
+    Event: {
+      fields: {
+        startsAt: { scalar: "DateTime" },
+      },
+    },
+  });
+});
+
+test("limits type policies to concrete types selected by inline fragments", async () => {
+  const schema = gql`
+    scalar DateTime
+
+    interface Schedulable {
+      id: ID!
+      startTime: DateTime
+    }
+
+    type Session implements Schedulable {
+      id: ID!
+      startTime: DateTime
+      room: String
+    }
+
+    type Workshop implements Schedulable {
+      id: ID!
+      startTime: DateTime
+      capacity: Int
+    }
+
+    type Query {
+      scheduledItems: [Schedulable]
+    }
+  `;
+
+  const documents = [
+    {
+      document: gql`
+        query GetScheduledItems {
+          scheduledItems {
+            __typename
+            ... on Session {
+              id
+              startTime
+            }
+          }
+        }
+      `,
+    },
+  ];
+
+  await expect(
+    generateTypePolicies({ schema, documents })
+  ).resolves.toStrictEqual({
+    Session: {
+      fields: {
+        startTime: { scalar: "DateTime" },
+      },
+    },
+  });
+});
+
+test("emits type policies without documents when filterByDocuments is false", async () => {
+  const schema = gql`
+    scalar DateTime
+
+    type Query {
+      event: Event
+      speaker: Speaker
+    }
+
+    type Event {
+      id: ID!
+      startsAt: DateTime
+      endsAt: DateTime
+    }
+
+    type Speaker {
+      id: ID!
+      availableFrom: DateTime
+    }
+  `;
+
+  await expect(
+    generateTypePolicies({ schema, config: { filterByDocuments: false } })
+  ).resolves.toStrictEqual({
+    Event: {
+      fields: {
+        startsAt: { scalar: "DateTime" },
+        endsAt: { scalar: "DateTime" },
+      },
+    },
+    Speaker: {
+      fields: {
+        availableFrom: { scalar: "DateTime" },
+      },
+    },
+  });
+});
+
+test("emits type policies for fields unused by documents when filterByDocuments is false", async () => {
+  const schema = gql`
+    scalar DateTime
+
+    type Query {
+      event: Event
+      speaker: Speaker
+    }
+
+    type Event {
+      id: ID!
+      startsAt: DateTime
+      endsAt: DateTime
+    }
+
+    type Speaker {
+      id: ID!
+      availableFrom: DateTime
+    }
+  `;
+
+  const documents = [
+    {
+      document: gql`
+        query GetEvent {
+          event {
+            id
+            startsAt
+          }
+        }
+      `,
+    },
+  ];
+
+  await expect(
+    generateTypePolicies({
+      schema,
+      documents,
+      config: { filterByDocuments: false },
+    })
+  ).resolves.toStrictEqual({
+    Event: {
+      fields: {
+        startsAt: { scalar: "DateTime" },
+        endsAt: { scalar: "DateTime" },
+      },
+    },
+    Speaker: {
+      fields: {
+        availableFrom: { scalar: "DateTime" },
+      },
+    },
+  });
+});
+
+test("applies ignoreScalars when filterByDocuments is false", async () => {
+  const schema = gql`
+    scalar DateTime
+    scalar JSON
+
+    type Query {
+      event: Event
+    }
+
+    type Event {
+      id: ID!
+      startsAt: DateTime
+      metadata: JSON
+    }
+  `;
+
+  await expect(
+    generateTypePolicies({
+      schema,
+      config: { filterByDocuments: false, ignoreScalars: ["JSON"] },
+    })
+  ).resolves.toStrictEqual({
+    Event: {
+      fields: {
+        startsAt: { scalar: "DateTime" },
+      },
+    },
+  });
+});
+
 async function runCodegen(
   options: Partial<Omit<Types.GenerateOptions, "schema">> &
     Pick<Types.GenerateOptions, "schema">

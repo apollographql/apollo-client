@@ -85,7 +85,6 @@ export const plugin: PluginFunction<ScalarTypePoliciesPluginConfig, string> = (
 
   if (filterByDocuments) {
     const typeInfo = new TypeInfo(schema);
-    const used = new Set<string>();
 
     for (const { document } of documents) {
       if (!document) continue;
@@ -100,8 +99,6 @@ export const plugin: PluginFunction<ScalarTypePoliciesPluginConfig, string> = (
             if (!parentType || !fieldType || !customScalars.has(fieldType)) {
               return;
             }
-
-            used.add(fieldType);
 
             const typenames =
               isInterfaceType(parentType) ?
@@ -118,12 +115,6 @@ export const plugin: PluginFunction<ScalarTypePoliciesPluginConfig, string> = (
           },
         })
       );
-    }
-
-    for (const scalar of customScalars) {
-      if (!used.has(scalar)) {
-        customScalars.delete(scalar);
-      }
     }
   }
 

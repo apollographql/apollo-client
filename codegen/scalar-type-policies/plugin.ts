@@ -46,9 +46,23 @@ export const plugin: PluginFunction<ScalarTypePoliciesPluginConfig, string> = (
   return buildOutput(typePolicies, ext);
 };
 
-export const validate: PluginValidateFn<
-  ScalarTypePoliciesPluginConfig
-> = () => {};
+export const validate: PluginValidateFn<ScalarTypePoliciesPluginConfig> = (
+  _schema,
+  _documents,
+  _config,
+  outputFile
+) => {
+  const ext = extname(outputFile).toLowerCase();
+  const all = Object.values(SUPPORTED_EXTENSIONS).flat();
+
+  if (!all.includes(ext)) {
+    throw new Error(
+      `Plugin "@apollo/client-graphql-codegen/scalar-type-policies" requires extension to be one of ${all.join(
+        ", "
+      )}.`
+    );
+  }
+};
 
 function buildOutput(typePolicies: TypePolicies, ext: string) {
   if (SUPPORTED_EXTENSIONS.ts.includes(ext)) {

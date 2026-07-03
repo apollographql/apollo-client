@@ -167,7 +167,7 @@ function buildOutput(typePolicies: TypePolicies, ext: string) {
     return buildJsOutput(typePolicies);
   }
 
-  throw new Error(`Cannot built output for unknown extension '${ext}'.`);
+  throw new Error(`Cannot build output for unknown extension '${ext}'.`);
 }
 
 function buildTsOutput(typePolicies: TypePolicies) {

@@ -168,7 +168,7 @@ export const scalarTypePolicies: TypePolicies = ${JSON.stringify(
 function buildJsOutput(typePolicies: TypePolicies) {
   return `
 /** @type {import("@apollo/client/cache").TypePolicies} */
-export const scalarTypePolicies = ${JSON.stringify(typePolicies, null, 2)}
+export const scalarTypePolicies = ${JSON.stringify(typePolicies, null, 2)};
 `.trim();
 }
 

@@ -97,13 +97,11 @@ export const plugin: PluginFunction<ScalarTypePoliciesPluginConfig, string> = (
             const parentType = typeInfo.getParentType();
             const fieldType = getNamedType(typeInfo.getType())?.name;
 
-            if (!parentType || !fieldType) {
+            if (!parentType || !fieldType || !customScalars.has(fieldType)) {
               return;
             }
 
-            if (customScalars.has(fieldType)) {
-              used.add(fieldType);
-            }
+            used.add(fieldType);
 
             const typenames =
               isInterfaceType(parentType) ?

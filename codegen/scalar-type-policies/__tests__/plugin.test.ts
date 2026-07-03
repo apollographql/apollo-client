@@ -391,6 +391,132 @@ test("outputs type policies for custom scalar fields on the root mutation type",
   });
 });
 
+// TODO: Determine whether we want to configure custom scalars on the interface
+// types or concrete types. Configuring the interface types might reduce the
+// size of the object, but is more complex in order to avoid writing to the
+// concrete types.
+test("outputs type policies for concrete types when selecting custom scalar fields from an interface", async () => {
+  const schema = gql`
+    scalar DateTime
+
+    interface Schedulable {
+      id: ID!
+      startTime: DateTime
+    }
+
+    type Session implements Schedulable {
+      id: ID!
+      startTime: DateTime
+      room: String
+    }
+
+    type Workshop implements Schedulable {
+      id: ID!
+      startTime: DateTime
+      capacity: Int
+    }
+
+    type Query {
+      scheduledItems: [Schedulable]
+    }
+  `;
+
+  const documents = [
+    {
+      document: gql`
+        query GetScheduledItems {
+          scheduledItems {
+            __typename
+            id
+            startTime
+          }
+        }
+      `,
+    },
+  ];
+
+  await expect(
+    generateTypePolicies({ schema, documents })
+  ).resolves.toStrictEqual({
+    Session: {
+      fields: {
+        startTime: { scalar: "DateTime" },
+      },
+    },
+    Workshop: {
+      fields: {
+        startTime: { scalar: "DateTime" },
+      },
+    },
+  });
+});
+
+// TODO: Determine whether we want to configure custom scalars on the interface
+// types or concrete types. Configuring the interface types might reduce the
+// size of the object, but is more complex in order to avoid writing to the
+// concrete types.
+test("outputs type policies for concrete types when selecting custom scalar fields with inline fragments", async () => {
+  const schema = gql`
+    scalar DateTime
+
+    interface Schedulable {
+      id: ID!
+      startTime: DateTime
+    }
+
+    type Session implements Schedulable {
+      id: ID!
+      startTime: DateTime
+      room: String
+    }
+
+    type Workshop implements Schedulable {
+      id: ID!
+      startTime: DateTime
+      capacity: Int
+    }
+
+    type Query {
+      scheduledItems: [Schedulable]
+    }
+  `;
+
+  const documents = [
+    {
+      document: gql`
+        query GetScheduledItems {
+          scheduledItems {
+            __typename
+            ... on Session {
+              id
+              startTime
+            }
+            ... on Workshop {
+              id
+              startTime
+            }
+          }
+        }
+      `,
+    },
+  ];
+
+  await expect(
+    generateTypePolicies({ schema, documents })
+  ).resolves.toStrictEqual({
+    Session: {
+      fields: {
+        startTime: { scalar: "DateTime" },
+      },
+    },
+    Workshop: {
+      fields: {
+        startTime: { scalar: "DateTime" },
+      },
+    },
+  });
+});
+
 async function runCodegen(
   options: Partial<Omit<Types.GenerateOptions, "schema">> &
     Pick<Types.GenerateOptions, "schema">

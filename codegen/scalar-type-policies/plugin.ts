@@ -94,19 +94,28 @@ export const plugin: PluginFunction<ScalarTypePoliciesPluginConfig, string> = (
         document,
         visitWithTypeInfo(typeInfo, {
           Field: (node) => {
-            const typename = typeInfo.getParentType()?.name;
-            const fieldName = node.name;
+            const parentType = typeInfo.getParentType();
             const fieldType = getNamedType(typeInfo.getType())?.name;
 
-            if (typename && fieldType) {
-              if (customScalars.has(fieldType)) {
-                used.add(fieldType);
-              }
+            if (!parentType || !fieldType) {
+              return;
+            }
+
+            if (customScalars.has(fieldType)) {
+              used.add(fieldType);
+            }
+
+            const typenames =
+              isInterfaceType(parentType) ?
+                schema.getPossibleTypes(parentType).map((type) => type.name)
+              : [parentType.name];
+
+            for (const typename of typenames) {
               let fields = fieldsUsed.get(typename);
               if (!fields) {
                 fieldsUsed.set(typename, (fields = new Set()));
               }
-              fields.add(fieldName.value);
+              fields.add(node.name.value);
             }
           },
         })

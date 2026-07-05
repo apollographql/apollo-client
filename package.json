@@ -169,7 +169,7 @@
     "@babel/preset-env": "^7.26.9",
     "@changesets/changelog-github": "0.5.0",
     "@changesets/cli": "2.27.7",
-    "@graphql-tools/schema": "10.0.33",
+    "@graphql-tools/schema": "10.0.34",
     "@jest/expect-utils": "30.2.0",
     "@jest/globals": "30.2.0",
     "@mdx-js/language-service": "^0.7.1",

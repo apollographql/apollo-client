@@ -22,7 +22,7 @@
   },
   "homepage": "https://www.apollographql.com/docs/react/",
   "exports": {
-    "./input-objects": "./dist/input-objects/index.js",
+    "./custom-scalars": "./dist/custom-scalars/index.js",
     "./local-state": "./dist/local-state/index.js"
   },
   "files": [

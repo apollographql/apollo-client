@@ -14,7 +14,7 @@ import {
   specifiedScalarTypes,
 } from "graphql";
 
-import type { InputObjectsPluginConfig } from "./config.js";
+import type { CustomScalarsPluginConfig } from "./config.js";
 
 type InputObjectMap = Map<string, Record<string, string>>;
 type InputObjectsConfig = Record<string, { fields: Record<string, string> }>;
@@ -24,7 +24,7 @@ const SUPPORTED_EXTENSIONS = {
   js: [".js", ".jsx"],
 };
 
-export const plugin: PluginFunction<InputObjectsPluginConfig, string> = async (
+export const plugin: PluginFunction<CustomScalarsPluginConfig, string> = async (
   schema,
   documents,
   config,
@@ -110,7 +110,7 @@ export const plugin: PluginFunction<InputObjectsPluginConfig, string> = async (
   return buildOutput(inputObjectsConfig, ext);
 };
 
-export const validate: PluginValidateFn = (
+export const validate: PluginValidateFn<CustomScalarsPluginConfig> = (
   _schema,
   _documents,
   _config,
@@ -121,7 +121,7 @@ export const validate: PluginValidateFn = (
 
   if (!all.includes(ext)) {
     throw new Error(
-      `Plugin "@apollo/client-graphql-codegen/input-objects" requires extension to be one of ${all.join(
+      `Plugin "@apollo/client-graphql-codegen/custom-scalars" requires extension to be one of ${all.join(
         ", "
       )}.`
     );

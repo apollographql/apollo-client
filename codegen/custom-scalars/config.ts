@@ -1,4 +1,4 @@
-export interface InputObjectsPluginConfig {
+export interface CustomScalarsPluginConfig {
   /**
    * List of scalars that should be ignored when creating the config object.
    * This can reduce the size of the config object by omitting input objects

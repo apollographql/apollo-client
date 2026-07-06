@@ -2,7 +2,7 @@ import { codegen } from "@graphql-codegen/core";
 import type { Types } from "@graphql-codegen/plugin-helpers";
 import { gql } from "graphql-tag";
 
-import * as inputObjectsPlugin from "../plugin.js";
+import * as customScalarsPlugin from "../plugin.js";
 
 test("outputs empty object with no input objects in schema", async () => {
   const schema = gql`
@@ -1390,7 +1390,7 @@ test("outputs TypeScript format for .ts files", async () => {
     },
   ];
 
-  await expect(runCodegen({ schema, documents, filename: "input-objects.ts" }))
+  await expect(runCodegen({ schema, documents, filename: "custom-scalars.ts" }))
     .resolves.toMatchInlineSnapshot(`
 "import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
 
@@ -1427,7 +1427,7 @@ test("outputs TypeScript format for .tsx files", async () => {
     },
   ];
 
-  await expect(runCodegen({ schema, documents, filename: "input-objects.tsx" }))
+  await expect(runCodegen({ schema, documents, filename: "custom-scalars.tsx" }))
     .resolves.toMatchInlineSnapshot(`
 "import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
 
@@ -1464,7 +1464,7 @@ test("outputs JSDoc format for .js files", async () => {
     },
   ];
 
-  await expect(runCodegen({ schema, documents, filename: "input-objects.js" }))
+  await expect(runCodegen({ schema, documents, filename: "custom-scalars.js" }))
     .resolves.toMatchInlineSnapshot(`
 "/** @type {import(\\"@apollo/client/cache\\").InputObjectsConfig} */
 export const inputObjects = {
@@ -1500,7 +1500,7 @@ test("outputs JSDoc format for .jsx files", async () => {
     },
   ];
 
-  await expect(runCodegen({ schema, documents, filename: "input-objects.jsx" }))
+  await expect(runCodegen({ schema, documents, filename: "custom-scalars.jsx" }))
     .resolves.toMatchInlineSnapshot(`
 "/** @type {import(\\"@apollo/client/cache\\").InputObjectsConfig} */
 export const inputObjects = {
@@ -1520,7 +1520,7 @@ test("outputs JSDoc format for empty output in .js files", async () => {
     }
   `;
 
-  await expect(runCodegen({ schema, filename: "input-objects.js" })).resolves
+  await expect(runCodegen({ schema, filename: "custom-scalars.js" })).resolves
     .toMatchInlineSnapshot(`
 "/** @type {import(\\"@apollo/client/cache\\").InputObjectsConfig} */
 export const inputObjects = {};"
@@ -1535,11 +1535,11 @@ test("throws on unsupported file extensions", async () => {
   `;
 
   await expect(
-    runCodegen({ schema, filename: "input-objects.json" })
+    runCodegen({ schema, filename: "custom-scalars.json" })
   ).rejects.toThrow(/requires extension to be one of/);
 
   await expect(
-    runCodegen({ schema, filename: "input-objects" })
+    runCodegen({ schema, filename: "custom-scalars" })
   ).rejects.toThrow(/requires extension to be one of/);
 });
 
@@ -1548,11 +1548,11 @@ async function runCodegen(
     Pick<Types.GenerateOptions, "schema">
 ) {
   return await codegen({
-    filename: "input-objects.ts",
+    filename: "custom-scalars.ts",
     documents: [],
-    plugins: [{ "@apollo/client-graphql-codegen/input-objects": {} }],
+    plugins: [{ "@apollo/client-graphql-codegen/custom-scalars": {} }],
     pluginMap: {
-      "@apollo/client-graphql-codegen/input-objects": inputObjectsPlugin,
+      "@apollo/client-graphql-codegen/custom-scalars": customScalarsPlugin,
     },
     config: {},
     ...options,

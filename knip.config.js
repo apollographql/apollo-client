@@ -33,7 +33,7 @@ const config = {
       "codegen/local-state/config.ts",
       "codegen/local-state/plugin.ts",
       "codegen/local-state/visitor.ts",
-      "codegen/input-objects/index.ts",
+      "codegen/custom-scalars/index.ts",
       "scripts/codemods/ac3-to-ac4/src/util/getAllExports.ts",
     ]),
   project: [

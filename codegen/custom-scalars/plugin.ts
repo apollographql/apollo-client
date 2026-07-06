@@ -154,7 +154,7 @@ export const inputObjects: InputObjectsConfig = ${JSON.stringify(
 
 function buildJsOutput(config: InputObjectsConfig) {
   return `
-/** @type {import("@apollo/client/cache").InputObjectsConfig} */
+/** @type {import("@apollo/client/cache").InputObjectsOption} */
 export const inputObjects = ${JSON.stringify(config, null, 2)};
 `.trim();
 }

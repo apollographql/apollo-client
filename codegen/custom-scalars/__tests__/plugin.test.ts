@@ -1427,8 +1427,9 @@ test("outputs TypeScript format for .tsx files", async () => {
     },
   ];
 
-  await expect(runCodegen({ schema, documents, filename: "custom-scalars.tsx" }))
-    .resolves.toMatchInlineSnapshot(`
+  await expect(
+    runCodegen({ schema, documents, filename: "custom-scalars.tsx" })
+  ).resolves.toMatchInlineSnapshot(`
 "import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
 
 export const inputObjects: InputObjectsConfig = {
@@ -1466,7 +1467,7 @@ test("outputs JSDoc format for .js files", async () => {
 
   await expect(runCodegen({ schema, documents, filename: "custom-scalars.js" }))
     .resolves.toMatchInlineSnapshot(`
-"/** @type {import(\\"@apollo/client/cache\\").InputObjectsConfig} */
+"/** @type {import(\\"@apollo/client/cache\\").InputObjectsOption} */
 export const inputObjects = {
   \\"EventInput\\": {
     \\"fields\\": {
@@ -1500,9 +1501,10 @@ test("outputs JSDoc format for .jsx files", async () => {
     },
   ];
 
-  await expect(runCodegen({ schema, documents, filename: "custom-scalars.jsx" }))
-    .resolves.toMatchInlineSnapshot(`
-"/** @type {import(\\"@apollo/client/cache\\").InputObjectsConfig} */
+  await expect(
+    runCodegen({ schema, documents, filename: "custom-scalars.jsx" })
+  ).resolves.toMatchInlineSnapshot(`
+"/** @type {import(\\"@apollo/client/cache\\").InputObjectsOption} */
 export const inputObjects = {
   \\"EventInput\\": {
     \\"fields\\": {
@@ -1522,7 +1524,7 @@ test("outputs JSDoc format for empty output in .js files", async () => {
 
   await expect(runCodegen({ schema, filename: "custom-scalars.js" })).resolves
     .toMatchInlineSnapshot(`
-"/** @type {import(\\"@apollo/client/cache\\").InputObjectsConfig} */
+"/** @type {import(\\"@apollo/client/cache\\").InputObjectsOption} */
 export const inputObjects = {};"
 `);
 });

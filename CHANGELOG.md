@@ -1,5 +1,13 @@
 # @apollo/client
 
+## 4.2.6
+
+### Patch Changes
+
+- [#13315](https://github.com/apollographql/apollo-client/pull/13315) [`a406cc9`](https://github.com/apollographql/apollo-client/commit/a406cc9669246972a8f067462422aec716b6213b) Thanks [@fallintoplace](https://github.com/fallintoplace)! - Prevent relay multipart subscriptions from issuing a fetch request after serializing the request body fails.
+
+- [#13307](https://github.com/apollographql/apollo-client/pull/13307) [`abd0781`](https://github.com/apollographql/apollo-client/commit/abd07814bbe80d9307458a450dd28addf1d38ef1) Thanks [@wolfie](https://github.com/wolfie)! - Speed up cache writes by avoiding a full AST `visit` of every written field to detect `@stream`. The check now runs only when the result carries stream info, and only inspects the field node's own directives. As a result, fields that merely contain `@stream` on a nested field are no longer treated as streamed themselves and now overwrite existing lists like regular fields instead of merging chunk-wise.
+
 ## 4.2.5
 
 ### Patch Changes

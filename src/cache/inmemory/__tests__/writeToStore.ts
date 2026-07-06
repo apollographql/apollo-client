@@ -4037,6 +4037,7 @@ describe("writing to the store", () => {
 
   describe("@stream", () => {
     it("applies the default stream merge strategy only to fields with @stream on the field itself", () => {
+      using _ = spyOnConsole("warn");
       const cache = new InMemoryCache();
       const query = gql`
         query {

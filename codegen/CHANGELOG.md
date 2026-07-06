@@ -1,5 +1,11 @@
 # @apollo/client-graphql-codegen
 
+## 2.1.1
+
+### Patch Changes
+
+- [#13308](https://github.com/apollographql/apollo-client/pull/13308) [`9e2c668`](https://github.com/apollographql/apollo-client/commit/9e2c6686563d47fa35b7ccc29c34556863a0bc61) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix accidentally omitted runtime files in latest minor.
+
 ## 2.1.0
 
 ### Minor Changes

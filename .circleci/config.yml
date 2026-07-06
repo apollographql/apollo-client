@@ -134,7 +134,7 @@ jobs:
       - run: npm run ci:precheck
       - run: npm version
       - run: npm ci
-      - run: npm run build -w @apollo/client-graphql-codegen && cd codegen/dist && mv "$(npm pack --json | jq --raw-output '.[0].filename')" apollo-client-graphql-codegen.tgz
+      - run: npm run build -w @apollo/client-graphql-codegen && cd codegen && mv "dist/$(npm pack --ignore-scripts --pack-destination dist --json | jq --raw-output '.[0].filename')" dist/apollo-client-graphql-codegen.tgz
       - persist_to_workspace:
           root: codegen/dist
           paths:

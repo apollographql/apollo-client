@@ -149,6 +149,7 @@ const codegen = {
       },
     ],
   },
+  testPathIgnorePatterns: ["/dist/"],
   transformIgnorePatterns: [],
   prettierPath: null,
   resolver: join(import.meta.dirname, "../src/config/jest/resolver.ts"),

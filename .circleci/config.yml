@@ -217,6 +217,7 @@ workflows:
                   "ReactDOM 17",
                   "ReactDOM 18",
                   "ReactDOM 19",
+                  "GraphQL Codegen Plugins",
                 ]
       - Circularity
       - Publint

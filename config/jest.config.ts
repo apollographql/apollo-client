@@ -132,8 +132,32 @@ const standardReact17Config = {
   },
 };
 
+const codegen = {
+  displayName: "GraphQL Codegen Plugins",
+  rootDir: "codegen",
+  preset: "ts-jest",
+  snapshotFormat: {
+    escapeString: true,
+    printBasicPrototype: true,
+  },
+  transform: {
+    "(dist/.+\\.js|\\.tsx?)$": [
+      "ts-jest",
+      {
+        // just transpile, no type checking. We type-check in CI by running `tsc` directly.
+        tsconfig: join(import.meta.dirname, "../codegen/tsconfig.json"),
+      },
+    ],
+  },
+  testPathIgnorePatterns: ["/dist/"],
+  transformIgnorePatterns: [],
+  prettierPath: null,
+  resolver: join(import.meta.dirname, "../src/config/jest/resolver.ts"),
+};
+
 export default {
   projects: [
+    codegen,
     tsStandardConfig,
     tsRxJSMinConfig,
     tsGraphql16Config,

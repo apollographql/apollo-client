@@ -113,9 +113,10 @@ export const plugin: PluginFunction<CustomScalarsPluginConfig, string> = async (
 export const validate: PluginValidateFn<CustomScalarsPluginConfig> = (
   _schema,
   _documents,
-  _config,
+  config,
   outputFile
 ) => {
+  const { ignoreScalars, includeScalars } = config;
   const ext = extname(outputFile).toLowerCase();
   const all = Object.values(SUPPORTED_EXTENSIONS).flat();
 
@@ -124,6 +125,12 @@ export const validate: PluginValidateFn<CustomScalarsPluginConfig> = (
       `Plugin "@apollo/client-graphql-codegen/custom-scalars" requires extension to be one of ${all.join(
         ", "
       )}.`
+    );
+  }
+
+  if (includeScalars && ignoreScalars) {
+    throw new Error(
+      `Plugin "@apollo/client-graphql-codegen/custom-scalars supports 'ignoreScalars' or 'includeScalars' but not both.`
     );
   }
 };

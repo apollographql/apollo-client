@@ -1321,7 +1321,7 @@ test("outputs empty object with an empty includeScalars list", async () => {
   ).resolves.toStrictEqual({});
 });
 
-test("applies ignoreScalars alongside includeScalars", async () => {
+test("throws when ignoreScalars is used with includeScalars", async () => {
   const schema = gql`
     scalar DateTime
     scalar JSON
@@ -1362,9 +1362,7 @@ test("applies ignoreScalars alongside includeScalars", async () => {
         ignoreScalars: ["JSON"],
       },
     })
-  ).resolves.toStrictEqual({
-    EventInput: { fields: { startsAt: "DateTime" } },
-  });
+  ).rejects.toThrow(/supports 'ignoreScalars' or 'includeScalars'/);
 });
 
 test("outputs TypeScript format for .ts files", async () => {

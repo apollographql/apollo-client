@@ -2805,83 +2805,80 @@ test("omits input objects without custom scalars when filterByDocuments is false
   });
 });
 
-test.each(["ts", "tsx"])(
-  "outputs TypeScript format for .%s files",
-  async (extension) => {
-    const schema = gql`
-      scalar DateTime
+// The inline snapshots in the format tests below are intentionally empty. They
+// populate on the first `jest -u` run once the plugin emits both `inputObjects`
+// and `scalarTypePolicies` in the combined output. Each extension is its own
+// test so every snapshot has a unique call site (`test.each` shares one call
+// site and can't write multiple inline snapshots).
+const formatSchema = gql`
+  scalar DateTime
 
-      input EventInput {
-        startsAt: DateTime
-      }
-
-      type Mutation {
-        createEvent(input: EventInput!): Event
-      }
-
-      type Event {
-        id: ID!
-        startsAt: DateTime
-      }
-    `;
-
-    const documents = [
-      {
-        document: gql`
-          mutation CreateEvent($input: EventInput!) {
-            createEvent(input: $input) {
-              id
-              startsAt
-            }
-          }
-        `,
-      },
-    ];
-
-    await expect(
-      runCodegen({ schema, documents, filename: `custom-scalars.${extension}` })
-    ).resolves.toMatchInlineSnapshot();
+  input EventInput {
+    startsAt: DateTime
   }
-);
 
-test.each(["js", "jsx"])(
-  "outputs JSDoc format for .%s files",
-  async (extension) => {
-    const schema = gql`
-      scalar DateTime
-
-      input EventInput {
-        startsAt: DateTime
-      }
-
-      type Mutation {
-        createEvent(input: EventInput!): Event
-      }
-
-      type Event {
-        id: ID!
-        startsAt: DateTime
-      }
-    `;
-
-    const documents = [
-      {
-        document: gql`
-          mutation CreateEvent($input: EventInput!) {
-            createEvent(input: $input) {
-              id
-              startsAt
-            }
-          }
-        `,
-      },
-    ];
-
-    await expect(
-      runCodegen({ schema, documents, filename: `custom-scalars.${extension}` })
-    ).resolves.toMatchInlineSnapshot();
+  type Mutation {
+    createEvent(input: EventInput!): Event
   }
-);
+
+  type Event {
+    id: ID!
+    startsAt: DateTime
+  }
+`;
+
+const formatDocuments = [
+  {
+    document: gql`
+      mutation CreateEvent($input: EventInput!) {
+        createEvent(input: $input) {
+          id
+          startsAt
+        }
+      }
+    `,
+  },
+];
+
+test("outputs TypeScript format for .ts files", async () => {
+  await expect(
+    runCodegen({
+      schema: formatSchema,
+      documents: formatDocuments,
+      filename: "custom-scalars.ts",
+    })
+  ).resolves.toMatchInlineSnapshot();
+});
+
+test("outputs TypeScript format for .tsx files", async () => {
+  await expect(
+    runCodegen({
+      schema: formatSchema,
+      documents: formatDocuments,
+      filename: "custom-scalars.tsx",
+    })
+  ).resolves.toMatchInlineSnapshot();
+});
+
+test("outputs JSDoc format for .js files", async () => {
+  await expect(
+    runCodegen({
+      schema: formatSchema,
+      documents: formatDocuments,
+      filename: "custom-scalars.js",
+    })
+  ).resolves.toMatchInlineSnapshot();
+});
+
+test("outputs JSDoc format for .jsx files", async () => {
+  await expect(
+    runCodegen({
+      schema: formatSchema,
+      documents: formatDocuments,
+      filename: "custom-scalars.jsx",
+    })
+  ).resolves.toMatchInlineSnapshot();
+});
 
 test("outputs empty config in JSDoc format for .js files", async () => {
   const schema = gql`

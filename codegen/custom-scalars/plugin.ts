@@ -120,20 +120,20 @@ export const plugin: PluginFunction<CustomScalarsPluginConfig, string> = async (
     // or the input object is a dependency of a used input object. This allows us
     // to keep the input config object as small as possible and limit it to only
     // used input object types.
-    const { used, fieldsUsed: fu } = getUsedFields(
+    const { usedInputObjects, usedFields } = getUsed(
       schema,
       documents,
       customScalars,
       inputObjects
     );
 
+    fieldsUsed = usedFields;
+
     for (const name of inputObjects.keys()) {
-      if (!used.has(name)) {
+      if (!usedInputObjects.has(name)) {
         inputObjects.delete(name);
       }
     }
-
-    fieldsUsed = fu;
   }
 
   // After filtering input objects used by documents, we need to figure out
@@ -290,13 +290,13 @@ function getInputObjectsWithCustomScalars(
   return useful;
 }
 
-function getUsedFields(
+function getUsed(
   schema: GraphQLSchema,
   documents: Types.DocumentFile[],
   customScalars: Set<string>,
   inputObjects: InputObjectMap
 ) {
-  const fieldsUsed = new Map<string, Set<string>>();
+  const usedFields = new Map<string, Set<string>>();
   const usedVariableTypes = new Set<string>();
   const typeInfo = new TypeInfo(schema);
 
@@ -332,9 +332,9 @@ function getUsedFields(
             : [parentType.name];
 
           for (const typename of typenames) {
-            let fields = fieldsUsed.get(typename);
+            let fields = usedFields.get(typename);
             if (!fields) {
-              fieldsUsed.set(typename, (fields = new Set()));
+              usedFields.set(typename, (fields = new Set()));
             }
             fields.add(node.name.value);
           }
@@ -343,19 +343,19 @@ function getUsedFields(
     );
   }
 
-  const used = new Set(usedVariableTypes);
-  const usedQueue = [...used];
+  const usedInputObjects = new Set(usedVariableTypes);
+  const usedQueue = [...usedInputObjects];
 
   while (usedQueue.length) {
     const fields = inputObjects.get(usedQueue.pop()!)!;
 
     for (const typeName of Object.values(fields)) {
-      if (inputObjects.has(typeName) && !used.has(typeName)) {
-        used.add(typeName);
+      if (inputObjects.has(typeName) && !usedInputObjects.has(typeName)) {
+        usedInputObjects.add(typeName);
         usedQueue.push(typeName);
       }
     }
   }
 
-  return { used, fieldsUsed };
+  return { usedInputObjects, usedFields };
 }

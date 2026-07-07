@@ -5,7 +5,11 @@ import type {
   PluginValidateFn,
   Types,
 } from "@graphql-codegen/plugin-helpers";
-import type { GraphQLSchema } from "graphql";
+import type {
+  GraphQLNamedType,
+  GraphQLScalarType,
+  GraphQLSchema,
+} from "graphql";
 import {
   getNamedType,
   isInputObjectType,
@@ -47,11 +51,7 @@ export const plugin: PluginFunction<CustomScalarsPluginConfig, string> = async (
   config,
   info
 ) => {
-  const {
-    ignoreScalars = [],
-    includeScalars,
-    filterByDocuments = true,
-  } = config;
+  const { includeScalars, filterByDocuments = true } = config;
   const ext = extname(info?.outputFile ?? "").toLowerCase();
 
   if (includeScalars?.length === 0) {
@@ -63,21 +63,22 @@ export const plugin: PluginFunction<CustomScalarsPluginConfig, string> = async (
   const inputObjects: InputObjectMap = new Map();
 
   for (const type of types) {
-    if (
-      isScalarType(type) &&
-      !specifiedScalarTypes.includes(type) &&
-      !ignoreScalars.includes(type.name) &&
-      (!includeScalars || includeScalars.includes(type.name))
-    ) {
+    if (isCustomScalar(type, config)) {
       customScalars.add(type.name);
     } else if (isInputObjectType(type)) {
-      const fields = Object.fromEntries(
-        Object.entries(type.getFields()).map(([fieldName, field]) => {
-          return [fieldName, getNamedType(field.type).name];
-        })
-      );
+      const fields: Record<string, string> = {};
 
-      inputObjects.set(type.name, fields);
+      for (const [fieldName, field] of Object.entries(type.getFields())) {
+        const inputType = getNamedType(field.type);
+
+        if (isCustomScalar(inputType, config) || isInputObjectType(inputType)) {
+          fields[fieldName] = inputType.name;
+        }
+      }
+
+      if (Object.keys(fields).length > 0) {
+        inputObjects.set(type.name, fields);
+      }
     }
   }
 
@@ -339,4 +340,16 @@ function collectDocumentUsage(
   }
 
   return { usedInputObjects, usedFields };
+}
+
+function isCustomScalar(
+  type: GraphQLNamedType,
+  { ignoreScalars = [], includeScalars }: CustomScalarsPluginConfig
+): type is GraphQLScalarType {
+  return (
+    isScalarType(type) &&
+    !specifiedScalarTypes.includes(type) &&
+    !ignoreScalars.includes(type.name) &&
+    (!includeScalars || includeScalars.includes(type.name))
+  );
 }

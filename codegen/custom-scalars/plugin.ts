@@ -93,7 +93,7 @@ export const plugin: PluginFunction<CustomScalarsPluginConfig, string> = async (
     // or the input object is a dependency of a used input object. This allows us
     // to keep the input config object as small as possible and limit it to only
     // used input object types.
-    const { usedInputObjects, usedFields: used } = getUsed(
+    const { usedInputObjects, usedFields: used } = collectDocumentUsage(
       schema,
       documents,
       customScalars,
@@ -278,7 +278,7 @@ function getInputObjectsWithCustomScalars(
   return useful;
 }
 
-function getUsed(
+function collectDocumentUsage(
   schema: GraphQLSchema,
   documents: Types.DocumentFile[],
   customScalars: Set<string>,

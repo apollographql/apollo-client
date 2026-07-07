@@ -92,7 +92,7 @@ export const plugin: PluginFunction<CustomScalarsPluginConfig, string> = async (
     // Limit the config to what the documents actually use. Object type policies
     // are limited to the selected custom scalar fields, and input objects are
     // limited to those reachable from a variable definition.
-    const { usedInputObjects, usedFields: fields } = collectDocumentUsage(
+    const { usedInputObjects, usedFields: fields } = getDocumentUsage(
       schema,
       documents,
       customScalars
@@ -271,7 +271,7 @@ function getInputObjectsWithCustomScalars(
   return useful;
 }
 
-function collectDocumentUsage(
+function getDocumentUsage(
   schema: GraphQLSchema,
   documents: Types.DocumentFile[],
   customScalars: Set<string>

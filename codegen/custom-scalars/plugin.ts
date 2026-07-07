@@ -198,7 +198,7 @@ export const validate: PluginValidateFn<CustomScalarsPluginConfig> = (
 
   if (includeScalars && ignoreScalars) {
     throw new Error(
-      `Plugin "@apollo/client-graphql-codegen/custom-scalars supports 'ignoreScalars' or 'includeScalars' but not both.`
+      `Plugin "@apollo/client-graphql-codegen/custom-scalars" supports 'ignoreScalars' or 'includeScalars' but not both.`
     );
   }
 };

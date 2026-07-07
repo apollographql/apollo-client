@@ -285,7 +285,7 @@ function getUsed(
   inputObjects: InputObjectMap
 ) {
   const usedFields = new Map<string, Set<string>>();
-  const usedVariableTypes = new Set<string>();
+  const usedInputObjects = new Set<string>();
   const typeInfo = new TypeInfo(schema);
 
   for (const { document } of documents) {
@@ -298,7 +298,7 @@ function getUsed(
           const type = getNamedType(typeInfo.getInputType());
 
           if (type && inputObjects.has(type.name)) {
-            usedVariableTypes.add(type.name);
+            usedInputObjects.add(type.name);
           }
         },
         Field(node) {
@@ -326,7 +326,6 @@ function getUsed(
     );
   }
 
-  const usedInputObjects = new Set(usedVariableTypes);
   const usedQueue = [...usedInputObjects];
 
   while (usedQueue.length) {

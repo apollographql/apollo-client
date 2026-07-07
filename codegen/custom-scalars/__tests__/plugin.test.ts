@@ -2842,15 +2842,15 @@ const formatDocuments = [
 
 test("outputs TypeScript format for .ts files", async () => {
   await expect(
-  runCodegen({
-    schema: formatSchema,
-    documents: formatDocuments,
-    filename: "custom-scalars.ts"
-  })
-).resolves.toMatchInlineSnapshot(`
-"import type { InputObjectsConfig, TypePolicies } from \\"@apollo/client/cache\\";
+    runCodegen({
+      schema: formatSchema,
+      documents: formatDocuments,
+      filename: "custom-scalars.ts",
+    })
+  ).resolves.toMatchInlineSnapshot(`
+"import type { InputObjectsOption, TypePolicies } from \\"@apollo/client/cache\\";
 
-export const inputObjects: InputObjectsConfig = {
+export const inputObjects: InputObjectsOption = {
   \\"EventInput\\": {
     \\"fields\\": {
       \\"startsAt\\": \\"DateTime\\"
@@ -2872,15 +2872,15 @@ export const scalarTypePolicies: TypePolicies = {
 
 test("outputs TypeScript format for .tsx files", async () => {
   await expect(
-  runCodegen({
-    schema: formatSchema,
-    documents: formatDocuments,
-    filename: "custom-scalars.tsx"
-  })
-).resolves.toMatchInlineSnapshot(`
-"import type { InputObjectsConfig, TypePolicies } from \\"@apollo/client/cache\\";
+    runCodegen({
+      schema: formatSchema,
+      documents: formatDocuments,
+      filename: "custom-scalars.tsx",
+    })
+  ).resolves.toMatchInlineSnapshot(`
+"import type { InputObjectsOption, TypePolicies } from \\"@apollo/client/cache\\";
 
-export const inputObjects: InputObjectsConfig = {
+export const inputObjects: InputObjectsOption = {
   \\"EventInput\\": {
     \\"fields\\": {
       \\"startsAt\\": \\"DateTime\\"
@@ -2902,12 +2902,12 @@ export const scalarTypePolicies: TypePolicies = {
 
 test("outputs JSDoc format for .js files", async () => {
   await expect(
-  runCodegen({
-    schema: formatSchema,
-    documents: formatDocuments,
-    filename: "custom-scalars.js"
-  })
-).resolves.toMatchInlineSnapshot(`
+    runCodegen({
+      schema: formatSchema,
+      documents: formatDocuments,
+      filename: "custom-scalars.js",
+    })
+  ).resolves.toMatchInlineSnapshot(`
 "/** @type {import(\\"@apollo/client/cache\\").InputObjectsOption} */
 export const inputObjects = {
   \\"EventInput\\": {
@@ -2932,12 +2932,12 @@ export const scalarTypePolicies = {
 
 test("outputs JSDoc format for .jsx files", async () => {
   await expect(
-  runCodegen({
-    schema: formatSchema,
-    documents: formatDocuments,
-    filename: "custom-scalars.jsx"
-  })
-).resolves.toMatchInlineSnapshot(`
+    runCodegen({
+      schema: formatSchema,
+      documents: formatDocuments,
+      filename: "custom-scalars.jsx",
+    })
+  ).resolves.toMatchInlineSnapshot(`
 "/** @type {import(\\"@apollo/client/cache\\").InputObjectsOption} */
 export const inputObjects = {
   \\"EventInput\\": {
@@ -2967,9 +2967,8 @@ test("outputs empty config in JSDoc format for .js files", async () => {
     }
   `;
 
-  await expect(
-  runCodegen({ schema, filename: "custom-scalars.js" })
-).resolves.toMatchInlineSnapshot(`
+  await expect(runCodegen({ schema, filename: "custom-scalars.js" })).resolves
+    .toMatchInlineSnapshot(`
 "/** @type {import(\\"@apollo/client/cache\\").InputObjectsOption} */
 export const inputObjects = {};
 

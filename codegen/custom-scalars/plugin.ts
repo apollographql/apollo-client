@@ -222,9 +222,9 @@ function buildOutput(config: BuildOutputConfig, ext: string) {
 
 function buildTsOutput(config: BuildOutputConfig) {
   return `
-import type { InputObjectsConfig, TypePolicies } from "@apollo/client/cache";
+import type { InputObjectsOption, TypePolicies } from "@apollo/client/cache";
 
-export const inputObjects: InputObjectsConfig = ${JSON.stringify(
+export const inputObjects: InputObjectsOption = ${JSON.stringify(
     config.inputObjects,
     null,
     2

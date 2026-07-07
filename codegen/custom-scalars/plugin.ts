@@ -120,7 +120,12 @@ export const plugin: PluginFunction<CustomScalarsPluginConfig, string> = async (
     // or the input object is a dependency of a used input object. This allows us
     // to keep the input config object as small as possible and limit it to only
     // used input object types.
-    const used = getUsedInputObjectsFromDocuments(documents, inputObjects);
+    const { used, fieldsUsed: fu } = getUsedFields(
+      schema,
+      documents,
+      customScalars,
+      inputObjects
+    );
 
     for (const name of inputObjects.keys()) {
       if (!used.has(name)) {
@@ -128,7 +133,7 @@ export const plugin: PluginFunction<CustomScalarsPluginConfig, string> = async (
       }
     }
 
-    fieldsUsed = getUsedFields(schema, documents, customScalars);
+    fieldsUsed = fu;
   }
 
   // After filtering input objects used by documents, we need to figure out
@@ -247,62 +252,6 @@ export const scalarTypePolicies = ${JSON.stringify(
 `.trim();
 }
 
-function getUsedInputObjectsFromDocuments(
-  documents: Types.DocumentFile[],
-  inputObjects: InputObjectMap
-) {
-  const usedVariableTypes = new Set<string>();
-
-  for (const { document } of documents) {
-    if (!document) continue;
-
-    eachVariableDef(document, (type) => {
-      const typeName = type.name.value;
-
-      if (inputObjects.has(typeName)) {
-        usedVariableTypes.add(typeName);
-      }
-    });
-  }
-
-  const used = new Set(usedVariableTypes);
-  const usedQueue = [...used];
-
-  while (usedQueue.length) {
-    const fields = inputObjects.get(usedQueue.pop()!)!;
-
-    for (const typeName of Object.values(fields)) {
-      if (inputObjects.has(typeName) && !used.has(typeName)) {
-        used.add(typeName);
-        usedQueue.push(typeName);
-      }
-    }
-  }
-
-  return used;
-}
-
-function eachVariableDef(
-  document: DocumentNode,
-  fn: (node: NamedTypeNode) => void
-) {
-  for (const definition of document.definitions) {
-    if (
-      definition.kind === Kind.OPERATION_DEFINITION &&
-      definition.variableDefinitions
-    ) {
-      for (const variableDef of definition.variableDefinitions) {
-        let type = variableDef.type;
-        while (type.kind !== Kind.NAMED_TYPE) {
-          type = type.type;
-        }
-
-        fn(type);
-      }
-    }
-  }
-}
-
 function getInputObjectsWithCustomScalars(
   inputObjects: InputObjectMap,
   customScalars: Set<string>
@@ -344,9 +293,11 @@ function getInputObjectsWithCustomScalars(
 function getUsedFields(
   schema: GraphQLSchema,
   documents: Types.DocumentFile[],
-  customScalars: Set<string>
+  customScalars: Set<string>,
+  inputObjects: InputObjectMap
 ) {
   const fieldsUsed = new Map<string, Set<string>>();
+  const usedVariableTypes = new Set<string>();
   const typeInfo = new TypeInfo(schema);
 
   for (const { document } of documents) {
@@ -355,6 +306,18 @@ function getUsedFields(
     visit(
       document,
       visitWithTypeInfo(typeInfo, {
+        VariableDefinition(node) {
+          let type = node.type;
+          while (type.kind !== Kind.NAMED_TYPE) {
+            type = type.type;
+          }
+
+          const typeName = type.name.value;
+
+          if (inputObjects.has(typeName)) {
+            usedVariableTypes.add(typeName);
+          }
+        },
         Field(node) {
           const parentType = typeInfo.getParentType();
           const fieldType = getNamedType(typeInfo.getType())?.name;
@@ -380,5 +343,19 @@ function getUsedFields(
     );
   }
 
-  return fieldsUsed;
+  const used = new Set(usedVariableTypes);
+  const usedQueue = [...used];
+
+  while (usedQueue.length) {
+    const fields = inputObjects.get(usedQueue.pop()!)!;
+
+    for (const typeName of Object.values(fields)) {
+      if (inputObjects.has(typeName) && !used.has(typeName)) {
+        used.add(typeName);
+        usedQueue.push(typeName);
+      }
+    }
+  }
+
+  return { used, fieldsUsed };
 }

@@ -2,20 +2,20 @@
 "@apollo/client-graphql-codegen": minor
 ---
 
-Introduce a new GraphQL Codegen plugin to generate the type policy configuration needed to configure custom scalars for each field.
+The `@apollo/client-graphql-codegen/custom-scalars` GraphQL Codegen plugin now generates the type policy configuration needed to configure custom scalars for each field.
 
 ```ts
 // codegen.ts
-import type { ScalarTypePoliciesPluginConfig } from "@apollo/client-graphql-codegen/scalar-type-policies";
+import type { CustomScalarsPluginConfig } from "@apollo/client-graphql-codegen/custom-scalars";
 
 const config: CodegenConfig = {
   // ...
   generates: {
-    "./path/to/schema-type-policies.ts": {
-      plugins: ["@apollo/client-graphql-codegen/scalar-type-policies"],
+    "./path/to/custom-scalars.ts": {
+      plugins: ["@apollo/client-graphql-codegen/custom-scalars"],
       config: {
         // ...
-      } satisfies ScalarTypePoliciesPluginConfig,
+      } satisfies CustomScalarsPluginConfig,
     },
   },
 };
@@ -24,7 +24,7 @@ const config: CodegenConfig = {
 This will generate a `scalarTypePolicies` object in the generated file that can be used to configure type policies.
 
 ```ts
-import { scalarTypePolicies } from "./path/to/schema-type-policies";
+import { scalarTypePolicies } from "./path/to/custom-scalars";
 
 const cache = new InMemoryCache();
 

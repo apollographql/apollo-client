@@ -162,3 +162,61 @@ test("returns parsed custom scalar fields", () => {
     },
   });
 });
+
+test("preserves referential identity when writing identical serialized scalar values", () => {
+  const query = gql`
+    query Event {
+      event {
+        id
+        startDate
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: ApolloLink.empty(),
+  });
+
+  client.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: "2026-01-01",
+      },
+    },
+  });
+
+  const previousResult = client.readQuery({ query });
+
+  expect(previousResult).toStrictEqualTyped({
+    event: {
+      __typename: "Event",
+      id: "1",
+      startDate: new Date(2026, 0, 1),
+    },
+  });
+
+  client.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: "2026-01-01",
+      },
+    },
+  });
+
+  expect(client.readQuery({ query })).toBe(previousResult);
+});

@@ -89,22 +89,21 @@ export const plugin: PluginFunction<CustomScalarsPluginConfig, string> = async (
   let usedFields: Map<string, Set<string>> | undefined;
 
   if (filterByDocuments) {
-    // Get a list of input objects used by variables in all documents. An input
-    // object is only considered used if a variable definition includes the type,
-    // or the input object is a dependency of a used input object. This allows us
-    // to keep the input config object as small as possible and limit it to only
-    // used input object types.
-    const { usedInputObjects, usedFields: used } = collectDocumentUsage(
+    // Limit the config to what the documents actually use. Object type policies
+    // are limited to the selected custom scalar fields, and input objects are
+    // limited to those reachable from a variable definition.
+    const { usedInputObjects, usedFields: fields } = collectDocumentUsage(
       schema,
       documents,
-      customScalars,
-      inputObjects
+      customScalars
     );
 
-    usedFields = used;
+    usedFields = fields;
+
+    const reachable = getReachableInputObjects(inputObjects, usedInputObjects);
 
     for (const name of inputObjects.keys()) {
-      if (!usedInputObjects.has(name)) {
+      if (!reachable.has(name)) {
         inputObjects.delete(name);
       }
     }
@@ -282,8 +281,7 @@ function getInputObjectsWithCustomScalars(
 function collectDocumentUsage(
   schema: GraphQLSchema,
   documents: Types.DocumentFile[],
-  customScalars: Set<string>,
-  inputObjects: InputObjectMap
+  customScalars: Set<string>
 ) {
   const usedFields = new Map<string, Set<string>>();
   const usedInputObjects = new Set<string>();
@@ -293,7 +291,7 @@ function collectDocumentUsage(
     VariableDefinition() {
       const type = getNamedType(typeInfo.getInputType());
 
-      if (type && inputObjects.has(type.name)) {
+      if (type && isInputObjectType(type)) {
         usedInputObjects.add(type.name);
       }
     },
@@ -326,20 +324,35 @@ function collectDocumentUsage(
     }
   }
 
-  const usedQueue = [...usedInputObjects];
+  return { usedInputObjects, usedFields };
+}
 
-  while (usedQueue.length) {
-    const fields = inputObjects.get(usedQueue.pop()!)!;
+function getReachableInputObjects(
+  inputObjects: InputObjectMap,
+  usedInputObjects: Set<string>
+) {
+  const reachable = new Set<string>();
+  const queue: string[] = [];
+
+  for (const name of usedInputObjects) {
+    if (inputObjects.has(name)) {
+      reachable.add(name);
+      queue.push(name);
+    }
+  }
+
+  while (queue.length) {
+    const fields = inputObjects.get(queue.pop()!)!;
 
     for (const typeName of Object.values(fields)) {
-      if (inputObjects.has(typeName) && !usedInputObjects.has(typeName)) {
-        usedInputObjects.add(typeName);
-        usedQueue.push(typeName);
+      if (inputObjects.has(typeName) && !reachable.has(typeName)) {
+        reachable.add(typeName);
+        queue.push(typeName);
       }
     }
   }
 
-  return { usedInputObjects, usedFields };
+  return reachable;
 }
 
 function isCustomScalar(

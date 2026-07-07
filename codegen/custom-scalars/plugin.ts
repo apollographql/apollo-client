@@ -298,9 +298,9 @@ function collectDocumentUsage(
     },
     Field(node) {
       const parentType = typeInfo.getParentType();
-      const fieldType = getNamedType(typeInfo.getType())?.name;
+      const fieldTypeName = getNamedType(typeInfo.getType())?.name;
 
-      if (!parentType || !fieldType || !customScalars.has(fieldType)) {
+      if (!parentType || !fieldTypeName || !customScalars.has(fieldTypeName)) {
         return;
       }
 

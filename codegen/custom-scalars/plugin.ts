@@ -288,42 +288,41 @@ function getUsed(
   const usedInputObjects = new Set<string>();
   const typeInfo = new TypeInfo(schema);
 
+  const visitor = visitWithTypeInfo(typeInfo, {
+    VariableDefinition() {
+      const type = getNamedType(typeInfo.getInputType());
+
+      if (type && inputObjects.has(type.name)) {
+        usedInputObjects.add(type.name);
+      }
+    },
+    Field(node) {
+      const parentType = typeInfo.getParentType();
+      const fieldType = getNamedType(typeInfo.getType())?.name;
+
+      if (!parentType || !fieldType || !customScalars.has(fieldType)) {
+        return;
+      }
+
+      const typenames =
+        isInterfaceType(parentType) ?
+          schema.getPossibleTypes(parentType).map((type) => type.name)
+        : [parentType.name];
+
+      for (const typename of typenames) {
+        let fields = usedFields.get(typename);
+        if (!fields) {
+          usedFields.set(typename, (fields = new Set()));
+        }
+        fields.add(node.name.value);
+      }
+    },
+  });
+
   for (const { document } of documents) {
-    if (!document) continue;
-
-    visit(
-      document,
-      visitWithTypeInfo(typeInfo, {
-        VariableDefinition() {
-          const type = getNamedType(typeInfo.getInputType());
-
-          if (type && inputObjects.has(type.name)) {
-            usedInputObjects.add(type.name);
-          }
-        },
-        Field(node) {
-          const parentType = typeInfo.getParentType();
-          const fieldType = getNamedType(typeInfo.getType())?.name;
-
-          if (!parentType || !fieldType || !customScalars.has(fieldType)) {
-            return;
-          }
-
-          const typenames =
-            isInterfaceType(parentType) ?
-              schema.getPossibleTypes(parentType).map((type) => type.name)
-            : [parentType.name];
-
-          for (const typename of typenames) {
-            let fields = usedFields.get(typename);
-            if (!fields) {
-              usedFields.set(typename, (fields = new Set()));
-            }
-            fields.add(node.name.value);
-          }
-        },
-      })
-    );
+    if (document) {
+      visit(document, visitor);
+    }
   }
 
   const usedQueue = [...usedInputObjects];

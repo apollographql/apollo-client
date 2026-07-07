@@ -1,7 +1,12 @@
 import { delay, of } from "rxjs";
 
-import type { OperationVariables } from "@apollo/client";
-import { ApolloClient, ApolloLink, gql } from "@apollo/client";
+import type { OperationVariables, TypedDocumentNode } from "@apollo/client";
+import {
+  ApolloClient,
+  ApolloLink,
+  CombinedGraphQLErrors,
+  gql,
+} from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { dateScalar, ObservableStream } from "@apollo/client/testing/internal";
 
@@ -401,3 +406,278 @@ test.failing(
     await expect(stream).toComplete();
   }
 );
+
+test("preserves referential identity when a subscription emits identical serialized scalar values", async () => {
+  const subscription: TypedDocumentNode<{
+    eventCreated: { __typename: "Event"; id: string; startDate: Date };
+  }> = gql`
+    subscription EventCreated {
+      eventCreated {
+        id
+        startDate
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() =>
+      of(
+        {
+          data: {
+            eventCreated: {
+              __typename: "Event",
+              id: "1",
+              startDate: "2026-01-01",
+            },
+          },
+        },
+        {
+          data: {
+            eventCreated: {
+              __typename: "Event",
+              id: "1",
+              startDate: "2026-01-01",
+            },
+          },
+        }
+      ).pipe(delay(20))
+    ),
+  });
+
+  using stream = new ObservableStream(
+    client.subscribe({ query: subscription })
+  );
+
+  const first = await stream.takeNext();
+
+  expect(first).toStrictEqualTyped({
+    data: {
+      eventCreated: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+      },
+    },
+  });
+
+  const second = await stream.takeNext();
+
+  expect(second.data!.eventCreated).toBe(first.data!.eventCreated);
+
+  await expect(stream).toComplete();
+});
+
+test("serializes scalar fields in the error with a `none` error policy", async () => {
+  const subscription = gql`
+    subscription EventCreated {
+      eventCreated {
+        id
+        startDate
+        endDate
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+            endDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          eventCreated: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+            endDate: null,
+          },
+        },
+        errors: [
+          {
+            message: "Could not resolve endDate",
+            path: ["eventCreated", "endDate"],
+          },
+        ],
+      }).pipe(delay(20))
+    ),
+  });
+
+  using stream = new ObservableStream(
+    client.subscribe({ query: subscription, errorPolicy: "none" })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    error: new CombinedGraphQLErrors({
+      data: {
+        eventCreated: {
+          __typename: "Event",
+          id: "1",
+          startDate: "2026-01-01",
+          endDate: null,
+        },
+      },
+      errors: [
+        {
+          message: "Could not resolve endDate",
+          path: ["eventCreated", "endDate"],
+        },
+      ],
+    }),
+  });
+
+  await expect(stream).toComplete();
+});
+
+test("parses scalar fields in the result and serializes them in the error with an `all` error policy", async () => {
+  const subscription = gql`
+    subscription EventCreated {
+      eventCreated {
+        id
+        startDate
+        endDate
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+            endDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          eventCreated: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+            endDate: null,
+          },
+        },
+        errors: [
+          {
+            message: "Could not resolve endDate",
+            path: ["eventCreated", "endDate"],
+          },
+        ],
+      }).pipe(delay(20))
+    ),
+  });
+
+  using stream = new ObservableStream(
+    client.subscribe({ query: subscription, errorPolicy: "all" })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      eventCreated: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+        endDate: null,
+      },
+    },
+    error: new CombinedGraphQLErrors({
+      data: {
+        eventCreated: {
+          __typename: "Event",
+          id: "1",
+          // TODO: Determine if this is correct
+          startDate: new Date(2026, 0, 1),
+          endDate: null,
+        },
+      },
+      errors: [
+        {
+          message: "Could not resolve endDate",
+          path: ["eventCreated", "endDate"],
+        },
+      ],
+    }),
+  });
+
+  await expect(stream).toComplete();
+});
+
+test("parses custom scalar fields with an `ignore` error policy", async () => {
+  const subscription = gql`
+    subscription EventCreated {
+      eventCreated {
+        id
+        startDate
+        endDate
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+            endDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          eventCreated: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+            endDate: null,
+          },
+        },
+        errors: [
+          {
+            message: "Could not resolve endDate",
+            path: ["eventCreated", "endDate"],
+          },
+        ],
+      }).pipe(delay(20))
+    ),
+  });
+
+  using stream = new ObservableStream(
+    client.subscribe({ query: subscription, errorPolicy: "ignore" })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      eventCreated: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+        endDate: null,
+      },
+    },
+  });
+
+  await expect(stream).toComplete();
+});

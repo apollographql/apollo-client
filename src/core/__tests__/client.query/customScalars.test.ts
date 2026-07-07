@@ -1,7 +1,12 @@
 import { delay, of } from "rxjs";
 
 import type { OperationVariables } from "@apollo/client";
-import { ApolloClient, ApolloLink, gql } from "@apollo/client";
+import {
+  ApolloClient,
+  ApolloLink,
+  CombinedGraphQLErrors,
+  gql,
+} from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { dateScalar } from "@apollo/client/testing/internal";
 
@@ -443,3 +448,248 @@ test.failing(
     });
   }
 );
+
+test("preserves referential identity when fetching identical serialized scalar values", async () => {
+  const query = gql`
+    query Event {
+      event {
+        id
+        startDate
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          event: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+          },
+        },
+      }).pipe(delay(20))
+    ),
+  });
+
+  const { data: first } = await client.query({
+    query,
+    fetchPolicy: "network-only",
+  });
+
+  expect(first).toStrictEqualTyped({
+    event: {
+      __typename: "Event",
+      id: "1",
+      startDate: new Date(2026, 0, 1),
+    },
+  });
+
+  const { data: second } = await client.query({
+    query,
+    fetchPolicy: "network-only",
+  });
+
+  expect(second).toBe(first);
+});
+
+test("serializes scalar fields in the error with a `none` error policy", async () => {
+  const query = gql`
+    query Event {
+      event {
+        id
+        startDate
+        endDate
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+            endDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          event: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+            endDate: null,
+          },
+        },
+        errors: [
+          {
+            message: "Could not resolve endDate",
+            path: ["event", "endDate"],
+          },
+        ],
+      }).pipe(delay(20))
+    ),
+  });
+
+  await expect(client.query({ query, errorPolicy: "none" })).rejects.toEqual(
+    new CombinedGraphQLErrors({
+      data: {
+        event: {
+          __typename: "Event",
+          id: "1",
+          startDate: "2026-01-01",
+          endDate: null,
+        },
+      },
+      errors: [
+        {
+          message: "Could not resolve endDate",
+          path: ["event", "endDate"],
+        },
+      ],
+    })
+  );
+});
+
+test("parses scalar fields in the result and serializes them in the error with an `all` error policy", async () => {
+  const query = gql`
+    query Event {
+      event {
+        id
+        startDate
+        endDate
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+            endDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          event: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+            endDate: null,
+          },
+        },
+        errors: [
+          {
+            message: "Could not resolve endDate",
+            path: ["event", "endDate"],
+          },
+        ],
+      }).pipe(delay(20))
+    ),
+  });
+
+  await expect(
+    client.query({ query, errorPolicy: "all" })
+  ).resolves.toStrictEqualTyped({
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+        endDate: null,
+      },
+    },
+    error: new CombinedGraphQLErrors({
+      data: {
+        event: {
+          __typename: "Event",
+          id: "1",
+          // TODO: Determine if this is correct
+          startDate: new Date(2026, 0, 1),
+          endDate: null,
+        },
+      },
+      errors: [
+        {
+          message: "Could not resolve endDate",
+          path: ["event", "endDate"],
+        },
+      ],
+    }),
+  });
+});
+
+test("parses custom scalar fields with an `ignore` error policy", async () => {
+  const query = gql`
+    query Event {
+      event {
+        id
+        startDate
+        endDate
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+            endDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          event: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+            endDate: null,
+          },
+        },
+        errors: [
+          {
+            message: "Could not resolve endDate",
+            path: ["event", "endDate"],
+          },
+        ],
+      }).pipe(delay(20))
+    ),
+  });
+
+  await expect(
+    client.query({ query, errorPolicy: "ignore" })
+  ).resolves.toStrictEqualTyped({
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+        endDate: null,
+      },
+    },
+  });
+});

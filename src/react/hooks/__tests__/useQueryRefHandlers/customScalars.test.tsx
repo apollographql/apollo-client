@@ -103,9 +103,14 @@ test("serializes scalar variables passed to refetch", async () => {
     wrapper: createClientWrapper(client),
   });
 
-  await expect(renderStream.takeRender()).resolves.toMatchObject({
-    renderedComponents: ["useQueryRefHandlers", "<Suspense />"],
-  });
+  {
+    const { renderedComponents } = await renderStream.takeRender();
+
+    expect(renderedComponents).toStrictEqual([
+      "useQueryRefHandlers",
+      "<Suspense />",
+    ]);
+  }
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -135,9 +140,14 @@ test("serializes scalar variables passed to refetch", async () => {
     },
   });
 
-  await expect(renderStream.takeRender()).resolves.toMatchObject({
-    renderedComponents: ["useQueryRefHandlers", "<Suspense />"],
-  });
+  {
+    const { renderedComponents } = await renderStream.takeRender();
+
+    expect(renderedComponents).toStrictEqual([
+      "useQueryRefHandlers",
+      "<Suspense />",
+    ]);
+  }
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -242,9 +252,14 @@ test("serializes scalar variables passed to fetchMore", async () => {
     wrapper: createClientWrapper(client),
   });
 
-  await expect(renderStream.takeRender()).resolves.toMatchObject({
-    renderedComponents: ["useQueryRefHandlers", "<Suspense />"],
-  });
+  {
+    const { renderedComponents } = await renderStream.takeRender();
+
+    expect(renderedComponents).toStrictEqual([
+      "useQueryRefHandlers",
+      "<Suspense />",
+    ]);
+  }
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -274,9 +289,14 @@ test("serializes scalar variables passed to fetchMore", async () => {
     },
   });
 
-  await expect(renderStream.takeRender()).resolves.toMatchObject({
-    renderedComponents: ["useQueryRefHandlers", "<Suspense />"],
-  });
+  {
+    const { renderedComponents } = await renderStream.takeRender();
+
+    expect(renderedComponents).toStrictEqual([
+      "useQueryRefHandlers",
+      "<Suspense />",
+    ]);
+  }
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -388,9 +408,14 @@ test("serializes scalar variables passed to subscribeToMore", async () => {
     wrapper: createClientWrapper(client),
   });
 
-  await expect(renderStream.takeRender()).resolves.toMatchObject({
-    renderedComponents: ["useQueryRefHandlers", "<Suspense />"],
-  });
+  {
+    const { renderedComponents } = await renderStream.takeRender();
+
+    expect(renderedComponents).toStrictEqual([
+      "useQueryRefHandlers",
+      "<Suspense />",
+    ]);
+  }
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -444,4 +469,161 @@ test("serializes scalar variables passed to subscribeToMore", async () => {
   expect(subscriptionLink.operation?.variables).toStrictEqualTyped({
     date: "2026-01-01",
   });
+});
+
+test("preserves referential identity when refetching identical serialized scalar values", async () => {
+  let refetchPromise!: ReturnType<
+    ReturnType<typeof useQueryRefHandlers>["refetch"]
+  >;
+
+  const query = gql`
+    query Event {
+      event {
+        id
+        startDate
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          event: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+          },
+        },
+      }).pipe(delay(20))
+    ),
+  });
+
+  const preloadQuery = createQueryPreloader(client);
+  const queryRef = preloadQuery(query);
+  const renderStream = createRenderStream({
+    initialSnapshot: {
+      result: null as useReadQuery.Result<any> | null,
+    },
+  });
+
+  function ReadQuery() {
+    useTrackRenders({ name: "useReadQuery" });
+    renderStream.mergeSnapshot({ result: useReadQuery(queryRef) });
+
+    return null;
+  }
+
+  function Fallback() {
+    useTrackRenders({ name: "<Suspense />" });
+    return null;
+  }
+
+  function App() {
+    useTrackRenders({ name: "useQueryRefHandlers" });
+    const { refetch } = useQueryRefHandlers(queryRef);
+
+    return (
+      <>
+        <button
+          onClick={() => {
+            refetchPromise = refetch();
+          }}
+        >
+          Refetch
+        </button>
+        <Suspense fallback={<Fallback />}>
+          <ReadQuery />
+        </Suspense>
+      </>
+    );
+  }
+
+  const user = userEvent.setup();
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, {
+    wrapper: createClientWrapper(client),
+  });
+
+  {
+    const { renderedComponents } = await renderStream.takeRender();
+
+    expect(renderedComponents).toStrictEqual([
+      "useQueryRefHandlers",
+      "<Suspense />",
+    ]);
+  }
+
+  let previousData: unknown;
+  {
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useReadQuery"]);
+    expect(snapshot.result).toStrictEqualTyped({
+      data: {
+        event: {
+          __typename: "Event",
+          id: "1",
+          startDate: new Date(2026, 0, 1),
+        },
+      },
+      dataState: "complete",
+      networkStatus: NetworkStatus.ready,
+      error: undefined,
+    });
+
+    previousData = snapshot.result!.data;
+  }
+
+  await user.click(screen.getByText("Refetch"));
+
+  await expect(refetchPromise).resolves.toStrictEqualTyped({
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+      },
+    },
+  });
+
+  {
+    const { renderedComponents } = await renderStream.takeRender();
+
+    expect(renderedComponents).toStrictEqual([
+      "useQueryRefHandlers",
+      "<Suspense />",
+    ]);
+  }
+
+  {
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useReadQuery"]);
+    expect(snapshot.result).toStrictEqualTyped({
+      data: {
+        event: {
+          __typename: "Event",
+          id: "1",
+          startDate: new Date(2026, 0, 1),
+        },
+      },
+      dataState: "complete",
+      networkStatus: NetworkStatus.ready,
+      error: undefined,
+    });
+
+    expect(snapshot.result!.data).toBe(previousData);
+  }
+
+  await expect(renderStream).not.toRerender();
 });

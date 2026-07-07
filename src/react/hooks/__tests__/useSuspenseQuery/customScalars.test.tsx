@@ -2,12 +2,26 @@ import { disableActEnvironment } from "@testing-library/react-render-stream";
 import { delay, of } from "rxjs";
 
 import type { OperationVariables } from "@apollo/client";
-import { ApolloClient, ApolloLink, gql, NetworkStatus } from "@apollo/client";
+import {
+  ApolloClient,
+  ApolloLink,
+  CombinedGraphQLErrors,
+  gql,
+  NetworkStatus,
+} from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
+import {
+  Defer20220824Handler,
+  GraphQL17Alpha9Handler,
+} from "@apollo/client/incremental";
 import { useSuspenseQuery } from "@apollo/client/react";
 import {
   createClientWrapper,
   dateScalar,
+  markAsStreaming,
+  mockDefer20220824,
+  mockDeferStreamGraphQL17Alpha9,
+  spyOnConsole,
 } from "@apollo/client/testing/internal";
 
 import { renderUseSuspenseQuery } from "./testUtils.js";
@@ -629,3 +643,783 @@ test.failing(
     }
   }
 );
+
+test("preserves referential identity when refetching identical serialized scalar values", async () => {
+  const query = gql`
+    query Event {
+      event {
+        id
+        startDate
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          event: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+          },
+        },
+      }).pipe(delay(20))
+    ),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeRender, getCurrentSnapshot } = await renderUseSuspenseQuery(
+    () => useSuspenseQuery(query),
+    { wrapper: createClientWrapper(client) }
+  );
+
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+  }
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+    expect(snapshot).toStrictEqualTyped({
+      data: {
+        event: {
+          __typename: "Event",
+          id: "1",
+          startDate: new Date(2026, 0, 1),
+        },
+      },
+      dataState: "complete",
+      networkStatus: NetworkStatus.ready,
+      error: undefined,
+    });
+  }
+
+  const { data: previousData, refetch } = getCurrentSnapshot();
+
+  await expect(refetch()).resolves.toStrictEqualTyped({
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+      },
+    },
+  });
+
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+  }
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+    expect(snapshot).toStrictEqualTyped({
+      data: {
+        event: {
+          __typename: "Event",
+          id: "1",
+          startDate: new Date(2026, 0, 1),
+        },
+      },
+      dataState: "complete",
+      networkStatus: NetworkStatus.ready,
+      error: undefined,
+    });
+  }
+
+  expect(getCurrentSnapshot().data).toBe(previousData);
+
+  await expect(takeRender).not.toRerender();
+});
+
+test("serializes scalar fields in the error with a `none` error policy", async () => {
+  using _consoleSpy = spyOnConsole("error");
+  const query = gql`
+    query Event {
+      event {
+        id
+        startDate
+        endDate
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+            endDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          event: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+            endDate: null,
+          },
+        },
+        errors: [
+          {
+            message: "Could not resolve endDate",
+            path: ["event", "endDate"],
+          },
+        ],
+      }).pipe(delay(20))
+    ),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeRender } = await renderUseSuspenseQuery(
+    () => useSuspenseQuery(query, { errorPolicy: "none" }),
+    { wrapper: createClientWrapper(client) }
+  );
+
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+  }
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["<ErrorBoundary />"]);
+    expect(snapshot).toStrictEqualTyped({
+      error: new CombinedGraphQLErrors({
+        data: {
+          event: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+            endDate: null,
+          },
+        },
+        errors: [
+          {
+            message: "Could not resolve endDate",
+            path: ["event", "endDate"],
+          },
+        ],
+      }),
+    });
+  }
+
+  await expect(takeRender).not.toRerender();
+});
+
+test("parses scalar fields in the result and serializes them in the error with an `all` error policy", async () => {
+  const query = gql`
+    query Event {
+      event {
+        id
+        startDate
+        endDate
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+            endDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          event: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+            endDate: null,
+          },
+        },
+        errors: [
+          {
+            message: "Could not resolve endDate",
+            path: ["event", "endDate"],
+          },
+        ],
+      }).pipe(delay(20))
+    ),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeRender } = await renderUseSuspenseQuery(
+    () => useSuspenseQuery(query, { errorPolicy: "all" }),
+    { wrapper: createClientWrapper(client) }
+  );
+
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+  }
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+    expect(snapshot).toStrictEqualTyped({
+      data: {
+        event: {
+          __typename: "Event",
+          id: "1",
+          startDate: new Date(2026, 0, 1),
+          endDate: null,
+        },
+      },
+      dataState: "complete",
+      networkStatus: NetworkStatus.error,
+      error: new CombinedGraphQLErrors({
+        data: {
+          event: {
+            __typename: "Event",
+            id: "1",
+            // TODO: Determine if this is correct
+            startDate: new Date(2026, 0, 1),
+            endDate: null,
+          },
+        },
+        errors: [
+          {
+            message: "Could not resolve endDate",
+            path: ["event", "endDate"],
+          },
+        ],
+      }),
+    });
+  }
+
+  await expect(takeRender).not.toRerender();
+});
+
+test("parses custom scalar fields with an `ignore` error policy", async () => {
+  const query = gql`
+    query Event {
+      event {
+        id
+        startDate
+        endDate
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+            endDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          event: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+            endDate: null,
+          },
+        },
+        errors: [
+          {
+            message: "Could not resolve endDate",
+            path: ["event", "endDate"],
+          },
+        ],
+      }).pipe(delay(20))
+    ),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeRender } = await renderUseSuspenseQuery(
+    () => useSuspenseQuery(query, { errorPolicy: "ignore" }),
+    { wrapper: createClientWrapper(client) }
+  );
+
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+  }
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+    expect(snapshot).toStrictEqualTyped({
+      data: {
+        event: {
+          __typename: "Event",
+          id: "1",
+          startDate: new Date(2026, 0, 1),
+          endDate: null,
+        },
+      },
+      dataState: "complete",
+      networkStatus: NetworkStatus.ready,
+      error: undefined,
+    });
+  }
+
+  await expect(takeRender).not.toRerender();
+});
+
+test("parses custom scalar fields across `@defer` payloads (defer20220824)", async () => {
+  const link = mockDefer20220824();
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+            endDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: link.httpLink,
+    incrementalHandler: new Defer20220824Handler(),
+  });
+  const query = gql`
+    query Event {
+      event {
+        id
+        startDate
+        ... @defer {
+          endDate
+        }
+      }
+    }
+  `;
+
+  using _disabledAct = disableActEnvironment();
+  const { takeRender } = await renderUseSuspenseQuery(
+    () => useSuspenseQuery(query),
+    { wrapper: createClientWrapper(client) }
+  );
+
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+  }
+
+  link.enqueueInitialChunk({
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: "2026-01-01",
+      },
+    },
+    hasNext: true,
+  });
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+    expect(snapshot).toStrictEqualTyped({
+      data: markAsStreaming({
+        event: {
+          __typename: "Event",
+          id: "1",
+          startDate: new Date(2026, 0, 1),
+        },
+      }),
+      dataState: "streaming",
+      networkStatus: NetworkStatus.streaming,
+      error: undefined,
+    });
+  }
+
+  link.enqueueSubsequentChunk({
+    incremental: [{ data: { endDate: "2026-02-02" }, path: ["event"] }],
+    hasNext: false,
+  });
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+    expect(snapshot).toStrictEqualTyped({
+      data: {
+        event: {
+          __typename: "Event",
+          id: "1",
+          startDate: new Date(2026, 0, 1),
+          endDate: new Date(2026, 1, 2),
+        },
+      },
+      dataState: "complete",
+      networkStatus: NetworkStatus.ready,
+      error: undefined,
+    });
+  }
+
+  await expect(takeRender).not.toRerender();
+});
+
+test("parses custom scalar fields across `@defer` payloads (graphql17Alpha9)", async () => {
+  const link = mockDeferStreamGraphQL17Alpha9();
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+            endDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: link.httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+  const query = gql`
+    query Event {
+      event {
+        id
+        startDate
+        ... @defer {
+          endDate
+        }
+      }
+    }
+  `;
+
+  using _disabledAct = disableActEnvironment();
+  const { takeRender } = await renderUseSuspenseQuery(
+    () => useSuspenseQuery(query),
+    { wrapper: createClientWrapper(client) }
+  );
+
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+  }
+
+  link.enqueueInitialChunk({
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: "2026-01-01",
+      },
+    },
+    pending: [{ id: "0", path: ["event"] }],
+    hasNext: true,
+  });
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+    expect(snapshot).toStrictEqualTyped({
+      data: markAsStreaming({
+        event: {
+          __typename: "Event",
+          id: "1",
+          startDate: new Date(2026, 0, 1),
+        },
+      }),
+      dataState: "streaming",
+      networkStatus: NetworkStatus.streaming,
+      error: undefined,
+    });
+  }
+
+  link.enqueueSubsequentChunk({
+    incremental: [{ data: { endDate: "2026-02-02" }, id: "0" }],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+    expect(snapshot).toStrictEqualTyped({
+      data: {
+        event: {
+          __typename: "Event",
+          id: "1",
+          startDate: new Date(2026, 0, 1),
+          endDate: new Date(2026, 1, 2),
+        },
+      },
+      dataState: "complete",
+      networkStatus: NetworkStatus.ready,
+      error: undefined,
+    });
+  }
+
+  await expect(takeRender).not.toRerender();
+});
+
+test("parses custom scalar fields across `@stream` payloads (defer20220824)", async () => {
+  const link = mockDefer20220824();
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: link.httpLink,
+    incrementalHandler: new Defer20220824Handler(),
+  });
+  const query = gql`
+    query Events {
+      events @stream(initialCount: 1) {
+        id
+        startDate
+      }
+    }
+  `;
+
+  using _disabledAct = disableActEnvironment();
+  const { takeRender } = await renderUseSuspenseQuery(
+    () => useSuspenseQuery(query),
+    { wrapper: createClientWrapper(client) }
+  );
+
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+  }
+
+  link.enqueueInitialChunk({
+    data: {
+      events: [
+        {
+          __typename: "Event",
+          id: "1",
+          startDate: "2026-01-01",
+        },
+      ],
+    },
+    hasNext: true,
+  });
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+    expect(snapshot).toStrictEqualTyped({
+      data: markAsStreaming({
+        events: [
+          {
+            __typename: "Event",
+            id: "1",
+            startDate: new Date(2026, 0, 1),
+          },
+        ],
+      }),
+      dataState: "streaming",
+      networkStatus: NetworkStatus.streaming,
+      error: undefined,
+    });
+  }
+
+  link.enqueueSubsequentChunk({
+    incremental: [
+      {
+        items: [
+          {
+            __typename: "Event",
+            id: "2",
+            startDate: "2026-02-02",
+          },
+        ] as any,
+        path: ["events", 1],
+      },
+    ],
+    hasNext: false,
+  });
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+    expect(snapshot).toStrictEqualTyped({
+      data: {
+        events: [
+          {
+            __typename: "Event",
+            id: "1",
+            startDate: new Date(2026, 0, 1),
+          },
+          {
+            __typename: "Event",
+            id: "2",
+            startDate: new Date(2026, 1, 2),
+          },
+        ],
+      },
+      dataState: "complete",
+      networkStatus: NetworkStatus.ready,
+      error: undefined,
+    });
+  }
+
+  await expect(takeRender).not.toRerender();
+});
+
+test("parses custom scalar fields across `@stream` payloads (graphql17Alpha9)", async () => {
+  const link = mockDeferStreamGraphQL17Alpha9();
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: link.httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+  const query = gql`
+    query Events {
+      events @stream(initialCount: 1) {
+        id
+        startDate
+      }
+    }
+  `;
+
+  using _disabledAct = disableActEnvironment();
+  const { takeRender } = await renderUseSuspenseQuery(
+    () => useSuspenseQuery(query),
+    { wrapper: createClientWrapper(client) }
+  );
+
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["<Suspense />"]);
+  }
+
+  link.enqueueInitialChunk({
+    data: {
+      events: [
+        {
+          __typename: "Event",
+          id: "1",
+          startDate: "2026-01-01",
+        },
+      ],
+    },
+    pending: [{ id: "0", path: ["events"] }],
+    hasNext: true,
+  });
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+    expect(snapshot).toStrictEqualTyped({
+      data: markAsStreaming({
+        events: [
+          {
+            __typename: "Event",
+            id: "1",
+            startDate: new Date(2026, 0, 1),
+          },
+        ],
+      }),
+      dataState: "streaming",
+      networkStatus: NetworkStatus.streaming,
+      error: undefined,
+    });
+  }
+
+  link.enqueueSubsequentChunk({
+    incremental: [
+      {
+        items: [
+          {
+            __typename: "Event",
+            id: "2",
+            startDate: "2026-02-02",
+          },
+        ] as any,
+        id: "0",
+      },
+    ],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+    expect(snapshot).toStrictEqualTyped({
+      data: {
+        events: [
+          {
+            __typename: "Event",
+            id: "1",
+            startDate: new Date(2026, 0, 1),
+          },
+          {
+            __typename: "Event",
+            id: "2",
+            startDate: new Date(2026, 1, 2),
+          },
+        ],
+      },
+      dataState: "complete",
+      networkStatus: NetworkStatus.ready,
+      error: undefined,
+    });
+  }
+
+  await expect(takeRender).not.toRerender();
+});

@@ -16,7 +16,7 @@ import {
   isInterfaceType,
   isObjectType,
   isScalarType,
-  specifiedScalarTypes,
+  isSpecifiedScalarType,
   TypeInfo,
   visit,
   visitWithTypeInfo,
@@ -360,7 +360,7 @@ function isCustomScalar(
 ): type is GraphQLScalarType {
   return (
     isScalarType(type) &&
-    !specifiedScalarTypes.includes(type) &&
+    !isSpecifiedScalarType(type) &&
     !ignoreScalars.includes(type.name) &&
     (!includeScalars || includeScalars.includes(type.name))
   );

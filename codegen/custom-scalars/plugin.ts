@@ -23,7 +23,6 @@ import type { CustomScalarsPluginConfig } from "./config.js";
 
 type InputObjectMap = Map<string, Record<string, string>>;
 type InputObjectsConfig = Record<string, { fields: Record<string, string> }>;
-type ObjectTypeMap = Map<string, Record<string, string>>;
 
 // Use a shim to avoid the need to add `@apollo/client` as a peer dependency
 type TypePolicies = {
@@ -63,7 +62,6 @@ export const plugin: PluginFunction<CustomScalarsPluginConfig, string> = async (
   const types = Object.values(schema.getTypeMap());
   const customScalars = new Set<string>();
   const inputObjects: InputObjectMap = new Map();
-  const objectTypes: ObjectTypeMap = new Map();
 
   for (const type of types) {
     if (
@@ -75,8 +73,8 @@ export const plugin: PluginFunction<CustomScalarsPluginConfig, string> = async (
       customScalars.add(type.name);
     } else if (isInputObjectType(type)) {
       const fields = Object.fromEntries(
-        Object.entries(type.getFields()).map(([fieldName, fieldType]) => {
-          return [fieldName, getNamedType(fieldType.type).name];
+        Object.entries(type.getFields()).map(([fieldName, field]) => {
+          return [fieldName, getNamedType(field.type).name];
         })
       );
 
@@ -88,31 +86,7 @@ export const plugin: PluginFunction<CustomScalarsPluginConfig, string> = async (
     return buildOutput({ inputObjects: {}, typePolicies: {} }, ext);
   }
 
-  // Iterate a 2nd time to gather object types so that we only record object
-  // types for known custom scalars to reduce the memory footprint for large
-  // schemas
-  for (const type of types) {
-    if (isObjectType(type)) {
-      const fields = Object.entries(type.getFields()).reduce(
-        (memo, [name, field]) => {
-          const fieldType = getNamedType(field.type).name;
-
-          if (customScalars.has(fieldType)) {
-            memo[name] = fieldType;
-          }
-
-          return memo;
-        },
-        {} as Record<string, string>
-      );
-
-      if (Object.keys(fields).length) {
-        objectTypes.set(type.name, fields);
-      }
-    }
-  }
-
-  let fieldsUsed: Map<string, Set<string>> | undefined;
+  let usedFields: Map<string, Set<string>> | undefined;
 
   if (filterByDocuments) {
     // Get a list of input objects used by variables in all documents. An input
@@ -120,14 +94,14 @@ export const plugin: PluginFunction<CustomScalarsPluginConfig, string> = async (
     // or the input object is a dependency of a used input object. This allows us
     // to keep the input config object as small as possible and limit it to only
     // used input object types.
-    const { usedInputObjects, usedFields } = getUsed(
+    const { usedInputObjects, usedFields: used } = getUsed(
       schema,
       documents,
       customScalars,
       inputObjects
     );
 
-    fieldsUsed = usedFields;
+    usedFields = used;
 
     for (const name of inputObjects.keys()) {
       if (!usedInputObjects.has(name)) {
@@ -146,7 +120,6 @@ export const plugin: PluginFunction<CustomScalarsPluginConfig, string> = async (
   );
 
   const inputObjectsConfig: InputObjectsConfig = {};
-  const typePolicies: TypePolicies = {};
 
   for (const name of withCustomScalars) {
     const fields = inputObjects.get(name)!;
@@ -161,17 +134,33 @@ export const plugin: PluginFunction<CustomScalarsPluginConfig, string> = async (
     inputObjectsConfig[name] = { fields: fieldsConfig };
   }
 
-  for (const [typename, fields] of objectTypes) {
+  // Iterate the schema types a 2nd time to build type policies for object type
+  // fields that resolve to a custom scalar. This runs after gathering custom
+  // scalars so we can skip object types outright instead of recording them,
+  // which keeps the memory footprint small for large schemas.
+  const typePolicies: TypePolicies = {};
+
+  for (const type of types) {
+    if (!isObjectType(type)) {
+      continue;
+    }
+
     const fieldPolicies: Record<string, FieldPolicy> = {};
 
-    for (const [fieldName, type] of Object.entries(fields)) {
-      if (!fieldsUsed || fieldsUsed.get(typename)?.has(fieldName)) {
-        fieldPolicies[fieldName] = { scalar: type };
+    for (const [fieldName, field] of Object.entries(type.getFields())) {
+      const typeName = getNamedType(field.type).name;
+
+      if (!customScalars.has(typeName)) {
+        continue;
+      }
+
+      if (!usedFields || usedFields.get(type.name)?.has(fieldName)) {
+        fieldPolicies[fieldName] = { scalar: typeName };
       }
     }
 
     if (Object.keys(fieldPolicies).length > 0) {
-      typePolicies[typename] = { fields: fieldPolicies };
+      typePolicies[type.name] = { fields: fieldPolicies };
     }
   }
 

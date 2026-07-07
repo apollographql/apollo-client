@@ -2842,42 +2842,122 @@ const formatDocuments = [
 
 test("outputs TypeScript format for .ts files", async () => {
   await expect(
-    runCodegen({
-      schema: formatSchema,
-      documents: formatDocuments,
-      filename: "custom-scalars.ts",
-    })
-  ).resolves.toMatchInlineSnapshot();
+  runCodegen({
+    schema: formatSchema,
+    documents: formatDocuments,
+    filename: "custom-scalars.ts"
+  })
+).resolves.toMatchInlineSnapshot(`
+"import type { InputObjectsConfig, TypePolicies } from \\"@apollo/client/cache\\";
+
+export const inputObjects: InputObjectsConfig = {
+  \\"EventInput\\": {
+    \\"fields\\": {
+      \\"startsAt\\": \\"DateTime\\"
+    }
+  }
+};
+
+export const scalarTypePolicies: TypePolicies = {
+  \\"Event\\": {
+    \\"fields\\": {
+      \\"startsAt\\": {
+        \\"scalar\\": \\"DateTime\\"
+      }
+    }
+  }
+};"
+`);
 });
 
 test("outputs TypeScript format for .tsx files", async () => {
   await expect(
-    runCodegen({
-      schema: formatSchema,
-      documents: formatDocuments,
-      filename: "custom-scalars.tsx",
-    })
-  ).resolves.toMatchInlineSnapshot();
+  runCodegen({
+    schema: formatSchema,
+    documents: formatDocuments,
+    filename: "custom-scalars.tsx"
+  })
+).resolves.toMatchInlineSnapshot(`
+"import type { InputObjectsConfig, TypePolicies } from \\"@apollo/client/cache\\";
+
+export const inputObjects: InputObjectsConfig = {
+  \\"EventInput\\": {
+    \\"fields\\": {
+      \\"startsAt\\": \\"DateTime\\"
+    }
+  }
+};
+
+export const scalarTypePolicies: TypePolicies = {
+  \\"Event\\": {
+    \\"fields\\": {
+      \\"startsAt\\": {
+        \\"scalar\\": \\"DateTime\\"
+      }
+    }
+  }
+};"
+`);
 });
 
 test("outputs JSDoc format for .js files", async () => {
   await expect(
-    runCodegen({
-      schema: formatSchema,
-      documents: formatDocuments,
-      filename: "custom-scalars.js",
-    })
-  ).resolves.toMatchInlineSnapshot();
+  runCodegen({
+    schema: formatSchema,
+    documents: formatDocuments,
+    filename: "custom-scalars.js"
+  })
+).resolves.toMatchInlineSnapshot(`
+"/** @type {import(\\"@apollo/client/cache\\").InputObjectsOption} */
+export const inputObjects = {
+  \\"EventInput\\": {
+    \\"fields\\": {
+      \\"startsAt\\": \\"DateTime\\"
+    }
+  }
+};
+
+/** @type {import(\\"@apollo/client/cache\\").TypePolicies} */
+export const scalarTypePolicies = {
+  \\"Event\\": {
+    \\"fields\\": {
+      \\"startsAt\\": {
+        \\"scalar\\": \\"DateTime\\"
+      }
+    }
+  }
+};"
+`);
 });
 
 test("outputs JSDoc format for .jsx files", async () => {
   await expect(
-    runCodegen({
-      schema: formatSchema,
-      documents: formatDocuments,
-      filename: "custom-scalars.jsx",
-    })
-  ).resolves.toMatchInlineSnapshot();
+  runCodegen({
+    schema: formatSchema,
+    documents: formatDocuments,
+    filename: "custom-scalars.jsx"
+  })
+).resolves.toMatchInlineSnapshot(`
+"/** @type {import(\\"@apollo/client/cache\\").InputObjectsOption} */
+export const inputObjects = {
+  \\"EventInput\\": {
+    \\"fields\\": {
+      \\"startsAt\\": \\"DateTime\\"
+    }
+  }
+};
+
+/** @type {import(\\"@apollo/client/cache\\").TypePolicies} */
+export const scalarTypePolicies = {
+  \\"Event\\": {
+    \\"fields\\": {
+      \\"startsAt\\": {
+        \\"scalar\\": \\"DateTime\\"
+      }
+    }
+  }
+};"
+`);
 });
 
 test("outputs empty config in JSDoc format for .js files", async () => {
@@ -2888,8 +2968,14 @@ test("outputs empty config in JSDoc format for .js files", async () => {
   `;
 
   await expect(
-    runCodegen({ schema, filename: "custom-scalars.js" })
-  ).resolves.toMatchInlineSnapshot();
+  runCodegen({ schema, filename: "custom-scalars.js" })
+).resolves.toMatchInlineSnapshot(`
+"/** @type {import(\\"@apollo/client/cache\\").InputObjectsOption} */
+export const inputObjects = {};
+
+/** @type {import(\\"@apollo/client/cache\\").TypePolicies} */
+export const scalarTypePolicies = {};"
+`);
 });
 
 test("throws on unsupported file extensions", async () => {

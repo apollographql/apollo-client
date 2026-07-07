@@ -5,19 +5,38 @@ import type {
   PluginValidateFn,
   Types,
 } from "@graphql-codegen/plugin-helpers";
-import type { DocumentNode, NamedTypeNode } from "graphql";
+import type { DocumentNode, GraphQLSchema, NamedTypeNode } from "graphql";
 import {
   getNamedType,
   isInputObjectType,
+  isInterfaceType,
+  isObjectType,
   isScalarType,
   Kind,
   specifiedScalarTypes,
+  TypeInfo,
+  visit,
+  visitWithTypeInfo,
 } from "graphql";
 
 import type { CustomScalarsPluginConfig } from "./config.js";
 
 type InputObjectMap = Map<string, Record<string, string>>;
 type InputObjectsConfig = Record<string, { fields: Record<string, string> }>;
+type ObjectTypeMap = Map<string, Record<string, string>>;
+
+// Use a shim to avoid the need to add `@apollo/client` as a peer dependency
+type TypePolicies = {
+  [__typename: string]: {
+    fields: {
+      [fieldName: string]: FieldPolicy;
+    };
+  };
+};
+
+type FieldPolicy = {
+  scalar: string;
+};
 
 const SUPPORTED_EXTENSIONS = {
   ts: [".ts", ".tsx"],
@@ -32,18 +51,19 @@ export const plugin: PluginFunction<CustomScalarsPluginConfig, string> = async (
 ) => {
   const {
     ignoreScalars = [],
-    filterByDocuments = true,
     includeScalars,
+    filterByDocuments = true,
   } = config;
   const ext = extname(info?.outputFile ?? "").toLowerCase();
 
   if (includeScalars?.length === 0) {
-    return buildOutput({}, ext);
+    return buildOutput({ inputObjects: {}, typePolicies: {} }, ext);
   }
 
   const types = Object.values(schema.getTypeMap());
   const customScalars = new Set<string>();
   const inputObjects: InputObjectMap = new Map();
+  const objectTypes: ObjectTypeMap = new Map();
 
   for (const type of types) {
     if (
@@ -65,8 +85,37 @@ export const plugin: PluginFunction<CustomScalarsPluginConfig, string> = async (
   }
 
   if (customScalars.size === 0) {
-    return buildOutput({}, ext);
+    return buildOutput({ inputObjects: {}, typePolicies: {} }, ext);
   }
+
+  // Iterate a 2nd time to gather object types so that we only record object
+  // types for known custom scalars to reduce the memory footprint for large
+  // schemas
+  for (const type of types) {
+    if (isObjectType(type)) {
+      const fields = Object.entries(type.getFields()).reduce(
+        (memo, [name, field]) => {
+          const fieldType = getNamedType(field.type).name;
+
+          if (customScalars.has(fieldType)) {
+            memo[name] = fieldType;
+          }
+
+          return memo;
+        },
+        {} as Record<string, string>
+      );
+
+      if (Object.keys(fields).length) {
+        objectTypes.set(type.name, fields);
+      }
+    }
+  }
+
+  const fieldsUsed =
+    filterByDocuments ?
+      getUsedFields(schema, documents, customScalars)
+    : undefined;
 
   if (filterByDocuments) {
     // Get a list of input objects used by variables in all documents. An input
@@ -93,6 +142,7 @@ export const plugin: PluginFunction<CustomScalarsPluginConfig, string> = async (
   );
 
   const inputObjectsConfig: InputObjectsConfig = {};
+  const typePolicies: TypePolicies = {};
 
   for (const name of withCustomScalars) {
     const fields = inputObjects.get(name)!;
@@ -107,7 +157,21 @@ export const plugin: PluginFunction<CustomScalarsPluginConfig, string> = async (
     inputObjectsConfig[name] = { fields: fieldsConfig };
   }
 
-  return buildOutput(inputObjectsConfig, ext);
+  for (const [typename, fields] of objectTypes) {
+    const fieldPolicies: Record<string, FieldPolicy> = {};
+
+    for (const [fieldName, type] of Object.entries(fields)) {
+      if (!fieldsUsed || fieldsUsed.get(typename)?.has(fieldName)) {
+        fieldPolicies[fieldName] = { scalar: type };
+      }
+    }
+
+    if (Object.keys(fieldPolicies).length > 0) {
+      typePolicies[typename] = { fields: fieldPolicies };
+    }
+  }
+
+  return buildOutput({ inputObjects: inputObjectsConfig, typePolicies }, ext);
 };
 
 export const validate: PluginValidateFn<CustomScalarsPluginConfig> = (
@@ -135,7 +199,12 @@ export const validate: PluginValidateFn<CustomScalarsPluginConfig> = (
   }
 };
 
-function buildOutput(config: InputObjectsConfig, ext: string) {
+interface BuildOutputConfig {
+  inputObjects: InputObjectsConfig;
+  typePolicies: TypePolicies;
+}
+
+function buildOutput(config: BuildOutputConfig, ext: string) {
   if (SUPPORTED_EXTENSIONS.ts.includes(ext)) {
     return buildTsOutput(config);
   }
@@ -147,22 +216,35 @@ function buildOutput(config: InputObjectsConfig, ext: string) {
   throw new Error(`Cannot build output for unknown extension '${ext}'.`);
 }
 
-function buildTsOutput(config: InputObjectsConfig) {
+function buildTsOutput(config: BuildOutputConfig) {
   return `
-import type { InputObjectsConfig } from "@apollo/client/cache";
+import type { InputObjectsConfig, TypePolicies } from "@apollo/client/cache";
 
 export const inputObjects: InputObjectsConfig = ${JSON.stringify(
-    config,
+    config.inputObjects,
+    null,
+    2
+  )};
+
+export const scalarTypePolicies: TypePolicies = ${JSON.stringify(
+    config.typePolicies,
     null,
     2
   )};
 `.trim();
 }
 
-function buildJsOutput(config: InputObjectsConfig) {
+function buildJsOutput(config: BuildOutputConfig) {
   return `
 /** @type {import("@apollo/client/cache").InputObjectsOption} */
-export const inputObjects = ${JSON.stringify(config, null, 2)};
+export const inputObjects = ${JSON.stringify(config.inputObjects, null, 2)};
+
+/** @type {import("@apollo/client/cache").TypePolicies} */
+export const scalarTypePolicies = ${JSON.stringify(
+    config.typePolicies,
+    null,
+    2
+  )};
 `.trim();
 }
 
@@ -258,4 +340,46 @@ function getInputObjectsWithCustomScalars(
   }
 
   return useful;
+}
+
+function getUsedFields(
+  schema: GraphQLSchema,
+  documents: Types.DocumentFile[],
+  customScalars: Set<string>
+) {
+  const fieldsUsed = new Map<string, Set<string>>();
+  const typeInfo = new TypeInfo(schema);
+
+  for (const { document } of documents) {
+    if (!document) continue;
+
+    visit(
+      document,
+      visitWithTypeInfo(typeInfo, {
+        Field(node) {
+          const parentType = typeInfo.getParentType();
+          const fieldType = getNamedType(typeInfo.getType())?.name;
+
+          if (!parentType || !fieldType || !customScalars.has(fieldType)) {
+            return;
+          }
+
+          const typenames =
+            isInterfaceType(parentType) ?
+              schema.getPossibleTypes(parentType).map((type) => type.name)
+            : [parentType.name];
+
+          for (const typename of typenames) {
+            let fields = fieldsUsed.get(typename);
+            if (!fields) {
+              fieldsUsed.set(typename, (fields = new Set()));
+            }
+            fields.add(node.name.value);
+          }
+        },
+      })
+    );
+  }
+
+  return fieldsUsed;
 }

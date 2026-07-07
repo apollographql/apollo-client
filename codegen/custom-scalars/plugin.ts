@@ -60,7 +60,7 @@ export const plugin: PluginFunction<CustomScalarsPluginConfig, string> = async (
 
   const types = Object.values(schema.getTypeMap());
   const customScalars = new Set<string>();
-  const inputObjects: InputObjectMap = new Map();
+  let inputObjects: InputObjectMap = new Map();
 
   for (const type of types) {
     if (isCustomScalar(type, config)) {
@@ -99,14 +99,7 @@ export const plugin: PluginFunction<CustomScalarsPluginConfig, string> = async (
     );
 
     usedFields = fields;
-
-    const reachable = getReachableInputObjects(inputObjects, usedInputObjects);
-
-    for (const name of inputObjects.keys()) {
-      if (!reachable.has(name)) {
-        inputObjects.delete(name);
-      }
-    }
+    inputObjects = getReachableInputObjects(inputObjects, usedInputObjects);
   }
 
   // After filtering input objects used by documents, we need to figure out
@@ -330,24 +323,30 @@ function collectDocumentUsage(
 function getReachableInputObjects(
   inputObjects: InputObjectMap,
   usedInputObjects: Set<string>
-) {
-  const reachable = new Set<string>();
+): InputObjectMap {
+  const reachable: InputObjectMap = new Map();
   const queue: string[] = [];
 
   for (const name of usedInputObjects) {
-    if (inputObjects.has(name)) {
-      reachable.add(name);
+    const fields = inputObjects.get(name);
+
+    if (fields && !reachable.has(name)) {
+      reachable.set(name, fields);
       queue.push(name);
     }
   }
 
   while (queue.length) {
-    const fields = inputObjects.get(queue.pop()!)!;
+    const fields = reachable.get(queue.pop()!)!;
 
     for (const typeName of Object.values(fields)) {
-      if (inputObjects.has(typeName) && !reachable.has(typeName)) {
-        reachable.add(typeName);
-        queue.push(typeName);
+      if (!reachable.has(typeName)) {
+        const dependencyFields = inputObjects.get(typeName);
+
+        if (dependencyFields) {
+          reachable.set(typeName, dependencyFields);
+          queue.push(typeName);
+        }
       }
     }
   }

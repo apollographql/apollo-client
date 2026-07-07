@@ -112,10 +112,7 @@ export const plugin: PluginFunction<CustomScalarsPluginConfig, string> = async (
     }
   }
 
-  const fieldsUsed =
-    filterByDocuments ?
-      getUsedFields(schema, documents, customScalars)
-    : undefined;
+  let fieldsUsed: Map<string, Set<string>> | undefined;
 
   if (filterByDocuments) {
     // Get a list of input objects used by variables in all documents. An input
@@ -130,6 +127,8 @@ export const plugin: PluginFunction<CustomScalarsPluginConfig, string> = async (
         inputObjects.delete(name);
       }
     }
+
+    fieldsUsed = getUsedFields(schema, documents, customScalars);
   }
 
   // After filtering input objects used by documents, we need to figure out

@@ -1439,6 +1439,334 @@ test("parses custom scalar fields across `@defer` payloads (graphql17Alpha9)", a
   await expect(stream).not.toEmitAnything();
 });
 
+test("parses custom scalar fields across `@defer` payloads when refetching (defer20220824)", async () => {
+  const link = mockDefer20220824();
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+            endDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: link.httpLink,
+    incrementalHandler: new Defer20220824Handler(),
+  });
+  const query = gql`
+    query Event {
+      event {
+        id
+        startDate
+        ... @defer {
+          endDate
+        }
+      }
+    }
+  `;
+
+  const observable = client.watchQuery({ query });
+  using stream = new ObservableStream(observable);
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  link.enqueueInitialChunk({
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: "2026-01-01",
+      },
+    },
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  link.enqueueSubsequentChunk({
+    incremental: [{ data: { endDate: "2026-02-02" }, path: ["event"] }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+        endDate: new Date(2026, 1, 2),
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  const refetchPromise = observable.refetch();
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+        endDate: new Date(2026, 1, 2),
+      },
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.refetch,
+    partial: false,
+  });
+
+  link.enqueueInitialChunk({
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: "2027-01-01",
+      },
+    },
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2027, 0, 1),
+        endDate: new Date(2026, 1, 2),
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  link.enqueueSubsequentChunk({
+    incremental: [{ data: { endDate: "2027-02-02" }, path: ["event"] }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2027, 0, 1),
+        endDate: new Date(2027, 1, 2),
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(refetchPromise).resolves.toStrictEqualTyped({
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2027, 0, 1),
+        endDate: new Date(2027, 1, 2),
+      },
+    },
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("parses custom scalar fields across `@defer` payloads when refetching (graphql17Alpha9)", async () => {
+  const link = mockDeferStreamGraphQL17Alpha9();
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+            endDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: link.httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+  const query = gql`
+    query Event {
+      event {
+        id
+        startDate
+        ... @defer {
+          endDate
+        }
+      }
+    }
+  `;
+
+  const observable = client.watchQuery({ query });
+  using stream = new ObservableStream(observable);
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  link.enqueueInitialChunk({
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: "2026-01-01",
+      },
+    },
+    pending: [{ id: "0", path: ["event"] }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  link.enqueueSubsequentChunk({
+    incremental: [{ data: { endDate: "2026-02-02" }, id: "0" }],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+        endDate: new Date(2026, 1, 2),
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  const refetchPromise = observable.refetch();
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+        endDate: new Date(2026, 1, 2),
+      },
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.refetch,
+    partial: false,
+  });
+
+  link.enqueueInitialChunk({
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: "2027-01-01",
+      },
+    },
+    pending: [{ id: "0", path: ["event"] }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2027, 0, 1),
+        endDate: new Date(2026, 1, 2),
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  link.enqueueSubsequentChunk({
+    incremental: [{ data: { endDate: "2027-02-02" }, id: "0" }],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2027, 0, 1),
+        endDate: new Date(2027, 1, 2),
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(refetchPromise).resolves.toStrictEqualTyped({
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2027, 0, 1),
+        endDate: new Date(2027, 1, 2),
+      },
+    },
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
 test("parses custom scalar fields across `@stream` payloads (defer20220824)", async () => {
   const link = mockDefer20220824();
   const client = new ApolloClient({

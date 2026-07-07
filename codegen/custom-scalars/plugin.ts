@@ -5,7 +5,7 @@ import type {
   PluginValidateFn,
   Types,
 } from "@graphql-codegen/plugin-helpers";
-import type { DocumentNode, GraphQLSchema, NamedTypeNode } from "graphql";
+import type { GraphQLSchema } from "graphql";
 import {
   getNamedType,
   isInputObjectType,

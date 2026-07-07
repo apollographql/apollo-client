@@ -12,7 +12,6 @@ import {
   isInterfaceType,
   isObjectType,
   isScalarType,
-  Kind,
   specifiedScalarTypes,
   TypeInfo,
   visit,
@@ -295,16 +294,11 @@ function getUsed(
     visit(
       document,
       visitWithTypeInfo(typeInfo, {
-        VariableDefinition(node) {
-          let type = node.type;
-          while (type.kind !== Kind.NAMED_TYPE) {
-            type = type.type;
-          }
+        VariableDefinition() {
+          const type = getNamedType(typeInfo.getInputType());
 
-          const typeName = type.name.value;
-
-          if (inputObjects.has(typeName)) {
-            usedVariableTypes.add(typeName);
+          if (type && inputObjects.has(type.name)) {
+            usedVariableTypes.add(type.name);
           }
         },
         Field(node) {

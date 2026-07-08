@@ -294,7 +294,15 @@ test("preserves referential identity when refetching identical serialized scalar
     previousData = snapshot.data;
   }
 
-  void refetch();
+  await expect(refetch()).resolves.toStrictEqualTyped({
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+      },
+    },
+  });
 
   {
     const { renderedComponents } = await takeRender();

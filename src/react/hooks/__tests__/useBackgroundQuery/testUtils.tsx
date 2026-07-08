@@ -1,11 +1,10 @@
 import type { RenderOptions } from "@testing-library/react";
-import { screen } from "@testing-library/react";
 import {
   createRenderStream,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
-import { userEvent } from "@testing-library/user-event";
 import React, { Suspense } from "react";
+import { flushSync } from "react-dom";
 import { ErrorBoundary } from "react-error-boundary";
 
 import type { DataState, ErrorLike, OperationVariables } from "@apollo/client";
@@ -47,9 +46,13 @@ export async function renderUseBackgroundQuery<
     return null;
   }
 
+  let currentRefetch!: useBackgroundQuery.Result<TData, TVariables>["refetch"];
+
   function App({ props }: { props: Props | undefined }) {
     useTrackRenders({ name: "useBackgroundQuery" });
     const [queryRef, { refetch }] = renderHook(props as any);
+
+    currentRefetch = refetch;
 
     return (
       <Suspense fallback={<SuspenseFallback />}>
@@ -58,13 +61,11 @@ export async function renderUseBackgroundQuery<
           onError={(error) => replaceSnapshot({ error })}
         >
           {queryRef && <UseReadQuery queryRef={queryRef} />}
-          <button onClick={() => refetch()}>refetch</button>
         </ErrorBoundary>
       </Suspense>
     );
   }
 
-  const user = userEvent.setup();
   const { render, takeRender, replaceSnapshot } = createRenderStream<
     useReadQuery.Result<TData, TStates> | { error: ErrorLike }
   >();
@@ -75,11 +76,13 @@ export async function renderUseBackgroundQuery<
     return utils.rerender(<App props={props} />);
   }
 
-  // refetch needs to be run in an event handler in order for React 18 to commit
-  // the suspense fallback
-  async function refetch() {
-    await user.click(screen.getByText("refetch"));
-  }
+  // React 18 skips committing the suspense fallback when refetch is triggered
+  // as a default-priority update, so the fallback render is missed and tests
+  // may fail. flushSync forces a synchronous commit so the fallback renders in
+  // both React 18 and 19, while returning the refetch promise.
+  const refetch: typeof currentRefetch = (...args) => {
+    return flushSync(() => currentRefetch(...args));
+  };
 
   return { takeRender, rerender, refetch };
 }

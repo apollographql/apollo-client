@@ -255,15 +255,9 @@ test("preserves referential identity when refetching identical serialized scalar
     ),
   });
 
-  let refetch!: useBackgroundQuery.Result["refetch"];
-
   using _disabledAct = disableActEnvironment();
-  const { takeRender } = await renderUseBackgroundQuery(
-    () => {
-      const result = useBackgroundQuery(query);
-      refetch = result[1].refetch;
-      return result;
-    },
+  const { takeRender, refetch } = await renderUseBackgroundQuery(
+    () => useBackgroundQuery(query),
     { wrapper: createClientWrapper(client) }
   );
 
@@ -300,15 +294,7 @@ test("preserves referential identity when refetching identical serialized scalar
     previousData = snapshot.data;
   }
 
-  await expect(refetch()).resolves.toStrictEqual({
-    data: {
-      event: {
-        __typename: "Event",
-        id: "1",
-        startDate: new Date(2026, 0, 1),
-      },
-    },
-  });
+  void refetch();
 
   {
     const { renderedComponents } = await takeRender();

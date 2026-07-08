@@ -42,6 +42,7 @@ const reactSharedTestFileIgnoreList = [
   ignoreDTSFiles,
   ignoreTSFiles,
   "src/react/hooks/__tests__/useBackgroundQuery/testUtils.tsx",
+  "src/react/hooks/__tests__/useLoadableQuery/testUtils.tsx",
   "src/react/hooks/__tests__/useSuspenseQuery/testUtils.tsx",
   "src/react/query-preloader/__tests__/createQueryPreloader/testUtils.tsx",
 ];

@@ -880,7 +880,7 @@ test("parses custom scalar fields across `@defer` payloads (defer20220824)", asy
   `;
 
   using _disabledAct = disableActEnvironment();
-  const { takeRender, getCurrentSnapshot } = await renderHook(
+  const { takeRender, loadQuery } = await renderHook(
     () => useLoadableQuery(query),
     { wrapper: createClientWrapper(client) }
   );
@@ -891,7 +891,7 @@ test("parses custom scalar fields across `@defer` payloads (defer20220824)", asy
     expect(renderedComponents).toStrictEqual(["useLoadableQuery"]);
   }
 
-  getCurrentSnapshot().loadQuery();
+  loadQuery();
 
   {
     const { renderedComponents } = await takeRender();
@@ -990,7 +990,7 @@ test("parses custom scalar fields across `@defer` payloads (graphql17Alpha9)", a
   `;
 
   using _disabledAct = disableActEnvironment();
-  const { takeRender, getCurrentSnapshot } = await renderHook(
+  const { takeRender, loadQuery } = await renderHook(
     () => useLoadableQuery(query),
     { wrapper: createClientWrapper(client) }
   );
@@ -1001,7 +1001,7 @@ test("parses custom scalar fields across `@defer` payloads (graphql17Alpha9)", a
     expect(renderedComponents).toStrictEqual(["useLoadableQuery"]);
   }
 
-  getCurrentSnapshot().loadQuery();
+  loadQuery();
 
   {
     const { renderedComponents } = await takeRender();
@@ -1098,7 +1098,7 @@ test("parses custom scalar fields across `@stream` payloads (defer20220824)", as
   `;
 
   using _disabledAct = disableActEnvironment();
-  const { takeRender, getCurrentSnapshot } = await renderHook(
+  const { takeRender, loadQuery } = await renderHook(
     () => useLoadableQuery(query),
     { wrapper: createClientWrapper(client) }
   );
@@ -1109,7 +1109,7 @@ test("parses custom scalar fields across `@stream` payloads (defer20220824)", as
     expect(renderedComponents).toStrictEqual(["useLoadableQuery"]);
   }
 
-  getCurrentSnapshot().loadQuery();
+  loadQuery();
 
   {
     const { renderedComponents } = await takeRender();
@@ -1225,7 +1225,7 @@ test("parses custom scalar fields across `@stream` payloads (graphql17Alpha9)", 
   `;
 
   using _disabledAct = disableActEnvironment();
-  const { takeRender, getCurrentSnapshot } = await renderHook(
+  const { takeRender, loadQuery } = await renderHook(
     () => useLoadableQuery(query),
     { wrapper: createClientWrapper(client) }
   );
@@ -1236,7 +1236,7 @@ test("parses custom scalar fields across `@stream` payloads (graphql17Alpha9)", 
     expect(renderedComponents).toStrictEqual(["useLoadableQuery"]);
   }
 
-  getCurrentSnapshot().loadQuery();
+  loadQuery();
 
   {
     const { renderedComponents } = await takeRender();

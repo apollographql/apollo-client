@@ -2805,11 +2805,6 @@ test("omits input objects without custom scalars when filterByDocuments is false
   });
 });
 
-// The inline snapshots in the format tests below are intentionally empty. They
-// populate on the first `jest -u` run once the plugin emits both `inputObjects`
-// and `scalarTypePolicies` in the combined output. Each extension is its own
-// test so every snapshot has a unique call site (`test.each` shares one call
-// site and can't write multiple inline snapshots).
 const formatSchema = gql`
   scalar DateTime
 

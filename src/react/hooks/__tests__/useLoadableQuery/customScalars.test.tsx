@@ -7,6 +7,7 @@ import {
 } from "@testing-library/react-render-stream";
 import { userEvent } from "@testing-library/user-event";
 import React, { Suspense } from "react";
+import { flushSync } from "react-dom";
 import { ErrorBoundary } from "react-error-boundary";
 import { delay, of } from "rxjs";
 
@@ -69,11 +70,16 @@ async function renderHook<
     return null;
   }
 
+  type RefetchFunction = useLoadableQuery.Handlers<
+    TData,
+    TVariables
+  >["refetch"];
+
   function App({ props }: { props: Props | undefined }) {
     useTrackRenders({ name: "useLoadableQuery" });
-    const [loadQuery, queryRef] = renderHookImpl(props as any);
+    const [loadQuery, queryRef, { refetch }] = renderHookImpl(props as any);
 
-    mergeSnapshot({ loadQuery });
+    mergeSnapshot({ loadQuery, refetch });
 
     return (
       <Suspense fallback={<SuspenseFallback />}>
@@ -96,10 +102,15 @@ async function renderHook<
   } = createRenderStream<
     | {
         loadQuery: useLoadableQuery.LoadQueryFunction<TVariables>;
+        refetch: RefetchFunction;
         result?: useReadQuery.Result<TData, TStates>;
       }
     | { error: ErrorLike }
-  >({ initialSnapshot: { loadQuery: null as any } });
+  >({
+    // These values should always be available, but createRenderStream needs an
+    // initial snapshot when using mergeSnapshot so we provide it with something
+    initialSnapshot: { loadQuery: null as any, refetch: null as any },
+  });
 
   const utils = await render(<App props={options.initialProps} />, options);
 
@@ -117,7 +128,21 @@ async function renderHook<
     return snapshot;
   }
 
-  return { takeRender, rerender, getCurrentSnapshot };
+  // React 18 skips committing the suspense fallback when loadQuery/refetch is
+  // triggered as a default-priority update, so the fallback render is missed
+  // and tests may fail. flushSync forces a synchronous commit so the fallback
+  // renders in both React 18 and 19, while returning the underlying result.
+  const loadQuery: useLoadableQuery.LoadQueryFunction<TVariables> = (
+    ...args
+  ) => {
+    return flushSync(() => getCurrentSnapshot().loadQuery(...args));
+  };
+
+  const refetch: RefetchFunction = (...args) => {
+    return flushSync(() => getCurrentSnapshot().refetch(...args));
+  };
+
+  return { takeRender, rerender, getCurrentSnapshot, refetch, loadQuery };
 }
 
 test("serializes scalar variables used in field arguments", async () => {
@@ -452,15 +477,9 @@ test("preserves referential identity when refetching identical serialized scalar
     ),
   });
 
-  let refetch!: useLoadableQuery.Result["2"]["refetch"];
-
   using _disabledAct = disableActEnvironment();
-  const { takeRender, getCurrentSnapshot } = await renderHook(
-    () => {
-      const result = useLoadableQuery(query);
-      refetch = result[2].refetch;
-      return result;
-    },
+  const { takeRender, refetch, loadQuery } = await renderHook(
+    () => useLoadableQuery(query),
     { wrapper: createClientWrapper(client) }
   );
 
@@ -470,7 +489,7 @@ test("preserves referential identity when refetching identical serialized scalar
     expect(renderedComponents).toStrictEqual(["useLoadableQuery"]);
   }
 
-  getCurrentSnapshot().loadQuery();
+  loadQuery();
 
   {
     const { renderedComponents } = await takeRender();
@@ -590,7 +609,7 @@ test("serializes scalar fields in the error with a `none` error policy", async (
   });
 
   using _disabledAct = disableActEnvironment();
-  const { takeRender, getCurrentSnapshot } = await renderHook(
+  const { takeRender, loadQuery } = await renderHook(
     () => useLoadableQuery(query, { errorPolicy: "none" }),
     { wrapper: createClientWrapper(client) }
   );
@@ -601,7 +620,7 @@ test("serializes scalar fields in the error with a `none` error policy", async (
     expect(renderedComponents).toStrictEqual(["useLoadableQuery"]);
   }
 
-  getCurrentSnapshot().loadQuery();
+  loadQuery();
 
   {
     const { renderedComponents } = await takeRender();
@@ -682,7 +701,7 @@ test("parses scalar fields in the result and serializes them in the error with a
   });
 
   using _disabledAct = disableActEnvironment();
-  const { takeRender, getCurrentSnapshot } = await renderHook(
+  const { takeRender, loadQuery } = await renderHook(
     () => useLoadableQuery(query, { errorPolicy: "all" }),
     { wrapper: createClientWrapper(client) }
   );
@@ -693,7 +712,7 @@ test("parses scalar fields in the result and serializes them in the error with a
     expect(renderedComponents).toStrictEqual(["useLoadableQuery"]);
   }
 
-  getCurrentSnapshot().loadQuery();
+  loadQuery();
 
   {
     const { renderedComponents } = await takeRender();
@@ -786,7 +805,7 @@ test("parses custom scalar fields with an `ignore` error policy", async () => {
   });
 
   using _disabledAct = disableActEnvironment();
-  const { takeRender, getCurrentSnapshot } = await renderHook(
+  const { takeRender, loadQuery } = await renderHook(
     () => useLoadableQuery(query, { errorPolicy: "ignore" }),
     { wrapper: createClientWrapper(client) }
   );
@@ -797,7 +816,7 @@ test("parses custom scalar fields with an `ignore` error policy", async () => {
     expect(renderedComponents).toStrictEqual(["useLoadableQuery"]);
   }
 
-  getCurrentSnapshot().loadQuery();
+  loadQuery();
 
   {
     const { renderedComponents } = await takeRender();

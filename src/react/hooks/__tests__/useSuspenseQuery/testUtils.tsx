@@ -1,8 +1,10 @@
 import type { RenderOptions } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import {
   createRenderStream,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
+import { userEvent } from "@testing-library/user-event";
 import React, { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
@@ -20,9 +22,14 @@ export async function renderUseSuspenseQuery<
 ) {
   function UseSuspenseQuery({ props }: { props: Props | undefined }) {
     useTrackRenders({ name: "useSuspenseQuery" });
-    replaceSnapshot(renderHook(props as any));
+    // eslint-disable-next-line testing-library/render-result-naming-convention
+    const result = renderHook(props as any);
+    replaceSnapshot(result);
 
-    return null;
+    // We need to trigger refetch in an event handler in order for React 18 to
+    // commit the suspense fallback, otherwise the suspense fallback render is
+    // skipped and tests may fail.
+    return <button onClick={() => result.refetch()}>refetch</button>;
   }
 
   function SuspenseFallback() {
@@ -50,6 +57,7 @@ export async function renderUseSuspenseQuery<
     );
   }
 
+  const user = userEvent.setup();
   const { render, takeRender, replaceSnapshot, getCurrentRender } =
     createRenderStream<
       useSuspenseQuery.Result<TData, TVariables> | { error: ErrorLike }
@@ -69,5 +77,9 @@ export async function renderUseSuspenseQuery<
     return snapshot;
   }
 
-  return { getCurrentSnapshot, rerender, takeRender };
+  async function refetch() {
+    await user.click(screen.getByText("refetch"));
+  }
+
+  return { getCurrentSnapshot, rerender, takeRender, refetch };
 }

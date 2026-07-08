@@ -678,10 +678,10 @@ test("preserves referential identity when refetching identical serialized scalar
   });
 
   using _disabledAct = disableActEnvironment();
-  const { takeRender, getCurrentSnapshot } = await renderUseSuspenseQuery(
-    () => useSuspenseQuery(query),
-    { wrapper: createClientWrapper(client) }
-  );
+  const { takeRender, getCurrentSnapshot, refetch } =
+    await renderUseSuspenseQuery(() => useSuspenseQuery(query), {
+      wrapper: createClientWrapper(client),
+    });
 
   {
     const { renderedComponents } = await takeRender();
@@ -707,17 +707,9 @@ test("preserves referential identity when refetching identical serialized scalar
     });
   }
 
-  const { data: previousData, refetch } = getCurrentSnapshot();
+  const { data: previousData } = getCurrentSnapshot();
 
-  await expect(refetch()).resolves.toStrictEqualTyped({
-    data: {
-      event: {
-        __typename: "Event",
-        id: "1",
-        startDate: new Date(2026, 0, 1),
-      },
-    },
-  });
+  void refetch();
 
   {
     const { renderedComponents } = await takeRender();

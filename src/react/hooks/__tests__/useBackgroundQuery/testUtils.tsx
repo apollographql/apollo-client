@@ -1,8 +1,10 @@
 import type { RenderOptions } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import {
   createRenderStream,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
+import { userEvent } from "@testing-library/user-event";
 import React, { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
@@ -47,7 +49,7 @@ export async function renderUseBackgroundQuery<
 
   function App({ props }: { props: Props | undefined }) {
     useTrackRenders({ name: "useBackgroundQuery" });
-    const [queryRef] = renderHook(props as any);
+    const [queryRef, { refetch }] = renderHook(props as any);
 
     return (
       <Suspense fallback={<SuspenseFallback />}>
@@ -56,11 +58,13 @@ export async function renderUseBackgroundQuery<
           onError={(error) => replaceSnapshot({ error })}
         >
           {queryRef && <UseReadQuery queryRef={queryRef} />}
+          <button onClick={() => refetch()}>refetch</button>
         </ErrorBoundary>
       </Suspense>
     );
   }
 
+  const user = userEvent.setup();
   const { render, takeRender, replaceSnapshot } = createRenderStream<
     useReadQuery.Result<TData, TStates> | { error: ErrorLike }
   >();
@@ -71,5 +75,11 @@ export async function renderUseBackgroundQuery<
     return utils.rerender(<App props={props} />);
   }
 
-  return { takeRender, rerender };
+  // refetch needs to be run in an event handler in order for React 18 to commit
+  // the suspense fallback
+  async function refetch() {
+    await user.click(screen.getByText("refetch"));
+  }
+
+  return { takeRender, rerender, refetch };
 }

@@ -1,11 +1,4 @@
-import { screen } from "@testing-library/react";
-import {
-  createRenderStream,
-  disableActEnvironment,
-  useTrackRenders,
-} from "@testing-library/react-render-stream";
-import { userEvent } from "@testing-library/user-event";
-import React, { Suspense } from "react";
+import { disableActEnvironment } from "@testing-library/react-render-stream";
 import { delay, of } from "rxjs";
 
 import type { OperationVariables } from "@apollo/client";
@@ -21,8 +14,7 @@ import {
   Defer20220824Handler,
   GraphQL17Alpha9Handler,
 } from "@apollo/client/incremental";
-import type { QueryRef } from "@apollo/client/react";
-import { useLoadableQuery, useReadQuery } from "@apollo/client/react";
+import { useLoadableQuery } from "@apollo/client/react";
 import {
   createClientWrapper,
   dateScalar,
@@ -51,13 +43,6 @@ test("serializes scalar variables used in field arguments", async () => {
     }),
   });
 
-  const renderStream = createRenderStream({
-    initialSnapshot: {
-      result: null as useReadQuery.Result<any> | null,
-    },
-    skipNonTrackingRenders: true,
-  });
-
   const query = gql`
     query Event($date: Date!) {
       event(date: $date) {
@@ -66,53 +51,33 @@ test("serializes scalar variables used in field arguments", async () => {
     }
   `;
 
-  function ReadQuery({ queryRef }: { queryRef: QueryRef }) {
-    useTrackRenders({ name: "useReadQuery" });
-    renderStream.mergeSnapshot({ result: useReadQuery(queryRef) });
-
-    return null;
-  }
-
-  function Fallback() {
-    useTrackRenders({ name: "<Suspense />" });
-    return null;
-  }
-
-  function App() {
-    useTrackRenders({ name: "useLoadableQuery" });
-    const [loadQuery, queryRef] = useLoadableQuery(query);
-
-    return (
-      <>
-        <button onClick={() => loadQuery({ date: new Date(2026, 0, 1) })}>
-          Load query
-        </button>
-        <Suspense fallback={<Fallback />}>
-          {queryRef && <ReadQuery queryRef={queryRef} />}
-        </Suspense>
-      </>
-    );
-  }
-
   using _disabledAct = disableActEnvironment();
-  const user = userEvent.setup();
-  await renderStream.render(<App />, {
-    wrapper: createClientWrapper(client),
-  });
-
-  await expect(renderStream.takeRender()).resolves.toMatchObject({
-    renderedComponents: ["useLoadableQuery"],
-  });
-
-  await user.click(screen.getByText("Load query"));
-
-  await expect(renderStream.takeRender()).resolves.toMatchObject({
-    renderedComponents: ["useLoadableQuery", "<Suspense />"],
-  });
+  const { takeRender, loadQuery } = await renderUseLoadableQueryHook(
+    () => useLoadableQuery(query),
+    { wrapper: createClientWrapper(client) }
+  );
 
   {
-    const { snapshot, renderedComponents } = await renderStream.takeRender();
+    const { renderedComponents } = await takeRender();
 
+    expect(renderedComponents).toStrictEqual(["useLoadableQuery"]);
+  }
+
+  loadQuery({ date: new Date(2026, 0, 1) });
+
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual([
+      "useLoadableQuery",
+      "<Suspense />",
+    ]);
+  }
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    invariant("result" in snapshot);
     expect(renderedComponents).toStrictEqual(["useReadQuery"]);
     expect(snapshot.result).toStrictEqualTyped({
       data: {
@@ -127,7 +92,7 @@ test("serializes scalar variables used in field arguments", async () => {
     });
   }
 
-  await expect(renderStream).not.toRerender();
+  await expect(takeRender).not.toRerender();
   expect(requestVariables).toStrictEqualTyped({ date: "2026-01-01" });
 });
 
@@ -147,13 +112,6 @@ test("serializes scalar variables used in directive arguments", async () => {
     }),
   });
 
-  const renderStream = createRenderStream({
-    initialSnapshot: {
-      result: null as useReadQuery.Result<any> | null,
-    },
-    skipNonTrackingRenders: true,
-  });
-
   const query = gql`
     query Event($date: Date!) {
       event @on(date: $date) {
@@ -162,53 +120,33 @@ test("serializes scalar variables used in directive arguments", async () => {
     }
   `;
 
-  function ReadQuery({ queryRef }: { queryRef: QueryRef }) {
-    useTrackRenders({ name: "useReadQuery" });
-    renderStream.mergeSnapshot({ result: useReadQuery(queryRef) });
-
-    return null;
-  }
-
-  function Fallback() {
-    useTrackRenders({ name: "<Suspense />" });
-    return null;
-  }
-
-  function App() {
-    useTrackRenders({ name: "useLoadableQuery" });
-    const [loadQuery, queryRef] = useLoadableQuery(query);
-
-    return (
-      <>
-        <button onClick={() => loadQuery({ date: new Date(2026, 0, 1) })}>
-          Load query
-        </button>
-        <Suspense fallback={<Fallback />}>
-          {queryRef && <ReadQuery queryRef={queryRef} />}
-        </Suspense>
-      </>
-    );
-  }
-
   using _disabledAct = disableActEnvironment();
-  const user = userEvent.setup();
-  await renderStream.render(<App />, {
-    wrapper: createClientWrapper(client),
-  });
-
-  await expect(renderStream.takeRender()).resolves.toMatchObject({
-    renderedComponents: ["useLoadableQuery"],
-  });
-
-  await user.click(screen.getByText("Load query"));
-
-  await expect(renderStream.takeRender()).resolves.toMatchObject({
-    renderedComponents: ["useLoadableQuery", "<Suspense />"],
-  });
+  const { takeRender, loadQuery } = await renderUseLoadableQueryHook(
+    () => useLoadableQuery(query),
+    { wrapper: createClientWrapper(client) }
+  );
 
   {
-    const { snapshot, renderedComponents } = await renderStream.takeRender();
+    const { renderedComponents } = await takeRender();
 
+    expect(renderedComponents).toStrictEqual(["useLoadableQuery"]);
+  }
+
+  loadQuery({ date: new Date(2026, 0, 1) });
+
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual([
+      "useLoadableQuery",
+      "<Suspense />",
+    ]);
+  }
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    invariant("result" in snapshot);
     expect(renderedComponents).toStrictEqual(["useReadQuery"]);
     expect(snapshot.result).toStrictEqualTyped({
       data: {
@@ -223,7 +161,7 @@ test("serializes scalar variables used in directive arguments", async () => {
     });
   }
 
-  await expect(renderStream).not.toRerender();
+  await expect(takeRender).not.toRerender();
   expect(requestVariables).toStrictEqualTyped({ date: "2026-01-01" });
 });
 
@@ -250,13 +188,6 @@ test("serializes scalar fields in input object variables", async () => {
     }),
   });
 
-  const renderStream = createRenderStream({
-    initialSnapshot: {
-      result: null as useReadQuery.Result<any> | null,
-    },
-    skipNonTrackingRenders: true,
-  });
-
   const query = gql`
     query Event($filter: EventFilter!) {
       event(filter: $filter) {
@@ -265,55 +196,33 @@ test("serializes scalar fields in input object variables", async () => {
     }
   `;
 
-  function ReadQuery({ queryRef }: { queryRef: QueryRef }) {
-    useTrackRenders({ name: "useReadQuery" });
-    renderStream.mergeSnapshot({ result: useReadQuery(queryRef) });
-
-    return null;
-  }
-
-  function Fallback() {
-    useTrackRenders({ name: "<Suspense />" });
-    return null;
-  }
-
-  function App() {
-    useTrackRenders({ name: "useLoadableQuery" });
-    const [loadQuery, queryRef] = useLoadableQuery(query);
-
-    return (
-      <>
-        <button
-          onClick={() => loadQuery({ filter: { date: new Date(2026, 0, 1) } })}
-        >
-          Load query
-        </button>
-        <Suspense fallback={<Fallback />}>
-          {queryRef && <ReadQuery queryRef={queryRef} />}
-        </Suspense>
-      </>
-    );
-  }
-
   using _disabledAct = disableActEnvironment();
-  const user = userEvent.setup();
-  await renderStream.render(<App />, {
-    wrapper: createClientWrapper(client),
-  });
-
-  await expect(renderStream.takeRender()).resolves.toMatchObject({
-    renderedComponents: ["useLoadableQuery"],
-  });
-
-  await user.click(screen.getByText("Load query"));
-
-  await expect(renderStream.takeRender()).resolves.toMatchObject({
-    renderedComponents: ["useLoadableQuery", "<Suspense />"],
-  });
+  const { takeRender, loadQuery } = await renderUseLoadableQueryHook(
+    () => useLoadableQuery(query),
+    { wrapper: createClientWrapper(client) }
+  );
 
   {
-    const { snapshot, renderedComponents } = await renderStream.takeRender();
+    const { renderedComponents } = await takeRender();
 
+    expect(renderedComponents).toStrictEqual(["useLoadableQuery"]);
+  }
+
+  loadQuery({ filter: { date: new Date(2026, 0, 1) } });
+
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual([
+      "useLoadableQuery",
+      "<Suspense />",
+    ]);
+  }
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    invariant("result" in snapshot);
     expect(renderedComponents).toStrictEqual(["useReadQuery"]);
     expect(snapshot.result).toStrictEqualTyped({
       data: {
@@ -328,7 +237,7 @@ test("serializes scalar fields in input object variables", async () => {
     });
   }
 
-  await expect(renderStream).not.toRerender();
+  await expect(takeRender).not.toRerender();
   expect(requestVariables).toStrictEqualTyped({
     filter: { date: "2026-01-01" },
   });

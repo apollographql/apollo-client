@@ -1041,6 +1041,7 @@ export class QueryManager {
       context: DefaultContext | undefined;
       fetchPolicy: WatchQueryFetchPolicy;
       errorPolicy: ErrorPolicy;
+      returnPartialData: boolean | undefined;
     },
     {
       queryInfo,
@@ -1076,6 +1077,7 @@ export class QueryManager {
           ...options,
           document: linkDocument,
           cacheWriteBehavior,
+          returnPartialData: options.returnPartialData,
         });
         const hasErrors = graphQLResultHasError(result);
 
@@ -1687,6 +1689,7 @@ export class QueryManager {
           context,
           fetchPolicy,
           errorPolicy,
+          returnPartialData,
         },
         {
           cacheWriteBehavior,

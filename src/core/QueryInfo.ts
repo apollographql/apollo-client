@@ -1,16 +1,31 @@
 import { equal } from "@wry/equality";
-import type { DocumentNode, FormattedExecutionResult } from "graphql";
+import type {
+  DocumentNode,
+  FormattedExecutionResult,
+  SelectionNode,
+  SelectionSetNode,
+} from "graphql";
+import { print } from "graphql";
 
-import type { ApolloCache, Cache } from "@apollo/client/cache";
+import type { ApolloCache, Cache, MissingTree } from "@apollo/client/cache";
 import type { IgnoreModifier } from "@apollo/client/cache";
 import type { Incremental } from "@apollo/client/incremental";
 import type { ApolloLink } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
 import type { DeepPartial } from "@apollo/client/utilities";
-import type { ExtensionsWithStreamInfo } from "@apollo/client/utilities/internal";
+import type {
+  ExtensionsWithStreamInfo,
+  FragmentMap,
+} from "@apollo/client/utilities/internal";
 import {
+  createFragmentMap,
+  getFragmentDefinitions,
+  getFragmentFromSelection,
+  getMainDefinition,
   getOperationName,
   graphQLResultHasError,
+  isField,
+  resultKeyNameFromField,
   streamInfoSymbol,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
@@ -62,6 +77,7 @@ interface OperationInfo<
   variables: TVariables;
   errorPolicy: ErrorPolicy;
   cacheWriteBehavior: AllowedCacheWriteBehavior;
+  returnPartialData: boolean | undefined;
 }
 
 interface MarkQueryResult<TData, TExtensions>
@@ -220,6 +236,7 @@ export class QueryInfo<
       variables,
       errorPolicy,
       cacheWriteBehavior,
+      returnPartialData,
     }: OperationInfo<TData, TVariables>
   ): MarkQueryResult<
     DataValue.Complete<TData> | DataValue.Streaming<TData>,
@@ -349,7 +366,18 @@ export class QueryInfo<
             result = {
               ...result,
               data: diff.result,
-              dataState: this.hasNext ? "streaming" : "complete",
+              dataState: "complete",
+            };
+          } else if (
+            this.hasNext &&
+            returnPartialData &&
+            diff.result !== null
+          ) {
+            result = {
+              ...result,
+              data: diff.result,
+              dataState:
+                isStreamingPartial(diff, query) ? "partial" : "streaming",
             };
           }
         },
@@ -666,4 +694,96 @@ function shouldWriteResult<T>(
     writeWithErrors = true;
   }
   return writeWithErrors;
+}
+
+function isStreamingPartial(
+  diff: Cache.DiffResult<unknown>,
+  document: DocumentNode
+) {
+  if (!diff.missing) return false;
+
+  const fragmentMap = createFragmentMap(getFragmentDefinitions(document));
+
+  return isPartialInSelectionSet(
+    getMainDefinition(document).selectionSet,
+    diff.missing.missing,
+    fragmentMap
+  );
+}
+
+function isPartialInSelectionSet(
+  selectionSet: SelectionSetNode,
+  missingTree: MissingTree | undefined,
+  fragmentMap: FragmentMap
+) {
+  if (typeof missingTree === "string") return true;
+  if (missingTree === undefined) return false;
+
+  for (const selection of selectionSet.selections) {
+    if (isField(selection)) {
+      if (selection.name.value === "__typename") continue;
+
+      const missing = missingTree[resultKeyNameFromField(selection)];
+      if (!missing) continue;
+
+      if (
+        !selection.selectionSet ||
+        isPartialInSelectionSet(selection.selectionSet, missing, fragmentMap)
+      ) {
+        return true;
+      }
+    } else {
+      const fragment = getFragmentFromSelection(selection, fragmentMap);
+      if (!fragment) continue;
+
+      if (isDeferred(selection)) {
+        // Once at least one of the fields in the fragment are fulfilled, the
+        // rest of the fields are required in order to be classified as
+        // fulfilled.
+        if (
+          fulfillsAnySelection(fragment.selectionSet, missingTree) &&
+          isPartialInSelectionSet(
+            fragment.selectionSet,
+            missingTree,
+            fragmentMap
+          )
+        ) {
+          return true;
+        }
+      } else if (
+        isPartialInSelectionSet(fragment.selectionSet, missingTree, fragmentMap)
+      ) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+function isDeferred(selection: SelectionNode) {
+  return !!selection.directives?.some(({ name }) => name.value === "defer");
+}
+
+function fulfillsAnySelection(
+  selectionSet: SelectionSetNode,
+  missingTree: MissingTree
+) {
+  if (typeof missingTree === "string") return false;
+
+  for (const selection of selectionSet.selections) {
+    if (isField(selection)) {
+      if (selection.name.value === "__typename") continue;
+
+      // A field absent from the `missingTree` means the field is present. If
+      // the field maps to an object (i.e. typeof missingTree[field] === "object"),
+      // this means the field field contains at least the top-level object key
+      // and is incomplete.
+      if (typeof missingTree[resultKeyNameFromField(selection)] !== "string") {
+        return true;
+      }
+    }
+  }
+
+  return false;
 }

@@ -598,6 +598,9 @@ test('does not suspend deferred queries with partial data in the cache and using
 });
 
 test('does not suspend deferred queries with partial data in the cache and using a "cache-first" fetch policy with `returnPartialData` with partial deferred data', async () => {
+  // Suppress expected missing field warning when writing partial value after
+  // first chunk
+  using _ = spyOnConsole("error");
   const query = gql`
     query {
       greeting {
@@ -616,20 +619,15 @@ test('does not suspend deferred queries with partial data in the cache and using
     mockDeferStreamGraphQL17Alpha9();
   const cache = new InMemoryCache();
 
-  // We are intentionally writing partial data to the cache. Suppress console
-  // warnings to avoid unnecessary noise in the test.
-  {
-    using _consoleSpy = spyOnConsole("error");
-    cache.writeQuery({
-      query,
-      data: {
-        greeting: {
-          __typename: "Greeting",
-          recipient: { __typename: "Person", name: "Cached Alice" },
-        },
+  cache.writeQuery({
+    query,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        recipient: { __typename: "Person", name: "Cached Alice" },
       },
-    });
-  }
+    },
+  });
 
   const client = new ApolloClient({
     cache,

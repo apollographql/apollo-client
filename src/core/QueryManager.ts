@@ -1072,7 +1072,7 @@ export class QueryManager {
         // Use linkDocument rather than queryInfo.document so the
         // operation/fragments used to write the result are the same as the
         // ones used to obtain it from the link.
-        const result = queryInfo.markQueryResult(incoming, {
+        const { dataState, ...result } = queryInfo.markQueryResult(incoming, {
           ...options,
           document: linkDocument,
           cacheWriteBehavior,
@@ -1093,11 +1093,11 @@ export class QueryManager {
             {
               loading: true,
               networkStatus: NetworkStatus.streaming,
-              dataState: "streaming",
+              dataState,
               partial: true,
             }
           : {
-              dataState: result.data ? "complete" : "empty",
+              dataState,
               loading: false,
               networkStatus: NetworkStatus.ready,
               partial: !result.data,

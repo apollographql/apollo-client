@@ -64,6 +64,11 @@ interface OperationInfo<
   cacheWriteBehavior: AllowedCacheWriteBehavior;
 }
 
+interface MarkQueryResult<TData, TExtensions>
+  extends FormattedExecutionResult<TData, TExtensions> {
+  dataState: "empty" | "partial" | "streaming" | "complete";
+}
+
 function wrapDestructiveCacheMethod(
   cache: ApolloCache,
   methodName: "evict" | "modify" | "reset"
@@ -216,7 +221,7 @@ export class QueryInfo<
       errorPolicy,
       cacheWriteBehavior,
     }: OperationInfo<TData, TVariables>
-  ): FormattedExecutionResult<
+  ): MarkQueryResult<
     DataValue.Complete<TData> | DataValue.Streaming<TData>,
     ExtensionsWithStreamInfo
   > {
@@ -235,11 +240,21 @@ export class QueryInfo<
     const lastDiff =
       skipCache ? undefined : this.cache.diff<TData>(diffOptions);
 
-    let result = this.maybeHandleIncrementalResult(
+    const incrementalResult = this.maybeHandleIncrementalResult(
       lastDiff?.result,
       incoming,
       query
     );
+
+    let result: MarkQueryResult<any, ExtensionsWithStreamInfo> = {
+      ...incrementalResult,
+      dataState: this.hasNext ? "streaming" : "complete",
+    };
+
+    if (result.data == null) {
+      result.dataState = "empty";
+    }
+
     if (skipCache) {
       return result;
     }
@@ -312,7 +327,11 @@ export class QueryInfo<
             if (lastDiff && lastDiff.complete) {
               // Reuse data from the last good (complete) diff that we
               // received, when possible.
-              result = { ...result, data: lastDiff.result };
+              result = {
+                ...result,
+                data: lastDiff.result,
+                dataState: "complete",
+              };
               return;
             }
             // If the previous this.diff was incomplete, fall through to
@@ -327,7 +346,11 @@ export class QueryInfo<
           // Set without setDiff to avoid triggering a notify call, since
           // we have other ways of notifying for this result.
           if (diff.complete) {
-            result = { ...result, data: diff.result };
+            result = {
+              ...result,
+              data: diff.result,
+              dataState: this.hasNext ? "streaming" : "complete",
+            };
           }
         },
       });

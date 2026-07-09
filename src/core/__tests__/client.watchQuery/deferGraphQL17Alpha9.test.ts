@@ -831,11 +831,7 @@ test('reports "streaming" when one of multiple sibling `@defer` fragments has fu
   });
 
   const stream = new ObservableStream(
-    client.watchQuery({
-      query,
-      fetchPolicy: "cache-first",
-      returnPartialData: true,
-    })
+    client.watchQuery({ query, returnPartialData: true })
   );
 
   await expect(stream).toEmitTypedValue({

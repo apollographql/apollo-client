@@ -952,6 +952,146 @@ test('reports overlapping deferred and non-deferred fields as "streaming" when o
   await expect(takeRender).not.toRerender();
 });
 
+test('reports "streaming" when one of multiple sibling `@defer` fragments has fully arrived and another is still pending', async () => {
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... @defer {
+          recipient {
+            name
+          }
+        }
+        ... @defer {
+          signature
+        }
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeRender } = await renderSuspenseHook(
+    () =>
+      useSuspenseQuery(query, {
+        fetchPolicy: "cache-first",
+        returnPartialData: true,
+      }),
+    { wrapper: createClientWrapper(client) }
+  );
+
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
+  }
+
+  enqueueInitialChunk({
+    data: { greeting: { message: "Hello world", __typename: "Greeting" } },
+    pending: [
+      { id: "0", path: ["greeting"] },
+      { id: "1", path: ["greeting"] },
+    ],
+    hasNext: true,
+  });
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+    expect(snapshot).toStrictEqualTyped({
+      data: markAsStreaming({
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+        },
+      }),
+      dataState: "streaming",
+      networkStatus: NetworkStatus.streaming,
+      error: undefined,
+    });
+  }
+
+  // One deferred fragment completes while the other is still in flight. The
+  // arrived fragment is fully satisfied (`recipient`); only `signature` remains
+  // as a clean defer gap. That must stay "streaming", not flip to "partial"
+  // just because some deferred selection is now present in the result.
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          __typename: "Greeting",
+          recipient: { __typename: "Person", name: "Alice" },
+        },
+        id: "0",
+      },
+    ],
+    completed: [{ id: "0" }],
+    hasNext: true,
+  });
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+    expect(snapshot).toStrictEqualTyped({
+      data: markAsStreaming({
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+          recipient: { __typename: "Person", name: "Alice" },
+        },
+      }),
+      dataState: "streaming",
+      networkStatus: NetworkStatus.streaming,
+      error: undefined,
+    });
+  }
+
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          __typename: "Greeting",
+          signature: "From Apollo",
+        },
+        id: "1",
+      },
+    ],
+    completed: [{ id: "1" }],
+    hasNext: false,
+  });
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+    expect(snapshot).toStrictEqualTyped({
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+          recipient: { __typename: "Person", name: "Alice" },
+          signature: "From Apollo",
+        },
+      },
+      dataState: "complete",
+      networkStatus: NetworkStatus.ready,
+      error: undefined,
+    });
+  }
+
+  await expect(takeRender).not.toRerender();
+});
+
 test('treats `@defer(if: false)` as a non-deferred fragment, using a "cache-first" fetch policy with `returnPartialData`', async () => {
   const query = gql`
     query {

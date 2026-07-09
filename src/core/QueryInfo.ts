@@ -98,9 +98,6 @@ export class QueryInfo<
   TVariables extends OperationVariables = OperationVariables,
   TCache extends ApolloCache = ApolloCache,
 > {
-  // TODO remove soon - this should be able to be handled by cancelling old operations before starting new ones
-  lastRequestId = 1;
-
   private cache: TCache;
   private queryManager: Pick<
     QueryManager,

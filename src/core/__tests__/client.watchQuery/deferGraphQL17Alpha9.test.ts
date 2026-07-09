@@ -177,7 +177,7 @@ test("deduplicates queries as long as a query still has deferred chunks", async 
 });
 
 it.each([["cache-first"], ["no-cache"]] as const)(
-  "correctly merges deleted rows when receiving a deferred payload",
+  "correctly merges deleted rows when receiving a deferred payload with %s fetch policy",
   async (fetchPolicy) => {
     const query = gql`
       query Characters {

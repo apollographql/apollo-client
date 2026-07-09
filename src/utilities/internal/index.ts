@@ -55,6 +55,7 @@ export { isField } from "./isField.js";
 export { isNonEmptyArray } from "./isNonEmptyArray.js";
 export { isNonNullObject } from "./isNonNullObject.js";
 export { isPlainObject } from "./isPlainObject.js";
+export { isTypenameField } from "./isTypenameField.js";
 export { makeReference } from "./makeReference.js";
 export { makeUniqueId } from "./makeUniqueId.js";
 export { maybeDeepFreeze } from "./maybeDeepFreeze.js";

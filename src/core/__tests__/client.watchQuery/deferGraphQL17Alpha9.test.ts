@@ -339,7 +339,9 @@ it.each([["cache-first"], ["no-cache"]] as const)(
               },
             ],
       }),
-      dataState: "streaming",
+      // The cache data from the initial query fulfills the data requirements so
+      // its considered complete
+      dataState: fetchPolicy === "no-cache" ? "streaming" : "complete",
       loading: true,
       networkStatus: NetworkStatus.streaming,
       partial: true,

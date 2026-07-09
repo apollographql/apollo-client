@@ -618,11 +618,6 @@ export class QueryManager {
     }));
   }
 
-  private requestIdCounter = 1;
-  public generateRequestId() {
-    return this.requestIdCounter++;
-  }
-
   public clearStore(
     options: Cache.ResetOptions = {
       discardWatches: true,

@@ -1,6 +1,6 @@
 {
   "name": "@apollo/client-graphql-codegen",
-  "version": "2.1.1",
+  "version": "2.2.0-alpha.0",
   "description": "Apollo Client GraphQL Codegen Plugins",
   "keywords": [
     "apollo",

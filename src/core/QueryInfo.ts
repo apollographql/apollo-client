@@ -712,21 +712,25 @@ function isStreamingPartial(
   return isPartialInSelectionSet(
     getMainDefinition(document).selectionSet,
     diff.missing.missing,
-    fragmentMap,
-    variables
+    { fragmentMap, variables }
   );
+}
+
+interface StreamingPartialContext {
+  fragmentMap: FragmentMap;
+  variables: OperationVariables;
 }
 
 function isPartialInSelectionSet(
   selectionSet: SelectionSetNode,
   missingTree: MissingTree | undefined,
-  fragmentMap: FragmentMap,
-  variables: OperationVariables
+  context: StreamingPartialContext
 ) {
   if (typeof missingTree === "string") return true;
   if (missingTree === undefined) return false;
 
   let nonDeferredFields: FieldMap | undefined;
+  const { fragmentMap, variables } = context;
 
   for (const selection of selectionSet.selections) {
     if (isField(selection)) {
@@ -738,12 +742,7 @@ function isPartialInSelectionSet(
 
       if (
         !selection.selectionSet ||
-        isPartialInSelectionSet(
-          selection.selectionSet,
-          missing,
-          fragmentMap,
-          variables
-        )
+        isPartialInSelectionSet(selection.selectionSet, missing, context)
       ) {
         return true;
       }
@@ -789,12 +788,7 @@ function isPartialInSelectionSet(
           return true;
         }
       } else if (
-        isPartialInSelectionSet(
-          fragment.selectionSet,
-          missingTree,
-          fragmentMap,
-          variables
-        )
+        isPartialInSelectionSet(fragment.selectionSet, missingTree, context)
       ) {
         return true;
       }

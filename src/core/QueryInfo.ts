@@ -854,12 +854,7 @@ function isPartialInSelectionSet(
             missingTree,
             nonDeferredFields,
             fragmentMap
-          ) // &&
-          // isPartialInSelectionSet(
-          //   fragment.selectionSet,
-          //   missingTree,
-          //   fragmentMap
-          // )
+          )
         ) {
           return true;
         }

@@ -24,6 +24,7 @@ import {
   getMainDefinition,
   getOperationName,
   graphQLResultHasError,
+  hasDirectives,
   isDeferredFragment,
   isField,
   isTypenameField,
@@ -274,7 +275,19 @@ export class QueryInfo<
     };
 
     if (skipCache) {
-      return result;
+      return {
+        ...result,
+        dataState:
+          result.data == null ? "empty"
+            // Ww can simplify the checks for no-cache queries because the
+            // result is purely server driven which means we can assume a
+            // well-formed GraphQL response. In this case, `streaming` only
+            // makes sense if we are using the `@defer` directive and there are
+            // more chunks still streaming (i.e. this.hasNext is true). Purely
+            // `@stream` queries should always be complete.
+          : this.hasNext && hasDirectives(["defer"], query) ? "streaming"
+          : "complete",
+      };
     }
 
     if (shouldWriteResult(result, errorPolicy)) {

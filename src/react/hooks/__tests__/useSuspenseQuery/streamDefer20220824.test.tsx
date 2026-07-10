@@ -25,7 +25,6 @@ import {
   createClientWrapper,
   executeSchemaGraphQL17Alpha2,
   friendListSchemaGraphQL17Alpha2,
-  markAsStreaming,
   spyOnConsole,
   wait,
 } from "@apollo/client/testing/internal";
@@ -253,10 +252,10 @@ test.each<useSuspenseQuery.FetchPolicy>([
 
       expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
       expect(snapshot).toStrictEqualTyped({
-        data: markAsStreaming({
+        data: {
           friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
-        }),
-        dataState: fetchPolicy === "no-cache" ? "streaming" : "complete",
+        },
+        dataState: "complete",
         networkStatus: NetworkStatus.streaming,
         error: undefined,
       });
@@ -269,13 +268,13 @@ test.each<useSuspenseQuery.FetchPolicy>([
 
       expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
       expect(snapshot).toStrictEqualTyped({
-        data: markAsStreaming({
+        data: {
           friendList: [
             { __typename: "Friend", id: "1", name: "Luke" },
             { __typename: "Friend", id: "2", name: "Han" },
           ],
-        }),
-        dataState: fetchPolicy === "no-cache" ? "streaming" : "complete",
+        },
+        dataState: "complete",
         networkStatus: NetworkStatus.streaming,
         error: undefined,
       });

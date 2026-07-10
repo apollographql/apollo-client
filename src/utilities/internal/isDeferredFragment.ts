@@ -12,21 +12,17 @@ export function isDeferredFragment(
       return false;
     }
 
-    if (!directive.arguments) {
-      return true;
-    }
-
-    for (const arg of directive.arguments) {
+    for (const arg of directive.arguments ?? []) {
       if (arg.name.value === "if") {
         switch (arg.value.kind) {
           case Kind.BOOLEAN:
             return arg.value.value;
           case Kind.VARIABLE:
             return variables[arg.value.name.value];
-          default:
-            return false;
         }
       }
     }
+
+    return true;
   });
 }

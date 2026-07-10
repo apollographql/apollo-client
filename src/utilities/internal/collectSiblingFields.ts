@@ -2,10 +2,7 @@ import type { SelectionSetNode } from "graphql";
 import type { SelectionNode } from "graphql";
 import { Kind } from "graphql";
 
-import type { OperationVariables } from "@apollo/client";
-
 import { getFragmentFromSelection } from "./getFragmentFromSelection.js";
-import { isDeferredFragment } from "./isDeferredFragment.js";
 import { isField } from "./isField.js";
 import { isTypenameField } from "./isTypenameField.js";
 import { resultKeyNameFromField } from "./resultKeyNameFromField.js";
@@ -15,7 +12,6 @@ export type FieldMap = Map<string, FieldMap | true>;
 
 interface CollectionContext {
   fragmentMap: FragmentMap;
-  variables: OperationVariables;
   exclude: SelectionNode;
 }
 
@@ -31,7 +27,7 @@ export function collectSiblingFields(
   visitedFragments = new Map<string, FieldMap>()
 ): FieldMap {
   const collectedFieldsMap: FieldMap = new Map();
-  const { fragmentMap, variables } = context;
+  const { fragmentMap } = context;
 
   for (const selection of selectionSet.selections) {
     if (context.exclude === selection) continue;

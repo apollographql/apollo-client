@@ -14,6 +14,7 @@ import { ErrorLike } from '@apollo/client';
 import type { FieldNode } from 'graphql';
 import type { FormattedExecutionResult } from 'graphql';
 import type { FragmentDefinitionNode } from 'graphql';
+import type { FragmentSpreadNode } from 'graphql';
 import type { GraphQLFormattedError } from 'graphql';
 import type { HKT } from '@apollo/client/utilities';
 import type { Incremental } from '@apollo/client/incremental';
@@ -84,6 +85,21 @@ export type ClassicSignature = SignatureStyle extends "classic" ? unknown : neve
 
 // @internal @deprecated
 export function cloneDeep<T>(value: T): T;
+
+// @public (undocumented)
+interface CollectionContext {
+    // (undocumented)
+    exclude: SelectionNode;
+    // Warning: (ae-incompatible-release-tags) The symbol "fragmentMap" is marked as @public, but its signature references "FragmentMap" which is marked as @internal
+    //
+    // (undocumented)
+    fragmentMap: FragmentMap;
+}
+
+// Warning: (ae-forgotten-export) The symbol "CollectionContext" needs to be exported by the entry point index.d.ts
+//
+// @internal @deprecated
+export function collectSiblingFields(selectionSet: SelectionSetNode, context: CollectionContext, visitedFragments?: Map<string, FieldMap>): FieldMap;
 
 // @public
 export function combineLatestBatched<T>(observables: Array<Observable<T> & {
@@ -220,6 +236,9 @@ export interface ExtensionsWithStreamInfo extends Record<string, unknown> {
         deref(): StreamInfoTrie | undefined;
     };
 }
+
+// @public (undocumented)
+export type FieldMap = Map<string, FieldMap | true>;
 
 // @public (undocumented)
 export function filterMap<T, R>(fn: (value: T, context: undefined) => R | undefined): OperatorFunction<T, R>;
@@ -368,6 +387,9 @@ export type IsAny<T> = 0 extends 1 & T ? true : false;
 // @internal @deprecated
 export const isArray: (a: any) => a is any[] | readonly any[];
 
+// @public (undocumented)
+export function isDeferredFragment(fragmentSelection: InlineFragmentNode | FragmentSpreadNode, variables: OperationVariables): boolean;
+
 // @internal @deprecated (undocumented)
 export function isDocumentNode(value: unknown): value is DocumentNode;
 
@@ -389,6 +411,9 @@ export function isNonNullObject(obj: unknown): obj is Record<string | number, an
 
 // @internal @deprecated (undocumented)
 export function isPlainObject(obj: unknown): obj is Record<string | number, any>;
+
+// @public (undocumented)
+export function isTypenameField(field: FieldNode): boolean;
 
 // @public
 export type LazyType<T> = T & {

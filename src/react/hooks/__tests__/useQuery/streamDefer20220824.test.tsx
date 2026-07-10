@@ -19,6 +19,7 @@ import {
   createClientWrapper,
   executeSchemaGraphQL17Alpha2,
   friendListSchemaGraphQL17Alpha2,
+  markAsStreaming,
   spyOnConsole,
 } from "@apollo/client/testing/internal";
 
@@ -176,9 +177,9 @@ test("should handle streamed queries with fetch policy no-cache", async () => {
   subject.next(friends[0]);
 
   await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-    data: {
+    data: markAsStreaming({
       friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
-    },
+    }),
     dataState: "streaming",
     loading: true,
     networkStatus: NetworkStatus.streaming,
@@ -189,12 +190,12 @@ test("should handle streamed queries with fetch policy no-cache", async () => {
   subject.next(friends[1]);
 
   await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-    data: {
+    data: markAsStreaming({
       friendList: [
         { __typename: "Friend", id: "1", name: "Luke" },
         { __typename: "Friend", id: "2", name: "Han" },
       ],
-    },
+    }),
     dataState: "streaming",
     loading: true,
     networkStatus: NetworkStatus.streaming,
@@ -208,13 +209,13 @@ test("should handle streamed queries with fetch policy no-cache", async () => {
   subject.complete();
 
   await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-    data: {
+    data: markAsStreaming({
       friendList: [
         { __typename: "Friend", id: "1", name: "Luke" },
         { __typename: "Friend", id: "2", name: "Han" },
         { __typename: "Friend", id: "3", name: "Leia" },
       ],
-    },
+    }),
     dataState: "streaming",
     loading: true,
     networkStatus: NetworkStatus.streaming,

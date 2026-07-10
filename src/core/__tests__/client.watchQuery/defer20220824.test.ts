@@ -293,7 +293,7 @@ it.each([["cache-first"], ["no-cache"]] as const)(
     });
 
     await expect(stream).toEmitTypedValue({
-      data: {
+      data: markAsStreaming({
         characters:
           // no-cache fetch policy doesn't merge with existing cache data, so
           // the lowercase field is not added to each item
@@ -316,7 +316,7 @@ it.each([["cache-first"], ["no-cache"]] as const)(
                 lowercase: "b",
               },
             ],
-      },
+      }),
       // no-cache is incomplete (lowercase still pending); cache policies merge residual lowercase
       dataState: fetchPolicy === "no-cache" ? "streaming" : "complete",
       loading: true,

@@ -666,7 +666,7 @@ test("suspends deferred queries with lists and properly patches results", async 
 
     expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
     expect(snapshot).toStrictEqualTyped({
-      data: {
+      data: markAsStreaming({
         greetings: [
           {
             __typename: "Greeting",
@@ -678,7 +678,7 @@ test("suspends deferred queries with lists and properly patches results", async 
             message: "Hello again",
           },
         ],
-      },
+      }),
       dataState: "streaming",
       networkStatus: NetworkStatus.streaming,
       error: undefined,
@@ -1301,7 +1301,7 @@ test("incrementally rerenders data returned by a `fetchMore` for a deferred quer
 
     expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
     expect(snapshot).toStrictEqualTyped({
-      data: {
+      data: markAsStreaming({
         greetings: [
           {
             __typename: "Greeting",
@@ -1316,7 +1316,7 @@ test("incrementally rerenders data returned by a `fetchMore` for a deferred quer
             message: "Goodbye",
           },
         ],
-      },
+      }),
       dataState: "streaming",
       networkStatus: NetworkStatus.streaming,
       error: undefined,

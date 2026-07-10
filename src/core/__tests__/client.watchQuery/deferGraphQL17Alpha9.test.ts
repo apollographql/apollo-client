@@ -769,14 +769,11 @@ test('reports overlapping deferred and non-deferred fields as "streaming" when o
     incremental: [
       {
         data: {
-          __typename: "Greeting",
-          recipient: {
-            __typename: "Person",
-            name: "Alice",
-            email: "alice@example.com",
-          },
+          __typename: "Person",
+          email: "alice@example.com",
         },
         id: "0",
+        subPath: ["recipient"],
       },
     ],
     completed: [{ id: "0" }],
@@ -792,6 +789,393 @@ test('reports overlapping deferred and non-deferred fields as "streaming" when o
           __typename: "Person",
           name: "Alice",
           email: "alice@example.com",
+        },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test('reports "streaming" when non-deferred fields for the same response key are split across sibling selection sets', async () => {
+  const query = gql`
+    query {
+      greeting {
+        message
+        recipient {
+          name
+        }
+        recipient {
+          email
+        }
+        ... on Greeting @defer {
+          recipient {
+            name
+            email
+            id
+          }
+        }
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({
+      query,
+      returnPartialData: true,
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+          email: "alice@example.com",
+        },
+      },
+    },
+    pending: [{ id: "0", path: ["greeting"] }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+          email: "alice@example.com",
+        },
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          __typename: "Person",
+          id: "1",
+        },
+        id: "0",
+        subPath: ["recipient"],
+      },
+    ],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+          email: "alice@example.com",
+          id: "1",
+        },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test('reports "streaming" when non-deferred fields for the same response key come from a field and a fragment', async () => {
+  const query = gql`
+    query {
+      greeting {
+        message
+        recipient {
+          name
+        }
+        ... on Greeting {
+          recipient {
+            email
+          }
+        }
+        ... on Greeting @defer {
+          recipient {
+            name
+            email
+            id
+          }
+        }
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({
+      query,
+      returnPartialData: true,
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+          email: "alice@example.com",
+        },
+      },
+    },
+    pending: [{ id: "0", path: ["greeting"] }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+          email: "alice@example.com",
+        },
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          __typename: "Person",
+          id: "1",
+        },
+        id: "0",
+        subPath: ["recipient"],
+      },
+    ],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+          email: "alice@example.com",
+          id: "1",
+        },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test('reports "streaming" when nested non-deferred fields are split across sibling selection sets', async () => {
+  const query = gql`
+    query {
+      greeting {
+        message
+        recipient {
+          name
+          bestFriend {
+            name
+          }
+        }
+        recipient {
+          email
+          bestFriend {
+            email
+          }
+        }
+        ... on Greeting @defer {
+          recipient {
+            name
+            email
+            id
+            bestFriend {
+              name
+              email
+              phone
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({
+      query,
+      returnPartialData: true,
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+          email: "alice@example.com",
+          bestFriend: {
+            __typename: "Person",
+            name: "Bob",
+            email: "bob@example.com",
+          },
+        },
+      },
+    },
+    pending: [{ id: "0", path: ["greeting"] }],
+    hasNext: true,
+  });
+
+  // All non-deferred paths are present, including nested `bestFriend` fields
+  // split across sibling selections. Only deferred-only `id` and
+  // `bestFriend.phone` are still missing.
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+          email: "alice@example.com",
+          bestFriend: {
+            __typename: "Person",
+            name: "Bob",
+            email: "bob@example.com",
+          },
+        },
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          __typename: "Person",
+          id: "1",
+          bestFriend: {
+            __typename: "Person",
+            phone: "555-0100",
+          },
+        },
+        id: "0",
+        subPath: ["recipient"],
+      },
+    ],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+          email: "alice@example.com",
+          id: "1",
+          bestFriend: {
+            __typename: "Person",
+            name: "Bob",
+            email: "bob@example.com",
+            phone: "555-0100",
+          },
         },
       },
     },
@@ -872,7 +1256,6 @@ test('reports "streaming" when one of multiple sibling `@defer` fragments has fu
     incremental: [
       {
         data: {
-          __typename: "Greeting",
           recipient: { __typename: "Person", name: "Alice" },
         },
         id: "0",
@@ -900,7 +1283,6 @@ test('reports "streaming" when one of multiple sibling `@defer` fragments has fu
     incremental: [
       {
         data: {
-          __typename: "Greeting",
           signature: "From Apollo",
         },
         id: "1",
@@ -1164,8 +1546,7 @@ test("evaluates the `@defer(if: $variable)` argument against variables, deferrin
     incremental: [
       {
         data: {
-          recipient: { name: "Alice", __typename: "Person" },
-          __typename: "Greeting",
+          recipient: { __typename: "Person", name: "Alice" },
         },
         id: "0",
       },
@@ -1278,8 +1659,7 @@ test('reports "streaming" instead of "partial" when the only unfulfilled field o
     incremental: [
       {
         data: {
-          __typename: "Greeting",
-          recipient: { name: "Alice", __typename: "Person" },
+          recipient: { __typename: "Person", name: "Alice" },
         },
         id: "0",
       },
@@ -1306,6 +1686,10 @@ test('reports "streaming" instead of "partial" when the only unfulfilled field o
 });
 
 test("reports the correct data state for `@defer` on a named fragment spread with partial cached data", async () => {
+  // Suppress expected missing field warning when writing partial value after
+  // first chunk
+  using _ = spyOnConsole("error");
+
   const query = gql`
     query {
       greeting {
@@ -1326,20 +1710,15 @@ test("reports the correct data state for `@defer` on a named fragment spread wit
     mockDeferStreamGraphQL17Alpha9();
   const cache = new InMemoryCache();
 
-  // We are intentionally writing partial data to the cache. Suppress console
-  // warnings to avoid unnecessary noise in the test.
-  {
-    using _consoleSpy = spyOnConsole("error");
-    cache.writeQuery({
-      query,
-      data: {
-        greeting: {
-          __typename: "Greeting",
-          recipient: { __typename: "Person", name: "Cached Alice" },
-        },
+  cache.writeQuery({
+    query,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        recipient: { __typename: "Person", name: "Cached Alice" },
       },
-    });
-  }
+    },
+  });
 
   const client = new ApolloClient({
     cache,
@@ -1392,11 +1771,10 @@ test("reports the correct data state for `@defer` on a named fragment spread wit
     incremental: [
       {
         data: {
-          __typename: "Greeting",
           recipient: {
+            __typename: "Person",
             name: "Alice",
             email: "alice@example.com",
-            __typename: "Person",
           },
         },
         id: "0",
@@ -1416,6 +1794,2534 @@ test("reports the correct data state for `@defer` on a named fragment spread wit
           name: "Alice",
           email: "alice@example.com",
         },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test('reports overlapping fields contributed by a non-deferred fragment spread as "streaming"', async () => {
+  const query = gql`
+    query {
+      greeting {
+        message
+        ...GreetingRecipient
+        ... on Greeting @defer {
+          recipient {
+            name
+            email
+          }
+        }
+      }
+    }
+
+    fragment GreetingRecipient on Greeting {
+      recipient {
+        name
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({ query, returnPartialData: true })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Alice" },
+      },
+    },
+    pending: [{ id: "0", path: ["greeting"] }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Alice" },
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          __typename: "Person",
+          email: "alice@example.com",
+        },
+        id: "0",
+        subPath: ["recipient"],
+      },
+    ],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+          email: "alice@example.com",
+        },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test('reports overlapping fields contributed by a non-deferred inline fragment as "streaming"', async () => {
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting {
+          recipient {
+            name
+          }
+        }
+        ... on Greeting @defer {
+          recipient {
+            name
+            email
+          }
+        }
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({ query, returnPartialData: true })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Alice" },
+      },
+    },
+    pending: [{ id: "0", path: ["greeting"] }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Alice" },
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          __typename: "Person",
+          email: "alice@example.com",
+        },
+        id: "0",
+        subPath: ["recipient"],
+      },
+    ],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+          email: "alice@example.com",
+        },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("treats nested fragments inside a `@defer` boundary when deciding if the fragment has started", async () => {
+  // Suppress expected missing field warning when writing partial value after
+  // first chunk
+  using _ = spyOnConsole("error");
+
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          ... on Greeting {
+            recipient {
+              name
+            }
+            signature
+          }
+        }
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+  const cache = new InMemoryCache();
+
+  cache.writeQuery({
+    query,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        recipient: { __typename: "Person", name: "Cached Alice" },
+      },
+    },
+  });
+
+  const client = new ApolloClient({
+    cache,
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({ query, returnPartialData: true })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        recipient: { __typename: "Person", name: "Cached Alice" },
+      },
+    },
+    dataState: "partial",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: { greeting: { message: "Hello world", __typename: "Greeting" } },
+    pending: [{ id: "0", path: ["greeting"] }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Cached Alice" },
+      },
+    }),
+    dataState: "partial",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          recipient: { __typename: "Person", name: "Alice" },
+          signature: "From Apollo",
+        },
+        id: "0",
+      },
+    ],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Alice" },
+        signature: "From Apollo",
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("treats a named fragment spread inside a `@defer` boundary when deciding if the fragment has started", async () => {
+  // Suppress expected missing field warning when writing partial value after
+  // first chunk
+  using _ = spyOnConsole("error");
+
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          ...DeferredGreeting
+        }
+      }
+    }
+
+    fragment DeferredGreeting on Greeting {
+      recipient {
+        name
+      }
+      signature
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+  const cache = new InMemoryCache();
+
+  cache.writeQuery({
+    query,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        recipient: { __typename: "Person", name: "Cached Alice" },
+      },
+    },
+  });
+
+  const client = new ApolloClient({
+    cache,
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({ query, returnPartialData: true })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        recipient: { __typename: "Person", name: "Cached Alice" },
+      },
+    },
+    dataState: "partial",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: { greeting: { message: "Hello world", __typename: "Greeting" } },
+    pending: [{ id: "0", path: ["greeting"] }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Cached Alice" },
+      },
+    }),
+    dataState: "partial",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          recipient: { __typename: "Person", name: "Alice" },
+          signature: "From Apollo",
+        },
+        id: "0",
+      },
+    ],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Alice" },
+        signature: "From Apollo",
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test('reports "partial" when a nested defer-only field is present under an overlapping parent while another defer-only field is still missing', async () => {
+  // Suppress expected missing field warning when writing partial value after
+  // first chunk
+  using _ = spyOnConsole("error");
+
+  const query = gql`
+    query {
+      greeting {
+        message
+        recipient {
+          name
+        }
+        ... on Greeting @defer {
+          recipient {
+            name
+            email
+            phone
+          }
+        }
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+  const cache = new InMemoryCache();
+
+  cache.writeQuery({
+    query,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        recipient: {
+          __typename: "Person",
+          name: "Cached Alice",
+          email: "cached@example.com",
+        },
+      },
+    },
+  });
+
+  const client = new ApolloClient({
+    cache,
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({
+      query,
+      returnPartialData: true,
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        recipient: {
+          __typename: "Person",
+          name: "Cached Alice",
+          email: "cached@example.com",
+        },
+      },
+    },
+    dataState: "partial",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Alice" },
+      },
+    },
+    pending: [{ id: "0", path: ["greeting"] }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+          email: "cached@example.com",
+        },
+      },
+    }),
+    dataState: "partial",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          __typename: "Person",
+          email: "alice@example.com",
+          phone: "555-0100",
+        },
+        id: "0",
+        subPath: ["recipient"],
+      },
+    ],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+          email: "alice@example.com",
+          phone: "555-0100",
+        },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("merges non-deferred selections that contribute different subfields under the same response key", async () => {
+  const query = gql`
+    query {
+      greeting {
+        message
+        ...RecipientName
+        ...RecipientId
+        ... on Greeting @defer {
+          recipient {
+            id
+            name
+            email
+          }
+        }
+      }
+    }
+
+    fragment RecipientName on Greeting {
+      recipient {
+        name
+      }
+    }
+
+    fragment RecipientId on Greeting {
+      recipient {
+        id
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({
+      query,
+      returnPartialData: true,
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", id: "1", name: "Alice" },
+      },
+    },
+    pending: [{ id: "0", path: ["greeting"] }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", id: "1", name: "Alice" },
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          __typename: "Person",
+          email: "alice@example.com",
+        },
+        id: "0",
+        subPath: ["recipient"],
+      },
+    ],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          id: "1",
+          name: "Alice",
+          email: "alice@example.com",
+        },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test('reports overlapping fields from a fragment spread repeated at the same selection-set level as "streaming"', async () => {
+  const query = gql`
+    query {
+      greeting {
+        message
+        recipient {
+          id
+          ...PersonName
+          ...PersonName
+        }
+        ... on Greeting @defer {
+          recipient {
+            ...PersonName
+            email
+          }
+        }
+      }
+    }
+
+    fragment PersonName on Person {
+      name
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({
+      query,
+      returnPartialData: true,
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", id: "1", name: "Alice" },
+      },
+    },
+    pending: [{ id: "0", path: ["greeting"] }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", id: "1", name: "Alice" },
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  // `name` was already delivered non-deferred via `PersonName`; only exclusive
+  // `email` arrives on the deferred pending (graphql.js uses `subPath`).
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          __typename: "Person",
+          email: "alice@example.com",
+        },
+        id: "0",
+        subPath: ["recipient"],
+      },
+    ],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          id: "1",
+          name: "Alice",
+          email: "alice@example.com",
+        },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test('reports overlapping fields from the same fragment spread used at different selection-set levels as "streaming"', async () => {
+  const query = gql`
+    query {
+      greeting {
+        message
+        recipient {
+          ...PersonName
+          bestFriend {
+            ...PersonName
+          }
+        }
+        ... on Greeting @defer {
+          recipient {
+            ...PersonName
+            email
+            bestFriend {
+              ...PersonName
+              email
+            }
+          }
+        }
+      }
+    }
+
+    fragment PersonName on Person {
+      name
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({
+      query,
+      returnPartialData: true,
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+          bestFriend: { __typename: "Person", name: "Bob" },
+        },
+      },
+    },
+    pending: [{ id: "0", path: ["greeting"] }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+          bestFriend: { __typename: "Person", name: "Bob" },
+        },
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          __typename: "Person",
+          email: "bob@example.com",
+        },
+        id: "0",
+        subPath: ["recipient", "bestFriend"],
+      },
+      {
+        data: {
+          __typename: "Person",
+          email: "alice@example.com",
+        },
+        id: "0",
+        subPath: ["recipient"],
+      },
+    ],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+          email: "alice@example.com",
+          bestFriend: {
+            __typename: "Person",
+            name: "Bob",
+            email: "bob@example.com",
+          },
+        },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test('reports per-item `@defer` gaps on a list as "streaming" when every item is still pending', async () => {
+  const query = gql`
+    query {
+      person {
+        id
+        friends {
+          id
+          ... @defer {
+            name
+          }
+        }
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({ query, returnPartialData: true })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: {
+      person: {
+        __typename: "Person",
+        id: "1",
+        friends: [
+          { __typename: "Person", id: "2" },
+          { __typename: "Person", id: "3" },
+        ],
+      },
+    },
+    pending: [
+      { id: "0", path: ["person", "friends", 0] },
+      { id: "1", path: ["person", "friends", 1] },
+    ],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      person: {
+        __typename: "Person",
+        id: "1",
+        friends: [
+          { __typename: "Person", id: "2" },
+          { __typename: "Person", id: "3" },
+        ],
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: { __typename: "Person", name: "Leia" },
+        id: "0",
+      },
+      {
+        data: { __typename: "Person", name: "Han" },
+        id: "1",
+      },
+    ],
+    completed: [{ id: "0" }, { id: "1" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      person: {
+        __typename: "Person",
+        id: "1",
+        friends: [
+          { __typename: "Person", id: "2", name: "Leia" },
+          { __typename: "Person", id: "3", name: "Han" },
+        ],
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test('reports "streaming" when one list item\'s `@defer` has arrived and another item is still pending', async () => {
+  const query = gql`
+    query {
+      person {
+        id
+        friends {
+          id
+          ... @defer {
+            name
+          }
+        }
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({ query, returnPartialData: true })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: {
+      person: {
+        __typename: "Person",
+        id: "1",
+        friends: [
+          { __typename: "Person", id: "2" },
+          { __typename: "Person", id: "3" },
+        ],
+      },
+    },
+    pending: [
+      { id: "0", path: ["person", "friends", 0] },
+      { id: "1", path: ["person", "friends", 1] },
+    ],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      person: {
+        __typename: "Person",
+        id: "1",
+        friends: [
+          { __typename: "Person", id: "2" },
+          { __typename: "Person", id: "3" },
+        ],
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: { __typename: "Person", name: "Leia" },
+        id: "0",
+      },
+    ],
+    completed: [{ id: "0" }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      person: {
+        __typename: "Person",
+        id: "1",
+        friends: [
+          { __typename: "Person", id: "2", name: "Leia" },
+          { __typename: "Person", id: "3" },
+        ],
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: { __typename: "Person", name: "Han" },
+        id: "1",
+      },
+    ],
+    completed: [{ id: "1" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      person: {
+        __typename: "Person",
+        id: "1",
+        friends: [
+          { __typename: "Person", id: "2", name: "Leia" },
+          { __typename: "Person", id: "3", name: "Han" },
+        ],
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test('reports overlapping deferred and non-deferred list fields as "streaming" when only defer-only item fields are missing', async () => {
+  const query = gql`
+    query {
+      person {
+        id
+        friends {
+          id
+          name
+        }
+        ... on Person @defer {
+          friends {
+            id
+            name
+            email
+          }
+        }
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({ query, returnPartialData: true })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: {
+      person: {
+        __typename: "Person",
+        id: "1",
+        friends: [
+          { __typename: "Person", id: "2", name: "Leia" },
+          { __typename: "Person", id: "3", name: "Han" },
+        ],
+      },
+    },
+    pending: [{ id: "0", path: ["person"] }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      person: {
+        __typename: "Person",
+        id: "1",
+        friends: [
+          { __typename: "Person", id: "2", name: "Leia" },
+          { __typename: "Person", id: "3", name: "Han" },
+        ],
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          __typename: "Person",
+          email: "leia@example.com",
+        },
+        id: "0",
+        subPath: ["friends", 0],
+      },
+      {
+        data: {
+          __typename: "Person",
+          email: "han@example.com",
+        },
+        id: "0",
+        subPath: ["friends", 1],
+      },
+    ],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      person: {
+        __typename: "Person",
+        id: "1",
+        friends: [
+          {
+            __typename: "Person",
+            id: "2",
+            name: "Leia",
+            email: "leia@example.com",
+          },
+          {
+            __typename: "Person",
+            id: "3",
+            name: "Han",
+            email: "han@example.com",
+          },
+        ],
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test('reports "partial" when one list item has a started `@defer` that is still incomplete while other items are only clean defer gaps', async () => {
+  // Suppress expected missing field warning when writing partial list items.
+  using _ = spyOnConsole("error");
+
+  const query = gql`
+    query {
+      person {
+        id
+        friends {
+          id
+          ... @defer {
+            email
+            phone
+          }
+        }
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+  const cache = new InMemoryCache();
+
+  cache.writeQuery({
+    query,
+    data: {
+      person: {
+        __typename: "Person",
+        id: "1",
+        friends: [
+          {
+            __typename: "Person",
+            id: "2",
+            email: "cached-leia@example.com",
+          },
+          {
+            __typename: "Person",
+            id: "3",
+          },
+        ],
+      },
+    },
+  });
+
+  const client = new ApolloClient({
+    cache,
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({
+      query,
+      returnPartialData: true,
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      person: {
+        __typename: "Person",
+        id: "1",
+        friends: [
+          {
+            __typename: "Person",
+            id: "2",
+            email: "cached-leia@example.com",
+          },
+          {
+            __typename: "Person",
+            id: "3",
+          },
+        ],
+      },
+    },
+    dataState: "partial",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: {
+      person: {
+        __typename: "Person",
+        id: "1",
+        friends: [
+          { __typename: "Person", id: "2" },
+          { __typename: "Person", id: "3" },
+        ],
+      },
+    },
+    pending: [
+      { id: "0", path: ["person", "friends", 0] },
+      { id: "1", path: ["person", "friends", 1] },
+    ],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      person: {
+        __typename: "Person",
+        id: "1",
+        friends: [
+          {
+            __typename: "Person",
+            id: "2",
+            email: "cached-leia@example.com",
+          },
+          {
+            __typename: "Person",
+            id: "3",
+          },
+        ],
+      },
+    }),
+    dataState: "partial",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          __typename: "Person",
+          email: "leia@example.com",
+          phone: "555-0102",
+        },
+        id: "0",
+      },
+      {
+        data: {
+          __typename: "Person",
+          email: "han@example.com",
+          phone: "555-0103",
+        },
+        id: "1",
+      },
+    ],
+    completed: [{ id: "0" }, { id: "1" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      person: {
+        __typename: "Person",
+        id: "1",
+        friends: [
+          {
+            __typename: "Person",
+            id: "2",
+            email: "leia@example.com",
+            phone: "555-0102",
+          },
+          {
+            __typename: "Person",
+            id: "3",
+            email: "han@example.com",
+            phone: "555-0103",
+          },
+        ],
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test('reports `@defer` nested under a field as "streaming" when only the nested deferred fields are missing', async () => {
+  const query = gql`
+    query {
+      greeting {
+        message
+        recipient {
+          name
+          ... on Person @defer {
+            email
+          }
+        }
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({
+      query,
+      returnPartialData: true,
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Alice" },
+      },
+    },
+    pending: [{ id: "0", path: ["greeting", "recipient"] }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Alice" },
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          __typename: "Person",
+          email: "alice@example.com",
+        },
+        id: "0",
+      },
+    ],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+          email: "alice@example.com",
+        },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test('reports "streaming" when two `@defer` fragments overlap and only the second fragment\'s exclusive fields are missing', async () => {
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... @defer {
+          recipient {
+            name
+          }
+        }
+        ... @defer {
+          recipient {
+            name
+            email
+          }
+        }
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({
+      query,
+      returnPartialData: true,
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: { greeting: { message: "Hello world", __typename: "Greeting" } },
+    pending: [
+      { id: "0", path: ["greeting"] },
+      { id: "1", path: ["greeting"] },
+    ],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          recipient: { __typename: "Person", name: "Alice" },
+        },
+        id: "0",
+      },
+    ],
+    completed: [{ id: "0" }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Alice" },
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          __typename: "Person",
+          email: "alice@example.com",
+        },
+        id: "1",
+        subPath: ["recipient"],
+      },
+    ],
+    completed: [{ id: "1" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+          email: "alice@example.com",
+        },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test('reports "partial" when a deep defer-only field is present under an overlapped path while another deep defer-only field is still missing', async () => {
+  // Suppress expected missing field warning when writing partial nested values.
+  using _ = spyOnConsole("error");
+
+  const query = gql`
+    query {
+      greeting {
+        message
+        recipient {
+          address {
+            city
+          }
+        }
+        ... on Greeting @defer {
+          recipient {
+            address {
+              city
+              postalCode
+              line2
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+  const cache = new InMemoryCache();
+
+  // `postalCode` is defer-only and already present; `line2` is still missing.
+  // Presence must be detected under the overlapped `recipient.address` path.
+  cache.writeQuery({
+    query,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        recipient: {
+          __typename: "Person",
+          address: {
+            __typename: "Address",
+            city: "Cached City",
+            postalCode: "00000",
+          },
+        },
+      },
+    },
+  });
+
+  const client = new ApolloClient({
+    cache,
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({
+      query,
+      returnPartialData: true,
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        recipient: {
+          __typename: "Person",
+          address: {
+            __typename: "Address",
+            city: "Cached City",
+            postalCode: "00000",
+          },
+        },
+      },
+    },
+    dataState: "partial",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          address: { __typename: "Address", city: "New York" },
+        },
+      },
+    },
+    pending: [{ id: "0", path: ["greeting"] }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          address: {
+            __typename: "Address",
+            city: "New York",
+            postalCode: "00000",
+          },
+        },
+      },
+    }),
+    dataState: "partial",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          __typename: "Address",
+          postalCode: "10001",
+          line2: "Apt 4",
+        },
+        id: "0",
+        subPath: ["recipient", "address"],
+      },
+    ],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          address: {
+            __typename: "Address",
+            city: "New York",
+            postalCode: "10001",
+            line2: "Apt 4",
+          },
+        },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test('reports overlapping fields gated by `@include` as "streaming" when the included non-deferred fields are present and only defer-only fields are missing', async () => {
+  const query = gql`
+    query ($includeRecipient: Boolean!) {
+      greeting {
+        message
+        recipient @include(if: $includeRecipient) {
+          name
+        }
+        ... on Greeting @defer {
+          recipient {
+            name
+            email
+          }
+        }
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({
+      query,
+      variables: { includeRecipient: true },
+      returnPartialData: true,
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Alice" },
+      },
+    },
+    pending: [{ id: "0", path: ["greeting"] }],
+    hasNext: true,
+  });
+
+  // Classifier must honor `@include` via operation variables: `name` is
+  // non-deferred when included, so only missing `email` stays "streaming".
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Alice" },
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          __typename: "Person",
+          email: "alice@example.com",
+        },
+        id: "0",
+        subPath: ["recipient"],
+      },
+    ],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+          email: "alice@example.com",
+        },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test('reports "partial" when a non-deferred `@defer(if: false)` selection is missing while another `@defer` is still pending', async () => {
+  // Suppress expected missing field warning when writing incomplete required
+  // selections alongside in-flight deferred data.
+  using _ = spyOnConsole("error");
+
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer(if: false) {
+          recipient {
+            name
+          }
+        }
+        ... on Greeting @defer {
+          signature
+        }
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+  const cache = new InMemoryCache();
+
+  // Seed only `message`. `recipient` is required (`if: false`) and missing;
+  // `signature` is a clean defer gap. Missing required data must win → partial.
+  cache.writeQuery({
+    query,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Cached hello",
+      },
+    },
+  });
+
+  const client = new ApolloClient({
+    cache,
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({
+      query,
+      returnPartialData: true,
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Cached hello",
+      },
+    },
+    dataState: "partial",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: { greeting: { message: "Hello world", __typename: "Greeting" } },
+    pending: [{ id: "0", path: ["greeting"] }],
+    hasNext: true,
+  });
+
+  // `recipient` from `@defer(if: false)` is required and still missing, so
+  // this is "partial" even though `signature` is only a clean defer gap.
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+      },
+    }),
+    dataState: "partial",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          __typename: "Greeting",
+          signature: "From Apollo",
+        },
+        id: "0",
+      },
+    ],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  // Stream finished without ever delivering required `recipient` from
+  // `@defer(if: false)`. Classification remains partial.
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        signature: "From Apollo",
+      },
+    },
+    dataState: "partial",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: true,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("uses response aliases when matching overlapping non-deferred and deferred fields", async () => {
+  const query = gql`
+    query {
+      greeting {
+        message
+        user: recipient {
+          name
+        }
+        ... on Greeting @defer {
+          user: recipient {
+            name
+            email
+          }
+        }
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({
+      query,
+      returnPartialData: true,
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        user: { __typename: "Person", name: "Alice" },
+      },
+    },
+    pending: [{ id: "0", path: ["greeting"] }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        user: { __typename: "Person", name: "Alice" },
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          __typename: "Person",
+          email: "alice@example.com",
+        },
+        id: "0",
+        subPath: ["user"],
+      },
+    ],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        user: {
+          __typename: "Person",
+          name: "Alice",
+          email: "alice@example.com",
+        },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test('reports "streaming" for nested `@defer` when the outer fragment has arrived and the inner fragment is still pending', async () => {
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+            ... on Person @defer {
+              email
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({
+      query,
+      returnPartialData: true,
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: { greeting: { message: "Hello world", __typename: "Greeting" } },
+    pending: [{ id: "0", path: ["greeting"] }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  // Outer defer arrives with `recipient.name`; inner email defer is still
+  // pending at a nested path.
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          recipient: { __typename: "Person", name: "Alice" },
+        },
+        id: "0",
+      },
+    ],
+    pending: [{ id: "1", path: ["greeting", "recipient"] }],
+    completed: [{ id: "0" }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Alice" },
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          __typename: "Person",
+          email: "alice@example.com",
+        },
+        id: "1",
+      },
+    ],
+    completed: [{ id: "1" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+          email: "alice@example.com",
+        },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("does not treat `__typename`-only presence under a `@defer` as the fragment having started", async () => {
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+            email
+          }
+        }
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+  const cache = new InMemoryCache();
+
+  {
+    using _consoleSpy = spyOnConsole("error");
+    cache.writeQuery({
+      query: gql`
+        query {
+          greeting {
+            message
+            recipient {
+              __typename
+            }
+          }
+        }
+      `,
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          message: "Cached",
+          recipient: { __typename: "Person" },
+        },
+      },
+    });
+  }
+
+  const client = new ApolloClient({
+    cache,
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({ query, returnPartialData: true })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Cached",
+        recipient: { __typename: "Person" },
+      },
+    },
+    dataState: "partial",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person" },
+      },
+    },
+    pending: [{ id: "0", path: ["greeting"] }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person" },
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          recipient: {
+            __typename: "Person",
+            name: "Alice",
+            email: "alice@example.com",
+          },
+        },
+        id: "0",
+      },
+    ],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+          email: "alice@example.com",
+        },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("treats a deferred field delivered as null as fulfilled rather than still missing", async () => {
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+          }
+        }
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({ query, returnPartialData: true })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: { greeting: { message: "Hello world", __typename: "Greeting" } },
+    pending: [{ id: "0", path: ["greeting"] }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          recipient: null,
+        },
+        id: "0",
+      },
+    ],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: null,
       },
     },
     dataState: "complete",

@@ -4,40 +4,86 @@ import { gql } from "graphql-tag";
 
 import * as customScalarsPlugin from "../plugin.js";
 
-test("outputs empty object with no input objects in schema", async () => {
+test("outputs empty objects when the schema has no custom scalars", async () => {
   const schema = gql`
     type Query {
-      foo: String
-    }
-  `;
-
-  await expect(generateConfig({ schema })).resolves.toStrictEqual({});
-});
-
-test("outputs empty object with no input objects in schema with custom scalars", async () => {
-  const schema = gql`
-    scalar DateTime
-
-    type Query {
-      event(at: DateTime): Event
+      event: Event
     }
 
     type Event {
       id: ID!
       name: String!
-      startsAt: DateTime
     }
   `;
 
-  await expect(generateConfig({ schema })).resolves.toStrictEqual({});
+  const documents = [
+    {
+      document: gql`
+        query GetEvent {
+          event {
+            id
+            name
+          }
+        }
+      `,
+    },
+  ];
+
+  const { inputObjects, scalarTypePolicies } = await generateConfig({
+    schema,
+    documents,
+  });
+
+  expect(inputObjects).toStrictEqual({});
+  expect(scalarTypePolicies).toStrictEqual({});
 });
 
-test("outputs input object that includes custom scalar", async () => {
+test("outputs empty objects when custom scalars are only used in field arguments", async () => {
+  const schema = gql`
+    scalar DateTime
+
+    type Query {
+      events(after: DateTime): [Event]
+    }
+
+    type Event {
+      id: ID!
+      name: String!
+    }
+  `;
+
+  const documents = [
+    {
+      document: gql`
+        query GetEvents($after: DateTime) {
+          events(after: $after) {
+            id
+            name
+          }
+        }
+      `,
+    },
+  ];
+
+  const { inputObjects, scalarTypePolicies } = await generateConfig({
+    schema,
+    documents,
+  });
+
+  expect(inputObjects).toStrictEqual({});
+  expect(scalarTypePolicies).toStrictEqual({});
+});
+
+test("outputs config for input object fields and object fields with custom scalars", async () => {
   const schema = gql`
     scalar DateTime
 
     input EventInput {
       startsAt: DateTime
+    }
+
+    type Query {
+      event: Event
     }
 
     type Mutation {
@@ -46,7 +92,6 @@ test("outputs input object that includes custom scalar", async () => {
 
     type Event {
       id: ID!
-      name: String!
       startsAt: DateTime
     }
   `;
@@ -57,25 +102,54 @@ test("outputs input object that includes custom scalar", async () => {
         mutation CreateEvent($input: EventInput!) {
           createEvent(input: $input) {
             id
+            startsAt
           }
         }
       `,
     },
   ];
 
-  await expect(generateConfig({ schema, documents })).resolves.toStrictEqual({
-    EventInput: { fields: { startsAt: "DateTime" } },
+  const { inputObjects, scalarTypePolicies } = await generateConfig({
+    schema,
+    documents,
+  });
+
+  expect(inputObjects).toStrictEqual({
+    EventInput: {
+      fields: {
+        startsAt: "DateTime",
+      },
+    },
+  });
+  expect(scalarTypePolicies).toStrictEqual({
+    Event: {
+      fields: {
+        startsAt: {
+          scalar: "DateTime",
+        },
+      },
+    },
   });
 });
 
-test("limits input object to custom scalar types only", async () => {
+test("limits config to custom scalar fields, ignoring built-in scalars and enums", async () => {
   const schema = gql`
     scalar DateTime
+
+    enum Status {
+      OPEN
+      CLOSED
+    }
 
     input EventInput {
       name: String!
       capacity: Int
+      status: Status
       startsAt: DateTime
+    }
+
+    type Query {
+      event: Event
     }
 
     type Mutation {
@@ -86,6 +160,7 @@ test("limits input object to custom scalar types only", async () => {
       id: ID!
       name: String!
       capacity: Int
+      status: Status
       startsAt: DateTime
     }
   `;
@@ -96,14 +171,36 @@ test("limits input object to custom scalar types only", async () => {
         mutation CreateEvent($input: EventInput!) {
           createEvent(input: $input) {
             id
+            name
+            capacity
+            status
+            startsAt
           }
         }
       `,
     },
   ];
 
-  await expect(generateConfig({ schema, documents })).resolves.toStrictEqual({
-    EventInput: { fields: { startsAt: "DateTime" } },
+  const { inputObjects, scalarTypePolicies } = await generateConfig({
+    schema,
+    documents,
+  });
+
+  expect(inputObjects).toStrictEqual({
+    EventInput: {
+      fields: {
+        startsAt: "DateTime",
+      },
+    },
+  });
+  expect(scalarTypePolicies).toStrictEqual({
+    Event: {
+      fields: {
+        startsAt: {
+          scalar: "DateTime",
+        },
+      },
+    },
   });
 });
 
@@ -126,8 +223,6 @@ test("handles references to nested input objects", async () => {
 
     type Event {
       id: ID!
-      name: String!
-      capacity: Int
       startsAt: DateTime
     }
   `;
@@ -138,15 +233,39 @@ test("handles references to nested input objects", async () => {
         query Events($filter: EventFilter) {
           events(filter: $filter) {
             id
+            startsAt
           }
         }
       `,
     },
   ];
 
-  await expect(generateConfig({ schema, documents })).resolves.toStrictEqual({
-    DateRange: { fields: { start: "DateTime", end: "DateTime" } },
-    EventFilter: { fields: { dateRange: "DateRange" } },
+  const { inputObjects, scalarTypePolicies } = await generateConfig({
+    schema,
+    documents,
+  });
+
+  expect(inputObjects).toStrictEqual({
+    DateRange: {
+      fields: {
+        start: "DateTime",
+        end: "DateTime",
+      },
+    },
+    EventFilter: {
+      fields: {
+        dateRange: "DateRange",
+      },
+    },
+  });
+  expect(scalarTypePolicies).toStrictEqual({
+    Event: {
+      fields: {
+        startsAt: {
+          scalar: "DateTime",
+        },
+      },
+    },
   });
 });
 
@@ -192,9 +311,13 @@ test("avoids configuring nested input objects without custom scalars", async () 
     },
   ];
 
-  await expect(generateConfig({ schema, documents })).resolves.toStrictEqual(
-    {}
-  );
+  const { inputObjects, scalarTypePolicies } = await generateConfig({
+    schema,
+    documents,
+  });
+
+  expect(inputObjects).toStrictEqual({});
+  expect(scalarTypePolicies).toStrictEqual({});
 });
 
 test("handles cyclic references between input objects without custom scalars", async () => {
@@ -230,9 +353,13 @@ test("handles cyclic references between input objects without custom scalars", a
     },
   ];
 
-  await expect(generateConfig({ schema, documents })).resolves.toStrictEqual(
-    {}
-  );
+  const { inputObjects, scalarTypePolicies } = await generateConfig({
+    schema,
+    documents,
+  });
+
+  expect(inputObjects).toStrictEqual({});
+  expect(scalarTypePolicies).toStrictEqual({});
 });
 
 test("retains cyclic input objects when a custom scalar is in the cycle", async () => {
@@ -256,6 +383,7 @@ test("retains cyclic input objects when a custom scalar is in the cycle", async 
     type Person {
       id: ID!
       name: String!
+      bornAt: DateTime
     }
   `;
 
@@ -265,15 +393,39 @@ test("retains cyclic input objects when a custom scalar is in the cycle", async 
         query People($filter: PersonFilter) {
           people(filter: $filter) {
             id
+            bornAt
           }
         }
       `,
     },
   ];
 
-  await expect(generateConfig({ schema, documents })).resolves.toStrictEqual({
-    FriendFilter: { fields: { since: "DateTime", person: "PersonFilter" } },
-    PersonFilter: { fields: { friends: "FriendFilter" } },
+  const { inputObjects, scalarTypePolicies } = await generateConfig({
+    schema,
+    documents,
+  });
+
+  expect(inputObjects).toStrictEqual({
+    FriendFilter: {
+      fields: {
+        since: "DateTime",
+        person: "PersonFilter",
+      },
+    },
+    PersonFilter: {
+      fields: {
+        friends: "FriendFilter",
+      },
+    },
+  });
+  expect(scalarTypePolicies).toStrictEqual({
+    Person: {
+      fields: {
+        bornAt: {
+          scalar: "DateTime",
+        },
+      },
+    },
   });
 });
 
@@ -302,6 +454,7 @@ test("omits fields on retained input objects that reference input objects withou
 
     type Result {
       id: ID!
+      updatedAt: DateTime
     }
   `;
 
@@ -311,15 +464,39 @@ test("omits fields on retained input objects that reference input objects withou
         query Search($filter: SearchFilter) {
           search(filter: $filter) {
             id
+            updatedAt
           }
         }
       `,
     },
   ];
 
-  await expect(generateConfig({ schema, documents })).resolves.toStrictEqual({
-    DateRange: { fields: { start: "DateTime", end: "DateTime" } },
-    SearchFilter: { fields: { dateRange: "DateRange" } },
+  const { inputObjects, scalarTypePolicies } = await generateConfig({
+    schema,
+    documents,
+  });
+
+  expect(inputObjects).toStrictEqual({
+    DateRange: {
+      fields: {
+        start: "DateTime",
+        end: "DateTime",
+      },
+    },
+    SearchFilter: {
+      fields: {
+        dateRange: "DateRange",
+      },
+    },
+  });
+  expect(scalarTypePolicies).toStrictEqual({
+    Result: {
+      fields: {
+        updatedAt: {
+          scalar: "DateTime",
+        },
+      },
+    },
   });
 });
 
@@ -339,7 +516,7 @@ test("handles self-referencing input objects", async () => {
 
     type Task {
       id: ID!
-      name: String!
+      completedAt: DateTime
     }
   `;
 
@@ -349,61 +526,39 @@ test("handles self-referencing input objects", async () => {
         query Tasks($filter: TaskFilter) {
           tasks(filter: $filter) {
             id
+            completedAt
           }
         }
       `,
     },
   ];
 
-  await expect(generateConfig({ schema, documents })).resolves.toStrictEqual({
+  const { inputObjects, scalarTypePolicies } = await generateConfig({
+    schema,
+    documents,
+  });
+
+  expect(inputObjects).toStrictEqual({
     TaskFilter: {
-      fields: { and: "TaskFilter", not: "TaskFilter", dueBefore: "DateTime" },
+      fields: {
+        and: "TaskFilter",
+        not: "TaskFilter",
+        dueBefore: "DateTime",
+      },
+    },
+  });
+  expect(scalarTypePolicies).toStrictEqual({
+    Task: {
+      fields: {
+        completedAt: {
+          scalar: "DateTime",
+        },
+      },
     },
   });
 });
 
-test("omits enum fields from retained input objects", async () => {
-  const schema = gql`
-    scalar DateTime
-
-    enum Status {
-      OPEN
-      CLOSED
-    }
-
-    input TicketFilter {
-      status: Status
-      after: DateTime
-    }
-
-    type Query {
-      tickets(filter: TicketFilter): [Ticket]
-    }
-
-    type Ticket {
-      id: ID!
-      status: Status
-    }
-  `;
-
-  const documents = [
-    {
-      document: gql`
-        query Tickets($filter: TicketFilter) {
-          tickets(filter: $filter) {
-            id
-          }
-        }
-      `,
-    },
-  ];
-
-  await expect(generateConfig({ schema, documents })).resolves.toStrictEqual({
-    TicketFilter: { fields: { after: "DateTime" } },
-  });
-});
-
-test("omits input objects when no document uses them", async () => {
+test("omits input objects unused by documents while still emitting used object fields", async () => {
   const schema = gql`
     scalar DateTime
 
@@ -431,15 +586,28 @@ test("omits input objects when no document uses them", async () => {
         query Events {
           events {
             id
+            startsAt
           }
         }
       `,
     },
   ];
 
-  await expect(generateConfig({ schema, documents })).resolves.toStrictEqual(
-    {}
-  );
+  const { inputObjects, scalarTypePolicies } = await generateConfig({
+    schema,
+    documents,
+  });
+
+  expect(inputObjects).toStrictEqual({});
+  expect(scalarTypePolicies).toStrictEqual({
+    Event: {
+      fields: {
+        startsAt: {
+          scalar: "DateTime",
+        },
+      },
+    },
+  });
 });
 
 test("retains only input objects used in document variable definitions", async () => {
@@ -476,23 +644,46 @@ test("retains only input objects used in document variable definitions", async (
         query Events($filter: EventFilter) {
           events(filter: $filter) {
             id
+            startsAt
           }
         }
       `,
     },
   ];
 
-  await expect(generateConfig({ schema, documents })).resolves.toStrictEqual({
-    EventFilter: { fields: { startsAfter: "DateTime" } },
+  const { inputObjects, scalarTypePolicies } = await generateConfig({
+    schema,
+    documents,
+  });
+
+  expect(inputObjects).toStrictEqual({
+    EventFilter: {
+      fields: {
+        startsAfter: "DateTime",
+      },
+    },
+  });
+  expect(scalarTypePolicies).toStrictEqual({
+    Event: {
+      fields: {
+        startsAt: {
+          scalar: "DateTime",
+        },
+      },
+    },
   });
 });
 
-test("outputs empty object when no documents are provided", async () => {
+test("outputs empty objects when no documents are provided", async () => {
   const schema = gql`
     scalar DateTime
 
     input EventInput {
       startsAt: DateTime
+    }
+
+    type Query {
+      event: Event
     }
 
     type Mutation {
@@ -505,7 +696,10 @@ test("outputs empty object when no documents are provided", async () => {
     }
   `;
 
-  await expect(generateConfig({ schema })).resolves.toStrictEqual({});
+  const { inputObjects, scalarTypePolicies } = await generateConfig({ schema });
+
+  expect(inputObjects).toStrictEqual({});
+  expect(scalarTypePolicies).toStrictEqual({});
 });
 
 test("omits unused input objects on fields with multiple input object arguments", async () => {
@@ -536,14 +730,33 @@ test("omits unused input objects on fields with multiple input object arguments"
         query Events($filter: EventFilter) {
           events(filter: $filter) {
             id
+            startsAt
           }
         }
       `,
     },
   ];
 
-  await expect(generateConfig({ schema, documents })).resolves.toStrictEqual({
-    EventFilter: { fields: { startsAfter: "DateTime" } },
+  const { inputObjects, scalarTypePolicies } = await generateConfig({
+    schema,
+    documents,
+  });
+
+  expect(inputObjects).toStrictEqual({
+    EventFilter: {
+      fields: {
+        startsAfter: "DateTime",
+      },
+    },
+  });
+  expect(scalarTypePolicies).toStrictEqual({
+    Event: {
+      fields: {
+        startsAt: {
+          scalar: "DateTime",
+        },
+      },
+    },
   });
 });
 
@@ -559,14 +772,9 @@ test("collects usage across multiple documents", async () => {
       purchasedAfter: DateTime
     }
 
-    input ReportFilter {
-      generatedAfter: DateTime
-    }
-
     type Query {
       events(filter: EventFilter): [Event]
       tickets(filter: TicketFilter): [Ticket]
-      reports(filter: ReportFilter): [Report]
     }
 
     type Event {
@@ -577,11 +785,6 @@ test("collects usage across multiple documents", async () => {
     type Ticket {
       id: ID!
       purchasedAt: DateTime
-    }
-
-    type Report {
-      id: ID!
-      generatedAt: DateTime
     }
   `;
 
@@ -591,6 +794,7 @@ test("collects usage across multiple documents", async () => {
         query Events($filter: EventFilter) {
           events(filter: $filter) {
             id
+            startsAt
           }
         }
       `,
@@ -600,92 +804,45 @@ test("collects usage across multiple documents", async () => {
         query Tickets($filter: TicketFilter) {
           tickets(filter: $filter) {
             id
+            purchasedAt
           }
         }
       `,
     },
   ];
 
-  await expect(generateConfig({ schema, documents })).resolves.toStrictEqual({
-    EventFilter: { fields: { startsAfter: "DateTime" } },
-    TicketFilter: { fields: { purchasedAfter: "DateTime" } },
+  const { inputObjects, scalarTypePolicies } = await generateConfig({
+    schema,
+    documents,
   });
-});
 
-test("retains input objects used on only one of multiple fields", async () => {
-  const schema = gql`
-    scalar DateTime
-
-    input DateRangeFilter {
-      start: DateTime
-      end: DateTime
-    }
-
-    type Query {
-      events(filter: DateRangeFilter): [Event]
-      tickets(filter: DateRangeFilter): [Ticket]
-    }
-
-    type Event {
-      id: ID!
-      startsAt: DateTime
-    }
-
-    type Ticket {
-      id: ID!
-      purchasedAt: DateTime
-    }
-  `;
-
-  const documents = [
-    {
-      document: gql`
-        query Events($filter: DateRangeFilter) {
-          events(filter: $filter) {
-            id
-          }
-        }
-      `,
+  expect(inputObjects).toStrictEqual({
+    EventFilter: {
+      fields: {
+        startsAfter: "DateTime",
+      },
     },
-  ];
-
-  await expect(generateConfig({ schema, documents })).resolves.toStrictEqual({
-    DateRangeFilter: { fields: { start: "DateTime", end: "DateTime" } },
+    TicketFilter: {
+      fields: {
+        purchasedAfter: "DateTime",
+      },
+    },
   });
-});
-
-test("handles list and non-null wrapped variable types", async () => {
-  const schema = gql`
-    scalar DateTime
-
-    input EventFilter {
-      startsAfter: DateTime
-    }
-
-    type Query {
-      events(filters: [EventFilter!]): [Event]
-    }
-
-    type Event {
-      id: ID!
-      startsAt: DateTime
-    }
-  `;
-
-  const documents = [
-    {
-      document: gql`
-        query Events($filters: [EventFilter!]!) {
-          events(filters: $filters) {
-            id
-          }
-        }
-      `,
+  expect(scalarTypePolicies).toStrictEqual({
+    Event: {
+      fields: {
+        startsAt: {
+          scalar: "DateTime",
+        },
+      },
     },
-  ];
-
-  await expect(generateConfig({ schema, documents })).resolves.toStrictEqual({
-    EventFilter: { fields: { startsAfter: "DateTime" } },
+    Ticket: {
+      fields: {
+        purchasedAt: {
+          scalar: "DateTime",
+        },
+      },
+    },
   });
 });
 
@@ -723,21 +880,178 @@ test("collects usage from multiple operations in a single document", async () =>
         query Events($filter: EventFilter) {
           events(filter: $filter) {
             id
+            startsAt
           }
         }
 
         query Tickets($filter: TicketFilter) {
           tickets(filter: $filter) {
             id
+            purchasedAt
           }
         }
       `,
     },
   ];
 
-  await expect(generateConfig({ schema, documents })).resolves.toStrictEqual({
-    EventFilter: { fields: { startsAfter: "DateTime" } },
-    TicketFilter: { fields: { purchasedAfter: "DateTime" } },
+  const { inputObjects, scalarTypePolicies } = await generateConfig({
+    schema,
+    documents,
+  });
+
+  expect(inputObjects).toStrictEqual({
+    EventFilter: {
+      fields: {
+        startsAfter: "DateTime",
+      },
+    },
+    TicketFilter: {
+      fields: {
+        purchasedAfter: "DateTime",
+      },
+    },
+  });
+  expect(scalarTypePolicies).toStrictEqual({
+    Event: {
+      fields: {
+        startsAt: {
+          scalar: "DateTime",
+        },
+      },
+    },
+    Ticket: {
+      fields: {
+        purchasedAt: {
+          scalar: "DateTime",
+        },
+      },
+    },
+  });
+});
+
+test("retains input objects used on only one of multiple fields", async () => {
+  const schema = gql`
+    scalar DateTime
+
+    input DateRangeFilter {
+      start: DateTime
+      end: DateTime
+    }
+
+    type Query {
+      events(filter: DateRangeFilter): [Event]
+      tickets(filter: DateRangeFilter): [Ticket]
+    }
+
+    type Event {
+      id: ID!
+      startsAt: DateTime
+    }
+
+    type Ticket {
+      id: ID!
+      purchasedAt: DateTime
+    }
+  `;
+
+  const documents = [
+    {
+      document: gql`
+        query Events($filter: DateRangeFilter) {
+          events(filter: $filter) {
+            id
+            startsAt
+          }
+        }
+      `,
+    },
+  ];
+
+  const { inputObjects, scalarTypePolicies } = await generateConfig({
+    schema,
+    documents,
+  });
+
+  expect(inputObjects).toStrictEqual({
+    DateRangeFilter: {
+      fields: {
+        start: "DateTime",
+        end: "DateTime",
+      },
+    },
+  });
+  expect(scalarTypePolicies).toStrictEqual({
+    Event: {
+      fields: {
+        startsAt: {
+          scalar: "DateTime",
+        },
+      },
+    },
+  });
+});
+
+test("unwraps list and non-null types for variable definitions and object fields", async () => {
+  const schema = gql`
+    scalar DateTime
+
+    input EventFilter {
+      startsAfter: DateTime
+    }
+
+    type Query {
+      events(filters: [EventFilter!]): [Schedule]
+    }
+
+    type Schedule {
+      id: ID!
+      createdAt: DateTime!
+      meetingTimes: [DateTime!]!
+      availabilitySlots: [[DateTime!]!]
+    }
+  `;
+
+  const documents = [
+    {
+      document: gql`
+        query Events($filters: [EventFilter!]!) {
+          events(filters: $filters) {
+            id
+            createdAt
+            meetingTimes
+            availabilitySlots
+          }
+        }
+      `,
+    },
+  ];
+
+  const { inputObjects, scalarTypePolicies } = await generateConfig({
+    schema,
+    documents,
+  });
+
+  expect(inputObjects).toStrictEqual({
+    EventFilter: {
+      fields: {
+        startsAfter: "DateTime",
+      },
+    },
+  });
+  expect(scalarTypePolicies).toStrictEqual({
+    Schedule: {
+      fields: {
+        createdAt: {
+          scalar: "DateTime",
+        },
+        meetingTimes: {
+          scalar: "DateTime",
+        },
+        availabilitySlots: {
+          scalar: "DateTime",
+        },
+      },
+    },
   });
 });
 
@@ -765,14 +1079,33 @@ test("retains input objects when mixed with scalar variable definitions", async 
         query Events($first: Int, $after: DateTime, $filter: EventFilter) {
           events(first: $first, after: $after, filter: $filter) {
             id
+            startsAt
           }
         }
       `,
     },
   ];
 
-  await expect(generateConfig({ schema, documents })).resolves.toStrictEqual({
-    EventFilter: { fields: { startsAfter: "DateTime" } },
+  const { inputObjects, scalarTypePolicies } = await generateConfig({
+    schema,
+    documents,
+  });
+
+  expect(inputObjects).toStrictEqual({
+    EventFilter: {
+      fields: {
+        startsAfter: "DateTime",
+      },
+    },
+  });
+  expect(scalarTypePolicies).toStrictEqual({
+    Event: {
+      fields: {
+        startsAt: {
+          scalar: "DateTime",
+        },
+      },
+    },
   });
 });
 
@@ -804,18 +1137,782 @@ test("omits input objects when documents only use scalar variable definitions", 
         query Events($first: Int, $after: DateTime) {
           events(first: $first, after: $after) {
             id
+            startsAt
           }
         }
       `,
     },
   ];
 
-  await expect(generateConfig({ schema, documents })).resolves.toStrictEqual(
-    {}
-  );
+  const { inputObjects, scalarTypePolicies } = await generateConfig({
+    schema,
+    documents,
+  });
+
+  expect(inputObjects).toStrictEqual({});
+  expect(scalarTypePolicies).toStrictEqual({
+    Event: {
+      fields: {
+        startsAt: {
+          scalar: "DateTime",
+        },
+      },
+    },
+  });
 });
 
-test("omits ignored scalar fields from input objects", async () => {
+test("outputs config for multiple object types with custom scalar fields", async () => {
+  const schema = gql`
+    scalar DateTime
+
+    input EventFilter {
+      startsAfter: DateTime
+    }
+
+    type Query {
+      events(filter: EventFilter): [Event]
+      speaker: Speaker
+    }
+
+    type Event {
+      id: ID!
+      startsAt: DateTime
+    }
+
+    type Speaker {
+      id: ID!
+      availableFrom: DateTime
+    }
+  `;
+
+  const documents = [
+    {
+      document: gql`
+        query GetEventAndSpeaker($filter: EventFilter) {
+          events(filter: $filter) {
+            id
+            startsAt
+          }
+          speaker {
+            id
+            availableFrom
+          }
+        }
+      `,
+    },
+  ];
+
+  const { inputObjects, scalarTypePolicies } = await generateConfig({
+    schema,
+    documents,
+  });
+
+  expect(inputObjects).toStrictEqual({
+    EventFilter: {
+      fields: {
+        startsAfter: "DateTime",
+      },
+    },
+  });
+  expect(scalarTypePolicies).toStrictEqual({
+    Event: {
+      fields: {
+        startsAt: {
+          scalar: "DateTime",
+        },
+      },
+    },
+    Speaker: {
+      fields: {
+        availableFrom: {
+          scalar: "DateTime",
+        },
+      },
+    },
+  });
+});
+
+test("outputs config for multiple custom scalars", async () => {
+  const schema = gql`
+    scalar DateTime
+    scalar Price
+
+    input EventInput {
+      startsAt: DateTime
+      price: Price
+    }
+
+    type Query {
+      event: Event
+    }
+
+    type Mutation {
+      createEvent(input: EventInput!): Event
+    }
+
+    type Event {
+      id: ID!
+      startsAt: DateTime
+      ticketPrice: Price
+    }
+  `;
+
+  const documents = [
+    {
+      document: gql`
+        mutation CreateEvent($input: EventInput!) {
+          createEvent(input: $input) {
+            id
+            startsAt
+            ticketPrice
+          }
+        }
+      `,
+    },
+  ];
+
+  const { inputObjects, scalarTypePolicies } = await generateConfig({
+    schema,
+    documents,
+  });
+
+  expect(inputObjects).toStrictEqual({
+    EventInput: {
+      fields: {
+        startsAt: "DateTime",
+        price: "Price",
+      },
+    },
+  });
+  expect(scalarTypePolicies).toStrictEqual({
+    Event: {
+      fields: {
+        startsAt: {
+          scalar: "DateTime",
+        },
+        ticketPrice: {
+          scalar: "Price",
+        },
+      },
+    },
+  });
+});
+
+test("outputs type policy keyed by field name for object fields with arguments", async () => {
+  const schema = gql`
+    scalar DateTime
+
+    input EventFilter {
+      startsAfter: DateTime
+    }
+
+    type Query {
+      events(filter: EventFilter): [Event]
+    }
+
+    type Event {
+      id: ID!
+      startsAt(timezone: String!): DateTime
+    }
+  `;
+
+  const documents = [
+    {
+      document: gql`
+        query GetEvents($filter: EventFilter, $timezone: String!) {
+          events(filter: $filter) {
+            id
+            startsAt(timezone: $timezone)
+          }
+        }
+      `,
+    },
+  ];
+
+  const { inputObjects, scalarTypePolicies } = await generateConfig({
+    schema,
+    documents,
+  });
+
+  expect(inputObjects).toStrictEqual({
+    EventFilter: {
+      fields: {
+        startsAfter: "DateTime",
+      },
+    },
+  });
+  expect(scalarTypePolicies).toStrictEqual({
+    Event: {
+      fields: {
+        startsAt: {
+          scalar: "DateTime",
+        },
+      },
+    },
+  });
+});
+
+test("outputs type policies for custom scalar fields on the root query type", async () => {
+  const schema = gql`
+    scalar DateTime
+
+    input EventFilter {
+      startsAfter: DateTime
+    }
+
+    type Query {
+      now: DateTime
+      events(filter: EventFilter): [Event]
+    }
+
+    type Event {
+      id: ID!
+    }
+  `;
+
+  const documents = [
+    {
+      document: gql`
+        query GetNow($filter: EventFilter) {
+          now
+          events(filter: $filter) {
+            id
+          }
+        }
+      `,
+    },
+  ];
+
+  const { inputObjects, scalarTypePolicies } = await generateConfig({
+    schema,
+    documents,
+  });
+
+  expect(inputObjects).toStrictEqual({
+    EventFilter: {
+      fields: {
+        startsAfter: "DateTime",
+      },
+    },
+  });
+  expect(scalarTypePolicies).toStrictEqual({
+    Query: {
+      fields: {
+        now: {
+          scalar: "DateTime",
+        },
+      },
+    },
+  });
+});
+
+test("outputs type policies for custom scalar fields on the root mutation type", async () => {
+  const schema = gql`
+    scalar DateTime
+
+    input EventInput {
+      startsAt: DateTime
+    }
+
+    type Mutation {
+      lockEvent(id: ID!): DateTime
+      createEvent(input: EventInput!): ID
+    }
+  `;
+
+  const documents = [
+    {
+      document: gql`
+        mutation LockAndCreate($id: ID!, $input: EventInput!) {
+          lockEvent(id: $id)
+          createEvent(input: $input)
+        }
+      `,
+    },
+  ];
+
+  const { inputObjects, scalarTypePolicies } = await generateConfig({
+    schema,
+    documents,
+  });
+
+  expect(inputObjects).toStrictEqual({
+    EventInput: {
+      fields: {
+        startsAt: "DateTime",
+      },
+    },
+  });
+  expect(scalarTypePolicies).toStrictEqual({
+    Mutation: {
+      fields: {
+        lockEvent: {
+          scalar: "DateTime",
+        },
+      },
+    },
+  });
+});
+
+// TODO: Determine whether we want to configure custom scalars on the interface
+// types or concrete types. Configuring the interface types might reduce the
+// size of the object, but is more complex in order to avoid writing to the
+// concrete types.
+test("outputs type policies for concrete types when selecting custom scalar fields from an interface", async () => {
+  const schema = gql`
+    scalar DateTime
+
+    input ScheduleFilter {
+      after: DateTime
+    }
+
+    interface Schedulable {
+      id: ID!
+      startTime: DateTime
+    }
+
+    type Session implements Schedulable {
+      id: ID!
+      startTime: DateTime
+      room: String
+    }
+
+    type Workshop implements Schedulable {
+      id: ID!
+      startTime: DateTime
+      capacity: Int
+    }
+
+    type Query {
+      scheduledItems(filter: ScheduleFilter): [Schedulable]
+    }
+  `;
+
+  const documents = [
+    {
+      document: gql`
+        query GetScheduledItems($filter: ScheduleFilter) {
+          scheduledItems(filter: $filter) {
+            __typename
+            id
+            startTime
+          }
+        }
+      `,
+    },
+  ];
+
+  const { inputObjects, scalarTypePolicies } = await generateConfig({
+    schema,
+    documents,
+  });
+
+  expect(inputObjects).toStrictEqual({
+    ScheduleFilter: {
+      fields: {
+        after: "DateTime",
+      },
+    },
+  });
+  expect(scalarTypePolicies).toStrictEqual({
+    Session: {
+      fields: {
+        startTime: {
+          scalar: "DateTime",
+        },
+      },
+    },
+    Workshop: {
+      fields: {
+        startTime: {
+          scalar: "DateTime",
+        },
+      },
+    },
+  });
+});
+
+// TODO: Determine whether we want to configure custom scalars on the interface
+// types or concrete types. Configuring the interface types might reduce the
+// size of the object, but is more complex in order to avoid writing to the
+// concrete types.
+test("outputs type policies for concrete types when selecting custom scalar fields with inline fragments", async () => {
+  const schema = gql`
+    scalar DateTime
+
+    input ScheduleFilter {
+      after: DateTime
+    }
+
+    interface Schedulable {
+      id: ID!
+      startTime: DateTime
+    }
+
+    type Session implements Schedulable {
+      id: ID!
+      startTime: DateTime
+      room: String
+    }
+
+    type Workshop implements Schedulable {
+      id: ID!
+      startTime: DateTime
+      capacity: Int
+    }
+
+    type Query {
+      scheduledItems(filter: ScheduleFilter): [Schedulable]
+    }
+  `;
+
+  const documents = [
+    {
+      document: gql`
+        query GetScheduledItems($filter: ScheduleFilter) {
+          scheduledItems(filter: $filter) {
+            __typename
+            ... on Session {
+              id
+              startTime
+            }
+            ... on Workshop {
+              id
+              startTime
+            }
+          }
+        }
+      `,
+    },
+  ];
+
+  const { inputObjects, scalarTypePolicies } = await generateConfig({
+    schema,
+    documents,
+  });
+
+  expect(inputObjects).toStrictEqual({
+    ScheduleFilter: {
+      fields: {
+        after: "DateTime",
+      },
+    },
+  });
+  expect(scalarTypePolicies).toStrictEqual({
+    Session: {
+      fields: {
+        startTime: {
+          scalar: "DateTime",
+        },
+      },
+    },
+    Workshop: {
+      fields: {
+        startTime: {
+          scalar: "DateTime",
+        },
+      },
+    },
+  });
+});
+
+test("collects usage through fragment spreads", async () => {
+  const schema = gql`
+    scalar DateTime
+
+    input EventFilter {
+      startsAfter: DateTime
+    }
+
+    type Query {
+      events(filter: EventFilter): [Event]
+    }
+
+    type Event {
+      id: ID!
+      startsAt: DateTime
+    }
+  `;
+
+  const documents = [
+    {
+      document: gql`
+        query Events($filter: EventFilter) {
+          events(filter: $filter) {
+            ...EventFields
+          }
+        }
+
+        fragment EventFields on Event {
+          id
+          startsAt
+        }
+      `,
+    },
+  ];
+
+  const { inputObjects, scalarTypePolicies } = await generateConfig({
+    schema,
+    documents,
+  });
+
+  expect(inputObjects).toStrictEqual({
+    EventFilter: {
+      fields: {
+        startsAfter: "DateTime",
+      },
+    },
+  });
+  expect(scalarTypePolicies).toStrictEqual({
+    Event: {
+      fields: {
+        startsAt: {
+          scalar: "DateTime",
+        },
+      },
+    },
+  });
+});
+
+test("uses the field name instead of the alias when determining type policy usage", async () => {
+  const schema = gql`
+    scalar DateTime
+
+    input EventFilter {
+      startsAfter: DateTime
+    }
+
+    type Query {
+      events(filter: EventFilter): [Event]
+    }
+
+    type Event {
+      id: ID!
+      startsAt: DateTime
+    }
+  `;
+
+  const documents = [
+    {
+      document: gql`
+        query Events($filter: EventFilter) {
+          events(filter: $filter) {
+            id
+            start: startsAt
+          }
+        }
+      `,
+    },
+  ];
+
+  const { inputObjects, scalarTypePolicies } = await generateConfig({
+    schema,
+    documents,
+  });
+
+  expect(inputObjects).toStrictEqual({
+    EventFilter: {
+      fields: {
+        startsAfter: "DateTime",
+      },
+    },
+  });
+  expect(scalarTypePolicies).toStrictEqual({
+    Event: {
+      fields: {
+        startsAt: {
+          scalar: "DateTime",
+        },
+      },
+    },
+  });
+});
+
+test("limits type policies to concrete types selected by inline fragments", async () => {
+  const schema = gql`
+    scalar DateTime
+
+    input ScheduleFilter {
+      after: DateTime
+    }
+
+    interface Schedulable {
+      id: ID!
+      startTime: DateTime
+    }
+
+    type Session implements Schedulable {
+      id: ID!
+      startTime: DateTime
+      room: String
+    }
+
+    type Workshop implements Schedulable {
+      id: ID!
+      startTime: DateTime
+      capacity: Int
+    }
+
+    type Query {
+      scheduledItems(filter: ScheduleFilter): [Schedulable]
+    }
+  `;
+
+  const documents = [
+    {
+      document: gql`
+        query GetScheduledItems($filter: ScheduleFilter) {
+          scheduledItems(filter: $filter) {
+            __typename
+            ... on Session {
+              id
+              startTime
+            }
+          }
+        }
+      `,
+    },
+  ];
+
+  const { inputObjects, scalarTypePolicies } = await generateConfig({
+    schema,
+    documents,
+  });
+
+  expect(inputObjects).toStrictEqual({
+    ScheduleFilter: {
+      fields: {
+        after: "DateTime",
+      },
+    },
+  });
+  expect(scalarTypePolicies).toStrictEqual({
+    Session: {
+      fields: {
+        startTime: {
+          scalar: "DateTime",
+        },
+      },
+    },
+  });
+});
+
+test("omits object fields not selected in any document", async () => {
+  const schema = gql`
+    scalar DateTime
+
+    input EventFilter {
+      startsAfter: DateTime
+    }
+
+    type Query {
+      events(filter: EventFilter): [Event]
+    }
+
+    type Event {
+      id: ID!
+      startsAt: DateTime
+      endsAt: DateTime
+    }
+  `;
+
+  const documents = [
+    {
+      document: gql`
+        query Events($filter: EventFilter) {
+          events(filter: $filter) {
+            id
+            startsAt
+          }
+        }
+      `,
+    },
+  ];
+
+  const { inputObjects, scalarTypePolicies } = await generateConfig({
+    schema,
+    documents,
+  });
+
+  expect(inputObjects).toStrictEqual({
+    EventFilter: {
+      fields: {
+        startsAfter: "DateTime",
+      },
+    },
+  });
+  expect(scalarTypePolicies).toStrictEqual({
+    Event: {
+      fields: {
+        startsAt: {
+          scalar: "DateTime",
+        },
+      },
+    },
+  });
+});
+
+test("omits object types not used by any document", async () => {
+  const schema = gql`
+    scalar DateTime
+
+    input EventFilter {
+      startsAfter: DateTime
+    }
+
+    type Query {
+      events(filter: EventFilter): [Event]
+      speaker: Speaker
+    }
+
+    type Event {
+      id: ID!
+      startsAt: DateTime
+    }
+
+    type Speaker {
+      id: ID!
+      availableFrom: DateTime
+    }
+  `;
+
+  const documents = [
+    {
+      document: gql`
+        query Events($filter: EventFilter) {
+          events(filter: $filter) {
+            id
+            startsAt
+          }
+        }
+      `,
+    },
+  ];
+
+  const { inputObjects, scalarTypePolicies } = await generateConfig({
+    schema,
+    documents,
+  });
+
+  expect(inputObjects).toStrictEqual({
+    EventFilter: {
+      fields: {
+        startsAfter: "DateTime",
+      },
+    },
+  });
+  expect(scalarTypePolicies).toStrictEqual({
+    Event: {
+      fields: {
+        startsAt: {
+          scalar: "DateTime",
+        },
+      },
+    },
+  });
+});
+
+test("omits ignored scalar fields from both objects", async () => {
   const schema = gql`
     scalar DateTime
     scalar JSON
@@ -825,6 +1922,10 @@ test("omits ignored scalar fields from input objects", async () => {
       metadata: JSON
     }
 
+    type Query {
+      event: Event
+    }
+
     type Mutation {
       createEvent(input: EventInput!): Event
     }
@@ -832,6 +1933,7 @@ test("omits ignored scalar fields from input objects", async () => {
     type Event {
       id: ID!
       startsAt: DateTime
+      metadata: JSON
     }
   `;
 
@@ -841,56 +1943,111 @@ test("omits ignored scalar fields from input objects", async () => {
         mutation CreateEvent($input: EventInput!) {
           createEvent(input: $input) {
             id
+            startsAt
+            metadata
           }
         }
       `,
     },
   ];
 
-  await expect(
-    generateConfig({ schema, documents, config: { ignoreScalars: ["JSON"] } })
-  ).resolves.toStrictEqual({
-    EventInput: { fields: { startsAt: "DateTime" } },
+  const { inputObjects, scalarTypePolicies } = await generateConfig({
+    schema,
+    documents,
+    config: { ignoreScalars: ["JSON"] },
+  });
+
+  expect(inputObjects).toStrictEqual({
+    EventInput: {
+      fields: {
+        startsAt: "DateTime",
+      },
+    },
+  });
+  expect(scalarTypePolicies).toStrictEqual({
+    Event: {
+      fields: {
+        startsAt: {
+          scalar: "DateTime",
+        },
+      },
+    },
   });
 });
 
-test("omits input objects whose only custom scalar is ignored", async () => {
+test("omits input objects and object types whose only custom scalar is ignored", async () => {
   const schema = gql`
     scalar DateTime
+    scalar JSON
 
     input EventInput {
       startsAt: DateTime
     }
 
+    input MetaInput {
+      data: JSON
+    }
+
+    type Query {
+      event: Event
+      product: Product
+    }
+
     type Mutation {
       createEvent(input: EventInput!): Event
+      updateMeta(input: MetaInput!): Product
     }
 
     type Event {
       id: ID!
       startsAt: DateTime
     }
+
+    type Product {
+      id: ID!
+      metadata: JSON
+    }
   `;
 
   const documents = [
     {
       document: gql`
-        mutation CreateEvent($input: EventInput!) {
-          createEvent(input: $input) {
+        mutation Mutate($event: EventInput!, $meta: MetaInput!) {
+          createEvent(input: $event) {
             id
+            startsAt
+          }
+          updateMeta(input: $meta) {
+            id
+            metadata
           }
         }
       `,
     },
   ];
 
-  await expect(
-    generateConfig({
-      schema,
-      documents,
-      config: { ignoreScalars: ["DateTime"] },
-    })
-  ).resolves.toStrictEqual({});
+  const { inputObjects, scalarTypePolicies } = await generateConfig({
+    schema,
+    documents,
+    config: { ignoreScalars: ["JSON"] },
+  });
+
+  expect(inputObjects).toStrictEqual({
+    EventInput: {
+      fields: {
+        startsAt: "DateTime",
+      },
+    },
+  });
+  expect(scalarTypePolicies).toStrictEqual({
+    Event: {
+      fields: {
+        startsAt: {
+          scalar: "DateTime",
+        },
+      },
+    },
+  });
 });
 
 test("applies ignored scalars transitively through nested input objects", async () => {
@@ -922,19 +2079,21 @@ test("applies ignored scalars transitively through nested input objects", async 
         query Events($filter: EventFilter) {
           events(filter: $filter) {
             id
+            startsAt
           }
         }
       `,
     },
   ];
 
-  await expect(
-    generateConfig({
-      schema,
-      documents,
-      config: { ignoreScalars: ["DateTime"] },
-    })
-  ).resolves.toStrictEqual({});
+  const { inputObjects, scalarTypePolicies } = await generateConfig({
+    schema,
+    documents,
+    config: { ignoreScalars: ["DateTime"] },
+  });
+
+  expect(inputObjects).toStrictEqual({});
+  expect(scalarTypePolicies).toStrictEqual({});
 });
 
 test("retains sibling branches when ignored scalars drop a nested input object", async () => {
@@ -962,6 +2121,7 @@ test("retains sibling branches when ignored scalars drop a nested input object",
 
     type Result {
       id: ID!
+      updatedAt: DateTime
     }
   `;
 
@@ -971,18 +2131,86 @@ test("retains sibling branches when ignored scalars drop a nested input object",
         query Search($filter: SearchFilter) {
           search(filter: $filter) {
             id
+            updatedAt
           }
         }
       `,
     },
   ];
 
-  await expect(
-    generateConfig({ schema, documents, config: { ignoreScalars: ["JSON"] } })
-  ).resolves.toStrictEqual({
-    DateRange: { fields: { start: "DateTime", end: "DateTime" } },
-    SearchFilter: { fields: { dateRange: "DateRange" } },
+  const { inputObjects, scalarTypePolicies } = await generateConfig({
+    schema,
+    documents,
+    config: { ignoreScalars: ["JSON"] },
   });
+
+  expect(inputObjects).toStrictEqual({
+    DateRange: {
+      fields: {
+        start: "DateTime",
+        end: "DateTime",
+      },
+    },
+    SearchFilter: {
+      fields: {
+        dateRange: "DateRange",
+      },
+    },
+  });
+  expect(scalarTypePolicies).toStrictEqual({
+    Result: {
+      fields: {
+        updatedAt: {
+          scalar: "DateTime",
+        },
+      },
+    },
+  });
+});
+
+test("outputs empty objects when all custom scalars are ignored", async () => {
+  const schema = gql`
+    scalar DateTime
+
+    input EventInput {
+      startsAt: DateTime
+    }
+
+    type Query {
+      event: Event
+    }
+
+    type Mutation {
+      createEvent(input: EventInput!): Event
+    }
+
+    type Event {
+      id: ID!
+      startsAt: DateTime
+    }
+  `;
+
+  const documents = [
+    {
+      document: gql`
+        mutation CreateEvent($input: EventInput!) {
+          createEvent(input: $input) {
+            id
+            startsAt
+          }
+        }
+      `,
+    },
+  ];
+
+  const { inputObjects, scalarTypePolicies } = await generateConfig({
+    schema,
+    documents,
+    config: { ignoreScalars: ["DateTime"] },
+  });
+
+  expect(inputObjects).toStrictEqual({});
+  expect(scalarTypePolicies).toStrictEqual({});
 });
 
 test("handles ignored scalars that are not in the schema", async () => {
@@ -993,6 +2221,10 @@ test("handles ignored scalars that are not in the schema", async () => {
       startsAt: DateTime
     }
 
+    type Query {
+      event: Event
+    }
+
     type Mutation {
       createEvent(input: EventInput!): Event
     }
@@ -1009,54 +2241,49 @@ test("handles ignored scalars that are not in the schema", async () => {
         mutation CreateEvent($input: EventInput!) {
           createEvent(input: $input) {
             id
+            startsAt
           }
         }
       `,
     },
   ];
 
-  await expect(
-    generateConfig({ schema, documents, config: { ignoreScalars: ["JSON"] } })
-  ).resolves.toStrictEqual({
-    EventInput: { fields: { startsAt: "DateTime" } },
+  const { inputObjects, scalarTypePolicies } = await generateConfig({
+    schema,
+    documents,
+    config: { ignoreScalars: ["JSON"] },
+  });
+
+  expect(inputObjects).toStrictEqual({
+    EventInput: {
+      fields: {
+        startsAt: "DateTime",
+      },
+    },
+  });
+  expect(scalarTypePolicies).toStrictEqual({
+    Event: {
+      fields: {
+        startsAt: {
+          scalar: "DateTime",
+        },
+      },
+    },
   });
 });
 
-test("emits input objects with custom scalars without documents when filterByDocuments is false", async () => {
+test("omits scalar fields not in includeScalars from both objects", async () => {
   const schema = gql`
     scalar DateTime
+    scalar JSON
 
     input EventInput {
       startsAt: DateTime
-    }
-
-    type Mutation {
-      createEvent(input: EventInput!): Event
-    }
-
-    type Event {
-      id: ID!
-      startsAt: DateTime
-    }
-  `;
-
-  await expect(
-    generateConfig({ schema, config: { filterByDocuments: false } })
-  ).resolves.toStrictEqual({
-    EventInput: { fields: { startsAt: "DateTime" } },
-  });
-});
-
-test("emits input objects unused by documents when filterByDocuments is false", async () => {
-  const schema = gql`
-    scalar DateTime
-
-    input EventInput {
-      startsAt: DateTime
+      metadata: JSON
     }
 
     type Query {
-      events: [Event]
+      event: Event
     }
 
     type Mutation {
@@ -1066,65 +2293,55 @@ test("emits input objects unused by documents when filterByDocuments is false", 
     type Event {
       id: ID!
       startsAt: DateTime
+      metadata: JSON
     }
   `;
 
   const documents = [
     {
       document: gql`
-        query Events {
-          events {
+        mutation CreateEvent($input: EventInput!) {
+          createEvent(input: $input) {
             id
+            startsAt
+            metadata
           }
         }
       `,
     },
   ];
 
-  await expect(
-    generateConfig({ schema, documents, config: { filterByDocuments: false } })
-  ).resolves.toStrictEqual({
-    EventInput: { fields: { startsAt: "DateTime" } },
+  const { inputObjects, scalarTypePolicies } = await generateConfig({
+    schema,
+    documents,
+    config: { includeScalars: ["DateTime"] },
+  });
+
+  expect(inputObjects).toStrictEqual({
+    EventInput: {
+      fields: {
+        startsAt: "DateTime",
+      },
+    },
+  });
+  expect(scalarTypePolicies).toStrictEqual({
+    Event: {
+      fields: {
+        startsAt: {
+          scalar: "DateTime",
+        },
+      },
+    },
   });
 });
 
-test("omits input objects without custom scalars when filterByDocuments is false", async () => {
-  const schema = gql`
-    scalar DateTime
-
-    input EventFilter {
-      startsAfter: DateTime
-    }
-
-    input PaginationInput {
-      limit: Int
-      offset: Int
-    }
-
-    type Query {
-      events(filter: EventFilter, pagination: PaginationInput): [Event]
-    }
-
-    type Event {
-      id: ID!
-      startsAt: DateTime
-    }
-  `;
-
-  await expect(
-    generateConfig({ schema, config: { filterByDocuments: false } })
-  ).resolves.toStrictEqual({
-    EventFilter: { fields: { startsAfter: "DateTime" } },
-  });
-});
-
-test("applies ignoreScalars when filterByDocuments is false", async () => {
+test("omits input objects and object types without included scalars", async () => {
   const schema = gql`
     scalar DateTime
     scalar JSON
 
-    input EventFilter {
-      startsAfter: DateTime
+    input EventInput {
+      startsAt: DateTime
     }
 
     input MetaInput {
@@ -1132,33 +2349,77 @@ test("applies ignoreScalars when filterByDocuments is false", async () => {
     }
 
     type Query {
-      events(filter: EventFilter, meta: MetaInput): [Event]
+      event: Event
+      product: Product
+    }
+
+    type Mutation {
+      createEvent(input: EventInput!): Event
+      updateMeta(input: MetaInput!): Product
     }
 
     type Event {
       id: ID!
       startsAt: DateTime
     }
+
+    type Product {
+      id: ID!
+      metadata: JSON
+    }
   `;
 
-  await expect(
-    generateConfig({
-      schema,
-      config: { filterByDocuments: false, ignoreScalars: ["JSON"] },
-    })
-  ).resolves.toStrictEqual({
-    EventFilter: { fields: { startsAfter: "DateTime" } },
+  const documents = [
+    {
+      document: gql`
+        mutation Mutate($event: EventInput!, $meta: MetaInput!) {
+          createEvent(input: $event) {
+            id
+            startsAt
+          }
+          updateMeta(input: $meta) {
+            id
+            metadata
+          }
+        }
+      `,
+    },
+  ];
+
+  const { inputObjects, scalarTypePolicies } = await generateConfig({
+    schema,
+    documents,
+    config: { includeScalars: ["DateTime"] },
+  });
+
+  expect(inputObjects).toStrictEqual({
+    EventInput: {
+      fields: {
+        startsAt: "DateTime",
+      },
+    },
+  });
+  expect(scalarTypePolicies).toStrictEqual({
+    Event: {
+      fields: {
+        startsAt: {
+          scalar: "DateTime",
+        },
+      },
+    },
   });
 });
 
-test("omits scalar fields not in includeScalars from input objects", async () => {
+test("outputs empty objects with an empty includeScalars list", async () => {
   const schema = gql`
     scalar DateTime
-    scalar JSON
 
     input EventInput {
       startsAt: DateTime
-      metadata: JSON
+    }
+
+    type Query {
+      event: Event
     }
 
     type Mutation {
@@ -1177,61 +2438,21 @@ test("omits scalar fields not in includeScalars from input objects", async () =>
         mutation CreateEvent($input: EventInput!) {
           createEvent(input: $input) {
             id
+            startsAt
           }
         }
       `,
     },
   ];
 
-  await expect(
-    generateConfig({
-      schema,
-      documents,
-      config: { includeScalars: ["DateTime"] },
-    })
-  ).resolves.toStrictEqual({
-    EventInput: { fields: { startsAt: "DateTime" } },
+  const { inputObjects, scalarTypePolicies } = await generateConfig({
+    schema,
+    documents,
+    config: { includeScalars: [] },
   });
-});
 
-test("omits input objects without included scalars", async () => {
-  const schema = gql`
-    scalar DateTime
-    scalar JSON
-
-    input EventInput {
-      metadata: JSON
-    }
-
-    type Mutation {
-      createEvent(input: EventInput!): Event
-    }
-
-    type Event {
-      id: ID!
-      startsAt: DateTime
-    }
-  `;
-
-  const documents = [
-    {
-      document: gql`
-        mutation CreateEvent($input: EventInput!) {
-          createEvent(input: $input) {
-            id
-          }
-        }
-      `,
-    },
-  ];
-
-  await expect(
-    generateConfig({
-      schema,
-      documents,
-      config: { includeScalars: ["DateTime"] },
-    })
-  ).resolves.toStrictEqual({});
+  expect(inputObjects).toStrictEqual({});
+  expect(scalarTypePolicies).toStrictEqual({});
 });
 
 test("retains sibling branches when non-included scalars drop a nested input object", async () => {
@@ -1259,6 +2480,7 @@ test("retains sibling branches when non-included scalars drop a nested input obj
 
     type Result {
       id: ID!
+      updatedAt: DateTime
     }
   `;
 
@@ -1268,57 +2490,41 @@ test("retains sibling branches when non-included scalars drop a nested input obj
         query Search($filter: SearchFilter) {
           search(filter: $filter) {
             id
+            updatedAt
           }
         }
       `,
     },
   ];
 
-  await expect(
-    generateConfig({
-      schema,
-      documents,
-      config: { includeScalars: ["DateTime"] },
-    })
-  ).resolves.toStrictEqual({
-    DateRange: { fields: { start: "DateTime", end: "DateTime" } },
-    SearchFilter: { fields: { dateRange: "DateRange" } },
+  const { inputObjects, scalarTypePolicies } = await generateConfig({
+    schema,
+    documents,
+    config: { includeScalars: ["DateTime"] },
   });
-});
 
-test("outputs empty object with an empty includeScalars list", async () => {
-  const schema = gql`
-    scalar DateTime
-
-    input EventInput {
-      startsAt: DateTime
-    }
-
-    type Mutation {
-      createEvent(input: EventInput!): Event
-    }
-
-    type Event {
-      id: ID!
-      startsAt: DateTime
-    }
-  `;
-
-  const documents = [
-    {
-      document: gql`
-        mutation CreateEvent($input: EventInput!) {
-          createEvent(input: $input) {
-            id
-          }
-        }
-      `,
+  expect(inputObjects).toStrictEqual({
+    DateRange: {
+      fields: {
+        start: "DateTime",
+        end: "DateTime",
+      },
     },
-  ];
-
-  await expect(
-    generateConfig({ schema, documents, config: { includeScalars: [] } })
-  ).resolves.toStrictEqual({});
+    SearchFilter: {
+      fields: {
+        dateRange: "DateRange",
+      },
+    },
+  });
+  expect(scalarTypePolicies).toStrictEqual({
+    Result: {
+      fields: {
+        updatedAt: {
+          scalar: "DateTime",
+        },
+      },
+    },
+  });
 });
 
 test("throws when ignoreScalars is used with includeScalars", async () => {
@@ -1338,6 +2544,7 @@ test("throws when ignoreScalars is used with includeScalars", async () => {
     type Event {
       id: ID!
       startsAt: DateTime
+      metadata: JSON
     }
   `;
 
@@ -1347,6 +2554,8 @@ test("throws when ignoreScalars is used with includeScalars", async () => {
         mutation CreateEvent($input: EventInput!) {
           createEvent(input: $input) {
             id
+            startsAt
+            metadata
           }
         }
       `,
@@ -1354,7 +2563,7 @@ test("throws when ignoreScalars is used with includeScalars", async () => {
   ];
 
   await expect(
-    generateConfig({
+    runCodegen({
       schema,
       documents,
       config: {
@@ -1365,7 +2574,7 @@ test("throws when ignoreScalars is used with includeScalars", async () => {
   ).rejects.toThrow(/supports 'ignoreScalars' or 'includeScalars'/);
 });
 
-test("outputs TypeScript format for .ts files", async () => {
+test("emits config without documents when filterByDocuments is false", async () => {
   const schema = gql`
     scalar DateTime
 
@@ -1373,29 +2582,283 @@ test("outputs TypeScript format for .ts files", async () => {
       startsAt: DateTime
     }
 
+    type Query {
+      event: Event
+      speaker: Speaker
+    }
+
     type Mutation {
-      createEvent(input: EventInput!): Boolean
+      createEvent(input: EventInput!): Event
+    }
+
+    type Event {
+      id: ID!
+      startsAt: DateTime
+      endsAt: DateTime
+    }
+
+    type Speaker {
+      id: ID!
+      availableFrom: DateTime
+    }
+  `;
+
+  const { inputObjects, scalarTypePolicies } = await generateConfig({
+    schema,
+    config: { filterByDocuments: false },
+  });
+
+  expect(inputObjects).toStrictEqual({
+    EventInput: {
+      fields: {
+        startsAt: "DateTime",
+      },
+    },
+  });
+  expect(scalarTypePolicies).toStrictEqual({
+    Event: {
+      fields: {
+        startsAt: {
+          scalar: "DateTime",
+        },
+        endsAt: {
+          scalar: "DateTime",
+        },
+      },
+    },
+    Speaker: {
+      fields: {
+        availableFrom: {
+          scalar: "DateTime",
+        },
+      },
+    },
+  });
+});
+
+test("emits config unused by documents when filterByDocuments is false", async () => {
+  const schema = gql`
+    scalar DateTime
+
+    input EventInput {
+      startsAt: DateTime
+    }
+
+    type Query {
+      event: Event
+      speaker: Speaker
+    }
+
+    type Mutation {
+      createEvent(input: EventInput!): Event
+    }
+
+    type Event {
+      id: ID!
+      startsAt: DateTime
+      endsAt: DateTime
+    }
+
+    type Speaker {
+      id: ID!
+      availableFrom: DateTime
     }
   `;
 
   const documents = [
     {
       document: gql`
-        mutation CreateEvent($input: EventInput!) {
-          createEvent(input: $input)
+        query GetEvent {
+          event {
+            id
+            startsAt
+          }
         }
       `,
     },
   ];
 
-  await expect(runCodegen({ schema, documents, filename: "custom-scalars.ts" }))
-    .resolves.toMatchInlineSnapshot(`
-"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
+  const { inputObjects, scalarTypePolicies } = await generateConfig({
+    schema,
+    documents,
+    config: { filterByDocuments: false },
+  });
 
-export const inputObjects: InputObjectsConfig = {
+  expect(inputObjects).toStrictEqual({
+    EventInput: {
+      fields: {
+        startsAt: "DateTime",
+      },
+    },
+  });
+  expect(scalarTypePolicies).toStrictEqual({
+    Event: {
+      fields: {
+        startsAt: {
+          scalar: "DateTime",
+        },
+        endsAt: {
+          scalar: "DateTime",
+        },
+      },
+    },
+    Speaker: {
+      fields: {
+        availableFrom: {
+          scalar: "DateTime",
+        },
+      },
+    },
+  });
+});
+
+test("applies ignoreScalars when filterByDocuments is false", async () => {
+  const schema = gql`
+    scalar DateTime
+    scalar JSON
+
+    input EventFilter {
+      startsAfter: DateTime
+    }
+
+    input MetaInput {
+      data: JSON
+    }
+
+    type Query {
+      events(filter: EventFilter, meta: MetaInput): [Event]
+    }
+
+    type Event {
+      id: ID!
+      startsAt: DateTime
+      metadata: JSON
+    }
+  `;
+
+  const { inputObjects, scalarTypePolicies } = await generateConfig({
+    schema,
+    config: { filterByDocuments: false, ignoreScalars: ["JSON"] },
+  });
+
+  expect(inputObjects).toStrictEqual({
+    EventFilter: {
+      fields: {
+        startsAfter: "DateTime",
+      },
+    },
+  });
+  expect(scalarTypePolicies).toStrictEqual({
+    Event: {
+      fields: {
+        startsAt: {
+          scalar: "DateTime",
+        },
+      },
+    },
+  });
+});
+
+test("omits input objects without custom scalars when filterByDocuments is false", async () => {
+  const schema = gql`
+    scalar DateTime
+
+    input EventFilter {
+      startsAfter: DateTime
+    }
+
+    input PaginationInput {
+      limit: Int
+      offset: Int
+    }
+
+    type Query {
+      events(filter: EventFilter, pagination: PaginationInput): [Event]
+    }
+
+    type Event {
+      id: ID!
+      startsAt: DateTime
+    }
+  `;
+
+  const { inputObjects, scalarTypePolicies } = await generateConfig({
+    schema,
+    config: { filterByDocuments: false },
+  });
+
+  expect(inputObjects).toStrictEqual({
+    EventFilter: {
+      fields: {
+        startsAfter: "DateTime",
+      },
+    },
+  });
+  expect(scalarTypePolicies).toStrictEqual({
+    Event: {
+      fields: {
+        startsAt: {
+          scalar: "DateTime",
+        },
+      },
+    },
+  });
+});
+
+const formatSchema = gql`
+  scalar DateTime
+
+  input EventInput {
+    startsAt: DateTime
+  }
+
+  type Mutation {
+    createEvent(input: EventInput!): Event
+  }
+
+  type Event {
+    id: ID!
+    startsAt: DateTime
+  }
+`;
+
+const formatDocuments = [
+  {
+    document: gql`
+      mutation CreateEvent($input: EventInput!) {
+        createEvent(input: $input) {
+          id
+          startsAt
+        }
+      }
+    `,
+  },
+];
+
+test("outputs TypeScript format for .ts files", async () => {
+  await expect(
+    runCodegen({
+      schema: formatSchema,
+      documents: formatDocuments,
+      filename: "custom-scalars.ts",
+    })
+  ).resolves.toMatchInlineSnapshot(`
+"import type { InputObjectsOption, TypePolicies } from \\"@apollo/client/cache\\";
+
+export const inputObjects: InputObjectsOption = {
   \\"EventInput\\": {
     \\"fields\\": {
       \\"startsAt\\": \\"DateTime\\"
+    }
+  }
+};
+
+export const scalarTypePolicies: TypePolicies = {
+  \\"Event\\": {
+    \\"fields\\": {
+      \\"startsAt\\": {
+        \\"scalar\\": \\"DateTime\\"
+      }
     }
   }
 };"
@@ -1403,37 +2866,29 @@ export const inputObjects: InputObjectsConfig = {
 });
 
 test("outputs TypeScript format for .tsx files", async () => {
-  const schema = gql`
-    scalar DateTime
-
-    input EventInput {
-      startsAt: DateTime
-    }
-
-    type Mutation {
-      createEvent(input: EventInput!): Boolean
-    }
-  `;
-
-  const documents = [
-    {
-      document: gql`
-        mutation CreateEvent($input: EventInput!) {
-          createEvent(input: $input)
-        }
-      `,
-    },
-  ];
-
   await expect(
-    runCodegen({ schema, documents, filename: "custom-scalars.tsx" })
+    runCodegen({
+      schema: formatSchema,
+      documents: formatDocuments,
+      filename: "custom-scalars.tsx",
+    })
   ).resolves.toMatchInlineSnapshot(`
-"import type { InputObjectsConfig } from \\"@apollo/client/cache\\";
+"import type { InputObjectsOption, TypePolicies } from \\"@apollo/client/cache\\";
 
-export const inputObjects: InputObjectsConfig = {
+export const inputObjects: InputObjectsOption = {
   \\"EventInput\\": {
     \\"fields\\": {
       \\"startsAt\\": \\"DateTime\\"
+    }
+  }
+};
+
+export const scalarTypePolicies: TypePolicies = {
+  \\"Event\\": {
+    \\"fields\\": {
+      \\"startsAt\\": {
+        \\"scalar\\": \\"DateTime\\"
+      }
     }
   }
 };"
@@ -1441,66 +2896,12 @@ export const inputObjects: InputObjectsConfig = {
 });
 
 test("outputs JSDoc format for .js files", async () => {
-  const schema = gql`
-    scalar DateTime
-
-    input EventInput {
-      startsAt: DateTime
-    }
-
-    type Mutation {
-      createEvent(input: EventInput!): Boolean
-    }
-  `;
-
-  const documents = [
-    {
-      document: gql`
-        mutation CreateEvent($input: EventInput!) {
-          createEvent(input: $input)
-        }
-      `,
-    },
-  ];
-
-  await expect(runCodegen({ schema, documents, filename: "custom-scalars.js" }))
-    .resolves.toMatchInlineSnapshot(`
-"/** @type {import(\\"@apollo/client/cache\\").InputObjectsOption} */
-export const inputObjects = {
-  \\"EventInput\\": {
-    \\"fields\\": {
-      \\"startsAt\\": \\"DateTime\\"
-    }
-  }
-};"
-`);
-});
-
-test("outputs JSDoc format for .jsx files", async () => {
-  const schema = gql`
-    scalar DateTime
-
-    input EventInput {
-      startsAt: DateTime
-    }
-
-    type Mutation {
-      createEvent(input: EventInput!): Boolean
-    }
-  `;
-
-  const documents = [
-    {
-      document: gql`
-        mutation CreateEvent($input: EventInput!) {
-          createEvent(input: $input)
-        }
-      `,
-    },
-  ];
-
   await expect(
-    runCodegen({ schema, documents, filename: "custom-scalars.jsx" })
+    runCodegen({
+      schema: formatSchema,
+      documents: formatDocuments,
+      filename: "custom-scalars.js",
+    })
   ).resolves.toMatchInlineSnapshot(`
 "/** @type {import(\\"@apollo/client/cache\\").InputObjectsOption} */
 export const inputObjects = {
@@ -1509,11 +2910,52 @@ export const inputObjects = {
       \\"startsAt\\": \\"DateTime\\"
     }
   }
+};
+
+/** @type {import(\\"@apollo/client/cache\\").TypePolicies} */
+export const scalarTypePolicies = {
+  \\"Event\\": {
+    \\"fields\\": {
+      \\"startsAt\\": {
+        \\"scalar\\": \\"DateTime\\"
+      }
+    }
+  }
 };"
 `);
 });
 
-test("outputs JSDoc format for empty output in .js files", async () => {
+test("outputs JSDoc format for .jsx files", async () => {
+  await expect(
+    runCodegen({
+      schema: formatSchema,
+      documents: formatDocuments,
+      filename: "custom-scalars.jsx",
+    })
+  ).resolves.toMatchInlineSnapshot(`
+"/** @type {import(\\"@apollo/client/cache\\").InputObjectsOption} */
+export const inputObjects = {
+  \\"EventInput\\": {
+    \\"fields\\": {
+      \\"startsAt\\": \\"DateTime\\"
+    }
+  }
+};
+
+/** @type {import(\\"@apollo/client/cache\\").TypePolicies} */
+export const scalarTypePolicies = {
+  \\"Event\\": {
+    \\"fields\\": {
+      \\"startsAt\\": {
+        \\"scalar\\": \\"DateTime\\"
+      }
+    }
+  }
+};"
+`);
+});
+
+test("outputs empty config in JSDoc format for .js files", async () => {
   const schema = gql`
     type Query {
       foo: String
@@ -1523,7 +2965,10 @@ test("outputs JSDoc format for empty output in .js files", async () => {
   await expect(runCodegen({ schema, filename: "custom-scalars.js" })).resolves
     .toMatchInlineSnapshot(`
 "/** @type {import(\\"@apollo/client/cache\\").InputObjectsOption} */
-export const inputObjects = {};"
+export const inputObjects = {};
+
+/** @type {import(\\"@apollo/client/cache\\").TypePolicies} */
+export const scalarTypePolicies = {};"
 `);
 });
 
@@ -1562,7 +3007,28 @@ async function runCodegen(
 async function generateConfig(options: Parameters<typeof runCodegen>[0]) {
   const output = await runCodegen(options);
 
-  return JSON.parse(
-    output.slice(output.indexOf("= ") + 2, output.lastIndexOf(";"))
-  );
+  return {
+    inputObjects: parseExport(output, "inputObjects"),
+    scalarTypePolicies: parseExport(output, "scalarTypePolicies"),
+  };
+}
+
+// Extracts the object literal assigned to a named export (e.g. `inputObjects`
+// or `scalarTypePolicies`) from the generated output. The combined plugin emits
+// both exports in a single file, so we anchor on a specific export and read up
+// to its terminating `;`. GraphQL names can't contain `;`, so it can't appear
+// inside the object literal.
+function parseExport(output: string, name: string) {
+  const start = output.indexOf(`export const ${name}`);
+
+  if (start === -1) {
+    throw new Error(
+      `Could not find \`export const ${name}\` in output:\n${output}`
+    );
+  }
+
+  const objStart = output.indexOf("=", start) + 1;
+  const objEnd = output.indexOf(";", objStart);
+
+  return JSON.parse(output.slice(objStart, objEnd));
 }

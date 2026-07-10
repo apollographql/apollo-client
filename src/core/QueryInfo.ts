@@ -5,7 +5,7 @@ import type {
   SelectionNode,
   SelectionSetNode,
 } from "graphql";
-import { print } from "graphql";
+import { Kind } from "graphql";
 
 import type { ApolloCache, Cache, MissingTree } from "@apollo/client/cache";
 import type { IgnoreModifier } from "@apollo/client/cache";
@@ -25,6 +25,7 @@ import {
   getOperationName,
   graphQLResultHasError,
   isField,
+  isTypenameField,
   resultKeyNameFromField,
   streamInfoSymbol,
 } from "@apollo/client/utilities/internal";
@@ -711,6 +712,88 @@ function isStreamingPartial(
   );
 }
 
+type FieldMap = Map<string, FieldMap | true>;
+
+function mergeFieldMaps(target: FieldMap, source: FieldMap) {
+  for (const key of source.keys()) {
+    if (target.has(key)) {
+      const targetValue = target.get(key)!;
+      const sourceValue = source.get(key)!;
+
+      if (targetValue === true || sourceValue === true) continue;
+
+      target.set(key, mergeFieldMaps(targetValue, sourceValue));
+    } else {
+      target.set(key, source.get(key)!);
+    }
+  }
+
+  return target;
+}
+
+function collectNonDeferredFields(
+  selectionSet: SelectionSetNode,
+  fragmentMap: FragmentMap,
+  visitedFragments = new Map<string, FieldMap>()
+): FieldMap {
+  const collectedFieldsMap: FieldMap = new Map();
+
+  for (const selection of selectionSet.selections) {
+    if (isField(selection)) {
+      if (isTypenameField(selection)) continue;
+
+      const name = resultKeyNameFromField(selection);
+
+      if (selection.selectionSet) {
+        const fieldsForSelection = collectNonDeferredFields(
+          selection.selectionSet,
+          fragmentMap,
+          visitedFragments
+        );
+
+        if (collectedFieldsMap.has(name)) {
+          mergeFieldMaps(
+            // We can reasonably assume the value is a nested map instead of
+            // `true` without checking its type, otherwise we'd have a broken
+            // query which would have errored on the server
+            collectedFieldsMap.get(name)! as FieldMap,
+            fieldsForSelection
+          );
+        } else {
+          collectedFieldsMap.set(name, fieldsForSelection);
+        }
+      } else {
+        collectedFieldsMap.set(name, true);
+      }
+    } else if (!isDeferred(selection)) {
+      const fragment = getFragmentFromSelection(selection, fragmentMap);
+      if (!fragment) continue;
+
+      let fragmentCollectedFieldsMap: FieldMap;
+
+      if (fragment.kind === Kind.FRAGMENT_DEFINITION) {
+        fragmentCollectedFieldsMap =
+          visitedFragments.get(fragment.name.value) ||
+          collectNonDeferredFields(
+            fragment.selectionSet,
+            fragmentMap,
+            visitedFragments
+          );
+      } else {
+        fragmentCollectedFieldsMap = collectNonDeferredFields(
+          fragment.selectionSet,
+          fragmentMap,
+          visitedFragments
+        );
+      }
+
+      mergeFieldMaps(collectedFieldsMap, fragmentCollectedFieldsMap);
+    }
+  }
+
+  return collectedFieldsMap;
+}
+
 function isPartialInSelectionSet(
   selectionSet: SelectionSetNode,
   missingTree: MissingTree | undefined,
@@ -719,9 +802,11 @@ function isPartialInSelectionSet(
   if (typeof missingTree === "string") return true;
   if (missingTree === undefined) return false;
 
+  let nonDeferredFields: FieldMap | undefined;
+
   for (const selection of selectionSet.selections) {
     if (isField(selection)) {
-      if (selection.name.value === "__typename") continue;
+      if (isTypenameField(selection)) continue;
 
       const missing = missingTree[resultKeyNameFromField(selection)];
       if (!missing) continue;
@@ -737,11 +822,22 @@ function isPartialInSelectionSet(
       if (!fragment) continue;
 
       if (isDeferred(selection)) {
+        // Lazily collect nonDeferredFields until we encounter a deferred
+        // fragment using the selection set provided to isPartialInSelectionSet
+        nonDeferredFields ||= collectNonDeferredFields(
+          selectionSet,
+          fragmentMap
+        );
+
         // Once at least one of the fields in the fragment are fulfilled, the
         // rest of the fields are required in order to be classified as
         // fulfilled.
         if (
-          fulfillsAnySelection(fragment.selectionSet, missingTree) &&
+          fulfillsAnySelection(
+            fragment.selectionSet,
+            missingTree,
+            nonDeferredFields
+          ) &&
           isPartialInSelectionSet(
             fragment.selectionSet,
             missingTree,
@@ -767,21 +863,22 @@ function isDeferred(selection: SelectionNode) {
 
 function fulfillsAnySelection(
   selectionSet: SelectionSetNode,
-  missingTree: MissingTree
+  missingTree: MissingTree,
+  nonDeferredFields: FieldMap
 ) {
   if (typeof missingTree === "string") return false;
 
   for (const selection of selectionSet.selections) {
     if (isField(selection)) {
-      if (selection.name.value === "__typename") continue;
+      if (isTypenameField(selection)) continue;
 
-      // A field absent from the `missingTree` means the field is present. If
-      // the field maps to an object (i.e. typeof missingTree[field] === "object"),
-      // this means the field field contains at least the top-level object key
-      // and is incomplete.
-      if (typeof missingTree[resultKeyNameFromField(selection)] !== "string") {
-        return true;
-      }
+      const name = resultKeyNameFromField(selection);
+      const missing = missingTree[name];
+      const nonDeferredField = nonDeferredFields.get(name);
+
+      if (typeof missing === "string") continue;
+
+      if (!nonDeferredField) return true;
     }
   }
 

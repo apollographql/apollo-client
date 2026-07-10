@@ -5093,8 +5093,7 @@ test('keeps residual deferred cache data as "complete" while streaming after a r
       },
       errors: [
         {
-          message:
-            "homeWorld for character with ID 1000 could not be fetched.",
+          message: "homeWorld for character with ID 1000 could not be fetched.",
           path: ["hero", "heroFriends", 0, "homeWorld"],
         },
       ],

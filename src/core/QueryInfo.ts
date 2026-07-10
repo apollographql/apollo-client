@@ -724,9 +724,18 @@ function isPartialInSelectionSet(
   selectionSet: SelectionSetNode,
   missingTree: MissingTree | undefined,
   context: StreamingPartialContext
-) {
+): boolean {
   if (typeof missingTree === "string") return true;
   if (missingTree === undefined) return false;
+
+  const missingKeys = Object.keys(missingTree);
+  if (missingKeys.length > 0 && missingKeys.every(isArrayIndex)) {
+    return missingKeys.some((key) => {
+      if (typeof missingTree[key] === "string") return true;
+
+      return isPartialInSelectionSet(selectionSet, missingTree[key], context);
+    });
+  }
 
   const { fragmentMap, variables } = context;
 

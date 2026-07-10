@@ -1089,6 +1089,7 @@ export class QueryManager {
           );
         }
 
+        const partial = dataState !== "complete";
         const aqr: QueryManager.Result<TData> = {
           data: result.data as TData,
           ...(queryInfo.hasNext ?
@@ -1096,13 +1097,13 @@ export class QueryManager {
               loading: true,
               networkStatus: NetworkStatus.streaming,
               dataState,
-              partial: true,
+              partial,
             }
           : {
               dataState,
               loading: false,
               networkStatus: NetworkStatus.ready,
-              partial: !result.data,
+              partial,
             }),
         } as ObservableQuery.Result<TData>;
 

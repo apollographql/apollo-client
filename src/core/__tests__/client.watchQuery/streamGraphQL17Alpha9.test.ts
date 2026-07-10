@@ -72,7 +72,7 @@ test("handles streamed scalar lists", async () => {
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitTypedValue({
@@ -122,7 +122,7 @@ test("handles streamed multi-dimensional lists", async () => {
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitTypedValue({
@@ -182,7 +182,7 @@ test("merges cache updates that happen concurrently", async () => {
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   client.cache.writeFragment({
@@ -280,7 +280,7 @@ test("handles errors from items before initialCount is reached", async () => {
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitTypedValue({
@@ -354,7 +354,7 @@ test("handles errors from items after initialCount is reached", async () => {
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitTypedValue({
@@ -370,7 +370,7 @@ test("handles errors from items after initialCount is reached", async () => {
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitTypedValue({
@@ -439,7 +439,7 @@ test("handles final chunk without incremental value", async () => {
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitTypedValue({
@@ -449,7 +449,7 @@ test("handles final chunk without incremental value", async () => {
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitTypedValue({
@@ -462,7 +462,7 @@ test("handles final chunk without incremental value", async () => {
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitTypedValue({
@@ -476,7 +476,7 @@ test("handles final chunk without incremental value", async () => {
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitSimilarValue({
@@ -587,7 +587,7 @@ test("handles errors thrown after initialCount is reached", async () => {
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitTypedValue({
@@ -649,7 +649,7 @@ it("handles errors thrown due to null returned in non-null list items after init
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitTypedValue({
@@ -745,7 +745,7 @@ it("handles stream when in parent deferred fragment", async () => {
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitTypedValue({
@@ -759,7 +759,7 @@ it("handles stream when in parent deferred fragment", async () => {
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitTypedValue({
@@ -776,7 +776,7 @@ it("handles stream when in parent deferred fragment", async () => {
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitSimilarValue({
@@ -844,7 +844,7 @@ test("handles @defer inside @stream", async () => {
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   resolveIterableCompletion();
@@ -871,6 +871,7 @@ test("handles @defer inside @stream", async () => {
         ],
       }),
       dataState: "streaming",
+      partial: true,
     }),
   });
 
@@ -977,7 +978,7 @@ test("can use custom merge function to combine cached and streamed lists", async
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(stream).toEmitTypedValue({
@@ -991,7 +992,7 @@ test("can use custom merge function to combine cached and streamed lists", async
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(stream).toEmitTypedValue({
@@ -1060,7 +1061,7 @@ test("provides streamFieldInfo to merge functions", async () => {
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(stream).toEmitTypedValue({
@@ -1073,7 +1074,7 @@ test("provides streamFieldInfo to merge functions", async () => {
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(stream).toEmitTypedValue({
@@ -1171,7 +1172,7 @@ test("returns correct streamFieldInfo when final chunk is only hasNext: false", 
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   subject.next(friends[1]);
@@ -1186,7 +1187,7 @@ test("returns correct streamFieldInfo when final chunk is only hasNext: false", 
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   subject.next(friends[2]);
@@ -1202,7 +1203,7 @@ test("returns correct streamFieldInfo when final chunk is only hasNext: false", 
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   subject.complete();
@@ -1315,7 +1316,7 @@ test("provides streamFieldInfo to merge functions in nested stream fields", asyn
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(stream).toEmitTypedValue({
@@ -1331,7 +1332,7 @@ test("provides streamFieldInfo to merge functions in nested stream fields", asyn
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(stream).toEmitTypedValue({
@@ -1437,7 +1438,7 @@ test("provides streamFieldInfo to merge functions in sibling stream fields", asy
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(stream).toEmitTypedValue({
@@ -1454,7 +1455,7 @@ test("provides streamFieldInfo to merge functions in sibling stream fields", asy
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(stream).toEmitTypedValue({
@@ -1472,7 +1473,7 @@ test("provides streamFieldInfo to merge functions in sibling stream fields", asy
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(stream).toEmitTypedValue({
@@ -1699,7 +1700,7 @@ test("sets correct streamFieldInfo when field name is same in different location
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(stream).toEmitTypedValue({
@@ -1710,7 +1711,7 @@ test("sets correct streamFieldInfo when field name is same in different location
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(stream).toEmitTypedValue({
@@ -1721,7 +1722,7 @@ test("sets correct streamFieldInfo when field name is same in different location
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(stream).toEmitTypedValue({
@@ -1854,7 +1855,7 @@ test("sets correct streamFieldInfo when stream field is inside another list", as
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(stream).toEmitTypedValue({
@@ -1877,7 +1878,7 @@ test("sets correct streamFieldInfo when stream field is inside another list", as
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(stream).toEmitTypedValue({
@@ -1900,7 +1901,7 @@ test("sets correct streamFieldInfo when stream field is inside another list", as
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(stream).toEmitTypedValue({
@@ -1923,7 +1924,7 @@ test("sets correct streamFieldInfo when stream field is inside another list", as
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(stream).toEmitTypedValue({
@@ -2048,7 +2049,7 @@ test("truncates array with default merge function on refetch when last chunk is 
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   subject.next(friends[1]);
@@ -2063,7 +2064,7 @@ test("truncates array with default merge function on refetch when last chunk is 
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   subject.next(friends[2]);
@@ -2079,7 +2080,7 @@ test("truncates array with default merge function on refetch when last chunk is 
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   subject.complete();
@@ -2131,7 +2132,7 @@ test("truncates array with default merge function on refetch when last chunk is 
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   subject.next({ ...friends[1], name: `${friends[1].name} (refetch)` });
@@ -2148,7 +2149,7 @@ test("truncates array with default merge function on refetch when last chunk is 
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(stream).toEmitTypedValue({
@@ -2237,7 +2238,7 @@ test("truncates array when fetched array is shorter than cached array with cache
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   subject.next(friends[1]);
@@ -2254,7 +2255,7 @@ test("truncates array when fetched array is shorter than cached array with cache
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(stream).toEmitTypedValue({

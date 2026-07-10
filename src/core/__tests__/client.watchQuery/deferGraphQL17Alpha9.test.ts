@@ -344,7 +344,7 @@ it.each([["cache-first"], ["no-cache"]] as const)(
       dataState: fetchPolicy === "no-cache" ? "streaming" : "complete",
       loading: true,
       networkStatus: NetworkStatus.streaming,
-      partial: true,
+      partial: fetchPolicy === "no-cache",
     });
 
     enqueueSubsequentChunk({
@@ -1805,7 +1805,7 @@ test('reports "streaming" instead of "partial" when the only unfulfilled field o
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   enqueueSubsequentChunk({

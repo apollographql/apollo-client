@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "target": "ESNext",
+    "target": "es5",
     "moduleResolution": "Node",
     "module": "ES2015",
     "allowJs": true,

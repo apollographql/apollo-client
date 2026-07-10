@@ -40,27 +40,24 @@ export function collectSiblingFields(
 
       const name = resultKeyNameFromField(selection);
 
-      if (selection.selectionSet) {
-        const fieldsForSelection = collectSiblingFields(
-          selection.selectionSet,
-          context,
-          visitedFragments
-        );
-
-        if (Object.hasOwn(collectedFieldsMap, name)) {
-          collectedFieldsMap[name] = mergeFieldMaps(
-            // We can reasonably assume the value is a nested map instead of
-            // `true` without checking its type, otherwise we'd have a broken
-            // query which would have errored on the server
-            collectedFieldsMap[name]! as FieldMap,
-            fieldsForSelection
-          );
-        } else {
-          collectedFieldsMap[name] = fieldsForSelection;
-        }
-      } else {
+      if (!selection.selectionSet) {
         collectedFieldsMap[name] = true;
+        continue;
       }
+
+      const fieldsForSelection = collectSiblingFields(
+        selection.selectionSet,
+        context,
+        visitedFragments
+      );
+
+      collectedFieldsMap[name] =
+        (
+          Object.hasOwn(collectedFieldsMap, name) &&
+          typeof collectedFieldsMap[name] === "object"
+        ) ?
+          mergeFieldMaps(collectedFieldsMap[name], fieldsForSelection)
+        : fieldsForSelection;
     } else {
       const fragment = getFragmentFromSelection(selection, fragmentMap);
       if (!fragment) continue;

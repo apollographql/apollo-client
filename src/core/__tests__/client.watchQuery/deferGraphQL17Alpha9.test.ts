@@ -1793,13 +1793,13 @@ test('reports "streaming" instead of "partial" when the only unfulfilled field o
   });
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       greeting: {
         __typename: "Greeting",
         message: "Hello world",
         recipient: { __typename: "Person", name: "Cached Alice" },
       },
-    }),
+    },
     // `email` is excluded by `@skip`, so the deferred fragment is fully
     // satisfied by the cached `name` and should report complete while streaming.
     dataState: "complete",

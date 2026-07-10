@@ -1009,10 +1009,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
                         // will be overwritten anyways, just here for types sake
                         loading: false,
                         data: diff.result,
-                        dataState:
-                          fetchMoreResult.dataState === "streaming" ?
-                            "streaming"
-                          : "complete",
+                        dataState: diff.complete ? "complete" : "streaming",
                       },
                     });
                   }

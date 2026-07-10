@@ -852,7 +852,8 @@ function isPartialInSelectionSet(
           fulfillsAnySelection(
             fragment.selectionSet,
             missingTree,
-            nonDeferredFields
+            nonDeferredFields,
+            fragmentMap
           ) &&
           isPartialInSelectionSet(
             fragment.selectionSet,
@@ -880,7 +881,8 @@ function isDeferred(selection: SelectionNode) {
 function fulfillsAnySelection(
   selectionSet: SelectionSetNode,
   missingTree: MissingTree,
-  nonDeferredFields: FieldMap
+  nonDeferredFields: FieldMap,
+  fragmentMap: FragmentMap
 ) {
   if (typeof missingTree === "string") return false;
 
@@ -895,6 +897,20 @@ function fulfillsAnySelection(
       if (typeof missing === "string") continue;
 
       if (!nonDeferredField) return true;
+    } else {
+      const fragment = getFragmentFromSelection(selection, fragmentMap);
+      if (!fragment) continue;
+
+      if (
+        fulfillsAnySelection(
+          fragment.selectionSet,
+          missingTree,
+          nonDeferredFields,
+          fragmentMap
+        )
+      ) {
+        return true;
+      }
     }
   }
 

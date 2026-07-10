@@ -50,6 +50,7 @@ export { graphQLResultHasError } from "./graphQLResultHasError.js";
 export { hasDirectives } from "./hasDirectives.js";
 export { hasForcedResolvers } from "./hasForcedResolvers.js";
 export { isArray } from "./isArray.js";
+export { isDeferredFragment } from "./isDeferredFragment.js";
 export { isDocumentNode } from "./isDocumentNode.js";
 export { isField } from "./isField.js";
 export { isNonEmptyArray } from "./isNonEmptyArray.js";

@@ -810,20 +810,6 @@ function isPartialDeferBoundary(
   nonDeferredFields: FieldMap | undefined,
   fragmentMap: FragmentMap
 ): boolean {
-  const missingKeys = Object.keys(missing);
-  if (missingKeys.length > 0 && missingKeys.every(isArrayIndex)) {
-    return missingKeys.some((key) => {
-      if (typeof missing[key] === "string") return true;
-
-      return isPartialDeferBoundary(
-        selectionSet,
-        missing[key],
-        nonDeferredFields,
-        fragmentMap
-      );
-    });
-  }
-
   // This flag tracks whether all fields in this selection set should contain
   // values or should all be missing. A defer boundary is only partial if some
   // fields are missing. The first selection node will set this value and all

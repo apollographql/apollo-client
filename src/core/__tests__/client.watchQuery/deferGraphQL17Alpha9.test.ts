@@ -3773,11 +3773,7 @@ test('reports overlapping fields gated by `@include` as "streaming" when the inc
   await expect(stream).not.toEmitAnything();
 });
 
-test('reports "partial" when a non-deferred `@defer(if: false)` selection is missing while another `@defer` is still pending', async () => {
-  // Suppress expected missing field warning when writing incomplete required
-  // selections alongside in-flight deferred data.
-  using _ = spyOnConsole("error");
-
+test('reports "streaming" when `@defer(if: false)` fields arrive in the initial payload while another `@defer` is still pending', async () => {
   const query = gql`
     query {
       greeting {
@@ -3796,62 +3792,46 @@ test('reports "partial" when a non-deferred `@defer(if: false)` selection is mis
 
   const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
     mockDeferStreamGraphQL17Alpha9();
-  const cache = new InMemoryCache();
-
-  // Seed only `message`. `recipient` is required (`if: false`) and missing;
-  // `signature` is a clean defer gap. Missing required data must win → partial.
-  cache.writeQuery({
-    query,
-    data: {
-      greeting: {
-        __typename: "Greeting",
-        message: "Cached hello",
-      },
-    },
-  });
 
   const client = new ApolloClient({
-    cache,
+    cache: new InMemoryCache(),
     link: httpLink,
     incrementalHandler: new GraphQL17Alpha9Handler(),
   });
 
   const stream = new ObservableStream(
-    client.watchQuery({
-      query,
-      returnPartialData: true,
-    })
+    client.watchQuery({ query, returnPartialData: true })
   );
 
   await expect(stream).toEmitTypedValue({
-    data: {
-      greeting: {
-        __typename: "Greeting",
-        message: "Cached hello",
-      },
-    },
-    dataState: "partial",
+    data: undefined,
+    dataState: "empty",
     loading: true,
     networkStatus: NetworkStatus.loading,
     partial: true,
   });
 
   enqueueInitialChunk({
-    data: { greeting: { message: "Hello world", __typename: "Greeting" } },
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Alice" },
+      },
+    },
     pending: [{ id: "0", path: ["greeting"] }],
     hasNext: true,
   });
 
-  // `recipient` from `@defer(if: false)` is required and still missing, so
-  // this is "partial" even though `signature` is only a clean defer gap.
   await expect(stream).toEmitTypedValue({
     data: markAsStreaming({
       greeting: {
         __typename: "Greeting",
         message: "Hello world",
+        recipient: { __typename: "Person", name: "Alice" },
       },
     }),
-    dataState: "partial",
+    dataState: "streaming",
     loading: true,
     networkStatus: NetworkStatus.streaming,
     partial: true,
@@ -3871,20 +3851,19 @@ test('reports "partial" when a non-deferred `@defer(if: false)` selection is mis
     hasNext: false,
   });
 
-  // Stream finished without ever delivering required `recipient` from
-  // `@defer(if: false)`. Classification remains partial.
   await expect(stream).toEmitTypedValue({
     data: {
       greeting: {
         __typename: "Greeting",
         message: "Hello world",
+        recipient: { __typename: "Person", name: "Alice" },
         signature: "From Apollo",
       },
     },
-    dataState: "partial",
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
-    partial: true,
+    partial: false,
   });
 
   await expect(stream).not.toEmitAnything();

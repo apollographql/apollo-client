@@ -267,12 +267,11 @@ export class QueryInfo<
 
     let result: MarkQueryResult<any, ExtensionsWithStreamInfo> = {
       ...incrementalResult,
-      dataState: this.hasNext ? "streaming" : "complete",
+      dataState:
+        incrementalResult.data == null ? "empty"
+        : this.hasNext ? "streaming"
+        : "complete",
     };
-
-    if (result.data == null) {
-      result.dataState = "empty";
-    }
 
     if (skipCache) {
       return result;

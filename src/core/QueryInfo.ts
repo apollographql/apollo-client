@@ -79,7 +79,7 @@ interface OperationInfo<
   variables: TVariables;
   errorPolicy: ErrorPolicy;
   cacheWriteBehavior: AllowedCacheWriteBehavior;
-  returnPartialData: boolean | undefined;
+  returnPartialData?: boolean | undefined;
 }
 
 interface MarkQueryResult<TData, TExtensions>

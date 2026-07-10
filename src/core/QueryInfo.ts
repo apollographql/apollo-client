@@ -886,10 +886,12 @@ function isPartialDeferBoundary(
   nonDeferredFields: FieldMap,
   fragmentMap: FragmentMap
 ) {
-  // This flag tracks whether we have a fully satisfied or unsatisfied
-  // selection set. The first selection sets the flag and if another field
-  // differs, this is considered a partial defer boundary
-  let containsValue: boolean | undefined;
+  // This flag tracks whether all fields in this selection set should contain
+  // values or should all be missing. A defer boundary is only partial if some
+  // fields are missing. The first selection node will set this value and all
+  // sibling fields should match after that. As soon as we get a mismatch, we
+  // have a partial defer boundary.
+  let shouldContainValues: boolean | undefined;
 
   for (const selection of selectionSet.selections) {
     if (isField(selection)) {
@@ -910,25 +912,17 @@ function isPartialDeferBoundary(
       // - object: The field has a selection set and is partially satisfied.
       const missingField = missing[name];
 
-      if (missingField === undefined) {
-        // If this field is fully satisfied, but another sibling is missing, we
-        // have a partial defer boundary
-        if (typeof containsValue === "boolean" && !containsValue) {
+      if (typeof missingField !== "object") {
+        const hasValue = missingField === undefined;
+
+        if (shouldContainValues === undefined) {
+          shouldContainValues = hasValue;
+        }
+
+        if (hasValue !== shouldContainValues) {
           return true;
         }
 
-        containsValue = true;
-        continue;
-      }
-
-      if (typeof missingField === "string") {
-        // If this field is fully unsatisfied, but another sibling has a value,
-        // we have a partial defer boundary
-        if (typeof containsValue === "boolean" && containsValue) {
-          return true;
-        }
-
-        containsValue = false;
         continue;
       }
 

@@ -809,6 +809,7 @@ function isPartialInSelectionSet(
       if (isTypenameField(selection)) continue;
 
       const missing = missingTree[resultKeyNameFromField(selection)];
+      // If a missing entry is absent, we have a value for this field
       if (!missing) continue;
 
       if (
@@ -822,16 +823,31 @@ function isPartialInSelectionSet(
       if (!fragment) continue;
 
       if (isDeferred(selection)) {
-        // Lazily collect nonDeferredFields until we encounter a deferred
-        // fragment using the selection set provided to isPartialInSelectionSet
+        // We need to know the non-deferred fields that might overlap with the
+        // deferred selection set so that we accurately report the right
+        // dataState when all the non-deferred fields are satisfied and only the
+        // selections inside the fragment are missing.
+        // For example:
+        //
+        // {
+        //   recipient {
+        //     name
+        //   }
+        //   ... @defer {
+        //     recipient {
+        //       name
+        //       email
+        //     }
+        //   }
+        // }
+        //
+        // dataState should be `streaming`, not `partial` if `name` is present,
+        // but `email` is absent since `name` is not deferred
         nonDeferredFields ||= collectNonDeferredFields(
           selectionSet,
           fragmentMap
         );
 
-        // Once at least one of the fields in the fragment are fulfilled, the
-        // rest of the fields are required in order to be classified as
-        // fulfilled.
         if (
           fulfillsAnySelection(
             fragment.selectionSet,

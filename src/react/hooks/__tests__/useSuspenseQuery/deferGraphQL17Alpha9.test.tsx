@@ -551,7 +551,7 @@ test('does not suspend deferred queries with data in the cache and using a "cach
           recipient: { __typename: "Person", name: "Cached Alice" },
         },
       }),
-      dataState: "streaming",
+      dataState: "complete",
       networkStatus: NetworkStatus.streaming,
       error: undefined,
     });
@@ -1029,7 +1029,7 @@ test("incrementally rerenders data returned by a `refetch` for a deferred query"
           },
         },
       }),
-      dataState: "streaming",
+      dataState: "complete",
       networkStatus: NetworkStatus.streaming,
       error: undefined,
     });
@@ -2223,7 +2223,7 @@ test("can refetch and respond to cache updates after encountering an error in an
           name: "R2-D2",
         },
       }),
-      dataState: "streaming",
+      dataState: "complete",
       networkStatus: NetworkStatus.streaming,
       error: undefined,
     });

@@ -810,7 +810,7 @@ function isPartialInSelectionSet(
 
       const missing = missingTree[resultKeyNameFromField(selection)];
       // If a missing entry is absent, we have a value for this field
-      if (!missing) continue;
+      if (missing === undefined) continue;
 
       if (
         !selection.selectionSet ||
@@ -842,24 +842,24 @@ function isPartialInSelectionSet(
         // }
         //
         // dataState should be `streaming`, not `partial` if `name` is present,
-        // but `email` is absent since `name` is not deferred
+        // but `email` is absent since `name` is not deferred.
         nonDeferredFields ||= collectNonDeferredFields(
           selectionSet,
           fragmentMap
         );
 
         if (
-          fulfillsAnySelection(
+          isPartialDeferBoundary(
             fragment.selectionSet,
             missingTree,
             nonDeferredFields,
             fragmentMap
-          ) &&
-          isPartialInSelectionSet(
-            fragment.selectionSet,
-            missingTree,
-            fragmentMap
-          )
+          ) // &&
+          // isPartialInSelectionSet(
+          //   fragment.selectionSet,
+          //   missingTree,
+          //   fragmentMap
+          // )
         ) {
           return true;
         }
@@ -878,33 +878,45 @@ function isDeferred(selection: SelectionNode) {
   return !!selection.directives?.some(({ name }) => name.value === "defer");
 }
 
-function fulfillsAnySelection(
+type MissingObject = Exclude<MissingTree, string>;
+
+function isPartialDeferBoundary(
   selectionSet: SelectionSetNode,
-  missingTree: MissingTree,
+  missing: MissingObject,
   nonDeferredFields: FieldMap,
   fragmentMap: FragmentMap
 ) {
-  if (typeof missingTree === "string") return false;
-
   for (const selection of selectionSet.selections) {
     if (isField(selection)) {
       if (isTypenameField(selection)) continue;
 
       const name = resultKeyNameFromField(selection);
-      const missing = missingTree[name];
+      const missingField = missing[name];
       const nonDeferredField = nonDeferredFields.get(name);
 
-      if (typeof missing === "string") continue;
+      // The value of missing means different things:
+      // - undefined: The field is fully satisfied (i.e. it has a value for the field)
+      // - string: the field is fully unsatisfied (no scalar value, or object is
+      //   missing all fields)
+      // - object: The field has a selection set and is partially satisfied.
+      //
+      // If this field is either fully satisfied or unsatisfied, it is not
+      // considered partial so we continue to check other siblings for
+      // completeness
+      if (typeof missingField !== "object") continue;
 
+      // If this field is exclusive to the defer boundary
+      // (e.g nonDeferredField === undefined) and is partially satisfied, we
+      // report this defer boundary as partial
       if (!nonDeferredField) return true;
     } else {
       const fragment = getFragmentFromSelection(selection, fragmentMap);
       if (!fragment) continue;
 
       if (
-        fulfillsAnySelection(
+        isPartialDeferBoundary(
           fragment.selectionSet,
-          missingTree,
+          missing,
           nonDeferredFields,
           fragmentMap
         )

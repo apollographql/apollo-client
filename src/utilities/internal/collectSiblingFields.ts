@@ -1,4 +1,5 @@
 import type { SelectionSetNode } from "graphql";
+import type { SelectionNode } from "graphql";
 import { Kind } from "graphql";
 
 import type { OperationVariables } from "@apollo/client";
@@ -12,30 +13,38 @@ import type { FragmentMap } from "./types/FragmentMap.js";
 
 export type FieldMap = Map<string, FieldMap | true>;
 
+interface CollectionContext {
+  fragmentMap: FragmentMap;
+  variables: OperationVariables;
+  exclude: SelectionNode;
+}
+
 /**
- * Returns a map of non-deferred fields for the current selection set. Useful
- * to detect non-deferred, overlapping fields from a defer boundary
+ * Returns a map of sibling fields for a selection set. Useful to detect
+ * overlapping fields.
  *
  * @internal
  */
-export function collectNonDeferredFields(
+export function collectSiblingFields(
   selectionSet: SelectionSetNode,
-  fragmentMap: FragmentMap,
-  variables: OperationVariables,
+  context: CollectionContext,
   visitedFragments = new Map<string, FieldMap>()
 ): FieldMap {
   const collectedFieldsMap: FieldMap = new Map();
+  const { fragmentMap, variables } = context;
 
   for (const selection of selectionSet.selections) {
+    if (context.exclude === selection) continue;
+
     if (isField(selection)) {
       if (isTypenameField(selection)) continue;
 
       const name = resultKeyNameFromField(selection);
 
       if (selection.selectionSet) {
-        const fieldsForSelection = collectNonDeferredFields(
+        const fieldsForSelection = collectSiblingFields(
           selection.selectionSet,
-          fragmentMap,
+          context,
           visitedFragments
         );
 
@@ -53,7 +62,7 @@ export function collectNonDeferredFields(
       } else {
         collectedFieldsMap.set(name, true);
       }
-    } else if (!isDeferredFragment(selection, variables)) {
+    } else {
       const fragment = getFragmentFromSelection(selection, fragmentMap);
       if (!fragment) continue;
 
@@ -62,15 +71,15 @@ export function collectNonDeferredFields(
       if (fragment.kind === Kind.FRAGMENT_DEFINITION) {
         fragmentCollectedFieldsMap =
           visitedFragments.get(fragment.name.value) ||
-          collectNonDeferredFields(
+          collectSiblingFields(
             fragment.selectionSet,
-            fragmentMap,
+            context,
             visitedFragments
           );
       } else {
-        fragmentCollectedFieldsMap = collectNonDeferredFields(
+        fragmentCollectedFieldsMap = collectSiblingFields(
           fragment.selectionSet,
-          fragmentMap,
+          context,
           visitedFragments
         );
       }

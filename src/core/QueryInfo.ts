@@ -17,7 +17,7 @@ import type {
   FragmentMap,
 } from "@apollo/client/utilities/internal";
 import {
-  collectNonDeferredFields,
+  collectSiblingFields,
   createFragmentMap,
   getFragmentDefinitions,
   getFragmentFromSelection,
@@ -729,7 +729,6 @@ function isPartialInSelectionSet(
   if (typeof missingTree === "string") return true;
   if (missingTree === undefined) return false;
 
-  let nonDeferredFields: FieldMap | undefined;
   const { fragmentMap, variables } = context;
 
   for (const selection of selectionSet.selections) {
@@ -771,17 +770,14 @@ function isPartialInSelectionSet(
         //
         // dataState should be `streaming`, not `partial` if `name` is present,
         // but `email` is absent since `name` is not deferred.
-        nonDeferredFields ||= collectNonDeferredFields(
-          selectionSet,
-          fragmentMap,
-          variables
-        );
-
         if (
           isPartialDeferBoundary(
             fragment.selectionSet,
             missingTree,
-            nonDeferredFields,
+            collectSiblingFields(selectionSet, {
+              ...context,
+              exclude: selection,
+            }),
             fragmentMap
           )
         ) {
@@ -805,7 +801,21 @@ function isPartialDeferBoundary(
   missing: MissingObject,
   nonDeferredFields: FieldMap | undefined,
   fragmentMap: FragmentMap
-) {
+): boolean {
+  const missingKeys = Object.keys(missing);
+  if (missingKeys.length > 0 && missingKeys.every(isArrayIndex)) {
+    return missingKeys.some((key) => {
+      if (typeof missing[key] === "string") return true;
+
+      return isPartialDeferBoundary(
+        selectionSet,
+        missing[key],
+        nonDeferredFields,
+        fragmentMap
+      );
+    });
+  }
+
   // This flag tracks whether all fields in this selection set should contain
   // values or should all be missing. A defer boundary is only partial if some
   // fields are missing. The first selection node will set this value and all
@@ -875,4 +885,8 @@ function isPartialDeferBoundary(
   }
 
   return false;
+}
+
+function isArrayIndex(key: string) {
+  return /^\d+$/.test(key);
 }

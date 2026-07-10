@@ -1,6 +1,7 @@
 export type { DecoratedPromise } from "./types/DecoratedPromise.js";
 export type { DeepOmit } from "./types/DeepOmit.js";
 export type { ExtensionsWithStreamInfo } from "./types/ExtensionsWithStreamDetails.js";
+export type { FieldMap } from "./collectNonDeferredFields.js";
 export type { FragmentMap } from "./types/FragmentMap.js";
 export type { FragmentMapFunction } from "./types/FragmentMapFunction.js";
 export type { FulfilledPromise } from "./types/FulfilledPromise.js";
@@ -31,6 +32,7 @@ export { compact } from "./compact.js";
 export { createFragmentMap } from "./createFragmentMap.js";
 export { createFulfilledPromise } from "./createFulfilledPromise.js";
 export { createRejectedPromise } from "./createRejectedPromise.js";
+export { collectNonDeferredFields } from "./collectNonDeferredFields.js";
 export { dealias } from "./dealias.js";
 export { decoratePromise } from "./decoratePromise.js";
 export { DeepMerger } from "./DeepMerger.js";

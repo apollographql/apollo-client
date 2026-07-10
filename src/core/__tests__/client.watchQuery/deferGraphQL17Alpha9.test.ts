@@ -1398,7 +1398,7 @@ test('treats `@defer(if: false)` as a non-deferred fragment with a "cache-first"
   await expect(stream).not.toEmitAnything();
 });
 
-test("evaluates the `@defer(if: $variable)` argument against variables, treating a `false` variable as non-deferred", async () => {
+test('evaluates `@defer(if: $variable)` as non-deferred when the variable is false, reporting "streaming" while a sibling `@defer` is pending', async () => {
   const query = gql`
     query ($shouldDefer: Boolean!) {
       greeting {
@@ -1408,95 +1408,8 @@ test("evaluates the `@defer(if: $variable)` argument against variables, treating
             name
           }
         }
-      }
-    }
-  `;
-
-  const { httpLink, enqueueInitialChunk } = mockDeferStreamGraphQL17Alpha9();
-  const cache = new InMemoryCache();
-
-  // We are intentionally writing partial data to the cache. Suppress console
-  // warnings to avoid unnecessary noise in the test.
-  {
-    using _consoleSpy = spyOnConsole("error");
-    cache.writeQuery({
-      query,
-      variables: { shouldDefer: false },
-      data: {
-        greeting: {
-          __typename: "Greeting",
-          message: "Cached hello",
-        },
-      },
-    });
-  }
-
-  const client = new ApolloClient({
-    cache,
-    link: httpLink,
-    incrementalHandler: new GraphQL17Alpha9Handler(),
-  });
-
-  const stream = new ObservableStream(
-    client.watchQuery({
-      query,
-      fetchPolicy: "cache-first",
-      returnPartialData: true,
-      variables: { shouldDefer: false },
-    })
-  );
-
-  await expect(stream).toEmitTypedValue({
-    data: {
-      greeting: {
-        __typename: "Greeting",
-        message: "Cached hello",
-      },
-    },
-    dataState: "partial",
-    loading: true,
-    networkStatus: NetworkStatus.loading,
-    partial: true,
-  });
-
-  enqueueInitialChunk({
-    data: {
-      greeting: {
-        __typename: "Greeting",
-        message: "Hello world",
-        recipient: { __typename: "Person", name: "Alice" },
-      },
-    },
-    pending: [],
-    hasNext: false,
-  });
-
-  await expect(stream).toEmitTypedValue({
-    data: {
-      greeting: {
-        __typename: "Greeting",
-        message: "Hello world",
-        recipient: { __typename: "Person", name: "Alice" },
-      },
-    },
-    dataState: "complete",
-    loading: false,
-    networkStatus: NetworkStatus.ready,
-    partial: false,
-  });
-
-  await expect(stream).not.toEmitAnything();
-});
-
-test("evaluates the `@defer(if: $variable)` argument against variables, deferring when the variable is `true`", async () => {
-  const query = gql`
-    query ($shouldDefer: Boolean!) {
-      greeting {
-        message
-        ... on Greeting @defer(if: $shouldDefer) {
-          recipient {
-            name
-          }
+        ... on Greeting @defer {
+          signature
         }
       }
     }
@@ -1514,6 +1427,107 @@ test("evaluates the `@defer(if: $variable)` argument against variables, deferrin
   const stream = new ObservableStream(
     client.watchQuery({
       query,
+      returnPartialData: true,
+      variables: { shouldDefer: false },
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Alice" },
+      },
+    },
+    pending: [{ id: "0", path: ["greeting"] }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Alice" },
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          __typename: "Greeting",
+          signature: "From Apollo",
+        },
+        id: "0",
+      },
+    ],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Alice" },
+        signature: "From Apollo",
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test('evaluates `@defer(if: $variable)` as deferred when the variable is true, reporting "streaming" while deferred fields are pending', async () => {
+  const query = gql`
+    query ($shouldDefer: Boolean!) {
+      greeting {
+        message
+        ... on Greeting @defer(if: $shouldDefer) {
+          recipient {
+            name
+          }
+        }
+        ... on Greeting @defer {
+          signature
+        }
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({
+      query,
+      returnPartialData: true,
       variables: { shouldDefer: true },
     })
   );
@@ -1528,7 +1542,10 @@ test("evaluates the `@defer(if: $variable)` argument against variables, deferrin
 
   enqueueInitialChunk({
     data: { greeting: { message: "Hello world", __typename: "Greeting" } },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [
+      { id: "0", path: ["greeting"] },
+      { id: "1", path: ["greeting"] },
+    ],
     hasNext: true,
   });
 
@@ -1552,6 +1569,34 @@ test("evaluates the `@defer(if: $variable)` argument against variables, deferrin
       },
     ],
     completed: [{ id: "0" }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Alice" },
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          __typename: "Greeting",
+          signature: "From Apollo",
+        },
+        id: "1",
+      },
+    ],
+    completed: [{ id: "1" }],
     hasNext: false,
   });
 
@@ -1561,6 +1606,114 @@ test("evaluates the `@defer(if: $variable)` argument against variables, deferrin
         __typename: "Greeting",
         message: "Hello world",
         recipient: { __typename: "Person", name: "Alice" },
+        signature: "From Apollo",
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("evaluates `@defer(if: $variable)` for overlapping fields so disabled-defer selections stay non-deferred", async () => {
+  const query = gql`
+    query ($shouldDefer: Boolean!) {
+      greeting {
+        message
+        ... on Greeting @defer(if: $shouldDefer) {
+          recipient {
+            name
+          }
+        }
+        ... on Greeting @defer {
+          recipient {
+            name
+            email
+          }
+        }
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({
+      query,
+      returnPartialData: true,
+      variables: { shouldDefer: false },
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Alice" },
+      },
+    },
+    pending: [{ id: "0", path: ["greeting"] }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Alice" },
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          __typename: "Person",
+          email: "alice@example.com",
+        },
+        id: "0",
+        subPath: ["recipient"],
+      },
+    ],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+          email: "alice@example.com",
+        },
       },
     },
     dataState: "complete",

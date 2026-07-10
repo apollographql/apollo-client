@@ -238,7 +238,9 @@ export interface ExtensionsWithStreamInfo extends Record<string, unknown> {
 }
 
 // @public (undocumented)
-export type FieldMap = Map<string, FieldMap | true>;
+export type FieldMap = {
+    [fieldName: string]: FieldMap | true;
+};
 
 // @public (undocumented)
 export function filterMap<T, R>(fn: (value: T, context: undefined) => R | undefined): OperatorFunction<T, R>;

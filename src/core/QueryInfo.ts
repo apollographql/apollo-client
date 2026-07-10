@@ -878,7 +878,7 @@ type MissingObject = Exclude<MissingTree, string>;
 function isPartialDeferBoundary(
   selectionSet: SelectionSetNode,
   missing: MissingObject,
-  nonDeferredFields: FieldMap,
+  nonDeferredFields: FieldMap | undefined,
   fragmentMap: FragmentMap
 ) {
   // This flag tracks whether all fields in this selection set should contain
@@ -893,9 +893,9 @@ function isPartialDeferBoundary(
       if (isTypenameField(selection)) continue;
 
       const name = resultKeyNameFromField(selection);
-      const nonDeferredField = nonDeferredFields.get(name);
+      const nonDeferredField = nonDeferredFields?.get(name);
 
-      // If this field is not exclusive to this defer fragment, we don't care
+      // If this field is not exclusive to this selection set, we don't care
       // what the value is as far as the defer boundary is concerned. Ignore it
       // and continue checking other siblings.
       if (nonDeferredField === true) continue;
@@ -920,11 +920,6 @@ function isPartialDeferBoundary(
 
         continue;
       }
-
-      // If this field is exclusive to the defer boundary
-      // (e.g nonDeferredField === undefined) and is partially satisfied, we
-      // report this defer boundary as partial
-      if (!nonDeferredField) return true;
 
       if (
         selection.selectionSet &&

@@ -440,13 +440,13 @@ test('does not suspend streamed queries with partial data in the cache and using
 
     expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
     expect(snapshot).toStrictEqualTyped({
-      data: markAsStreaming({
+      data: {
         friendList: [
           { __typename: "Friend", id: "1", name: "Luke" },
           { __typename: "Friend", id: "2" },
           { __typename: "Friend", id: "3" },
         ],
-      }),
+      },
       dataState: "partial",
       networkStatus: NetworkStatus.streaming,
       error: undefined,
@@ -916,13 +916,13 @@ test("incrementally rerenders data returned by a `fetchMore` for a streamed quer
 
     expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
     expect(snapshot).toStrictEqualTyped({
-      data: markAsStreaming({
+      data: {
         friendList: [
           { __typename: "Friend", id: "1", name: "Luke" },
           { __typename: "Friend", id: "2", name: "Han" },
           { __typename: "Friend", id: "3", name: "Leia" },
         ],
-      }),
+      },
       dataState: "complete",
       networkStatus: NetworkStatus.streaming,
       error: undefined,
@@ -1650,13 +1650,13 @@ test("reports data as partial if a cache merge function returns partial data", a
 
     expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
     expect(snapshot).toStrictEqualTyped({
-      data: markAsStreaming({
+      data: {
         friendList: [
           { __typename: "Friend", id: "1", name: "Luke" },
           { __typename: "Friend", id: "2" },
           { __typename: "Friend", id: "3" },
         ],
-      }),
+      },
       dataState: "partial",
       networkStatus: NetworkStatus.streaming,
       error: undefined,

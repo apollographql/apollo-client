@@ -553,13 +553,13 @@ test('returns partial deferred cached data as "partial" while streaming with a "
   });
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       greeting: {
         __typename: "Greeting",
         message: "Hello world",
         recipient: { __typename: "Person", name: "Cached Alice" },
       },
-    }),
+    },
     dataState: "partial",
     loading: true,
     networkStatus: NetworkStatus.streaming,
@@ -1926,13 +1926,13 @@ test("reports the correct data state for `@defer` on a named fragment spread wit
   });
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       greeting: {
         __typename: "Greeting",
         message: "Hello world",
         recipient: { __typename: "Person", name: "Cached Alice" },
       },
-    }),
+    },
     dataState: "partial",
     loading: true,
     networkStatus: NetworkStatus.streaming,
@@ -2256,13 +2256,13 @@ test("treats nested fragments inside a `@defer` boundary when deciding if the fr
   });
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       greeting: {
         __typename: "Greeting",
         message: "Hello world",
         recipient: { __typename: "Person", name: "Cached Alice" },
       },
-    }),
+    },
     dataState: "partial",
     loading: true,
     networkStatus: NetworkStatus.streaming,
@@ -2368,13 +2368,13 @@ test("treats a named fragment spread inside a `@defer` boundary when deciding if
   });
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       greeting: {
         __typename: "Greeting",
         message: "Hello world",
         recipient: { __typename: "Person", name: "Cached Alice" },
       },
-    }),
+    },
     dataState: "partial",
     loading: true,
     networkStatus: NetworkStatus.streaming,
@@ -2497,7 +2497,7 @@ test('reports "partial" when a nested defer-only field is present under an overl
   });
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       greeting: {
         __typename: "Greeting",
         message: "Hello world",
@@ -2507,7 +2507,7 @@ test('reports "partial" when a nested defer-only field is present under an overl
           email: "cached@example.com",
         },
       },
-    }),
+    },
     dataState: "partial",
     loading: true,
     networkStatus: NetworkStatus.streaming,
@@ -3392,7 +3392,7 @@ test('reports "partial" when one list item has a started `@defer` that is still 
   });
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       person: {
         __typename: "Person",
         id: "1",
@@ -3408,7 +3408,7 @@ test('reports "partial" when one list item has a started `@defer` that is still 
           },
         ],
       },
-    }),
+    },
     dataState: "partial",
     loading: true,
     networkStatus: NetworkStatus.streaming,
@@ -3638,13 +3638,13 @@ test('reports "partial" when a later `@defer` boundary is incomplete and an earl
   });
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       greeting: {
         __typename: "Greeting",
         message: "Hello world",
         recipient: { __typename: "Person", name: "Cached Alice" },
       },
-    }),
+    },
     dataState: "partial",
     loading: true,
     networkStatus: NetworkStatus.streaming,
@@ -3951,7 +3951,7 @@ test('reports "partial" when a deep defer-only field is present under an overlap
   });
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       greeting: {
         __typename: "Greeting",
         message: "Hello world",
@@ -3964,7 +3964,7 @@ test('reports "partial" when a deep defer-only field is present under an overlap
           },
         },
       },
-    }),
+    },
     dataState: "partial",
     loading: true,
     networkStatus: NetworkStatus.streaming,
@@ -4649,13 +4649,13 @@ test('reports residual deferred cached data as "complete" while streaming with a
   // Selection set is fully satisfied from network message + residual cached
   // recipient, so dataState is complete even though the stream is still open.
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       greeting: {
         __typename: "Greeting",
         message: "Hello world",
         recipient: { __typename: "Person", name: "Cached Alice" },
       },
-    }),
+    },
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
@@ -4754,13 +4754,13 @@ test('reports complete cached deferred data as "complete" while streaming with a
   // Residual cached recipient keeps the selection set complete while the
   // deferred network chunk is still pending.
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       greeting: {
         __typename: "Greeting",
         message: "Hello world",
         recipient: { __typename: "Person", name: "Cached Alice" },
       },
-    }),
+    },
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
@@ -4914,7 +4914,7 @@ test('keeps residual deferred cache data as "complete" while streaming after a r
   // Previous recipient remains in the cache, so the selection set is complete
   // even though the refetch deferred chunk has not arrived yet.
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       greeting: {
         __typename: "Greeting",
         message: "Goodbye",
@@ -4923,7 +4923,7 @@ test('keeps residual deferred cache data as "complete" while streaming after a r
           name: "Alice",
         },
       },
-    }),
+    },
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
@@ -5143,7 +5143,7 @@ test('keeps residual deferred cache data as "complete" while streaming after a r
   // Residual homeWorld values from the previous complete result keep the
   // selection set complete while deferred refetch chunks are still pending.
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       hero: {
         heroFriends: [
           { id: "1000", name: "Luke Skywalker", homeWorld: null },
@@ -5151,7 +5151,7 @@ test('keeps residual deferred cache data as "complete" while streaming after a r
         ],
         name: "R2-D2",
       },
-    }),
+    },
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,

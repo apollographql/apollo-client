@@ -412,7 +412,7 @@ test("should handle deferred queries in lists, merging arrays", async () => {
   });
 
   await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-    data: markAsStreaming({
+    data: {
       allProducts: [
         {
           __typename: "Product",
@@ -435,7 +435,7 @@ test("should handle deferred queries in lists, merging arrays", async () => {
           sku: "studio",
         },
       ],
-    }),
+    },
     dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,

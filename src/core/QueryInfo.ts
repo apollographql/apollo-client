@@ -2,7 +2,6 @@ import { equal } from "@wry/equality";
 import type {
   DocumentNode,
   FormattedExecutionResult,
-  SelectionNode,
   SelectionSetNode,
 } from "graphql";
 import { Kind } from "graphql";
@@ -24,6 +23,7 @@ import {
   getMainDefinition,
   getOperationName,
   graphQLResultHasError,
+  isDeferredFragment,
   isField,
   isTypenameField,
   resultKeyNameFromField,
@@ -378,7 +378,9 @@ export class QueryInfo<
               ...result,
               data: diff.result,
               dataState:
-                isStreamingPartial(diff, query) ? "partial" : "streaming",
+                isStreamingPartial(diff, query, variables) ? "partial" : (
+                  "streaming"
+                ),
             };
           }
         },
@@ -699,7 +701,8 @@ function shouldWriteResult<T>(
 
 function isStreamingPartial(
   diff: Cache.DiffResult<unknown>,
-  document: DocumentNode
+  document: DocumentNode,
+  variables: OperationVariables
 ) {
   if (!diff.missing) return false;
 
@@ -708,7 +711,8 @@ function isStreamingPartial(
   return isPartialInSelectionSet(
     getMainDefinition(document).selectionSet,
     diff.missing.missing,
-    fragmentMap
+    fragmentMap,
+    variables
   );
 }
 
@@ -734,6 +738,7 @@ function mergeFieldMaps(target: FieldMap, source: FieldMap) {
 function collectNonDeferredFields(
   selectionSet: SelectionSetNode,
   fragmentMap: FragmentMap,
+  variables: OperationVariables,
   visitedFragments = new Map<string, FieldMap>()
 ): FieldMap {
   const collectedFieldsMap: FieldMap = new Map();
@@ -765,7 +770,7 @@ function collectNonDeferredFields(
       } else {
         collectedFieldsMap.set(name, true);
       }
-    } else if (!isDeferred(selection)) {
+    } else if (!isDeferredFragment(selection, variables)) {
       const fragment = getFragmentFromSelection(selection, fragmentMap);
       if (!fragment) continue;
 
@@ -797,7 +802,8 @@ function collectNonDeferredFields(
 function isPartialInSelectionSet(
   selectionSet: SelectionSetNode,
   missingTree: MissingTree | undefined,
-  fragmentMap: FragmentMap
+  fragmentMap: FragmentMap,
+  variables: OperationVariables
 ) {
   if (typeof missingTree === "string") return true;
   if (missingTree === undefined) return false;
@@ -814,7 +820,12 @@ function isPartialInSelectionSet(
 
       if (
         !selection.selectionSet ||
-        isPartialInSelectionSet(selection.selectionSet, missing, fragmentMap)
+        isPartialInSelectionSet(
+          selection.selectionSet,
+          missing,
+          fragmentMap,
+          variables
+        )
       ) {
         return true;
       }
@@ -822,7 +833,7 @@ function isPartialInSelectionSet(
       const fragment = getFragmentFromSelection(selection, fragmentMap);
       if (!fragment) continue;
 
-      if (isDeferred(selection)) {
+      if (isDeferredFragment(selection, variables)) {
         // We need to know the non-deferred fields that might overlap with the
         // deferred selection set so that we accurately report the right
         // dataState when all the non-deferred fields are satisfied and only the
@@ -845,7 +856,8 @@ function isPartialInSelectionSet(
         // but `email` is absent since `name` is not deferred.
         nonDeferredFields ||= collectNonDeferredFields(
           selectionSet,
-          fragmentMap
+          fragmentMap,
+          variables
         );
 
         if (
@@ -859,7 +871,12 @@ function isPartialInSelectionSet(
           return true;
         }
       } else if (
-        isPartialInSelectionSet(fragment.selectionSet, missingTree, fragmentMap)
+        isPartialInSelectionSet(
+          fragment.selectionSet,
+          missingTree,
+          fragmentMap,
+          variables
+        )
       ) {
         return true;
       }
@@ -867,10 +884,6 @@ function isPartialInSelectionSet(
   }
 
   return false;
-}
-
-function isDeferred(selection: SelectionNode) {
-  return !!selection.directives?.some(({ name }) => name.value === "defer");
 }
 
 type MissingObject = Exclude<MissingTree, string>;

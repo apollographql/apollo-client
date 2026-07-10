@@ -822,7 +822,7 @@ function isPartialDeferBoundary(
       if (isTypenameField(selection)) continue;
 
       const name = resultKeyNameFromField(selection);
-      const nonDeferredField = nonDeferredFields?.get(name);
+      const nonDeferredField = nonDeferredFields?.[name];
 
       // If this field is not exclusive to this selection set, we don't care
       // what the value is as far as the defer boundary is concerned. Ignore it

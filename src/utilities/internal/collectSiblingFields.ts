@@ -2,13 +2,16 @@ import type { SelectionSetNode } from "graphql";
 import type { SelectionNode } from "graphql";
 import { Kind } from "graphql";
 
+import { DeepMerger } from "./DeepMerger.js";
 import { getFragmentFromSelection } from "./getFragmentFromSelection.js";
 import { isField } from "./isField.js";
 import { isTypenameField } from "./isTypenameField.js";
 import { resultKeyNameFromField } from "./resultKeyNameFromField.js";
 import type { FragmentMap } from "./types/FragmentMap.js";
 
-export type FieldMap = Map<string, FieldMap | true>;
+export type FieldMap = {
+  [fieldName: string]: FieldMap | true;
+};
 
 interface CollectionContext {
   fragmentMap: FragmentMap;
@@ -26,7 +29,7 @@ export function collectSiblingFields(
   context: CollectionContext,
   visitedFragments = new Map<string, FieldMap>()
 ): FieldMap {
-  const collectedFieldsMap: FieldMap = new Map();
+  let collectedFieldsMap: FieldMap = {};
   const { fragmentMap } = context;
 
   for (const selection of selectionSet.selections) {
@@ -44,19 +47,19 @@ export function collectSiblingFields(
           visitedFragments
         );
 
-        if (collectedFieldsMap.has(name)) {
-          mergeFieldMaps(
+        if (Object.hasOwn(collectedFieldsMap, name)) {
+          collectedFieldsMap[name] = mergeFieldMaps(
             // We can reasonably assume the value is a nested map instead of
             // `true` without checking its type, otherwise we'd have a broken
             // query which would have errored on the server
-            collectedFieldsMap.get(name)! as FieldMap,
+            collectedFieldsMap[name]! as FieldMap,
             fieldsForSelection
           );
         } else {
-          collectedFieldsMap.set(name, fieldsForSelection);
+          collectedFieldsMap[name] = fieldsForSelection;
         }
       } else {
-        collectedFieldsMap.set(name, true);
+        collectedFieldsMap[name] = true;
       }
     } else {
       const fragment = getFragmentFromSelection(selection, fragmentMap);
@@ -82,7 +85,10 @@ export function collectSiblingFields(
         );
       }
 
-      mergeFieldMaps(collectedFieldsMap, fragmentCollectedFieldsMap);
+      collectedFieldsMap = mergeFieldMaps(
+        collectedFieldsMap,
+        fragmentCollectedFieldsMap
+      );
     }
   }
 
@@ -90,18 +96,5 @@ export function collectSiblingFields(
 }
 
 function mergeFieldMaps(target: FieldMap, source: FieldMap) {
-  for (const key of source.keys()) {
-    if (target.has(key)) {
-      const targetValue = target.get(key)!;
-      const sourceValue = source.get(key)!;
-
-      if (targetValue === true || sourceValue === true) continue;
-
-      target.set(key, mergeFieldMaps(targetValue, sourceValue));
-    } else {
-      target.set(key, source.get(key)!);
-    }
-  }
-
-  return target;
+  return new DeepMerger().merge(target, source);
 }

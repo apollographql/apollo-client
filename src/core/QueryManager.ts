@@ -1123,7 +1123,7 @@ export class QueryManager {
             aqr.error = new CombinedGraphQLErrors(
               removeStreamDetailsFromExtensions(result)
             );
-            if (aqr.dataState !== "streaming") {
+            if (aqr.networkStatus !== NetworkStatus.streaming) {
               aqr.networkStatus = NetworkStatus.error;
             }
           }

@@ -694,6 +694,9 @@ test("emits empty then streaming results for deferred queries with no data in th
 });
 
 test('reports overlapping deferred and non-deferred fields as "streaming" when only the deferred-only fields are missing', async () => {
+  // Suppress expected missing field write warnings since defer context is reset.
+  using _ = spyOnConsole("error");
+
   const query = gql`
     query {
       greeting {
@@ -802,6 +805,9 @@ test('reports overlapping deferred and non-deferred fields as "streaming" when o
 });
 
 test('reports "streaming" when non-deferred fields for the same response key are split across sibling selection sets', async () => {
+  // Suppress expected missing field write warnings since defer context is reset.
+  using _ = spyOnConsole("error");
+
   const query = gql`
     query {
       greeting {
@@ -919,6 +925,9 @@ test('reports "streaming" when non-deferred fields for the same response key are
 });
 
 test('reports "streaming" when non-deferred fields for the same response key come from a field and a fragment', async () => {
+  // Suppress expected missing field write warnings since defer context is reset.
+  using _ = spyOnConsole("error");
+
   const query = gql`
     query {
       greeting {
@@ -1038,6 +1047,9 @@ test('reports "streaming" when non-deferred fields for the same response key com
 });
 
 test('reports "streaming" when nested non-deferred fields are split across sibling selection sets', async () => {
+  // Suppress expected missing field write warnings since defer context is reset.
+  using _ = spyOnConsole("error");
+
   const query = gql`
     query {
       greeting {
@@ -1619,6 +1631,9 @@ test('evaluates `@defer(if: $variable)` as deferred when the variable is true, r
 });
 
 test("evaluates `@defer(if: $variable)` for overlapping fields so disabled-defer selections stay non-deferred", async () => {
+  // Suppress expected missing field write warnings since defer context is reset.
+  using _ = spyOnConsole("error");
+
   const query = gql`
     query ($shouldDefer: Boolean!) {
       greeting {
@@ -1959,6 +1974,9 @@ test("reports the correct data state for `@defer` on a named fragment spread wit
 });
 
 test('reports overlapping fields contributed by a non-deferred fragment spread as "streaming"', async () => {
+  // Suppress expected missing field write warnings since defer context is reset.
+  using _ = spyOnConsole("error");
+
   const query = gql`
     query {
       greeting {
@@ -2064,6 +2082,9 @@ test('reports overlapping fields contributed by a non-deferred fragment spread a
 });
 
 test('reports overlapping fields contributed by a non-deferred inline fragment as "streaming"', async () => {
+  // Suppress expected missing field write warnings since defer context is reset.
+  using _ = spyOnConsole("error");
+
   const query = gql`
     query {
       greeting {
@@ -2528,6 +2549,9 @@ test('reports "partial" when a nested defer-only field is present under an overl
 });
 
 test("merges non-deferred selections that contribute different subfields under the same response key", async () => {
+  // Suppress expected missing field write warnings since defer context is reset.
+  using _ = spyOnConsole("error");
+
   const query = gql`
     query {
       greeting {
@@ -2645,6 +2669,9 @@ test("merges non-deferred selections that contribute different subfields under t
 });
 
 test('reports overlapping fields from a fragment spread repeated at the same selection-set level as "streaming"', async () => {
+  // Suppress expected missing field write warnings since defer context is reset.
+  using _ = spyOnConsole("error");
+
   const query = gql`
     query {
       greeting {
@@ -2758,6 +2785,9 @@ test('reports overlapping fields from a fragment spread repeated at the same sel
 });
 
 test('reports overlapping fields from the same fragment spread used at different selection-set levels as "streaming"', async () => {
+  // Suppress expected missing field write warnings since defer context is reset.
+  using _ = spyOnConsole("error");
+
   const query = gql`
     query {
       greeting {
@@ -3130,6 +3160,9 @@ test('reports "streaming" when one list item\'s `@defer` has arrived and another
 });
 
 test('reports overlapping deferred and non-deferred list fields as "streaming" when only defer-only item fields are missing', async () => {
+  // Suppress expected missing field write warnings since defer context is reset.
+  using _ = spyOnConsole("error");
+
   const query = gql`
     query {
       person {
@@ -3532,6 +3565,7 @@ test('reports `@defer` nested under a field as "streaming" when only the nested 
 });
 
 test('reports "partial" when a later `@defer` boundary is incomplete and an earlier sibling `@defer` is still fully pending', async () => {
+  // Suppress expected missing field write warnings since defer context is reset.
   using _ = spyOnConsole("error");
 
   const query = gql`
@@ -3684,6 +3718,9 @@ test('reports "partial" when a later `@defer` boundary is incomplete and an earl
 });
 
 test('reports "streaming" when two `@defer` fragments overlap and only the second fragment\'s exclusive fields are missing', async () => {
+  // Suppress expected missing field write warnings since defer context is reset.
+  using _ = spyOnConsole("error");
+
   const query = gql`
     query {
       greeting {
@@ -3972,6 +4009,9 @@ test('reports "partial" when a deep defer-only field is present under an overlap
 });
 
 test('reports overlapping fields gated by `@include` as "streaming" when the included non-deferred fields are present and only defer-only fields are missing', async () => {
+  // Suppress expected missing field write warnings since defer context is reset.
+  using _ = spyOnConsole("error");
+
   const query = gql`
     query ($includeRecipient: Boolean!) {
       greeting {
@@ -4175,6 +4215,9 @@ test('reports "streaming" when `@defer(if: false)` fields arrive in the initial 
 });
 
 test("uses response aliases when matching overlapping non-deferred and deferred fields", async () => {
+  // Suppress expected missing field write warnings since defer context is reset.
+  using _ = spyOnConsole("error");
+
   const query = gql`
     query {
       greeting {
@@ -4404,6 +4447,9 @@ test('reports "streaming" for nested `@defer` when the outer fragment has arrive
 });
 
 test("does not treat `__typename`-only presence under a `@defer` as the fragment having started", async () => {
+  // Suppress expected missing field write warnings since defer context is reset.
+  using _ = spyOnConsole("error");
+
   const query = gql`
     query {
       greeting {
@@ -4422,28 +4468,25 @@ test("does not treat `__typename`-only presence under a `@defer` as the fragment
     mockDeferStreamGraphQL17Alpha9();
   const cache = new InMemoryCache();
 
-  {
-    using _consoleSpy = spyOnConsole("error");
-    cache.writeQuery({
-      query: gql`
-        query {
-          greeting {
-            message
-            recipient {
-              __typename
-            }
+  cache.writeQuery({
+    query: gql`
+      query {
+        greeting {
+          message
+          recipient {
+            __typename
           }
         }
-      `,
-      data: {
-        greeting: {
-          __typename: "Greeting",
-          message: "Cached",
-          recipient: { __typename: "Person" },
-        },
+      }
+    `,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Cached",
+        recipient: { __typename: "Person" },
       },
-    });
-  }
+    },
+  });
 
   const client = new ApolloClient({
     cache,

@@ -1,7 +1,11 @@
 import { gql } from "graphql-tag";
 
 import type { ObservableQuery } from "@apollo/client";
-import { ApolloClient, NetworkStatus } from "@apollo/client";
+import {
+  ApolloClient,
+  CombinedGraphQLErrors,
+  NetworkStatus,
+} from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { GraphQL17Alpha9Handler } from "@apollo/client/incremental";
 import { ApolloLink } from "@apollo/client/link";
@@ -4571,6 +4575,634 @@ test("does not treat `__typename`-only presence under a `@defer` as the fragment
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test('reports residual deferred cached data as "complete" while streaming with a "cache-first" fetch policy and returnPartialData', async () => {
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+          }
+        }
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+  const cache = new InMemoryCache();
+
+  // We are intentionally writing partial data to the cache. Suppress console
+  // warnings to avoid unnecessary noise in the test.
+  {
+    using _consoleSpy = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          recipient: { __typename: "Person", name: "Cached Alice" },
+        },
+      },
+    });
+  }
+
+  const client = new ApolloClient({
+    cache,
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({
+      query,
+      fetchPolicy: "cache-first",
+      returnPartialData: true,
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        recipient: { __typename: "Person", name: "Cached Alice" },
+      },
+    },
+    dataState: "partial",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: { greeting: { message: "Hello world", __typename: "Greeting" } },
+    pending: [{ id: "0", path: ["greeting"] }],
+    hasNext: true,
+  });
+
+  // Selection set is fully satisfied from network message + residual cached
+  // recipient, so dataState is complete even though the stream is still open.
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Cached Alice" },
+      },
+    }),
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          __typename: "Greeting",
+          recipient: { name: "Alice", __typename: "Person" },
+        },
+        id: "0",
+      },
+    ],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Alice" },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test('reports complete cached deferred data as "complete" while streaming with a "cache-and-network" fetch policy', async () => {
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+          }
+        }
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  client.writeQuery({
+    query,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello cached",
+        recipient: { __typename: "Person", name: "Cached Alice" },
+      },
+    },
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({ query, fetchPolicy: "cache-and-network" })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        message: "Hello cached",
+        __typename: "Greeting",
+        recipient: { __typename: "Person", name: "Cached Alice" },
+      },
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: false,
+  });
+
+  enqueueInitialChunk({
+    data: { greeting: { __typename: "Greeting", message: "Hello world" } },
+    pending: [{ id: "0", path: ["greeting"] }],
+    hasNext: true,
+  });
+
+  // Residual cached recipient keeps the selection set complete while the
+  // deferred network chunk is still pending.
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Cached Alice" },
+      },
+    }),
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          recipient: { name: "Alice", __typename: "Person" },
+          __typename: "Greeting",
+        },
+        id: "0",
+      },
+    ],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Alice" },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test('keeps residual deferred cache data as "complete" while streaming after a refetch', async () => {
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... @defer {
+          recipient {
+            name
+          }
+        }
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+
+  const client = new ApolloClient({
+    link: httpLink,
+    cache: new InMemoryCache(),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const observable = client.watchQuery({ query });
+  const stream = new ObservableStream(observable);
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: { greeting: { __typename: "Greeting", message: "Hello world" } },
+    pending: [{ id: "0", path: ["greeting"] }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          recipient: { name: "Alice", __typename: "Person" },
+        },
+        id: "0",
+      },
+    ],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+        },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  const refetchPromise = observable.refetch();
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+        },
+      },
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.refetch,
+    partial: false,
+  });
+
+  enqueueInitialChunk({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Goodbye",
+      },
+    },
+    pending: [{ id: "0", path: ["greeting"] }],
+    hasNext: true,
+  });
+
+  // Previous recipient remains in the cache, so the selection set is complete
+  // even though the refetch deferred chunk has not arrived yet.
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Goodbye",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+        },
+      },
+    }),
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          recipient: { name: "Bob", __typename: "Person" },
+        },
+        id: "0",
+      },
+    ],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Goodbye",
+        recipient: {
+          __typename: "Person",
+          name: "Bob",
+        },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(refetchPromise).resolves.toStrictEqualTyped({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Goodbye",
+        recipient: {
+          __typename: "Person",
+          name: "Bob",
+        },
+      },
+    },
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test('keeps residual deferred cache data as "complete" while streaming after a refetch that previously had incremental errors', async () => {
+  const query = gql`
+    query {
+      hero {
+        name
+        heroFriends {
+          id
+          name
+          ... @defer {
+            homeWorld
+          }
+        }
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const observable = client.watchQuery({ query, errorPolicy: "all" });
+  const stream = new ObservableStream(observable);
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: {
+      hero: {
+        name: "R2-D2",
+        heroFriends: [
+          { id: "1000", name: "Luke Skywalker" },
+          { id: "1003", name: "Leia Organa" },
+        ],
+      },
+    },
+    pending: [
+      { id: "0", path: ["hero", "heroFriends", 0] },
+      { id: "1", path: ["hero", "heroFriends", 1] },
+    ],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      hero: {
+        heroFriends: [
+          { id: "1000", name: "Luke Skywalker" },
+          { id: "1003", name: "Leia Organa" },
+        ],
+        name: "R2-D2",
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        id: "0",
+        errors: [
+          {
+            message:
+              "homeWorld for character with ID 1000 could not be fetched.",
+            path: ["hero", "heroFriends", 0, "homeWorld"],
+          },
+        ],
+        data: {
+          homeWorld: null,
+        },
+      },
+      {
+        id: "1",
+        data: {
+          homeWorld: "Alderaan",
+        },
+      },
+    ],
+    completed: [{ id: "0" }, { id: "1" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      hero: {
+        heroFriends: [
+          { id: "1000", name: "Luke Skywalker", homeWorld: null },
+          { id: "1003", name: "Leia Organa", homeWorld: "Alderaan" },
+        ],
+        name: "R2-D2",
+      },
+    },
+    error: new CombinedGraphQLErrors({
+      data: {
+        hero: {
+          heroFriends: [
+            { id: "1000", name: "Luke Skywalker", homeWorld: null },
+            { id: "1003", name: "Leia Organa", homeWorld: "Alderaan" },
+          ],
+          name: "R2-D2",
+        },
+      },
+      errors: [
+        {
+          message:
+            "homeWorld for character with ID 1000 could not be fetched.",
+          path: ["hero", "heroFriends", 0, "homeWorld"],
+        },
+      ],
+    }),
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.error,
+    partial: false,
+  });
+
+  const refetchPromise = observable.refetch();
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      hero: {
+        heroFriends: [
+          { id: "1000", name: "Luke Skywalker", homeWorld: null },
+          { id: "1003", name: "Leia Organa", homeWorld: "Alderaan" },
+        ],
+        name: "R2-D2",
+      },
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.refetch,
+    partial: false,
+  });
+
+  enqueueInitialChunk({
+    data: {
+      hero: {
+        name: "R2-D2",
+        heroFriends: [
+          { id: "1000", name: "Luke Skywalker" },
+          { id: "1003", name: "Leia Organa" },
+        ],
+      },
+    },
+    pending: [
+      { id: "0", path: ["hero", "heroFriends", 0] },
+      { id: "1", path: ["hero", "heroFriends", 1] },
+    ],
+    hasNext: true,
+  });
+
+  // Residual homeWorld values from the previous complete result keep the
+  // selection set complete while deferred refetch chunks are still pending.
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      hero: {
+        heroFriends: [
+          { id: "1000", name: "Luke Skywalker", homeWorld: null },
+          { id: "1003", name: "Leia Organa", homeWorld: "Alderaan" },
+        ],
+        name: "R2-D2",
+      },
+    }),
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        id: "0",
+        data: {
+          homeWorld: "Alderaan",
+        },
+      },
+      {
+        id: "1",
+        data: {
+          homeWorld: "Alderaan",
+        },
+      },
+    ],
+    completed: [{ id: "0" }, { id: "1" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      hero: {
+        heroFriends: [
+          { id: "1000", name: "Luke Skywalker", homeWorld: "Alderaan" },
+          { id: "1003", name: "Leia Organa", homeWorld: "Alderaan" },
+        ],
+        name: "R2-D2",
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(refetchPromise).resolves.toStrictEqualTyped({
+    data: {
+      hero: {
+        heroFriends: [
+          { id: "1000", name: "Luke Skywalker", homeWorld: "Alderaan" },
+          { id: "1003", name: "Leia Organa", homeWorld: "Alderaan" },
+        ],
+        name: "R2-D2",
+      },
+    },
   });
 
   await expect(stream).not.toEmitAnything();

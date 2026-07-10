@@ -213,7 +213,7 @@ test("should handle deferred queries in lists", async () => {
   });
 
   await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-    data: markAsStreaming({
+    data: {
       greetings: [
         {
           message: "Hello world",
@@ -225,7 +225,7 @@ test("should handle deferred queries in lists", async () => {
           __typename: "Greeting",
         },
       ],
-    }),
+    },
     dataState: "streaming",
     loading: true,
     networkStatus: NetworkStatus.streaming,
@@ -991,14 +991,14 @@ test('returns eventually consistent data from deferred queries with data in the 
   });
 
   await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-    data: markAsStreaming({
+    data: {
       greeting: {
         __typename: "Greeting",
         message: "Hello world",
         recipient: { __typename: "Person", name: "Cached Alice" },
       },
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
     previousData: {
@@ -1122,14 +1122,14 @@ test('returns eventually consistent data from deferred queries with partial data
   });
 
   await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-    data: markAsStreaming({
+    data: {
       greeting: {
         __typename: "Greeting",
         message: "Hello world",
         recipient: { __typename: "Person", name: "Cached Alice" },
       },
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
     previousData: {

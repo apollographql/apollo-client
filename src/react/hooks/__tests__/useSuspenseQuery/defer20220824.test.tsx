@@ -420,14 +420,14 @@ test('does not suspend deferred queries with partial data in the cache and using
 
     expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
     expect(snapshot).toStrictEqualTyped({
-      data: markAsStreaming({
+      data: {
         greeting: {
           __typename: "Greeting",
           message: "Hello world",
           recipient: { __typename: "Person", name: "Cached Alice" },
         },
-      }),
-      dataState: "streaming",
+      },
+      dataState: "complete",
       networkStatus: NetworkStatus.streaming,
       error: undefined,
     });
@@ -537,14 +537,14 @@ test('does not suspend deferred queries with data in the cache and using a "cach
 
     expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
     expect(snapshot).toStrictEqualTyped({
-      data: markAsStreaming({
+      data: {
         greeting: {
           __typename: "Greeting",
           message: "Hello world",
           recipient: { __typename: "Person", name: "Cached Alice" },
         },
-      }),
-      dataState: "streaming",
+      },
+      dataState: "complete",
       networkStatus: NetworkStatus.streaming,
       error: undefined,
     });
@@ -666,7 +666,7 @@ test("suspends deferred queries with lists and properly patches results", async 
 
     expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
     expect(snapshot).toStrictEqualTyped({
-      data: markAsStreaming({
+      data: {
         greetings: [
           {
             __typename: "Greeting",
@@ -678,7 +678,7 @@ test("suspends deferred queries with lists and properly patches results", async 
             message: "Hello again",
           },
         ],
-      }),
+      },
       dataState: "streaming",
       networkStatus: NetworkStatus.streaming,
       error: undefined,
@@ -997,7 +997,7 @@ test("incrementally rerenders data returned by a `refetch` for a deferred query"
 
     expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
     expect(snapshot).toStrictEqualTyped({
-      data: markAsStreaming({
+      data: {
         greeting: {
           __typename: "Greeting",
           message: "Goodbye",
@@ -1006,8 +1006,8 @@ test("incrementally rerenders data returned by a `refetch` for a deferred query"
             name: "Alice",
           },
         },
-      }),
-      dataState: "streaming",
+      },
+      dataState: "complete",
       networkStatus: NetworkStatus.streaming,
       error: undefined,
     });
@@ -1301,7 +1301,7 @@ test("incrementally rerenders data returned by a `fetchMore` for a deferred quer
 
     expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
     expect(snapshot).toStrictEqualTyped({
-      data: markAsStreaming({
+      data: {
         greetings: [
           {
             __typename: "Greeting",
@@ -1316,7 +1316,7 @@ test("incrementally rerenders data returned by a `fetchMore` for a deferred quer
             message: "Goodbye",
           },
         ],
-      }),
+      },
       dataState: "streaming",
       networkStatus: NetworkStatus.streaming,
       error: undefined,
@@ -2165,7 +2165,7 @@ test("can refetch and respond to cache updates after encountering an error in an
 
     expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
     expect(snapshot).toStrictEqualTyped({
-      data: markAsStreaming({
+      data: {
         hero: {
           heroFriends: [
             { id: "1000", name: "Luke Skywalker", homeWorld: null },
@@ -2173,8 +2173,8 @@ test("can refetch and respond to cache updates after encountering an error in an
           ],
           name: "R2-D2",
         },
-      }),
-      dataState: "streaming",
+      },
+      dataState: "complete",
       networkStatus: NetworkStatus.streaming,
       error: undefined,
     });

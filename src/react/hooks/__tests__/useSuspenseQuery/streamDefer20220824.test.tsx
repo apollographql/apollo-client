@@ -157,10 +157,10 @@ test("suspends streamed queries until initial chunk loads then streams in data a
 
     expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
     expect(snapshot).toStrictEqualTyped({
-      data: markAsStreaming({
+      data: {
         friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
-      }),
-      dataState: "streaming",
+      },
+      dataState: "complete",
       networkStatus: NetworkStatus.streaming,
       error: undefined,
     });
@@ -173,13 +173,13 @@ test("suspends streamed queries until initial chunk loads then streams in data a
 
     expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
     expect(snapshot).toStrictEqualTyped({
-      data: markAsStreaming({
+      data: {
         friendList: [
           { __typename: "Friend", id: "1", name: "Luke" },
           { __typename: "Friend", id: "2", name: "Han" },
         ],
-      }),
-      dataState: "streaming",
+      },
+      dataState: "complete",
       networkStatus: NetworkStatus.streaming,
       error: undefined,
     });
@@ -256,7 +256,7 @@ test.each<useSuspenseQuery.FetchPolicy>([
         data: markAsStreaming({
           friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
         }),
-        dataState: "streaming",
+        dataState: fetchPolicy === "no-cache" ? "streaming" : "complete",
         networkStatus: NetworkStatus.streaming,
         error: undefined,
       });
@@ -275,7 +275,7 @@ test.each<useSuspenseQuery.FetchPolicy>([
             { __typename: "Friend", id: "2", name: "Han" },
           ],
         }),
-        dataState: "streaming",
+        dataState: fetchPolicy === "no-cache" ? "streaming" : "complete",
         networkStatus: NetworkStatus.streaming,
         error: undefined,
       });
@@ -449,10 +449,10 @@ test('does not suspend streamed queries with partial data in the cache and using
 
     expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
     expect(snapshot).toStrictEqualTyped({
-      data: markAsStreaming({
+      data: {
         friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
-      }),
-      dataState: "streaming",
+      },
+      dataState: "complete",
       networkStatus: NetworkStatus.streaming,
       error: undefined,
     });
@@ -465,13 +465,13 @@ test('does not suspend streamed queries with partial data in the cache and using
 
     expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
     expect(snapshot).toStrictEqualTyped({
-      data: markAsStreaming({
+      data: {
         friendList: [
           { __typename: "Friend", id: "1", name: "Luke" },
           { __typename: "Friend", id: "2", name: "Han" },
         ],
-      }),
-      dataState: "streaming",
+      },
+      dataState: "complete",
       networkStatus: NetworkStatus.streaming,
       error: undefined,
     });
@@ -485,13 +485,13 @@ test('does not suspend streamed queries with partial data in the cache and using
 
     expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
     expect(snapshot).toStrictEqualTyped({
-      data: markAsStreaming({
+      data: {
         friendList: [
           { __typename: "Friend", id: "1", name: "Luke" },
           { __typename: "Friend", id: "2", name: "Han" },
           { __typename: "Friend", id: "3", name: "Leia" },
         ],
-      }),
+      },
       dataState: "complete",
       networkStatus: NetworkStatus.ready,
       error: undefined,
@@ -570,10 +570,10 @@ test('does not suspend streamed queries with data in the cache and using a "cach
 
     expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
     expect(snapshot).toStrictEqualTyped({
-      data: markAsStreaming({
+      data: {
         friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
-      }),
-      dataState: "streaming",
+      },
+      dataState: "complete",
       networkStatus: NetworkStatus.streaming,
       error: undefined,
     });
@@ -647,10 +647,10 @@ test("incrementally rerenders data returned by a `refetch` for a streamed query"
 
     expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
     expect(snapshot).toStrictEqualTyped({
-      data: markAsStreaming({
+      data: {
         friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
-      }),
-      dataState: "streaming",
+      },
+      dataState: "complete",
       networkStatus: NetworkStatus.streaming,
       error: undefined,
     });
@@ -693,10 +693,10 @@ test("incrementally rerenders data returned by a `refetch` for a streamed query"
 
     expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
     expect(snapshot).toStrictEqualTyped({
-      data: markAsStreaming({
+      data: {
         friendList: [{ __typename: "Friend", id: "1", name: "Luke (refetch)" }],
-      }),
-      dataState: "streaming",
+      },
+      dataState: "complete",
       networkStatus: NetworkStatus.streaming,
       error: undefined,
     });
@@ -788,10 +788,10 @@ test("incrementally renders data returned after skipping a streamed query", asyn
 
     expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
     expect(snapshot).toStrictEqualTyped({
-      data: markAsStreaming({
+      data: {
         friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
-      }),
-      dataState: "streaming",
+      },
+      dataState: "complete",
       networkStatus: NetworkStatus.streaming,
       error: undefined,
     });
@@ -876,10 +876,10 @@ test("incrementally rerenders data returned by a `fetchMore` for a streamed quer
 
     expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
     expect(snapshot).toStrictEqualTyped({
-      data: markAsStreaming({
+      data: {
         friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
-      }),
-      dataState: "streaming",
+      },
+      dataState: "complete",
       networkStatus: NetworkStatus.streaming,
       error: undefined,
     });
@@ -929,7 +929,7 @@ test("incrementally rerenders data returned by a `fetchMore` for a streamed quer
           { __typename: "Friend", id: "3", name: "Leia" },
         ],
       }),
-      dataState: "streaming",
+      dataState: "complete",
       networkStatus: NetworkStatus.streaming,
       error: undefined,
     });
@@ -1113,10 +1113,10 @@ test("discards partial data and throws errors returned in incremental chunks", a
 
     expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
     expect(snapshot).toStrictEqualTyped({
-      data: markAsStreaming({
+      data: {
         friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
-      }),
-      dataState: "streaming",
+      },
+      dataState: "complete",
       networkStatus: NetworkStatus.streaming,
       error: undefined,
     });
@@ -1177,10 +1177,10 @@ test("adds partial data and does not throw errors returned in incremental chunks
 
     expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
     expect(snapshot).toStrictEqualTyped({
-      data: markAsStreaming({
+      data: {
         friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
-      }),
-      dataState: "streaming",
+      },
+      dataState: "complete",
       networkStatus: NetworkStatus.streaming,
       error: undefined,
     });
@@ -1193,10 +1193,10 @@ test("adds partial data and does not throw errors returned in incremental chunks
 
     expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
     expect(snapshot).toStrictEqualTyped({
-      data: markAsStreaming({
+      data: {
         friendList: [{ __typename: "Friend", id: "1", name: "Luke" }, null],
-      }),
-      dataState: "streaming",
+      },
+      dataState: "complete",
       networkStatus: NetworkStatus.streaming,
       error: new CombinedGraphQLErrors({
         data: {
@@ -1278,10 +1278,10 @@ test("adds partial data and discards errors returned in incremental chunks with 
 
     expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
     expect(snapshot).toStrictEqualTyped({
-      data: markAsStreaming({
+      data: {
         friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
-      }),
-      dataState: "streaming",
+      },
+      dataState: "complete",
       networkStatus: NetworkStatus.streaming,
       error: undefined,
     });
@@ -1294,10 +1294,10 @@ test("adds partial data and discards errors returned in incremental chunks with 
 
     expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
     expect(snapshot).toStrictEqualTyped({
-      data: markAsStreaming({
+      data: {
         friendList: [{ __typename: "Friend", id: "1", name: "Luke" }, null],
-      }),
-      dataState: "streaming",
+      },
+      dataState: "complete",
       networkStatus: NetworkStatus.streaming,
       error: undefined,
     });
@@ -1370,10 +1370,10 @@ test("can refetch and respond to cache updates after encountering an error in an
 
     expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
     expect(snapshot).toStrictEqualTyped({
-      data: markAsStreaming({
+      data: {
         friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
-      }),
-      dataState: "streaming",
+      },
+      dataState: "complete",
       networkStatus: NetworkStatus.streaming,
       error: undefined,
     });
@@ -1386,10 +1386,10 @@ test("can refetch and respond to cache updates after encountering an error in an
 
     expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
     expect(snapshot).toStrictEqualTyped({
-      data: markAsStreaming({
+      data: {
         friendList: [{ __typename: "Friend", id: "1", name: "Luke" }, null],
-      }),
-      dataState: "streaming",
+      },
+      dataState: "complete",
       networkStatus: NetworkStatus.streaming,
       error: new CombinedGraphQLErrors({
         data: {
@@ -1408,13 +1408,13 @@ test("can refetch and respond to cache updates after encountering an error in an
 
     expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
     expect(snapshot).toStrictEqualTyped({
-      data: markAsStreaming({
+      data: {
         friendList: [
           { __typename: "Friend", id: "1", name: "Luke" },
           null,
           { __typename: "Friend", id: "3", name: "Leia" },
         ],
-      }),
+      },
       dataState: "complete",
       networkStatus: NetworkStatus.error,
       error: new CombinedGraphQLErrors({
@@ -1445,10 +1445,10 @@ test("can refetch and respond to cache updates after encountering an error in an
 
     expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
     expect(snapshot).toStrictEqualTyped({
-      data: markAsStreaming({
+      data: {
         friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
-      }),
-      dataState: "streaming",
+      },
+      dataState: "complete",
       networkStatus: NetworkStatus.streaming,
       error: undefined,
     });
@@ -1461,13 +1461,13 @@ test("can refetch and respond to cache updates after encountering an error in an
 
     expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
     expect(snapshot).toStrictEqualTyped({
-      data: markAsStreaming({
+      data: {
         friendList: [
           { __typename: "Friend", id: "1", name: "Luke" },
           { __typename: "Friend", id: "2", name: "Han" },
         ],
-      }),
-      dataState: "streaming",
+      },
+      dataState: "complete",
       networkStatus: NetworkStatus.streaming,
       error: undefined,
     });

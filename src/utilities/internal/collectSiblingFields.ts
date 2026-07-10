@@ -72,6 +72,8 @@ export function collectSiblingFields(
             context,
             visitedFragments
           );
+
+        visitedFragments.set(fragment.name.value, fragmentCollectedFieldsMap);
       } else {
         fragmentCollectedFieldsMap = collectSiblingFields(
           fragment.selectionSet,

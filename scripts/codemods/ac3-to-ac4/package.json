@@ -50,6 +50,6 @@
     "@types/node": "20.9.0",
     "diff": "^8.0.2",
     "typescript": "^5.2.2",
-    "vitest": "^1.0.1"
+    "vitest": "^4.1.10"
   }
 }

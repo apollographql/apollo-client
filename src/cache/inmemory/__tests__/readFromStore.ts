@@ -805,27 +805,13 @@ describe("reading from the store", () => {
 
     expect(missing).toEqual(
       new MissingFieldError(
-        `Can't find field 'missing' on object ${JSON.stringify(
-          {
-            present: "here",
-          },
-          null,
-          2
-        )}`,
+        `Can't find field 'missing' on object`,
         {
           normal: {
-            missing: `Can't find field 'missing' on object ${JSON.stringify(
-              { present: "here" },
-              null,
-              2
-            )}`,
+            missing: `Can't find field 'missing' on object`,
           },
           clientOnly: {
-            missing: `Can't find field 'missing' on object ${JSON.stringify(
-              { present: "also here" },
-              null,
-              2
-            )}`,
+            missing: `Can't find field 'missing' on object`,
           },
         },
         query,
@@ -1404,12 +1390,12 @@ describe("reading from the store", () => {
     expect(diffChickens()).toEqual({
       complete: false,
       missing: new MissingFieldError(
-        "Can't find field 'id' on object {}",
+        "Can't find field 'id' on object",
         {
           chickens: {
             1: {
-              id: "Can't find field 'id' on object {}",
-              inCoop: "Can't find field 'inCoop' on object {}",
+              id: "Can't find field 'id' on object",
+              inCoop: "Can't find field 'inCoop' on object",
             },
           },
         },
@@ -1612,12 +1598,12 @@ describe("reading from the store", () => {
         ],
       },
       missing: new MissingFieldError(
-        "Can't find field 'id' on object undefined",
+        "Can't find field 'id' on object",
         {
           ducks: {
             2: {
-              id: "Can't find field 'id' on object undefined",
-              quacking: "Can't find field 'quacking' on object undefined",
+              id: "Can't find field 'id' on object",
+              quacking: "Can't find field 'quacking' on object",
             },
           },
         },
@@ -2176,5 +2162,114 @@ describe("reading from the store", () => {
     expect(result1.abc).toBe(result2.abc);
     expect(result1.abc).toBe(abc);
     expect(result2.abc).toBe(abc);
+  });
+});
+
+describe("lazy MissingFieldError diagnostics", () => {
+  it("does not construct MissingFieldError when only diff.complete is checked", () => {
+    const cache = new InMemoryCache();
+
+    const fullQuery = gql`
+      query {
+        customer {
+          id
+          name
+          address {
+            street
+            city
+          }
+        }
+      }
+    `;
+
+    const partialQuery = gql`
+      query {
+        customer {
+          id
+        }
+      }
+    `;
+
+    cache.writeQuery({
+      query: partialQuery,
+      data: {
+        customer: {
+          __typename: "Customer",
+          id: "c1",
+        },
+      },
+    });
+
+    const diff = cache.diff({
+      query: fullQuery,
+      returnPartialData: true,
+      optimistic: true,
+    });
+
+    expect(diff.complete).toBe(false);
+    expect(diff.result).toEqual({
+      customer: {
+        __typename: "Customer",
+        id: "c1",
+      },
+    });
+
+    // diff.missing should be a MissingFieldError when accessed
+    expect(diff.missing).toBeInstanceOf(MissingFieldError);
+    expect(diff.missing!.message).toContain("Can't find field 'name'");
+    expect(diff.missing!.message).toContain("Customer:c1 object");
+
+    // Verify missing tree structure
+    expect(diff.missing!.missing).toEqual({
+      customer: {
+        name: "Can't find field 'name' on Customer:c1 object",
+        address: "Can't find field 'address' on Customer:c1 object",
+      },
+    });
+  });
+
+  it("missing message no longer embeds full object dumps for embedded parents", () => {
+    const cache = new InMemoryCache();
+
+    const query = gql`
+      query {
+        profile {
+          bio
+          largeField
+        }
+      }
+    `;
+
+    cache.writeQuery({
+      query: gql`
+        query {
+          profile {
+            bio
+          }
+        }
+      `,
+      data: {
+        profile: {
+          __typename: "Profile",
+          bio: "a".repeat(1000),
+        },
+      },
+    });
+
+    const diff = cache.diff({
+      query,
+      returnPartialData: true,
+      optimistic: true,
+    });
+
+    expect(diff.complete).toBe(false);
+
+    // The missing message should NOT contain the full bio string
+    const message = diff.missing!.message;
+    expect(message).not.toContain("a".repeat(1000));
+    expect(message).toContain("Can't find field 'largeField'");
+    expect(message).toContain("object Profile");
+    // The message should be short - no large embedded content
+    expect(message.length).toBeLessThan(100);
   });
 });

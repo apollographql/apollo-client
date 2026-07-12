@@ -224,18 +224,10 @@ export class StoreReader {
       },
     });
 
-    let missing: MissingFieldError | undefined;
-    if (execResult.missing) {
-      missing = new MissingFieldError(
-        firstMissing(execResult.missing)!,
-        execResult.missing,
-        query,
-        variables
-      );
-    }
+    const { result, missing: rawMissing } = execResult;
+    const complete = !rawMissing;
 
-    const complete = !missing;
-    const { result } = execResult;
+    let missingError: MissingFieldError | undefined;
 
     return {
       result:
@@ -246,7 +238,17 @@ export class StoreReader {
           : result
         : null,
       complete,
-      missing,
+      get missing() {
+        if (missingError === void 0 && rawMissing) {
+          missingError = new MissingFieldError(
+            firstMissing(rawMissing)!,
+            rawMissing,
+            query,
+            variables
+          );
+        }
+        return missingError;
+      },
     } as Cache.DiffResult<T>;
   }
 
@@ -342,7 +344,9 @@ export class StoreReader {
               [resultName]: `Can't find field '${selection.name.value}' on ${
                 isReference(objectOrReference) ?
                   objectOrReference.__ref + " object"
-                : "object " + JSON.stringify(objectOrReference, null, 2)
+                : objectOrReference && objectOrReference.__typename ?
+                  "object " + objectOrReference.__typename
+                : "object"
               }`,
             });
           }

@@ -391,11 +391,7 @@ describe("diffing queries against the store", () => {
       returnPartialData: false,
     });
 
-    const missingFieldErrorMessage = `Can't find field 'address' on object ${JSON.stringify(
-      firstResult.person,
-      null,
-      2
-    )}`;
+    const missingFieldErrorMessage = `Can't find field 'address' on object Author`;
 
     expect(complete).toBe(false);
     expect(result).toBe(null);

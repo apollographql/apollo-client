@@ -1041,6 +1041,7 @@ export class QueryManager {
       context: DefaultContext | undefined;
       fetchPolicy: WatchQueryFetchPolicy;
       errorPolicy: ErrorPolicy;
+      returnPartialData: boolean | undefined;
     },
     {
       queryInfo,
@@ -1072,10 +1073,11 @@ export class QueryManager {
         // Use linkDocument rather than queryInfo.document so the
         // operation/fragments used to write the result are the same as the
         // ones used to obtain it from the link.
-        const result = queryInfo.markQueryResult(incoming, {
+        const { dataState, ...result } = queryInfo.markQueryResult(incoming, {
           ...options,
           document: linkDocument,
           cacheWriteBehavior,
+          returnPartialData: options.returnPartialData,
         });
         const hasErrors = graphQLResultHasError(result);
 
@@ -1087,20 +1089,21 @@ export class QueryManager {
           );
         }
 
+        const partial = dataState !== "complete";
         const aqr: QueryManager.Result<TData> = {
           data: result.data as TData,
           ...(queryInfo.hasNext ?
             {
               loading: true,
               networkStatus: NetworkStatus.streaming,
-              dataState: "streaming",
-              partial: true,
+              dataState,
+              partial,
             }
           : {
-              dataState: result.data ? "complete" : "empty",
+              dataState,
               loading: false,
               networkStatus: NetworkStatus.ready,
-              partial: !result.data,
+              partial,
             }),
         } as ObservableQuery.Result<TData>;
 
@@ -1121,7 +1124,7 @@ export class QueryManager {
             aqr.error = new CombinedGraphQLErrors(
               removeStreamDetailsFromExtensions(result)
             );
-            if (aqr.dataState !== "streaming") {
+            if (aqr.networkStatus !== NetworkStatus.streaming) {
               aqr.networkStatus = NetworkStatus.error;
             }
           }
@@ -1687,6 +1690,7 @@ export class QueryManager {
           context,
           fetchPolicy,
           errorPolicy,
+          returnPartialData,
         },
         {
           cacheWriteBehavior,

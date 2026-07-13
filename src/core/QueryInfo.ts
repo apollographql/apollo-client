@@ -1,16 +1,34 @@
 import { equal } from "@wry/equality";
-import type { DocumentNode, FormattedExecutionResult } from "graphql";
+import type {
+  DocumentNode,
+  FormattedExecutionResult,
+  SelectionSetNode,
+} from "graphql";
 
-import type { ApolloCache, Cache } from "@apollo/client/cache";
+import type { ApolloCache, Cache, MissingTree } from "@apollo/client/cache";
 import type { IgnoreModifier } from "@apollo/client/cache";
 import type { Incremental } from "@apollo/client/incremental";
 import type { ApolloLink } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
 import type { DeepPartial } from "@apollo/client/utilities";
-import type { ExtensionsWithStreamInfo } from "@apollo/client/utilities/internal";
+import type {
+  ExtensionsWithStreamInfo,
+  FieldMap,
+  FragmentMap,
+} from "@apollo/client/utilities/internal";
 import {
+  collectSiblingFields,
+  createFragmentMap,
+  getFragmentDefinitions,
+  getFragmentFromSelection,
+  getMainDefinition,
   getOperationName,
   graphQLResultHasError,
+  hasDirectives,
+  isDeferredFragment,
+  isField,
+  isTypenameField,
+  resultKeyNameFromField,
   streamInfoSymbol,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
@@ -62,6 +80,12 @@ interface OperationInfo<
   variables: TVariables;
   errorPolicy: ErrorPolicy;
   cacheWriteBehavior: AllowedCacheWriteBehavior;
+  returnPartialData?: boolean | undefined;
+}
+
+interface MarkQueryResult<TData, TExtensions>
+  extends FormattedExecutionResult<TData, TExtensions> {
+  dataState: "empty" | "partial" | "streaming" | "complete";
 }
 
 function wrapDestructiveCacheMethod(
@@ -215,8 +239,9 @@ export class QueryInfo<
       variables,
       errorPolicy,
       cacheWriteBehavior,
+      returnPartialData,
     }: OperationInfo<TData, TVariables>
-  ): FormattedExecutionResult<
+  ): MarkQueryResult<
     DataValue.Complete<TData> | DataValue.Streaming<TData>,
     ExtensionsWithStreamInfo
   > {
@@ -235,13 +260,34 @@ export class QueryInfo<
     const lastDiff =
       skipCache ? undefined : this.cache.diff<TData>(diffOptions);
 
-    let result = this.maybeHandleIncrementalResult(
+    const incrementalResult = this.maybeHandleIncrementalResult(
       lastDiff?.result,
       incoming,
       query
     );
+
+    let result: MarkQueryResult<any, ExtensionsWithStreamInfo> = {
+      ...incrementalResult,
+      dataState:
+        incrementalResult.data == null ? "empty"
+        : this.hasNext ? "streaming"
+        : "complete",
+    };
+
     if (skipCache) {
-      return result;
+      return {
+        ...result,
+        dataState:
+          result.data == null ? "empty"
+            // Ww can simplify the checks for no-cache queries because the
+            // result is purely server driven which means we can assume a
+            // well-formed GraphQL response. In this case, `streaming` only
+            // makes sense if we are using the `@defer` directive and there are
+            // more chunks still streaming (i.e. this.hasNext is true). Purely
+            // `@stream` queries should always be complete.
+          : this.hasNext && hasDirectives(["defer"], query) ? "streaming"
+          : "complete",
+      };
     }
 
     if (shouldWriteResult(result, errorPolicy)) {
@@ -312,7 +358,11 @@ export class QueryInfo<
             if (lastDiff && lastDiff.complete) {
               // Reuse data from the last good (complete) diff that we
               // received, when possible.
-              result = { ...result, data: lastDiff.result };
+              result = {
+                ...result,
+                data: lastDiff.result,
+                dataState: "complete",
+              };
               return;
             }
             // If the previous this.diff was incomplete, fall through to
@@ -327,7 +377,27 @@ export class QueryInfo<
           // Set without setDiff to avoid triggering a notify call, since
           // we have other ways of notifying for this result.
           if (diff.complete) {
-            result = { ...result, data: diff.result };
+            result = {
+              ...result,
+              data: diff.result,
+              dataState: "complete",
+            };
+          } else if (this.hasNext && diff.result !== null) {
+            const isPartial = isStreamingPartial(diff, query, variables);
+
+            // If we tolerate partial results always apply `diff.result` to
+            // ensure we return the result of any transforms in cache read
+            // functions or custom scalars. If we don't tolerate partial
+            // results, we only want to apply the diff result if the only hole
+            // in the data is at a defer boundary (e.g.
+            // `diff.complete === false && isStreamingPartial === false`)
+            if (returnPartialData || !isPartial) {
+              result = {
+                ...result,
+                data: diff.result,
+                dataState: isPartial ? "partial" : "streaming",
+              };
+            }
           }
         },
       });
@@ -643,4 +713,190 @@ function shouldWriteResult<T>(
     writeWithErrors = true;
   }
   return writeWithErrors;
+}
+
+function isStreamingPartial(
+  diff: Cache.DiffResult<unknown>,
+  document: DocumentNode,
+  variables: OperationVariables
+) {
+  if (!diff.missing) return false;
+
+  const fragmentMap = createFragmentMap(getFragmentDefinitions(document));
+
+  return isPartialInSelectionSet(
+    getMainDefinition(document).selectionSet,
+    diff.missing.missing,
+    { fragmentMap, variables }
+  );
+}
+
+interface StreamingPartialContext {
+  fragmentMap: FragmentMap;
+  variables: OperationVariables;
+}
+
+function isPartialInSelectionSet(
+  selectionSet: SelectionSetNode,
+  missingTree: MissingTree | undefined,
+  context: StreamingPartialContext
+): boolean {
+  if (typeof missingTree === "string") return true;
+  if (missingTree === undefined) return false;
+
+  const missingKeys = Object.keys(missingTree);
+  if (missingKeys.length > 0 && missingKeys.every(isArrayIndex)) {
+    return missingKeys.some((key) => {
+      if (typeof missingTree[key] === "string") return true;
+
+      return isPartialInSelectionSet(selectionSet, missingTree[key], context);
+    });
+  }
+
+  const { fragmentMap, variables } = context;
+
+  for (const selection of selectionSet.selections) {
+    if (isField(selection)) {
+      if (isTypenameField(selection)) continue;
+
+      const missing = missingTree[resultKeyNameFromField(selection)];
+      // If a missing entry is absent, we have a value for this field
+      if (missing === undefined) continue;
+
+      if (
+        !selection.selectionSet ||
+        isPartialInSelectionSet(selection.selectionSet, missing, context)
+      ) {
+        return true;
+      }
+    } else {
+      const fragment = getFragmentFromSelection(selection, fragmentMap);
+      if (!fragment) continue;
+
+      if (isDeferredFragment(selection, variables)) {
+        // We need to know the non-deferred fields that might overlap with the
+        // deferred selection set so that we accurately report the right
+        // dataState when all the non-deferred fields are satisfied and only the
+        // selections inside the fragment are missing.
+        // For example:
+        //
+        // {
+        //   recipient {
+        //     name
+        //   }
+        //   ... @defer {
+        //     recipient {
+        //       name
+        //       email
+        //     }
+        //   }
+        // }
+        //
+        // dataState should be `streaming`, not `partial` if `name` is present,
+        // but `email` is absent since `name` is not deferred.
+        if (
+          isPartialDeferBoundary(
+            fragment.selectionSet,
+            missingTree,
+            collectSiblingFields(selectionSet, {
+              ...context,
+              exclude: selection,
+            }),
+            fragmentMap
+          )
+        ) {
+          return true;
+        }
+      } else if (
+        isPartialInSelectionSet(fragment.selectionSet, missingTree, context)
+      ) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+type MissingObject = Exclude<MissingTree, string>;
+
+function isPartialDeferBoundary(
+  selectionSet: SelectionSetNode,
+  missing: MissingObject,
+  nonDeferredFields: FieldMap | undefined,
+  fragmentMap: FragmentMap
+): boolean {
+  // This flag tracks whether all fields in this selection set should contain
+  // values or should all be missing. A defer boundary is only partial if some
+  // fields are missing. The first selection node will set this value and all
+  // sibling fields should match after that. As soon as we get a mismatch, we
+  // have a partial defer boundary.
+  let shouldContainValues: boolean | undefined;
+
+  for (const selection of selectionSet.selections) {
+    if (isField(selection)) {
+      if (isTypenameField(selection)) continue;
+
+      const name = resultKeyNameFromField(selection);
+      const nonDeferredField = nonDeferredFields?.[name];
+
+      // If this field is not exclusive to this selection set, we don't care
+      // what the value is as far as the defer boundary is concerned. Ignore it
+      // and continue checking other siblings.
+      if (nonDeferredField === true) continue;
+
+      // The value of missing means different things:
+      // - undefined: The field is fully satisfied (i.e. it has a value for the field)
+      // - string: the field is fully unsatisfied (no scalar value, or object is
+      //   missing all fields)
+      // - object: The field has a selection set and is partially satisfied.
+      const missingField = missing[name];
+
+      if (typeof missingField !== "object") {
+        const hasValue = missingField === undefined;
+
+        if (shouldContainValues === undefined) {
+          shouldContainValues = hasValue;
+        }
+
+        if (hasValue !== shouldContainValues) {
+          return true;
+        }
+
+        continue;
+      }
+
+      if (
+        selection.selectionSet &&
+        isPartialDeferBoundary(
+          selection.selectionSet,
+          missingField,
+          nonDeferredField,
+          fragmentMap
+        )
+      ) {
+        return true;
+      }
+    } else {
+      const fragment = getFragmentFromSelection(selection, fragmentMap);
+      if (!fragment) continue;
+
+      if (
+        isPartialDeferBoundary(
+          fragment.selectionSet,
+          missing,
+          nonDeferredFields,
+          fragmentMap
+        )
+      ) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+function isArrayIndex(key: string) {
+  return /^\d+$/.test(key);
 }

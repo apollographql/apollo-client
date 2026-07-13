@@ -377,6 +377,111 @@ it.each([["cache-first"], ["no-cache"]] as const)(
   }
 );
 
+test.failing(
+  'returns non-deferred cached data with a "cache-first" fetch policy and returnPartialData: false',
+  async () => {
+    const query = gql`
+      query {
+        greeting {
+          message
+          ... on Greeting @defer {
+            recipient {
+              name
+              email
+            }
+          }
+        }
+      }
+    `;
+
+    const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+      mockDeferStreamGraphQL17Alpha9();
+    const cache = new InMemoryCache();
+
+    // We are intentionally writing partial data to the cache. Suppress console
+    // warnings to avoid unnecessary noise in the test.
+    {
+      using _consoleSpy = spyOnConsole("error");
+      cache.writeQuery({
+        query,
+        data: {
+          greeting: {
+            __typename: "Greeting",
+            recipient: {
+              email: "test@example.com",
+            },
+          },
+        },
+      });
+    }
+
+    const client = new ApolloClient({
+      cache,
+      link: httpLink,
+      incrementalHandler: new GraphQL17Alpha9Handler(),
+    });
+
+    const stream = new ObservableStream(client.watchQuery({ query }));
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    enqueueInitialChunk({
+      data: { greeting: { message: "Hello world", __typename: "Greeting" } },
+      pending: [{ id: "0", path: ["greeting"] }],
+      hasNext: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: markAsStreaming({
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+        },
+      }),
+      dataState: "streaming",
+      loading: true,
+      networkStatus: NetworkStatus.streaming,
+      partial: true,
+    });
+
+    enqueueSubsequentChunk({
+      incremental: [
+        {
+          data: {
+            __typename: "Greeting",
+            recipient: { name: "Alice", __typename: "Person" },
+          },
+          id: "0",
+        },
+      ],
+      completed: [{ id: "0" }],
+      hasNext: false,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+          recipient: { __typename: "Person", name: "Alice" },
+        },
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    await expect(stream).not.toEmitAnything();
+  }
+);
+
 test('returns partial non-deferred cached data with a "cache-first" fetch policy and returnPartialData', async () => {
   const query = gql`
     query {

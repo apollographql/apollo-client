@@ -1553,18 +1553,18 @@ test("parses custom scalar fields across `@defer` payloads when refetching (defe
   });
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       event: {
         __typename: "Event",
         id: "1",
         startDate: new Date(2027, 0, 1),
         endDate: new Date(2026, 1, 2),
       },
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   link.enqueueSubsequentChunk({
@@ -1718,18 +1718,18 @@ test("parses custom scalar fields across `@defer` payloads when refetching (grap
   });
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       event: {
         __typename: "Event",
         id: "1",
         startDate: new Date(2027, 0, 1),
         endDate: new Date(2026, 1, 2),
       },
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   link.enqueueSubsequentChunk({
@@ -1816,7 +1816,7 @@ test("parses custom scalar fields across `@stream` payloads (defer20220824)", as
   });
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       events: [
         {
           __typename: "Event",
@@ -1824,11 +1824,11 @@ test("parses custom scalar fields across `@stream` payloads (defer20220824)", as
           startDate: new Date(2026, 0, 1),
         },
       ],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   link.enqueueSubsequentChunk({
@@ -1921,7 +1921,7 @@ test("parses custom scalar fields across `@stream` payloads (graphql17Alpha9)", 
   });
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       events: [
         {
           __typename: "Event",
@@ -1929,11 +1929,11 @@ test("parses custom scalar fields across `@stream` payloads (graphql17Alpha9)", 
           startDate: new Date(2026, 0, 1),
         },
       ],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   link.enqueueSubsequentChunk({

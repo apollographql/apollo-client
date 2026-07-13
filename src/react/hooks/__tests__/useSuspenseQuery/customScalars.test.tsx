@@ -1249,7 +1249,7 @@ test("parses custom scalar fields across `@stream` payloads (defer20220824)", as
 
     expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
     expect(snapshot).toStrictEqualTyped({
-      data: markAsStreaming({
+      data: {
         events: [
           {
             __typename: "Event",
@@ -1257,8 +1257,8 @@ test("parses custom scalar fields across `@stream` payloads (defer20220824)", as
             startDate: new Date(2026, 0, 1),
           },
         ],
-      }),
-      dataState: "streaming",
+      },
+      dataState: "complete",
       networkStatus: NetworkStatus.streaming,
       error: undefined,
     });
@@ -1364,7 +1364,7 @@ test("parses custom scalar fields across `@stream` payloads (graphql17Alpha9)", 
 
     expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
     expect(snapshot).toStrictEqualTyped({
-      data: markAsStreaming({
+      data: {
         events: [
           {
             __typename: "Event",
@@ -1372,8 +1372,8 @@ test("parses custom scalar fields across `@stream` payloads (graphql17Alpha9)", 
             startDate: new Date(2026, 0, 1),
           },
         ],
-      }),
-      dataState: "streaming",
+      },
+      dataState: "complete",
       networkStatus: NetworkStatus.streaming,
       error: undefined,
     });

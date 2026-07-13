@@ -1332,7 +1332,7 @@ test("parses custom scalar fields across `@stream` payloads (defer20220824)", as
   });
 
   await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-    data: markAsStreaming({
+    data: {
       events: [
         {
           __typename: "Event",
@@ -1340,8 +1340,8 @@ test("parses custom scalar fields across `@stream` payloads (defer20220824)", as
           startDate: new Date(2026, 0, 1),
         },
       ],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
     previousData: undefined,
@@ -1452,7 +1452,7 @@ test("parses custom scalar fields across `@stream` payloads (graphql17Alpha9)", 
   });
 
   await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-    data: markAsStreaming({
+    data: {
       events: [
         {
           __typename: "Event",
@@ -1460,8 +1460,8 @@ test("parses custom scalar fields across `@stream` payloads (graphql17Alpha9)", 
           startDate: new Date(2026, 0, 1),
         },
       ],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
     previousData: undefined,

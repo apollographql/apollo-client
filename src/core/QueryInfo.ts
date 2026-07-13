@@ -382,19 +382,22 @@ export class QueryInfo<
               data: diff.result,
               dataState: "complete",
             };
-          } else if (
-            this.hasNext &&
-            returnPartialData &&
-            diff.result !== null
-          ) {
-            result = {
-              ...result,
-              data: diff.result,
-              dataState:
-                isStreamingPartial(diff, query, variables) ? "partial" : (
-                  "streaming"
-                ),
-            };
+          } else if (this.hasNext && diff.result !== null) {
+            const isPartial = isStreamingPartial(diff, query, variables);
+
+            // If we tolerate partial results always apply `diff.result` to
+            // ensure we return the result of any transforms in cache read
+            // functions or custom scalars. If we don't tolerate partial
+            // results, we only want to apply the diff result if the only hole
+            // in the data is at a defer boundary (e.g.
+            // `diff.complete === false && isStreamingPartial === false`)
+            if (returnPartialData || !isPartial) {
+              result = {
+                ...result,
+                data: diff.result,
+                dataState: isPartial ? "partial" : "streaming",
+              };
+            }
           }
         },
       });

@@ -7,11 +7,14 @@
     "@apollo/client-codemod-migrate-3-to-4": "1.0.2"
   },
   "changesets": [
+    "angry-baboons-decide",
     "big-scissors-hope",
     "cold-comics-add",
     "eighty-files-sort",
+    "fast-geckos-help",
     "fifty-books-return",
     "fuzzy-hairs-tie",
+    "serious-bugs-move",
     "strong-shoes-sell",
     "thin-tips-fold",
     "tidy-cache-type-constraints",

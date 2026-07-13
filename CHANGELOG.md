@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 4.2.7
+
+### Patch Changes
+
+- [#13320](https://github.com/apollographql/apollo-client/pull/13320) [`538c906`](https://github.com/apollographql/apollo-client/commit/538c906143c18dcc4fd9c29427413451fcd72c22) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Cleanup some unused internals. Please file an issue if you notice anything change.
+
 ## 4.2.6
 
 ### Patch Changes

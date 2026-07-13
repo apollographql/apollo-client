@@ -30,7 +30,6 @@ import {
   getDefaultValues,
   getFragmentFromSelection,
   getOperationDefinition,
-  hasDirectives,
   isArray,
   isField,
   isNonEmptyArray,
@@ -398,9 +397,9 @@ export class StoreWriter {
             path,
           };
         } else if (
-          hasDirectives(["stream"], field) &&
+          context.extensions?.[streamInfoSymbol] &&
           Array.isArray(incomingValue) &&
-          context.extensions?.[streamInfoSymbol]
+          hasStreamDirective(field)
         ) {
           childTree.info = {
             field,
@@ -823,6 +822,13 @@ function mergeMergeTrees(
   }
 
   return merged;
+}
+
+function hasStreamDirective(field: FieldNode): boolean {
+  return (
+    !!field.directives &&
+    field.directives.some((directive) => directive.name.value === "stream")
+  );
 }
 
 function mergeTreeIsEmpty(tree: MergeTree | undefined): boolean {

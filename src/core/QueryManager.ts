@@ -618,11 +618,6 @@ export class QueryManager {
     }));
   }
 
-  private requestIdCounter = 1;
-  public generateRequestId() {
-    return this.requestIdCounter++;
-  }
-
   public clearStore(
     options: Cache.ResetOptions = {
       discardWatches: true,
@@ -1055,7 +1050,6 @@ export class QueryManager {
       exposeExtensions?: boolean;
     }
   ): Observable<ObservableQuery.Result<TData>> {
-    const requestId = (queryInfo.lastRequestId = this.generateRequestId());
     const { errorPolicy } = options;
 
     // Performing transformForLink here gives this.cache a chance to fill in
@@ -1111,10 +1105,6 @@ export class QueryManager {
           aqr[extensionsSymbol] = result.extensions;
         }
 
-        // In the case we start multiple network requests simultaneously, we
-        // want to ensure we properly set `data` if we're reporting on an old
-        // result which will not be caught by the conditional above that ends up
-        // throwing the markError result.
         if (hasErrors) {
           if (errorPolicy === "none") {
             aqr.data = void 0 as TData;
@@ -1133,8 +1123,7 @@ export class QueryManager {
         return aqr;
       }),
       catchError((error) => {
-        // Avoid storing errors from older interrupted queries.
-        if (requestId >= queryInfo.lastRequestId && errorPolicy === "none") {
+        if (errorPolicy === "none") {
           queryInfo.resetLastWrite();
           observableQuery?.["resetNotifications"]();
           throw error;

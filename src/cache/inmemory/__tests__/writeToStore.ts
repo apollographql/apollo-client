@@ -1,3 +1,4 @@
+import { Trie } from "@wry/trie";
 import type {
   ASTNode,
   DefinitionNode,
@@ -14,11 +15,16 @@ import { InMemoryCache } from "@apollo/client/cache";
 import { spyOnConsole } from "@apollo/client/testing/internal";
 import type { Reference, StoreObject } from "@apollo/client/utilities";
 import { addTypenameToDocument, isReference } from "@apollo/client/utilities";
+import type {
+  ExtensionsWithStreamInfo,
+  StreamInfoTrie,
+} from "@apollo/client/utilities/internal";
 import {
   cloneDeep,
   getMainDefinition,
   makeReference,
   storeKeyNameFromField,
+  streamInfoSymbol,
 } from "@apollo/client/utilities/internal";
 import { invariant, InvariantError } from "@apollo/client/utilities/invariant";
 
@@ -4027,5 +4033,49 @@ describe("writing to the store", () => {
     `);
 
     expect(cache.extract()["User:5"]).toBeUndefined();
+  });
+
+  describe("@stream", () => {
+    it("applies the default stream merge strategy only to fields with @stream on the field itself", () => {
+      using _ = spyOnConsole("warn");
+      const cache = new InMemoryCache();
+      const query = gql`
+        query {
+          list {
+            id
+            nested @stream {
+              id
+            }
+          }
+        }
+      `;
+
+      const extensions: ExtensionsWithStreamInfo = {
+        [streamInfoSymbol]: new WeakRef(new Trie() as StreamInfoTrie),
+      };
+
+      const item = (id: string) => ({
+        __typename: "Item",
+        id,
+        nested: [],
+      });
+
+      cache.writeQuery({
+        query,
+        data: { list: [item("1"), item("2"), item("3")] },
+        extensions,
+      });
+
+      cache.writeQuery({
+        query,
+        data: { list: [item("1"), item("2")] },
+        extensions,
+      });
+
+      expect(cache.extract().ROOT_QUERY).toEqual({
+        __typename: "Query",
+        list: [{ __ref: "Item:1" }, { __ref: "Item:2" }],
+      });
+    });
   });
 });

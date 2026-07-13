@@ -126,5 +126,28 @@ describe("createFetchMultipartSubscription", () => {
 
       expect(errorSpy).toHaveBeenCalledWith(networkError);
     });
+
+    it("should not call fetch if JSON serialization fails", () => {
+      const errorSpy = jest.fn();
+      const mockFetch = jest.fn();
+      const variables: Record<string, unknown> = {};
+
+      variables.self = variables;
+
+      const subscribe = createFetchMultipartSubscription("/graphql", {
+        fetch: mockFetch as typeof fetch,
+      });
+
+      const observable = subscribe(mockRequestParameters, variables);
+
+      observable.subscribe({
+        next: () => {},
+        error: errorSpy,
+        complete: () => {},
+      });
+
+      expect(errorSpy).toHaveBeenCalled();
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
   });
 });

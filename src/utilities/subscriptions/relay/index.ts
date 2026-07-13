@@ -39,6 +39,7 @@ export function createFetchMultipartSubscription(
         options.body = JSON.stringify(body);
       } catch (parseError) {
         sink.error(parseError as Error);
+        return;
       }
 
       const currentFetch = preferredFetch || maybe(() => fetch) || backupFetch;

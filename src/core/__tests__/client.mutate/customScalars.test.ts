@@ -1,7 +1,13 @@
 import { delay, of } from "rxjs";
 
 import type { OperationVariables, TypedDocumentNode } from "@apollo/client";
-import { ApolloClient, ApolloLink, gql, NetworkStatus } from "@apollo/client";
+import {
+  ApolloClient,
+  ApolloLink,
+  CombinedGraphQLErrors,
+  gql,
+  NetworkStatus,
+} from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { MockLink } from "@apollo/client/testing";
 import { dateScalar, ObservableStream } from "@apollo/client/testing/internal";
@@ -655,6 +661,199 @@ test("parses custom scalar fields in queries triggered by refetchQueries", async
       __typename: "Event",
       id: "1",
       startDate: new Date(2026, 2, 3),
+    },
+  });
+});
+
+test("serializes scalar fields in the error with a `none` error policy", async () => {
+  const mutation = gql`
+    mutation CreateEvent {
+      createEvent {
+        id
+        startDate
+        endDate
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+            endDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          createEvent: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+            endDate: null,
+          },
+        },
+        errors: [
+          {
+            message: "Could not resolve endDate",
+            path: ["createEvent", "endDate"],
+          },
+        ],
+      }).pipe(delay(20))
+    ),
+  });
+
+  await expect(
+    client.mutate({ mutation, errorPolicy: "none" })
+  ).rejects.toEqual(
+    new CombinedGraphQLErrors({
+      data: {
+        createEvent: {
+          __typename: "Event",
+          id: "1",
+          startDate: "2026-01-01",
+          endDate: null,
+        },
+      },
+      errors: [
+        {
+          message: "Could not resolve endDate",
+          path: ["createEvent", "endDate"],
+        },
+      ],
+    })
+  );
+});
+
+test("parses scalar fields in the result and serializes them in the error with an `all` error policy", async () => {
+  const mutation = gql`
+    mutation CreateEvent {
+      createEvent {
+        id
+        startDate
+        endDate
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+            endDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          createEvent: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+            endDate: null,
+          },
+        },
+        errors: [
+          {
+            message: "Could not resolve endDate",
+            path: ["createEvent", "endDate"],
+          },
+        ],
+      }).pipe(delay(20))
+    ),
+  });
+
+  await expect(
+    client.mutate({ mutation, errorPolicy: "all" })
+  ).resolves.toStrictEqualTyped({
+    data: {
+      createEvent: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+        endDate: null,
+      },
+    },
+    error: new CombinedGraphQLErrors({
+      data: {
+        createEvent: {
+          __typename: "Event",
+          id: "1",
+          // TODO: Determine if this is correct
+          startDate: new Date(2026, 0, 1),
+          endDate: null,
+        },
+      },
+      errors: [
+        {
+          message: "Could not resolve endDate",
+          path: ["createEvent", "endDate"],
+        },
+      ],
+    }),
+  });
+});
+
+test("parses custom scalar fields with an `ignore` error policy", async () => {
+  const mutation = gql`
+    mutation CreateEvent {
+      createEvent {
+        id
+        startDate
+        endDate
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+            endDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          createEvent: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+            endDate: null,
+          },
+        },
+        errors: [
+          {
+            message: "Could not resolve endDate",
+            path: ["createEvent", "endDate"],
+          },
+        ],
+      }).pipe(delay(20))
+    ),
+  });
+
+  await expect(
+    client.mutate({ mutation, errorPolicy: "ignore" })
+  ).resolves.toStrictEqualTyped({
+    data: {
+      createEvent: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+        endDate: null,
+      },
     },
   });
 });

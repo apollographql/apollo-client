@@ -5,13 +5,25 @@ import {
 import { delay, of } from "rxjs";
 
 import type { OperationVariables, TypedDocumentNode } from "@apollo/client";
-import { ApolloClient, ApolloLink, gql, NetworkStatus } from "@apollo/client";
+import {
+  ApolloClient,
+  ApolloLink,
+  CombinedGraphQLErrors,
+  gql,
+  NetworkStatus,
+} from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
+import {
+  Defer20220824Handler,
+  GraphQL17Alpha9Handler,
+} from "@apollo/client/incremental";
 import { useMutation, useQuery } from "@apollo/client/react";
 import { MockLink } from "@apollo/client/testing";
 import {
   createClientWrapper,
   dateScalar,
+  mockDefer20220824,
+  mockDeferStreamGraphQL17Alpha9,
 } from "@apollo/client/testing/internal";
 
 test("serializes scalar variables used in field arguments", async () => {
@@ -1106,4 +1118,589 @@ test("parses custom scalar fields in queries triggered by refetchQueries", async
       startDate: new Date(2026, 2, 3),
     },
   });
+});
+
+test("serializes scalar fields in the error with a `none` error policy", async () => {
+  const mutation = gql`
+    mutation CreateEvent {
+      createEvent {
+        id
+        startDate
+        endDate
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+            endDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          createEvent: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+            endDate: null,
+          },
+        },
+        errors: [
+          {
+            message: "Could not resolve endDate",
+            path: ["createEvent", "endDate"],
+          },
+        ],
+      }).pipe(delay(20))
+    ),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot, getCurrentSnapshot } = await renderHookToSnapshotStream(
+    () => useMutation(mutation, { errorPolicy: "none" }),
+    { wrapper: createClientWrapper(client) }
+  );
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: undefined,
+      error: undefined,
+      called: false,
+      loading: false,
+    });
+  }
+
+  const [mutate] = getCurrentSnapshot();
+
+  await expect(mutate()).rejects.toEqual(
+    new CombinedGraphQLErrors({
+      data: {
+        createEvent: {
+          __typename: "Event",
+          id: "1",
+          startDate: "2026-01-01",
+          endDate: null,
+        },
+      },
+      errors: [
+        {
+          message: "Could not resolve endDate",
+          path: ["createEvent", "endDate"],
+        },
+      ],
+    })
+  );
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: undefined,
+      error: undefined,
+      called: true,
+      loading: true,
+    });
+  }
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: undefined,
+      error: new CombinedGraphQLErrors({
+        data: {
+          createEvent: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+            endDate: null,
+          },
+        },
+        errors: [
+          {
+            message: "Could not resolve endDate",
+            path: ["createEvent", "endDate"],
+          },
+        ],
+      }),
+      called: true,
+      loading: false,
+    });
+  }
+
+  await expect(takeSnapshot).not.toRerender();
+});
+
+test("parses scalar fields in the result and serializes them in the error with an `all` error policy", async () => {
+  const mutation = gql`
+    mutation CreateEvent {
+      createEvent {
+        id
+        startDate
+        endDate
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+            endDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          createEvent: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+            endDate: null,
+          },
+        },
+        errors: [
+          {
+            message: "Could not resolve endDate",
+            path: ["createEvent", "endDate"],
+          },
+        ],
+      }).pipe(delay(20))
+    ),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot, getCurrentSnapshot } = await renderHookToSnapshotStream(
+    () => useMutation(mutation, { errorPolicy: "all" }),
+    { wrapper: createClientWrapper(client) }
+  );
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: undefined,
+      error: undefined,
+      called: false,
+      loading: false,
+    });
+  }
+
+  const [mutate] = getCurrentSnapshot();
+
+  await expect(mutate()).resolves.toStrictEqualTyped({
+    data: {
+      createEvent: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+        endDate: null,
+      },
+    },
+    error: new CombinedGraphQLErrors({
+      data: {
+        createEvent: {
+          __typename: "Event",
+          id: "1",
+          // TODO: Determine if this is correct
+          startDate: new Date(2026, 0, 1),
+          endDate: null,
+        },
+      },
+      errors: [
+        {
+          message: "Could not resolve endDate",
+          path: ["createEvent", "endDate"],
+        },
+      ],
+    }),
+  });
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: undefined,
+      error: undefined,
+      called: true,
+      loading: true,
+    });
+  }
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: {
+        createEvent: {
+          __typename: "Event",
+          id: "1",
+          startDate: new Date(2026, 0, 1),
+          endDate: null,
+        },
+      },
+      error: new CombinedGraphQLErrors({
+        data: {
+          createEvent: {
+            __typename: "Event",
+            id: "1",
+            // TODO: Determine if this is correct
+            startDate: new Date(2026, 0, 1),
+            endDate: null,
+          },
+        },
+        errors: [
+          {
+            message: "Could not resolve endDate",
+            path: ["createEvent", "endDate"],
+          },
+        ],
+      }),
+      called: true,
+      loading: false,
+    });
+  }
+
+  await expect(takeSnapshot).not.toRerender();
+});
+
+test("parses custom scalar fields with an `ignore` error policy", async () => {
+  const mutation = gql`
+    mutation CreateEvent {
+      createEvent {
+        id
+        startDate
+        endDate
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+            endDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          createEvent: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+            endDate: null,
+          },
+        },
+        errors: [
+          {
+            message: "Could not resolve endDate",
+            path: ["createEvent", "endDate"],
+          },
+        ],
+      }).pipe(delay(20))
+    ),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot, getCurrentSnapshot } = await renderHookToSnapshotStream(
+    () => useMutation(mutation, { errorPolicy: "ignore" }),
+    { wrapper: createClientWrapper(client) }
+  );
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: undefined,
+      error: undefined,
+      called: false,
+      loading: false,
+    });
+  }
+
+  const [mutate] = getCurrentSnapshot();
+
+  await expect(mutate()).resolves.toStrictEqualTyped({
+    data: {
+      createEvent: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+        endDate: null,
+      },
+    },
+  });
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: undefined,
+      error: undefined,
+      called: true,
+      loading: true,
+    });
+  }
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: {
+        createEvent: {
+          __typename: "Event",
+          id: "1",
+          startDate: new Date(2026, 0, 1),
+          endDate: null,
+        },
+      },
+      error: undefined,
+      called: true,
+      loading: false,
+    });
+  }
+
+  await expect(takeSnapshot).not.toRerender();
+});
+
+test("parses custom scalar fields across `@defer` payloads (defer20220824)", async () => {
+  const link = mockDefer20220824();
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+            endDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: link.httpLink,
+    incrementalHandler: new Defer20220824Handler(),
+  });
+  const mutation = gql`
+    mutation CreateEvent {
+      createEvent {
+        id
+        startDate
+        ... @defer {
+          endDate
+        }
+      }
+    }
+  `;
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot, getCurrentSnapshot } = await renderHookToSnapshotStream(
+    () => useMutation(mutation),
+    { wrapper: createClientWrapper(client) }
+  );
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: undefined,
+      error: undefined,
+      called: false,
+      loading: false,
+    });
+  }
+
+  const [mutate] = getCurrentSnapshot();
+
+  const promise = mutate();
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: undefined,
+      error: undefined,
+      called: true,
+      loading: true,
+    });
+  }
+
+  link.enqueueInitialChunk({
+    data: {
+      createEvent: {
+        __typename: "Event",
+        id: "1",
+        startDate: "2026-01-01",
+      },
+    },
+    hasNext: true,
+  });
+
+  await expect(takeSnapshot).not.toRerender();
+
+  link.enqueueSubsequentChunk({
+    incremental: [{ data: { endDate: "2026-02-02" }, path: ["createEvent"] }],
+    hasNext: false,
+  });
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: {
+        createEvent: {
+          __typename: "Event",
+          id: "1",
+          startDate: new Date(2026, 0, 1),
+          endDate: new Date(2026, 1, 2),
+        },
+      },
+      error: undefined,
+      called: true,
+      loading: false,
+    });
+  }
+
+  await expect(promise).resolves.toStrictEqualTyped({
+    data: {
+      createEvent: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+        endDate: new Date(2026, 1, 2),
+      },
+    },
+  });
+
+  await expect(takeSnapshot).not.toRerender();
+});
+
+test("parses custom scalar fields across `@defer` payloads (graphql17Alpha9)", async () => {
+  const link = mockDeferStreamGraphQL17Alpha9();
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+            endDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: link.httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+  const mutation = gql`
+    mutation CreateEvent {
+      createEvent {
+        id
+        startDate
+        ... @defer {
+          endDate
+        }
+      }
+    }
+  `;
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot, getCurrentSnapshot } = await renderHookToSnapshotStream(
+    () => useMutation(mutation),
+    { wrapper: createClientWrapper(client) }
+  );
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: undefined,
+      error: undefined,
+      called: false,
+      loading: false,
+    });
+  }
+
+  const [mutate] = getCurrentSnapshot();
+
+  const promise = mutate();
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: undefined,
+      error: undefined,
+      called: true,
+      loading: true,
+    });
+  }
+
+  link.enqueueInitialChunk({
+    data: {
+      createEvent: {
+        __typename: "Event",
+        id: "1",
+        startDate: "2026-01-01",
+      },
+    },
+    pending: [{ id: "0", path: ["createEvent"] }],
+    hasNext: true,
+  });
+
+  await expect(takeSnapshot).not.toRerender();
+
+  link.enqueueSubsequentChunk({
+    incremental: [{ data: { endDate: "2026-02-02" }, id: "0" }],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: {
+        createEvent: {
+          __typename: "Event",
+          id: "1",
+          startDate: new Date(2026, 0, 1),
+          endDate: new Date(2026, 1, 2),
+        },
+      },
+      error: undefined,
+      called: true,
+      loading: false,
+    });
+  }
+
+  await expect(promise).resolves.toStrictEqualTyped({
+    data: {
+      createEvent: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+        endDate: new Date(2026, 1, 2),
+      },
+    },
+  });
+
+  await expect(takeSnapshot).not.toRerender();
 });

@@ -1,22 +1,31 @@
-import { screen } from "@testing-library/react";
-import {
-  createRenderStream,
-  disableActEnvironment,
-  useTrackRenders,
-} from "@testing-library/react-render-stream";
-import { userEvent } from "@testing-library/user-event";
-import React, { Suspense } from "react";
+import { disableActEnvironment } from "@testing-library/react-render-stream";
 import { delay, of } from "rxjs";
 
 import type { OperationVariables } from "@apollo/client";
-import { ApolloClient, ApolloLink, gql, NetworkStatus } from "@apollo/client";
+import {
+  ApolloClient,
+  ApolloLink,
+  CombinedGraphQLErrors,
+  gql,
+  NetworkStatus,
+} from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
-import type { QueryRef } from "@apollo/client/react";
-import { useLoadableQuery, useReadQuery } from "@apollo/client/react";
+import {
+  Defer20220824Handler,
+  GraphQL17Alpha9Handler,
+} from "@apollo/client/incremental";
+import { useLoadableQuery } from "@apollo/client/react";
 import {
   createClientWrapper,
   dateScalar,
+  markAsStreaming,
+  mockDefer20220824,
+  mockDeferStreamGraphQL17Alpha9,
+  spyOnConsole,
 } from "@apollo/client/testing/internal";
+import { invariant } from "@apollo/client/utilities/invariant";
+
+import { renderUseLoadableQueryHook } from "./testUtils.js";
 
 test("serializes scalar variables used in field arguments", async () => {
   let requestVariables!: OperationVariables;
@@ -34,13 +43,6 @@ test("serializes scalar variables used in field arguments", async () => {
     }),
   });
 
-  const renderStream = createRenderStream({
-    initialSnapshot: {
-      result: null as useReadQuery.Result<any> | null,
-    },
-    skipNonTrackingRenders: true,
-  });
-
   const query = gql`
     query Event($date: Date!) {
       event(date: $date) {
@@ -49,53 +51,33 @@ test("serializes scalar variables used in field arguments", async () => {
     }
   `;
 
-  function ReadQuery({ queryRef }: { queryRef: QueryRef }) {
-    useTrackRenders({ name: "useReadQuery" });
-    renderStream.mergeSnapshot({ result: useReadQuery(queryRef) });
-
-    return null;
-  }
-
-  function Fallback() {
-    useTrackRenders({ name: "<Suspense />" });
-    return null;
-  }
-
-  function App() {
-    useTrackRenders({ name: "useLoadableQuery" });
-    const [loadQuery, queryRef] = useLoadableQuery(query);
-
-    return (
-      <>
-        <button onClick={() => loadQuery({ date: new Date(2026, 0, 1) })}>
-          Load query
-        </button>
-        <Suspense fallback={<Fallback />}>
-          {queryRef && <ReadQuery queryRef={queryRef} />}
-        </Suspense>
-      </>
-    );
-  }
-
   using _disabledAct = disableActEnvironment();
-  const user = userEvent.setup();
-  await renderStream.render(<App />, {
-    wrapper: createClientWrapper(client),
-  });
-
-  await expect(renderStream.takeRender()).resolves.toMatchObject({
-    renderedComponents: ["useLoadableQuery"],
-  });
-
-  await user.click(screen.getByText("Load query"));
-
-  await expect(renderStream.takeRender()).resolves.toMatchObject({
-    renderedComponents: ["useLoadableQuery", "<Suspense />"],
-  });
+  const { takeRender, loadQuery } = await renderUseLoadableQueryHook(
+    () => useLoadableQuery(query),
+    { wrapper: createClientWrapper(client) }
+  );
 
   {
-    const { snapshot, renderedComponents } = await renderStream.takeRender();
+    const { renderedComponents } = await takeRender();
 
+    expect(renderedComponents).toStrictEqual(["useLoadableQuery"]);
+  }
+
+  loadQuery({ date: new Date(2026, 0, 1) });
+
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual([
+      "useLoadableQuery",
+      "<Suspense />",
+    ]);
+  }
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    invariant("result" in snapshot);
     expect(renderedComponents).toStrictEqual(["useReadQuery"]);
     expect(snapshot.result).toStrictEqualTyped({
       data: {
@@ -110,7 +92,7 @@ test("serializes scalar variables used in field arguments", async () => {
     });
   }
 
-  await expect(renderStream).not.toRerender();
+  await expect(takeRender).not.toRerender();
   expect(requestVariables).toStrictEqualTyped({ date: "2026-01-01" });
 });
 
@@ -130,13 +112,6 @@ test("serializes scalar variables used in directive arguments", async () => {
     }),
   });
 
-  const renderStream = createRenderStream({
-    initialSnapshot: {
-      result: null as useReadQuery.Result<any> | null,
-    },
-    skipNonTrackingRenders: true,
-  });
-
   const query = gql`
     query Event($date: Date!) {
       event @on(date: $date) {
@@ -145,53 +120,33 @@ test("serializes scalar variables used in directive arguments", async () => {
     }
   `;
 
-  function ReadQuery({ queryRef }: { queryRef: QueryRef }) {
-    useTrackRenders({ name: "useReadQuery" });
-    renderStream.mergeSnapshot({ result: useReadQuery(queryRef) });
-
-    return null;
-  }
-
-  function Fallback() {
-    useTrackRenders({ name: "<Suspense />" });
-    return null;
-  }
-
-  function App() {
-    useTrackRenders({ name: "useLoadableQuery" });
-    const [loadQuery, queryRef] = useLoadableQuery(query);
-
-    return (
-      <>
-        <button onClick={() => loadQuery({ date: new Date(2026, 0, 1) })}>
-          Load query
-        </button>
-        <Suspense fallback={<Fallback />}>
-          {queryRef && <ReadQuery queryRef={queryRef} />}
-        </Suspense>
-      </>
-    );
-  }
-
   using _disabledAct = disableActEnvironment();
-  const user = userEvent.setup();
-  await renderStream.render(<App />, {
-    wrapper: createClientWrapper(client),
-  });
-
-  await expect(renderStream.takeRender()).resolves.toMatchObject({
-    renderedComponents: ["useLoadableQuery"],
-  });
-
-  await user.click(screen.getByText("Load query"));
-
-  await expect(renderStream.takeRender()).resolves.toMatchObject({
-    renderedComponents: ["useLoadableQuery", "<Suspense />"],
-  });
+  const { takeRender, loadQuery } = await renderUseLoadableQueryHook(
+    () => useLoadableQuery(query),
+    { wrapper: createClientWrapper(client) }
+  );
 
   {
-    const { snapshot, renderedComponents } = await renderStream.takeRender();
+    const { renderedComponents } = await takeRender();
 
+    expect(renderedComponents).toStrictEqual(["useLoadableQuery"]);
+  }
+
+  loadQuery({ date: new Date(2026, 0, 1) });
+
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual([
+      "useLoadableQuery",
+      "<Suspense />",
+    ]);
+  }
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    invariant("result" in snapshot);
     expect(renderedComponents).toStrictEqual(["useReadQuery"]);
     expect(snapshot.result).toStrictEqualTyped({
       data: {
@@ -206,7 +161,7 @@ test("serializes scalar variables used in directive arguments", async () => {
     });
   }
 
-  await expect(renderStream).not.toRerender();
+  await expect(takeRender).not.toRerender();
   expect(requestVariables).toStrictEqualTyped({ date: "2026-01-01" });
 });
 
@@ -233,13 +188,6 @@ test("serializes scalar fields in input object variables", async () => {
     }),
   });
 
-  const renderStream = createRenderStream({
-    initialSnapshot: {
-      result: null as useReadQuery.Result<any> | null,
-    },
-    skipNonTrackingRenders: true,
-  });
-
   const query = gql`
     query Event($filter: EventFilter!) {
       event(filter: $filter) {
@@ -248,55 +196,33 @@ test("serializes scalar fields in input object variables", async () => {
     }
   `;
 
-  function ReadQuery({ queryRef }: { queryRef: QueryRef }) {
-    useTrackRenders({ name: "useReadQuery" });
-    renderStream.mergeSnapshot({ result: useReadQuery(queryRef) });
-
-    return null;
-  }
-
-  function Fallback() {
-    useTrackRenders({ name: "<Suspense />" });
-    return null;
-  }
-
-  function App() {
-    useTrackRenders({ name: "useLoadableQuery" });
-    const [loadQuery, queryRef] = useLoadableQuery(query);
-
-    return (
-      <>
-        <button
-          onClick={() => loadQuery({ filter: { date: new Date(2026, 0, 1) } })}
-        >
-          Load query
-        </button>
-        <Suspense fallback={<Fallback />}>
-          {queryRef && <ReadQuery queryRef={queryRef} />}
-        </Suspense>
-      </>
-    );
-  }
-
   using _disabledAct = disableActEnvironment();
-  const user = userEvent.setup();
-  await renderStream.render(<App />, {
-    wrapper: createClientWrapper(client),
-  });
-
-  await expect(renderStream.takeRender()).resolves.toMatchObject({
-    renderedComponents: ["useLoadableQuery"],
-  });
-
-  await user.click(screen.getByText("Load query"));
-
-  await expect(renderStream.takeRender()).resolves.toMatchObject({
-    renderedComponents: ["useLoadableQuery", "<Suspense />"],
-  });
+  const { takeRender, loadQuery } = await renderUseLoadableQueryHook(
+    () => useLoadableQuery(query),
+    { wrapper: createClientWrapper(client) }
+  );
 
   {
-    const { snapshot, renderedComponents } = await renderStream.takeRender();
+    const { renderedComponents } = await takeRender();
 
+    expect(renderedComponents).toStrictEqual(["useLoadableQuery"]);
+  }
+
+  loadQuery({ filter: { date: new Date(2026, 0, 1) } });
+
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual([
+      "useLoadableQuery",
+      "<Suspense />",
+    ]);
+  }
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    invariant("result" in snapshot);
     expect(renderedComponents).toStrictEqual(["useReadQuery"]);
     expect(snapshot.result).toStrictEqualTyped({
       data: {
@@ -311,8 +237,892 @@ test("serializes scalar fields in input object variables", async () => {
     });
   }
 
-  await expect(renderStream).not.toRerender();
+  await expect(takeRender).not.toRerender();
   expect(requestVariables).toStrictEqualTyped({
     filter: { date: "2026-01-01" },
   });
+});
+
+test("preserves referential identity when refetching identical serialized scalar values", async () => {
+  const query = gql`
+    query Event {
+      event {
+        id
+        startDate
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          event: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+          },
+        },
+      }).pipe(delay(20))
+    ),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeRender, refetch, loadQuery } = await renderUseLoadableQueryHook(
+    () => useLoadableQuery(query),
+    { wrapper: createClientWrapper(client) }
+  );
+
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useLoadableQuery"]);
+  }
+
+  loadQuery();
+
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual([
+      "useLoadableQuery",
+      "<Suspense />",
+    ]);
+  }
+
+  let previousData: unknown;
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    invariant("result" in snapshot);
+    expect(renderedComponents).toStrictEqual(["useReadQuery"]);
+    expect(snapshot.result).toStrictEqualTyped({
+      data: {
+        event: {
+          __typename: "Event",
+          id: "1",
+          startDate: new Date(2026, 0, 1),
+        },
+      },
+      dataState: "complete",
+      networkStatus: NetworkStatus.ready,
+      error: undefined,
+    });
+
+    previousData = snapshot.result!.data;
+  }
+
+  await expect(refetch()).resolves.toStrictEqualTyped({
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+      },
+    },
+  });
+
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual([
+      "useLoadableQuery",
+      "<Suspense />",
+    ]);
+  }
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    invariant("result" in snapshot);
+    expect(renderedComponents).toStrictEqual(["useReadQuery"]);
+    expect(snapshot.result).toStrictEqualTyped({
+      data: {
+        event: {
+          __typename: "Event",
+          id: "1",
+          startDate: new Date(2026, 0, 1),
+        },
+      },
+      dataState: "complete",
+      networkStatus: NetworkStatus.ready,
+      error: undefined,
+    });
+
+    expect(snapshot.result!.data).toBe(previousData);
+  }
+
+  await expect(takeRender).not.toRerender();
+});
+
+test("serializes scalar fields in the error with a `none` error policy", async () => {
+  using _consoleSpy = spyOnConsole("error");
+  const query = gql`
+    query Event {
+      event {
+        id
+        startDate
+        endDate
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+            endDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          event: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+            endDate: null,
+          },
+        },
+        errors: [
+          {
+            message: "Could not resolve endDate",
+            path: ["event", "endDate"],
+          },
+        ],
+      }).pipe(delay(20))
+    ),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeRender, loadQuery } = await renderUseLoadableQueryHook(
+    () => useLoadableQuery(query, { errorPolicy: "none" }),
+    { wrapper: createClientWrapper(client) }
+  );
+
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useLoadableQuery"]);
+  }
+
+  loadQuery();
+
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual([
+      "useLoadableQuery",
+      "<Suspense />",
+    ]);
+  }
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["<ErrorBoundary />"]);
+    expect(snapshot).toStrictEqualTyped({
+      error: new CombinedGraphQLErrors({
+        data: {
+          event: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+            endDate: null,
+          },
+        },
+        errors: [
+          {
+            message: "Could not resolve endDate",
+            path: ["event", "endDate"],
+          },
+        ],
+      }),
+    });
+  }
+
+  await expect(takeRender).not.toRerender();
+});
+
+test("parses scalar fields in the result and serializes them in the error with an `all` error policy", async () => {
+  const query = gql`
+    query Event {
+      event {
+        id
+        startDate
+        endDate
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+            endDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          event: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+            endDate: null,
+          },
+        },
+        errors: [
+          {
+            message: "Could not resolve endDate",
+            path: ["event", "endDate"],
+          },
+        ],
+      }).pipe(delay(20))
+    ),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeRender, loadQuery } = await renderUseLoadableQueryHook(
+    () => useLoadableQuery(query, { errorPolicy: "all" }),
+    { wrapper: createClientWrapper(client) }
+  );
+
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useLoadableQuery"]);
+  }
+
+  loadQuery();
+
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual([
+      "useLoadableQuery",
+      "<Suspense />",
+    ]);
+  }
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    invariant("result" in snapshot);
+    expect(renderedComponents).toStrictEqual(["useReadQuery"]);
+    expect(snapshot.result).toStrictEqualTyped({
+      data: {
+        event: {
+          __typename: "Event",
+          id: "1",
+          startDate: new Date(2026, 0, 1),
+          endDate: null,
+        },
+      },
+      dataState: "complete",
+      networkStatus: NetworkStatus.error,
+      error: new CombinedGraphQLErrors({
+        data: {
+          event: {
+            __typename: "Event",
+            id: "1",
+            // TODO: Determine if this is correct
+            startDate: new Date(2026, 0, 1),
+            endDate: null,
+          },
+        },
+        errors: [
+          {
+            message: "Could not resolve endDate",
+            path: ["event", "endDate"],
+          },
+        ],
+      }),
+    });
+  }
+
+  await expect(takeRender).not.toRerender();
+});
+
+test("parses custom scalar fields with an `ignore` error policy", async () => {
+  const query = gql`
+    query Event {
+      event {
+        id
+        startDate
+        endDate
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+            endDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          event: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+            endDate: null,
+          },
+        },
+        errors: [
+          {
+            message: "Could not resolve endDate",
+            path: ["event", "endDate"],
+          },
+        ],
+      }).pipe(delay(20))
+    ),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeRender, loadQuery } = await renderUseLoadableQueryHook(
+    () => useLoadableQuery(query, { errorPolicy: "ignore" }),
+    { wrapper: createClientWrapper(client) }
+  );
+
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useLoadableQuery"]);
+  }
+
+  loadQuery();
+
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual([
+      "useLoadableQuery",
+      "<Suspense />",
+    ]);
+  }
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    invariant("result" in snapshot);
+    expect(renderedComponents).toStrictEqual(["useReadQuery"]);
+    expect(snapshot.result).toStrictEqualTyped({
+      data: {
+        event: {
+          __typename: "Event",
+          id: "1",
+          startDate: new Date(2026, 0, 1),
+          endDate: null,
+        },
+      },
+      dataState: "complete",
+      networkStatus: NetworkStatus.ready,
+      error: undefined,
+    });
+  }
+
+  await expect(takeRender).not.toRerender();
+});
+
+test("parses custom scalar fields across `@defer` payloads (defer20220824)", async () => {
+  const link = mockDefer20220824();
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+            endDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: link.httpLink,
+    incrementalHandler: new Defer20220824Handler(),
+  });
+  const query = gql`
+    query Event {
+      event {
+        id
+        startDate
+        ... @defer {
+          endDate
+        }
+      }
+    }
+  `;
+
+  using _disabledAct = disableActEnvironment();
+  const { takeRender, loadQuery } = await renderUseLoadableQueryHook(
+    () => useLoadableQuery(query),
+    { wrapper: createClientWrapper(client) }
+  );
+
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useLoadableQuery"]);
+  }
+
+  loadQuery();
+
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual([
+      "useLoadableQuery",
+      "<Suspense />",
+    ]);
+  }
+
+  link.enqueueInitialChunk({
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: "2026-01-01",
+      },
+    },
+    hasNext: true,
+  });
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    invariant("result" in snapshot);
+    expect(renderedComponents).toStrictEqual(["useReadQuery"]);
+    expect(snapshot.result).toStrictEqualTyped({
+      data: markAsStreaming({
+        event: {
+          __typename: "Event",
+          id: "1",
+          startDate: new Date(2026, 0, 1),
+        },
+      }),
+      dataState: "streaming",
+      networkStatus: NetworkStatus.streaming,
+      error: undefined,
+    });
+  }
+
+  link.enqueueSubsequentChunk({
+    incremental: [{ data: { endDate: "2026-02-02" }, path: ["event"] }],
+    hasNext: false,
+  });
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    invariant("result" in snapshot);
+    expect(renderedComponents).toStrictEqual(["useReadQuery"]);
+    expect(snapshot.result).toStrictEqualTyped({
+      data: {
+        event: {
+          __typename: "Event",
+          id: "1",
+          startDate: new Date(2026, 0, 1),
+          endDate: new Date(2026, 1, 2),
+        },
+      },
+      dataState: "complete",
+      networkStatus: NetworkStatus.ready,
+      error: undefined,
+    });
+  }
+
+  await expect(takeRender).not.toRerender();
+});
+
+test("parses custom scalar fields across `@defer` payloads (graphql17Alpha9)", async () => {
+  const link = mockDeferStreamGraphQL17Alpha9();
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+            endDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: link.httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+  const query = gql`
+    query Event {
+      event {
+        id
+        startDate
+        ... @defer {
+          endDate
+        }
+      }
+    }
+  `;
+
+  using _disabledAct = disableActEnvironment();
+  const { takeRender, loadQuery } = await renderUseLoadableQueryHook(
+    () => useLoadableQuery(query),
+    { wrapper: createClientWrapper(client) }
+  );
+
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useLoadableQuery"]);
+  }
+
+  loadQuery();
+
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual([
+      "useLoadableQuery",
+      "<Suspense />",
+    ]);
+  }
+
+  link.enqueueInitialChunk({
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: "2026-01-01",
+      },
+    },
+    pending: [{ id: "0", path: ["event"] }],
+    hasNext: true,
+  });
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    invariant("result" in snapshot);
+    expect(renderedComponents).toStrictEqual(["useReadQuery"]);
+    expect(snapshot.result).toStrictEqualTyped({
+      data: markAsStreaming({
+        event: {
+          __typename: "Event",
+          id: "1",
+          startDate: new Date(2026, 0, 1),
+        },
+      }),
+      dataState: "streaming",
+      networkStatus: NetworkStatus.streaming,
+      error: undefined,
+    });
+  }
+
+  link.enqueueSubsequentChunk({
+    incremental: [{ data: { endDate: "2026-02-02" }, id: "0" }],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    invariant("result" in snapshot);
+    expect(renderedComponents).toStrictEqual(["useReadQuery"]);
+    expect(snapshot.result).toStrictEqualTyped({
+      data: {
+        event: {
+          __typename: "Event",
+          id: "1",
+          startDate: new Date(2026, 0, 1),
+          endDate: new Date(2026, 1, 2),
+        },
+      },
+      dataState: "complete",
+      networkStatus: NetworkStatus.ready,
+      error: undefined,
+    });
+  }
+
+  await expect(takeRender).not.toRerender();
+});
+
+test("parses custom scalar fields across `@stream` payloads (defer20220824)", async () => {
+  const link = mockDefer20220824();
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: link.httpLink,
+    incrementalHandler: new Defer20220824Handler(),
+  });
+  const query = gql`
+    query Events {
+      events @stream(initialCount: 1) {
+        id
+        startDate
+      }
+    }
+  `;
+
+  using _disabledAct = disableActEnvironment();
+  const { takeRender, loadQuery } = await renderUseLoadableQueryHook(
+    () => useLoadableQuery(query),
+    { wrapper: createClientWrapper(client) }
+  );
+
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useLoadableQuery"]);
+  }
+
+  loadQuery();
+
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual([
+      "useLoadableQuery",
+      "<Suspense />",
+    ]);
+  }
+
+  link.enqueueInitialChunk({
+    data: {
+      events: [
+        {
+          __typename: "Event",
+          id: "1",
+          startDate: "2026-01-01",
+        },
+      ],
+    },
+    hasNext: true,
+  });
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    invariant("result" in snapshot);
+    expect(renderedComponents).toStrictEqual(["useReadQuery"]);
+    expect(snapshot.result).toStrictEqualTyped({
+      data: {
+        events: [
+          {
+            __typename: "Event",
+            id: "1",
+            startDate: new Date(2026, 0, 1),
+          },
+        ],
+      },
+      dataState: "complete",
+      networkStatus: NetworkStatus.streaming,
+      error: undefined,
+    });
+  }
+
+  link.enqueueSubsequentChunk({
+    incremental: [
+      {
+        items: [
+          {
+            __typename: "Event",
+            id: "2",
+            startDate: "2026-02-02",
+          },
+        ] as any,
+        path: ["events", 1],
+      },
+    ],
+    hasNext: false,
+  });
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    invariant("result" in snapshot);
+    expect(renderedComponents).toStrictEqual(["useReadQuery"]);
+    expect(snapshot.result).toStrictEqualTyped({
+      data: {
+        events: [
+          {
+            __typename: "Event",
+            id: "1",
+            startDate: new Date(2026, 0, 1),
+          },
+          {
+            __typename: "Event",
+            id: "2",
+            startDate: new Date(2026, 1, 2),
+          },
+        ],
+      },
+      dataState: "complete",
+      networkStatus: NetworkStatus.ready,
+      error: undefined,
+    });
+  }
+
+  await expect(takeRender).not.toRerender();
+});
+
+test("parses custom scalar fields across `@stream` payloads (graphql17Alpha9)", async () => {
+  const link = mockDeferStreamGraphQL17Alpha9();
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: link.httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+  const query = gql`
+    query Events {
+      events @stream(initialCount: 1) {
+        id
+        startDate
+      }
+    }
+  `;
+
+  using _disabledAct = disableActEnvironment();
+  const { takeRender, loadQuery } = await renderUseLoadableQueryHook(
+    () => useLoadableQuery(query),
+    { wrapper: createClientWrapper(client) }
+  );
+
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useLoadableQuery"]);
+  }
+
+  loadQuery();
+
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual([
+      "useLoadableQuery",
+      "<Suspense />",
+    ]);
+  }
+
+  link.enqueueInitialChunk({
+    data: {
+      events: [
+        {
+          __typename: "Event",
+          id: "1",
+          startDate: "2026-01-01",
+        },
+      ],
+    },
+    pending: [{ id: "0", path: ["events"] }],
+    hasNext: true,
+  });
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    invariant("result" in snapshot);
+    expect(renderedComponents).toStrictEqual(["useReadQuery"]);
+    expect(snapshot.result).toStrictEqualTyped({
+      data: {
+        events: [
+          {
+            __typename: "Event",
+            id: "1",
+            startDate: new Date(2026, 0, 1),
+          },
+        ],
+      },
+      dataState: "complete",
+      networkStatus: NetworkStatus.streaming,
+      error: undefined,
+    });
+  }
+
+  link.enqueueSubsequentChunk({
+    incremental: [
+      {
+        items: [
+          {
+            __typename: "Event",
+            id: "2",
+            startDate: "2026-02-02",
+          },
+        ] as any,
+        id: "0",
+      },
+    ],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    invariant("result" in snapshot);
+    expect(renderedComponents).toStrictEqual(["useReadQuery"]);
+    expect(snapshot.result).toStrictEqualTyped({
+      data: {
+        events: [
+          {
+            __typename: "Event",
+            id: "1",
+            startDate: new Date(2026, 0, 1),
+          },
+          {
+            __typename: "Event",
+            id: "2",
+            startDate: new Date(2026, 1, 2),
+          },
+        ],
+      },
+      dataState: "complete",
+      networkStatus: NetworkStatus.ready,
+      error: undefined,
+    });
+  }
+
+  await expect(takeRender).not.toRerender();
 });

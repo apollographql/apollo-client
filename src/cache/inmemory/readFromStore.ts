@@ -258,10 +258,11 @@ export class StoreReader {
 
     const { result, dataState } = execResult;
     const complete = dataState === "complete";
+    const streaming = dataState === "streaming";
 
     const diffResult = {
       result:
-        complete ? result
+        complete || streaming ? result
         : returnPartialData ?
           Object.keys(result).length === 0 ?
             null
@@ -275,11 +276,9 @@ export class StoreReader {
       return diffResult;
     }
 
-    const streaming = dataState === "streaming";
     const withDataState = {
       ...diffResult,
-      result: streaming ? result : diffResult.result,
-      dataState: dataState,
+      dataState,
     } as Cache.InternalDiffResultWithDataState<T>;
 
     if (withDataState.result === null) {

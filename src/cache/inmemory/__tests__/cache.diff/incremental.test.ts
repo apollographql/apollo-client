@@ -43,9 +43,6 @@ test('returns dataState "complete" when the cache fully satisfies the query', ()
       [handleIncrementalSymbol]: true,
     })
   ).toStrictEqualTyped({
-    complete: true,
-    dataState: "complete",
-    missing: undefined,
     result: {
       greeting: {
         __typename: "Greeting",
@@ -57,6 +54,9 @@ test('returns dataState "complete" when the cache fully satisfies the query', ()
         },
       },
     },
+    dataState: "complete",
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -94,15 +94,15 @@ test('returns dataState "streaming" when only deferred fields are missing with r
       [handleIncrementalSymbol]: true,
     })
   ).toStrictEqualTyped({
-    complete: false,
-    dataState: "streaming",
-    missing: undefined,
     result: markAsStreaming({
       greeting: {
         __typename: "Greeting",
         message: "Hello world",
       },
     }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
   });
 });
 
@@ -140,15 +140,15 @@ test('returns dataState "streaming" when only deferred fields are missing with r
       [handleIncrementalSymbol]: true,
     })
   ).toStrictEqualTyped({
-    complete: false,
-    dataState: "streaming",
-    missing: undefined,
     result: markAsStreaming({
       greeting: {
         __typename: "Greeting",
         message: "Hello world",
       },
     }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
   });
 });
 
@@ -191,8 +191,14 @@ test('returns dataState "partial" when non-deferred fields are missing with retu
       [handleIncrementalSymbol]: true,
     })
   ).toStrictEqualTyped({
-    complete: false,
+    result: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+      },
+    },
     dataState: "partial",
+    complete: false,
     missing: new MissingFieldError(
       getMissingMessage("author", missingObject),
       {
@@ -204,12 +210,6 @@ test('returns dataState "partial" when non-deferred fields are missing with retu
       query,
       {}
     ),
-    result: {
-      greeting: {
-        __typename: "Greeting",
-        message: "Hello world",
-      },
-    },
   });
 });
 
@@ -252,8 +252,9 @@ test('returns dataState "empty" when non-deferred fields are missing with return
       [handleIncrementalSymbol]: true,
     })
   ).toStrictEqualTyped({
-    complete: false,
+    result: null,
     dataState: "empty",
+    complete: false,
     missing: new MissingFieldError(
       getMissingMessage("author", missingObject),
       {
@@ -265,7 +266,6 @@ test('returns dataState "empty" when non-deferred fields are missing with return
       query,
       {}
     ),
-    result: null,
   });
 });
 
@@ -310,15 +310,15 @@ test("strips incomplete fields inside a defer boundary when returnPartialData is
       [handleIncrementalSymbol]: true,
     })
   ).toStrictEqualTyped({
-    complete: false,
-    dataState: "streaming",
-    missing: undefined,
     result: markAsStreaming({
       greeting: {
         __typename: "Greeting",
         message: "Hello world",
       },
     }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
   });
 });
 
@@ -365,8 +365,18 @@ test('keeps incomplete fields inside a defer boundary when returnPartialData is 
       [handleIncrementalSymbol]: true,
     })
   ).toStrictEqualTyped({
-    complete: false,
+    result: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Cached Alice",
+        },
+      },
+    },
     dataState: "partial",
+    complete: false,
     missing: new MissingFieldError(
       getMissingMessage("email", missingObject),
       {
@@ -379,16 +389,6 @@ test('keeps incomplete fields inside a defer boundary when returnPartialData is 
       query,
       {}
     ),
-    result: {
-      greeting: {
-        __typename: "Greeting",
-        message: "Hello world",
-        recipient: {
-          __typename: "Person",
-          name: "Cached Alice",
-        },
-      },
-    },
   });
 });
 
@@ -436,9 +436,6 @@ test("does not treat overlapping non-deferred fields as partial when only deferr
       [handleIncrementalSymbol]: true,
     })
   ).toStrictEqualTyped({
-    complete: false,
-    dataState: "streaming",
-    missing: undefined,
     result: markAsStreaming({
       greeting: {
         __typename: "Greeting",
@@ -449,6 +446,9 @@ test("does not treat overlapping non-deferred fields as partial when only deferr
         },
       },
     }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
   });
 });
 
@@ -495,15 +495,15 @@ test("strips incomplete fields inside a deferred named fragment with returnParti
       [handleIncrementalSymbol]: true,
     })
   ).toStrictEqualTyped({
-    complete: false,
-    dataState: "streaming",
-    missing: undefined,
     result: markAsStreaming({
       greeting: {
         __typename: "Greeting",
         message: "Hello world",
       },
     }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
   });
 });
 
@@ -555,15 +555,15 @@ test("strips incomplete nested fields inside a nested defer boundary with return
       [handleIncrementalSymbol]: true,
     })
   ).toStrictEqualTyped({
-    complete: false,
-    dataState: "streaming",
-    missing: undefined,
     result: markAsStreaming({
       greeting: {
         __typename: "Greeting",
         message: "Hello world",
       },
     }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
   });
 });
 
@@ -601,15 +601,15 @@ test("returns incomplete deferred data written only inside the boundary without 
       [handleIncrementalSymbol]: true,
     })
   ).toStrictEqualTyped({
-    complete: false,
-    dataState: "streaming",
-    missing: undefined,
     result: markAsStreaming({
       greeting: {
         __typename: "Greeting",
         message: "Hello world",
       },
     }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
   });
 });
 
@@ -642,15 +642,15 @@ test('returns dataState "complete" for pure @stream when all selected fields on 
       [handleIncrementalSymbol]: true,
     })
   ).toStrictEqualTyped({
-    complete: true,
-    dataState: "complete",
-    missing: undefined,
     result: {
       friendList: [
         { __typename: "Friend", id: "1", name: "Luke" },
         { __typename: "Friend", id: "2", name: "Han" },
       ],
     },
+    dataState: "complete",
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -687,15 +687,15 @@ test("keeps complete stream list items and drops incomplete ones when returnPart
       [handleIncrementalSymbol]: true,
     })
   ).toStrictEqualTyped({
-    complete: true,
-    dataState: "complete",
-    missing: undefined,
     result: {
       friendList: [
         { __typename: "Friend", id: "1", name: "Luke" },
         { __typename: "Friend", id: "2", name: "Han" },
       ],
     },
+    dataState: "complete",
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -731,10 +731,10 @@ test('returns dataState "empty" when every stream list item is incomplete with r
       [handleIncrementalSymbol]: true,
     })
   ).toStrictEqualTyped({
-    complete: false,
-    dataState: "empty",
-    missing: undefined,
     result: null,
+    dataState: "empty",
+    complete: false,
+    missing: undefined,
   });
 });
 
@@ -772,8 +772,14 @@ test('keeps incomplete stream list items when returnPartialData is true and repo
       [handleIncrementalSymbol]: true,
     })
   ).toStrictEqualTyped({
-    complete: false,
+    result: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2" },
+      ],
+    },
     dataState: "partial",
+    complete: false,
     missing: new MissingFieldError(
       getMissingMessage("name", missingObject),
       {
@@ -786,12 +792,6 @@ test('keeps incomplete stream list items when returnPartialData is true and repo
       query,
       {}
     ),
-    result: {
-      friendList: [
-        { __typename: "Friend", id: "1", name: "Luke" },
-        { __typename: "Friend", id: "2" },
-      ],
-    },
   });
 });
 
@@ -837,9 +837,6 @@ test("drops incomplete stream items and strips deferred holes under a combined @
       [handleIncrementalSymbol]: true,
     })
   ).toStrictEqualTyped({
-    complete: false,
-    dataState: "streaming",
-    missing: undefined,
     result: markAsStreaming({
       friendList: [
         {
@@ -849,6 +846,9 @@ test("drops incomplete stream items and strips deferred holes under a combined @
         },
       ],
     }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
   });
 });
 
@@ -887,9 +887,6 @@ test("returns streaming for complete non-deferred stream fields when only deferr
       [handleIncrementalSymbol]: true,
     })
   ).toStrictEqualTyped({
-    complete: false,
-    dataState: "streaming",
-    missing: undefined,
     result: markAsStreaming({
       friendList: [
         {
@@ -899,6 +896,9 @@ test("returns streaming for complete non-deferred stream fields when only deferr
         },
       ],
     }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
   });
 });
 
@@ -936,15 +936,15 @@ test("complete is only true when dataState is complete", () => {
       [handleIncrementalSymbol]: true,
     })
   ).toStrictEqualTyped({
-    complete: false,
-    dataState: "streaming",
-    missing: undefined,
     result: markAsStreaming({
       greeting: {
         __typename: "Greeting",
         message: "Hello world",
       },
     }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
   });
 
   {
@@ -974,8 +974,18 @@ test("complete is only true when dataState is complete", () => {
       [handleIncrementalSymbol]: true,
     })
   ).toStrictEqualTyped({
-    complete: false,
+    result: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+        },
+      },
+    },
     dataState: "partial",
+    complete: false,
     missing: new MissingFieldError(
       getMissingMessage("email", missingObject),
       {
@@ -988,16 +998,6 @@ test("complete is only true when dataState is complete", () => {
       query,
       {}
     ),
-    result: {
-      greeting: {
-        __typename: "Greeting",
-        message: "Hello world",
-        recipient: {
-          __typename: "Person",
-          name: "Alice",
-        },
-      },
-    },
   });
 
   cache.writeQuery({
@@ -1023,9 +1023,6 @@ test("complete is only true when dataState is complete", () => {
       [handleIncrementalSymbol]: true,
     })
   ).toStrictEqualTyped({
-    complete: true,
-    dataState: "complete",
-    missing: undefined,
     result: {
       greeting: {
         __typename: "Greeting",
@@ -1037,6 +1034,9 @@ test("complete is only true when dataState is complete", () => {
         },
       },
     },
+    dataState: "complete",
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -1083,8 +1083,9 @@ test('returns dataState "empty" for incomplete fields under @defer(if: false) wi
       [handleIncrementalSymbol]: true,
     })
   ).toStrictEqualTyped({
-    complete: false,
+    result: null,
     dataState: "empty",
+    complete: false,
     missing: new MissingFieldError(
       getMissingMessage("email", missingObject),
       {
@@ -1097,7 +1098,6 @@ test('returns dataState "empty" for incomplete fields under @defer(if: false) wi
       query,
       {}
     ),
-    result: null,
   });
 });
 
@@ -1147,8 +1147,9 @@ test('returns dataState "empty" for incomplete fields under @defer(if: $shouldDe
       [handleIncrementalSymbol]: true,
     })
   ).toStrictEqualTyped({
-    complete: false,
+    result: null,
     dataState: "empty",
+    complete: false,
     missing: new MissingFieldError(
       getMissingMessage("email", missingObject),
       {
@@ -1161,7 +1162,6 @@ test('returns dataState "empty" for incomplete fields under @defer(if: $shouldDe
       query,
       variables
     ),
-    result: null,
   });
 });
 
@@ -1209,15 +1209,15 @@ test('returns dataState "streaming" for incomplete fields under @defer(if: $shou
       [handleIncrementalSymbol]: true,
     })
   ).toStrictEqualTyped({
-    complete: false,
-    dataState: "streaming",
-    missing: undefined,
     result: markAsStreaming({
       greeting: {
         __typename: "Greeting",
         message: "Hello world",
       },
     }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
   });
 });
 

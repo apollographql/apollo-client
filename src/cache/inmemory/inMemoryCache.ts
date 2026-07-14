@@ -458,9 +458,7 @@ export class InMemoryCache extends ApolloCache {
     query: Cache.DiffOptions<TData, TVariables> & {
       [incrementalInfoSymbol]: Cache.InternalIncrementalInfo;
     }
-  ): Cache.DiffResult<TData> & {
-    dataState: "empty" | "partial" | "streaming" | "complete";
-  };
+  ): Cache.InternalDiffResultWithDataState<TData>;
 
   public diff<
     TData = unknown,

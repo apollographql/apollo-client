@@ -21,6 +21,7 @@ import {
   getFragmentFromSelection,
   getMainDefinition,
   getQueryDefinition,
+  incrementalInfoSymbol,
   isArray,
   isField,
   isNonNullObject,
@@ -195,14 +196,28 @@ export class StoreReader {
    * Given a store and a query, return as much of the result as possible and
    * identify if any data was missing from the store.
    */
+  public diffQueryAgainstStore<T>(
+    options: DiffQueryAgainstStoreOptions & {
+      [incrementalInfoSymbol]: Cache.InternalIncrementalInfo;
+    }
+  ): Cache.InternalDiffResultWithDataState<T>;
+
+  public diffQueryAgainstStore<T>(
+    options: DiffQueryAgainstStoreOptions
+  ): Cache.DiffResult<T>;
+
   public diffQueryAgainstStore<T>({
     store,
     query,
     rootId = "ROOT_QUERY",
     variables,
     returnPartialData = true,
-  }: DiffQueryAgainstStoreOptions): Cache.DiffResult<T> {
+    ...options
+  }: DiffQueryAgainstStoreOptions): Cache.DiffResult<T> & {
+    dataState?: "empty" | "partial" | "streaming" | "complete";
+  } {
     const policies = this.config.cache.policies;
+    const incremental = options[incrementalInfoSymbol];
 
     variables = {
       ...getDefaultValues(getQueryDefinition(query)),

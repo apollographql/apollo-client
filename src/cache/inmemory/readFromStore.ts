@@ -261,6 +261,7 @@ export class StoreReader {
     if (handleIncremental) {
       const complete = context.dataState === "complete";
       const streaming = context.dataState === "streaming";
+
       const diffResult = {
         result:
           complete || streaming ? result
@@ -274,7 +275,7 @@ export class StoreReader {
         dataState: context.dataState,
       } as Cache.InternalDiffResultWithDataState<T>;
 
-      if (result == null) {
+      if (diffResult.result === null) {
         diffResult.dataState = "empty";
       }
 

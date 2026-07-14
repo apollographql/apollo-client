@@ -5,7 +5,7 @@ import type { OperationVariables } from "@apollo/client";
 
 export function isDeferredFragment(
   fragmentSelection: InlineFragmentNode | FragmentSpreadNode,
-  variables: OperationVariables
+  variables: OperationVariables | undefined
 ) {
   return !!fragmentSelection.directives?.some((directive) => {
     if (directive.name.value !== "defer") {
@@ -18,7 +18,7 @@ export function isDeferredFragment(
           case Kind.BOOLEAN:
             return arg.value.value;
           case Kind.VARIABLE:
-            return variables[arg.value.name.value];
+            return !!variables?.[arg.value.name.value];
         }
       }
     }

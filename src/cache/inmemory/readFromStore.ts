@@ -392,15 +392,10 @@ export class StoreReader {
             });
 
             if (dataState !== "empty") {
-              if (
-                handleIncremental &&
-                deferredFields.has(selection) &&
-                dataState !== "partial"
-              ) {
-                dataState = "streaming";
-              } else {
-                dataState = "partial";
-              }
+              dataState =
+                handleIncremental && isDeferred && dataState !== "partial" ?
+                  "streaming"
+                : "partial";
             }
           }
         } else if (isArray(fieldValue)) {

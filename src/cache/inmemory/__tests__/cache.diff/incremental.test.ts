@@ -4,11 +4,6 @@ import { InMemoryCache, MissingFieldError } from "@apollo/client/cache";
 import { markAsStreaming, spyOnConsole } from "@apollo/client/testing/internal";
 import { handleIncrementalSymbol } from "@apollo/client/utilities/internal";
 
-function writePartial(write: () => void): void {
-  using _ = spyOnConsole("error");
-  write();
-}
-
 test('returns dataState "complete" when the cache fully satisfies the query', () => {
   const cache = new InMemoryCache();
   const query = gql`
@@ -229,7 +224,8 @@ test('returns dataState "partial" when non-deferred fields are missing with retu
     }
   `;
 
-  writePartial(() => {
+  {
+    using _ = spyOnConsole("error");
     cache.writeQuery({
       query,
       data: {
@@ -239,7 +235,7 @@ test('returns dataState "partial" when non-deferred fields are missing with retu
         },
       },
     });
-  });
+  }
 
   const diff = cache.diff({
     query,
@@ -281,7 +277,8 @@ test.only('returns dataState "empty" when non-deferred fields are missing with r
     }
   `;
 
-  writePartial(() => {
+  {
+    using _ = spyOnConsole("error");
     cache.writeQuery({
       query,
       data: {
@@ -291,7 +288,7 @@ test.only('returns dataState "empty" when non-deferred fields are missing with r
         },
       },
     });
-  });
+  }
 
   expect(
     cache.diff({
@@ -324,7 +321,8 @@ test("strips incomplete fields inside a defer boundary when returnPartialData is
     }
   `;
 
-  writePartial(() => {
+  {
+    using _ = spyOnConsole("error");
     cache.writeQuery({
       query,
       data: {
@@ -338,7 +336,7 @@ test("strips incomplete fields inside a defer boundary when returnPartialData is
         },
       },
     });
-  });
+  }
 
   expect(
     cache.diff({
@@ -376,7 +374,8 @@ test('keeps incomplete fields inside a defer boundary when returnPartialData is 
     }
   `;
 
-  writePartial(() => {
+  {
+    using _ = spyOnConsole("error");
     cache.writeQuery({
       query,
       data: {
@@ -390,7 +389,7 @@ test('keeps incomplete fields inside a defer boundary when returnPartialData is 
         },
       },
     });
-  });
+  }
 
   const diff = cache.diff({
     query,
@@ -440,7 +439,8 @@ test("does not treat overlapping non-deferred fields as partial when only deferr
     }
   `;
 
-  writePartial(() => {
+  {
+    using _ = spyOnConsole("error");
     cache.writeQuery({
       query,
       data: {
@@ -454,7 +454,7 @@ test("does not treat overlapping non-deferred fields as partial when only deferr
         },
       },
     });
-  });
+  }
 
   expect(
     cache.diff({
@@ -498,7 +498,8 @@ test("strips incomplete fields inside a deferred named fragment with returnParti
     }
   `;
 
-  writePartial(() => {
+  {
+    using _ = spyOnConsole("error");
     cache.writeQuery({
       query,
       data: {
@@ -512,7 +513,7 @@ test("strips incomplete fields inside a deferred named fragment with returnParti
         },
       },
     });
-  });
+  }
 
   expect(
     cache.diff({
@@ -553,7 +554,8 @@ test("strips incomplete nested fields inside a nested defer boundary with return
     }
   `;
 
-  writePartial(() => {
+  {
+    using _ = spyOnConsole("error");
     cache.writeQuery({
       query,
       data: {
@@ -571,7 +573,7 @@ test("strips incomplete nested fields inside a nested defer boundary with return
         },
       },
     });
-  });
+  }
 
   expect(
     cache.diff({
@@ -691,7 +693,8 @@ test("keeps complete stream list items and drops incomplete ones when returnPart
     }
   `;
 
-  writePartial(() => {
+  {
+    using _ = spyOnConsole("error");
     cache.writeQuery({
       query,
       data: {
@@ -702,7 +705,7 @@ test("keeps complete stream list items and drops incomplete ones when returnPart
         ],
       },
     });
-  });
+  }
 
   expect(
     cache.diff({
@@ -735,7 +738,8 @@ test('returns dataState "empty" when every stream list item is incomplete with r
     }
   `;
 
-  writePartial(() => {
+  {
+    using _ = spyOnConsole("error");
     cache.writeQuery({
       query,
       data: {
@@ -745,7 +749,7 @@ test('returns dataState "empty" when every stream list item is incomplete with r
         ],
       },
     });
-  });
+  }
 
   expect(
     cache.diff({
@@ -773,7 +777,8 @@ test('keeps incomplete stream list items when returnPartialData is true and repo
     }
   `;
 
-  writePartial(() => {
+  {
+    using _ = spyOnConsole("error");
     cache.writeQuery({
       query,
       data: {
@@ -783,7 +788,7 @@ test('keeps incomplete stream list items when returnPartialData is true and repo
         ],
       },
     });
-  });
+  }
 
   const diff = cache.diff({
     query,
@@ -824,7 +829,8 @@ test("drops incomplete stream items and strips deferred holes under a combined @
     }
   `;
 
-  writePartial(() => {
+  {
+    using _ = spyOnConsole("error");
     cache.writeQuery({
       query,
       data: {
@@ -841,7 +847,7 @@ test("drops incomplete stream items and strips deferred holes under a combined @
         ],
       },
     });
-  });
+  }
 
   expect(
     cache.diff({
@@ -952,7 +958,8 @@ test("complete is only true when dataState is complete", () => {
   expect(streamingDiff.dataState).toBe("streaming");
   expect(streamingDiff.complete).toBe(false);
 
-  writePartial(() => {
+  {
+    using _ = spyOnConsole("error");
     cache.writeQuery({
       query,
       data: {
@@ -966,7 +973,7 @@ test("complete is only true when dataState is complete", () => {
         },
       },
     });
-  });
+  }
 
   const partialDiff = cache.diff({
     query,

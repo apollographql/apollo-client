@@ -79,7 +79,6 @@ type ExecSelectionSetOptions = {
   objectOrReference: StoreObject | Reference;
   enclosingRef: Reference;
   context: ReadContext;
-  isDeferred?: boolean;
   [handleIncrementalSymbol]: true | undefined;
 };
 
@@ -316,7 +315,6 @@ export class StoreReader {
     objectOrReference,
     enclosingRef,
     context,
-    isDeferred,
     [handleIncrementalSymbol]: handleIncremental,
   }: ExecSelectionSetOptions): ExecResult {
     if (
@@ -359,9 +357,6 @@ export class StoreReader {
     }
 
     const workSet = new Set(selectionSet.selections);
-    const deferredFields = new Set(
-      isDeferred ? selectionSet.selections : undefined
-    );
 
     workSet.forEach((selection) => {
       // Omit fields with directives @skip(if: <truthy value>) or
@@ -392,10 +387,7 @@ export class StoreReader {
             });
 
             if (dataState !== "empty") {
-              dataState =
-                handleIncremental && isDeferred && dataState !== "partial" ?
-                  "streaming"
-                : "partial";
+              dataState = "partial";
             }
           }
         } else if (isArray(fieldValue)) {
@@ -418,11 +410,6 @@ export class StoreReader {
             dataState = "complete";
           }
         } else if (fieldValue != null) {
-          // Don't promote the dataState if we've already detected a streaming
-          // or partial response.
-          if (dataState === "empty") {
-            dataState = "complete";
-          }
           if (__DEV__) {
             const fieldName = selection.name.value;
 
@@ -441,17 +428,21 @@ export class StoreReader {
           // In this case, because we know the field has a selection set,
           // it must be trying to query a GraphQLObjectType, which is why
           // fieldValue must be != null.
-          fieldValue = handleMissing(
-            this.executeSelectionSet({
-              selectionSet: selection.selectionSet,
-              objectOrReference: fieldValue as StoreObject | Reference,
-              enclosingRef: isReference(fieldValue) ? fieldValue : enclosingRef,
-              context,
-              isDeferred: deferredFields.has(selection),
-              [handleIncrementalSymbol]: handleIncremental,
-            }),
-            resultName
-          );
+          const execResult = this.executeSelectionSet({
+            selectionSet: selection.selectionSet,
+            objectOrReference: fieldValue as StoreObject | Reference,
+            enclosingRef: isReference(fieldValue) ? fieldValue : enclosingRef,
+            context,
+            [handleIncrementalSymbol]: handleIncremental,
+          });
+
+          handleMissing(execResult, resultName);
+
+          fieldValue = execResult.result;
+
+          if (dataState === "empty") {
+            dataState = execResult.dataState;
+          }
         }
 
         if (fieldValue !== void 0) {
@@ -468,23 +459,30 @@ export class StoreReader {
         }
 
         if (fragment && policies.fragmentMatches(fragment, typename)) {
-          const { result, missing: fragmentMissing } = this.executeSelectionSet(
-            {
-              selectionSet: fragment.selectionSet,
-              objectOrReference,
-              enclosingRef,
-              context,
-              isDeferred: isDeferredFragment(selection, context.variables),
-              [handleIncrementalSymbol]: handleIncremental,
-            }
+          const isDeferBoundary = isDeferredFragment(
+            selection,
+            context.variables
           );
+          const execResult = this.executeSelectionSet({
+            selectionSet: fragment.selectionSet,
+            objectOrReference,
+            enclosingRef,
+            context,
+            [handleIncrementalSymbol]: handleIncremental,
+          });
 
-          if (result !== void 0) {
-            objectsToMerge.push(result);
+          if (execResult.result !== void 0) {
+            objectsToMerge.push(execResult.result);
           }
 
-          if (fragmentMissing) {
-            missing = missingMerger.merge(missing, fragmentMissing);
+          if (isDeferBoundary && handleIncremental) {
+            if (execResult.dataState === "empty" && dataState !== "partial") {
+              dataState = "streaming";
+            } else {
+              missing = missingMerger.merge(missing, execResult.missing);
+            }
+          } else if (execResult.missing) {
+            missing = missingMerger.merge(missing, execResult.missing);
           }
         }
       }

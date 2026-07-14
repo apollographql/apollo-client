@@ -261,7 +261,7 @@ test('returns dataState "partial" when non-deferred fields are missing with retu
   });
 });
 
-test.only('returns dataState "empty" when non-deferred fields are missing with returnPartialData: false', () => {
+test('returns dataState "empty" when non-deferred fields are missing with returnPartialData: false', () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -290,6 +290,8 @@ test.only('returns dataState "empty" when non-deferred fields are missing with r
     });
   }
 
+  const missingObject = { __typename: "Greeting", message: "Hello world" };
+
   expect(
     cache.diff({
       query,
@@ -300,7 +302,17 @@ test.only('returns dataState "empty" when non-deferred fields are missing with r
   ).toStrictEqualTyped({
     complete: false,
     dataState: "empty",
-    missing: undefined,
+    missing: new MissingFieldError(
+      getMissingMessage("author", missingObject),
+      {
+        greeting: {
+          author: getMissingMessage("author", missingObject),
+          recipient: getMissingMessage("recipient", missingObject),
+        },
+      },
+      query,
+      {}
+    ),
     result: null,
   });
 });
@@ -1010,3 +1022,11 @@ test("complete is only true when dataState is complete", () => {
   expect(completeDiff.dataState).toBe("complete");
   expect(completeDiff.complete).toBe(true);
 });
+
+function getMissingMessage(fieldName: string, obj: Record<string, unknown>) {
+  return `Can't find field '${fieldName}' on object ${JSON.stringify(
+    obj,
+    null,
+    2
+  )}`;
+}

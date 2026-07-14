@@ -477,15 +477,24 @@ export class StoreReader {
         }
 
         if (fragment && policies.fragmentMatches(fragment, typename)) {
-          const isDeferred = isDeferredFragment(selection, context.variables);
-
-          fragment.selectionSet.selections.forEach((selection) => {
-            workSet.add(selection);
-
-            if (isDeferred) {
-              deferredFields.add(selection);
+          const { result, missing: fragmentMissing } = this.executeSelectionSet(
+            {
+              selectionSet: fragment.selectionSet,
+              objectOrReference,
+              enclosingRef,
+              context,
+              isDeferred: isDeferredFragment(selection, context.variables),
+              [handleIncrementalSymbol]: handleIncremental,
             }
-          });
+          );
+
+          if (result !== void 0) {
+            objectsToMerge.push(result);
+          }
+
+          if (fragmentMissing) {
+            missing = missingMerger.merge(missing, fragmentMissing);
+          }
         }
       }
     });

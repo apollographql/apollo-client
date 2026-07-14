@@ -59,16 +59,18 @@ import type {
   ReadMergeModifyContext,
 } from "./types.js";
 
+type DataState = "empty" | "partial" | "streaming" | "complete";
+
 interface ReadContext extends ReadMergeModifyContext {
   query: DocumentNode;
   policies: Policies;
   fragmentMap: FragmentMap;
   lookupFragment: FragmentMapFunction;
-  dataState: "empty" | "partial" | "streaming" | "complete";
 }
 
 type ExecResult<R = any> = {
   result: R;
+  dataState: DataState;
   missing?: MissingTree;
 };
 
@@ -229,20 +231,18 @@ export class StoreReader {
     };
 
     const rootRef = makeReference(rootId);
-    const context: ReadContext = {
-      store,
-      query,
-      policies,
-      variables,
-      varString: canonicalStringify(variables),
-      dataState: "empty",
-      ...extractFragmentContext(query, this.config.fragments),
-    };
     const execResult = this.executeSelectionSet({
       selectionSet: getMainDefinition(query).selectionSet,
       objectOrReference: rootRef,
       enclosingRef: rootRef,
-      context,
+      context: {
+        store,
+        query,
+        policies,
+        variables,
+        varString: canonicalStringify(variables),
+        ...extractFragmentContext(query, this.config.fragments),
+      },
       [handleIncrementalSymbol]: handleIncremental,
     });
 
@@ -256,9 +256,8 @@ export class StoreReader {
       );
     }
 
-    const { result } = execResult;
-    const complete =
-      handleIncremental ? context.dataState === "complete" : !missing;
+    const { result, dataState } = execResult;
+    const complete = handleIncremental ? dataState === "complete" : !missing;
 
     const diffResult = {
       result:
@@ -276,11 +275,11 @@ export class StoreReader {
       return diffResult;
     }
 
-    const streaming = context.dataState === "streaming";
+    const streaming = dataState === "streaming";
     const withDataState = {
       ...diffResult,
       result: streaming ? result : diffResult.result,
-      dataState: context.dataState,
+      dataState: dataState,
     } as Cache.InternalDiffResultWithDataState<T>;
 
     if (withDataState.result === null) {
@@ -332,6 +331,7 @@ export class StoreReader {
     ) {
       return {
         result: {},
+        dataState: "empty",
         missing: `Dangling reference to missing ${objectOrReference.__ref} object`,
       };
     }
@@ -343,6 +343,7 @@ export class StoreReader {
     );
 
     const objectsToMerge: Record<string, any>[] = [];
+    let dataState: DataState = "empty";
     let missing: MissingTree | undefined;
     const missingMerger = new DeepMerger();
 
@@ -395,15 +396,15 @@ export class StoreReader {
               }`,
             });
 
-            if (context.dataState !== "empty") {
+            if (dataState !== "empty") {
               if (
                 handleIncremental &&
                 deferredFields.has(selection) &&
-                context.dataState !== "partial"
+                dataState !== "partial"
               ) {
-                context.dataState = "streaming";
+                dataState = "streaming";
               } else {
-                context.dataState = "partial";
+                dataState = "partial";
               }
             }
           }
@@ -423,14 +424,14 @@ export class StoreReader {
         } else if (!selection.selectionSet) {
           // Don't promote the dataState if we've already detected a streaming
           // or partial response.
-          if (context.dataState === "empty") {
-            context.dataState = "complete";
+          if (dataState === "empty") {
+            dataState = "complete";
           }
         } else if (fieldValue != null) {
           // Don't promote the dataState if we've already detected a streaming
           // or partial response.
-          if (context.dataState === "empty") {
-            context.dataState = "complete";
+          if (dataState === "empty") {
+            dataState = "complete";
           }
           if (__DEV__) {
             const fieldName = selection.name.value;
@@ -500,7 +501,7 @@ export class StoreReader {
     });
 
     const result = mergeDeepArray(objectsToMerge);
-    const finalResult: ExecResult = { result, missing };
+    const finalResult: ExecResult = { result, missing, dataState };
     const frozen = maybeDeepFreeze(finalResult);
 
     // Store this result with its selection set so that we can quickly
@@ -579,6 +580,7 @@ export class StoreReader {
 
     return {
       result: array,
+      dataState: "complete",
       missing,
     };
   }

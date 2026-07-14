@@ -23,6 +23,7 @@ import {
   getQueryDefinition,
   handleIncrementalSymbol,
   isArray,
+  isDeferredFragment,
   isField,
   isNonNullObject,
   makeReference,
@@ -63,6 +64,7 @@ interface ReadContext extends ReadMergeModifyContext {
   policies: Policies;
   fragmentMap: FragmentMap;
   lookupFragment: FragmentMapFunction;
+  dataState: "empty" | "partial" | "streaming" | "complete";
 }
 
 type ExecResult<R = any> = {
@@ -75,6 +77,8 @@ type ExecSelectionSetOptions = {
   objectOrReference: StoreObject | Reference;
   enclosingRef: Reference;
   context: ReadContext;
+  isDeferred?: boolean;
+  [handleIncrementalSymbol]: true | undefined;
 };
 
 type ExecSubSelectedArrayOptions = {
@@ -82,6 +86,7 @@ type ExecSubSelectedArrayOptions = {
   array: readonly any[];
   enclosingRef: Reference;
   context: ReadContext;
+  [handleIncrementalSymbol]: true | undefined;
 };
 
 interface StoreReaderConfig {
@@ -212,12 +217,11 @@ export class StoreReader {
     rootId = "ROOT_QUERY",
     variables,
     returnPartialData = true,
-    ...options
+    [handleIncrementalSymbol]: handleIncremental,
   }: DiffQueryAgainstStoreOptions): Cache.DiffResult<T> & {
     dataState?: "empty" | "partial" | "streaming" | "complete";
   } {
     const policies = this.config.cache.policies;
-    const incremental = options[handleIncrementalSymbol];
 
     variables = {
       ...getDefaultValues(getQueryDefinition(query)),
@@ -225,18 +229,21 @@ export class StoreReader {
     };
 
     const rootRef = makeReference(rootId);
+    const context: ReadContext = {
+      store,
+      query,
+      policies,
+      variables,
+      varString: canonicalStringify(variables),
+      dataState: "empty",
+      ...extractFragmentContext(query, this.config.fragments),
+    };
     const execResult = this.executeSelectionSet({
       selectionSet: getMainDefinition(query).selectionSet,
       objectOrReference: rootRef,
       enclosingRef: rootRef,
-      context: {
-        store,
-        query,
-        policies,
-        variables,
-        varString: canonicalStringify(variables),
-        ...extractFragmentContext(query, this.config.fragments),
-      },
+      context,
+      [handleIncrementalSymbol]: handleIncremental,
     });
 
     let missing: MissingFieldError | undefined;
@@ -249,10 +256,38 @@ export class StoreReader {
       );
     }
 
-    const complete = !missing;
     const { result } = execResult;
 
-    const diffResult = {
+    if (handleIncremental) {
+      const complete = context.dataState === "complete";
+      const streaming = context.dataState === "streaming";
+      const diffResult = {
+        result:
+          complete || streaming ? result
+          : returnPartialData ?
+            Object.keys(result).length === 0 ?
+              null
+            : result
+          : null,
+        complete,
+        missing,
+        dataState: context.dataState,
+      } as Cache.InternalDiffResultWithDataState<T>;
+
+      if (result == null) {
+        diffResult.dataState = "empty";
+      }
+
+      if (streaming) {
+        diffResult.missing = undefined;
+      }
+
+      return diffResult as any;
+    }
+
+    const complete = !missing;
+
+    return {
       result:
         complete ? result
         : returnPartialData ?
@@ -263,18 +298,6 @@ export class StoreReader {
       complete,
       missing,
     } as Cache.DiffResult<T>;
-
-    if (incremental) {
-      let result = diffResult as Cache.InternalDiffResultWithDataState<T>;
-
-      if (complete) {
-        result.dataState = "complete";
-      } else if (result.result === null) {
-        result.dataState = "empty";
-      }
-    }
-
-    return diffResult;
   }
 
   public isFresh(
@@ -305,6 +328,8 @@ export class StoreReader {
     objectOrReference,
     enclosingRef,
     context,
+    isDeferred,
+    [handleIncrementalSymbol]: handleIncremental,
   }: ExecSelectionSetOptions): ExecResult {
     if (
       isReference(objectOrReference) &&
@@ -344,6 +369,9 @@ export class StoreReader {
     }
 
     const workSet = new Set(selectionSet.selections);
+    const deferredFields = new Set(
+      isDeferred ? selectionSet.selections : undefined
+    );
 
     workSet.forEach((selection) => {
       // Omit fields with directives @skip(if: <truthy value>) or
@@ -372,6 +400,18 @@ export class StoreReader {
                 : "object " + JSON.stringify(objectOrReference, null, 2)
               }`,
             });
+
+            if (context.dataState !== "empty") {
+              if (
+                handleIncremental &&
+                deferredFields.has(selection) &&
+                context.dataState !== "partial"
+              ) {
+                context.dataState = "streaming";
+              } else {
+                context.dataState = "partial";
+              }
+            }
           }
         } else if (isArray(fieldValue)) {
           if (fieldValue.length > 0) {
@@ -381,13 +421,23 @@ export class StoreReader {
                 array: fieldValue,
                 enclosingRef,
                 context,
+                [handleIncrementalSymbol]: handleIncremental,
               }),
               resultName
             );
           }
         } else if (!selection.selectionSet) {
-          // do nothing
+          // Don't promote the dataState if we've already detected a streaming
+          // or partial response.
+          if (context.dataState === "empty") {
+            context.dataState = "complete";
+          }
         } else if (fieldValue != null) {
+          // Don't promote the dataState if we've already detected a streaming
+          // or partial response.
+          if (context.dataState === "empty") {
+            context.dataState = "complete";
+          }
           if (__DEV__) {
             const fieldName = selection.name.value;
 
@@ -412,6 +462,8 @@ export class StoreReader {
               objectOrReference: fieldValue as StoreObject | Reference,
               enclosingRef: isReference(fieldValue) ? fieldValue : enclosingRef,
               context,
+              isDeferred: deferredFields.has(selection),
+              [handleIncrementalSymbol]: handleIncremental,
             }),
             resultName
           );
@@ -431,7 +483,15 @@ export class StoreReader {
         }
 
         if (fragment && policies.fragmentMatches(fragment, typename)) {
-          fragment.selectionSet.selections.forEach(workSet.add, workSet);
+          const isDeferred = isDeferredFragment(selection, context.variables);
+
+          fragment.selectionSet.selections.forEach((selection) => {
+            workSet.add(selection);
+
+            if (isDeferred) {
+              deferredFields.add(selection);
+            }
+          });
         }
       }
     });
@@ -455,6 +515,7 @@ export class StoreReader {
     array,
     enclosingRef,
     context,
+    [handleIncrementalSymbol]: handleIncremental,
   }: ExecSubSelectedArrayOptions): ExecResult {
     let missing: MissingTree | undefined;
     let missingMerger = new DeepMerger();
@@ -486,6 +547,7 @@ export class StoreReader {
             array: item,
             enclosingRef,
             context,
+            [handleIncrementalSymbol]: handleIncremental,
           }),
           i
         );
@@ -499,6 +561,7 @@ export class StoreReader {
             objectOrReference: item,
             enclosingRef: isReference(item) ? item : enclosingRef,
             context,
+            [handleIncrementalSymbol]: handleIncremental,
           }),
           i
         );

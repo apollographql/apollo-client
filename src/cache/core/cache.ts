@@ -205,18 +205,6 @@ export abstract class ApolloCache {
   public abstract diff<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
-  >(
-    query: Cache.DiffOptions<TData, TVariables> & {
-      [incrementalInfoSymbol]: Cache.InternalIncrementalInfo;
-    }
-  ): Cache.DiffResult<TData> & {
-    dataState: "empty" | "partial" | "streaming" | "complete";
-  };
-
-  /** {@inheritDoc @apollo/client/cache!ApolloCache#diff:member(1)} */
-  public abstract diff<
-    TData = unknown,
-    TVariables extends OperationVariables = OperationVariables,
   >(query: Cache.DiffOptions<TData, TVariables>): Cache.DiffResult<TData>;
   public abstract watch<
     TData = unknown,

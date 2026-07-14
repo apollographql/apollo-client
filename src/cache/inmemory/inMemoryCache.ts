@@ -465,6 +465,11 @@ export class InMemoryCache extends ApolloCache {
   public diff<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
+  >(query: Cache.DiffOptions<TData, TVariables>): Cache.DiffResult<TData>;
+
+  public diff<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
   >(options: Cache.DiffOptions<TData, TVariables>): Cache.DiffResult<TData> {
     const { variables } = options;
 

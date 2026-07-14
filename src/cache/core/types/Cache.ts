@@ -28,6 +28,10 @@ export declare namespace Cache {
       : "The cache type declared in TypeOverrides does not extend `ApolloCache` and cannot be used with Apollo Client. See https://www.apollographql.com/docs/react/data/typescript#declaring-the-cache-type."
     : ApolloCache;
 
+  export interface InternalIncrementalInfo {
+    hasNext: boolean;
+  }
+
   export interface ReadOptions<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,

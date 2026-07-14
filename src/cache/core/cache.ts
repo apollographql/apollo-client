@@ -29,6 +29,7 @@ import type { Reference, StoreObject } from "@apollo/client/utilities";
 import { cacheSizes, canonicalStringify } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
+  incrementalInfoSymbol,
   IsAny,
   NoInfer,
   Prettify,
@@ -201,6 +202,18 @@ export abstract class ApolloCache {
    * returned if it contains at least one field that can be fulfilled from the
    * cache.
    */
+  public abstract diff<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    query: Cache.DiffOptions<TData, TVariables> & {
+      [incrementalInfoSymbol]: Cache.InternalIncrementalInfo;
+    }
+  ): Cache.DiffResult<TData> & {
+    dataState: "empty" | "partial" | "streaming" | "complete";
+  };
+
+  /** {@inheritDoc @apollo/client/cache!ApolloCache#diff:member(1)} */
   public abstract diff<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,

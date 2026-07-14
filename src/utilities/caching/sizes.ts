@@ -249,6 +249,12 @@ export interface CacheSizes {
    * if they are not valid.
    */
   checkDocument: number;
+
+  /**
+   * Used by the internal `isDeferredFragment` utility that determines whether a
+   * fragment selection node is a deferred fragment.
+   */
+  isDeferredFragment: number;
 }
 
 const cacheSizeSymbol = Symbol.for("apollo.cacheSize");
@@ -278,6 +284,7 @@ export const cacheSizes: Partial<CacheSizes> = { ...global[cacheSizeSymbol] };
 
 export const enum defaultCacheSizes {
   checkDocument = 2000,
+  isDeferredFragment = 2000,
   canonicalStringify = 1000,
   print = 2000,
   "documentTransform.cache" = 2000,

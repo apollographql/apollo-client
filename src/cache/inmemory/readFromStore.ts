@@ -257,38 +257,10 @@ export class StoreReader {
     }
 
     const { result } = execResult;
+    const complete =
+      handleIncremental ? context.dataState === "complete" : !missing;
 
-    if (handleIncremental) {
-      const complete = context.dataState === "complete";
-      const streaming = context.dataState === "streaming";
-
-      const diffResult = {
-        result:
-          complete || streaming ? result
-          : returnPartialData ?
-            Object.keys(result).length === 0 ?
-              null
-            : result
-          : null,
-        complete,
-        missing,
-        dataState: context.dataState,
-      } as Cache.InternalDiffResultWithDataState<T>;
-
-      if (diffResult.result === null) {
-        diffResult.dataState = "empty";
-      }
-
-      if (streaming) {
-        diffResult.missing = undefined;
-      }
-
-      return diffResult as any;
-    }
-
-    const complete = !missing;
-
-    return {
+    const diffResult = {
       result:
         complete ? result
         : returnPartialData ?
@@ -299,6 +271,27 @@ export class StoreReader {
       complete,
       missing,
     } as Cache.DiffResult<T>;
+
+    if (!handleIncremental) {
+      return diffResult;
+    }
+
+    const streaming = context.dataState === "streaming";
+    const withDataState = {
+      ...diffResult,
+      result: streaming ? result : diffResult.result,
+      dataState: context.dataState,
+    } as Cache.InternalDiffResultWithDataState<T>;
+
+    if (withDataState.result === null) {
+      withDataState.dataState = "empty";
+    }
+
+    if (streaming) {
+      withDataState.missing = undefined;
+    }
+
+    return withDataState as any;
   }
 
   public isFresh(

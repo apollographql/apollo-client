@@ -21,7 +21,7 @@ import {
   getFragmentFromSelection,
   getMainDefinition,
   getQueryDefinition,
-  incrementalInfoSymbol,
+  handleIncrementalSymbol,
   isArray,
   isField,
   isNonNullObject,
@@ -198,7 +198,7 @@ export class StoreReader {
    */
   public diffQueryAgainstStore<T>(
     options: DiffQueryAgainstStoreOptions & {
-      [incrementalInfoSymbol]: Cache.InternalIncrementalInfo;
+      [handleIncrementalSymbol]: true;
     }
   ): Cache.InternalDiffResultWithDataState<T>;
 
@@ -217,7 +217,7 @@ export class StoreReader {
     dataState?: "empty" | "partial" | "streaming" | "complete";
   } {
     const policies = this.config.cache.policies;
-    const incremental = options[incrementalInfoSymbol];
+    const incremental = options[handleIncrementalSymbol];
 
     variables = {
       ...getDefaultValues(getQueryDefinition(query)),
@@ -252,7 +252,7 @@ export class StoreReader {
     const complete = !missing;
     const { result } = execResult;
 
-    return {
+    const diffResult = {
       result:
         complete ? result
         : returnPartialData ?
@@ -263,6 +263,18 @@ export class StoreReader {
       complete,
       missing,
     } as Cache.DiffResult<T>;
+
+    if (incremental) {
+      let result = diffResult as Cache.InternalDiffResultWithDataState<T>;
+
+      if (complete) {
+        result.dataState = "complete";
+      } else if (result.result === null) {
+        result.dataState = "empty";
+      }
+    }
+
+    return diffResult;
   }
 
   public isFresh(

@@ -23,7 +23,7 @@ import {
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
-  incrementalInfoSymbol,
+  handleIncrementalSymbol,
   IsLooselyEqual,
   NoInfer,
 } from "@apollo/client/utilities/internal";
@@ -456,7 +456,7 @@ export class InMemoryCache extends ApolloCache {
     TVariables extends OperationVariables = OperationVariables,
   >(
     query: Cache.DiffOptions<TData, TVariables> & {
-      [incrementalInfoSymbol]: Cache.InternalIncrementalInfo;
+      [handleIncrementalSymbol]: true;
     }
   ): Cache.InternalDiffResultWithDataState<TData>;
 

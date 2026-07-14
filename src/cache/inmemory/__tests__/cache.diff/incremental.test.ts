@@ -2,7 +2,7 @@ import { gql } from "graphql-tag";
 
 import { InMemoryCache, MissingFieldError } from "@apollo/client/cache";
 import { markAsStreaming, spyOnConsole } from "@apollo/client/testing/internal";
-import { incrementalInfoSymbol } from "@apollo/client/utilities/internal";
+import { handleIncrementalSymbol } from "@apollo/client/utilities/internal";
 
 function writePartial(write: () => void): void {
   using _ = spyOnConsole("error");
@@ -45,7 +45,7 @@ test('returns dataState "complete" when the cache fully satisfies the query', ()
       query,
       optimistic: true,
       returnPartialData: false,
-      [incrementalInfoSymbol]: { hasNext: false },
+      [handleIncrementalSymbol]: true,
     })
   ).toStrictEqualTyped({
     complete: true,
@@ -101,7 +101,7 @@ test('returns dataState "complete" when the cache fully satisfies the query even
       query,
       optimistic: true,
       returnPartialData: false,
-      [incrementalInfoSymbol]: { hasNext: true },
+      [handleIncrementalSymbol]: true,
     })
   ).toStrictEqualTyped({
     complete: true,
@@ -152,7 +152,7 @@ test('returns dataState "streaming" when only deferred fields are missing with r
       query,
       optimistic: true,
       returnPartialData: false,
-      [incrementalInfoSymbol]: { hasNext: true },
+      [handleIncrementalSymbol]: true,
     })
   ).toStrictEqualTyped({
     complete: false,
@@ -198,7 +198,7 @@ test('returns dataState "streaming" when only deferred fields are missing with r
       query,
       optimistic: true,
       returnPartialData: true,
-      [incrementalInfoSymbol]: { hasNext: true },
+      [handleIncrementalSymbol]: true,
     })
   ).toStrictEqualTyped({
     complete: false,
@@ -245,7 +245,7 @@ test('returns dataState "partial" when non-deferred fields are missing with retu
     query,
     optimistic: true,
     returnPartialData: true,
-    [incrementalInfoSymbol]: { hasNext: true },
+    [handleIncrementalSymbol]: true,
   });
 
   expect(diff.complete).toBe(false);
@@ -298,7 +298,7 @@ test.only('returns dataState "empty" when non-deferred fields are missing with r
       query,
       optimistic: true,
       returnPartialData: false,
-      [incrementalInfoSymbol]: { hasNext: true },
+      [handleIncrementalSymbol]: true,
     })
   ).toStrictEqualTyped({
     complete: false,
@@ -345,7 +345,7 @@ test("strips incomplete fields inside a defer boundary when returnPartialData is
       query,
       optimistic: true,
       returnPartialData: false,
-      [incrementalInfoSymbol]: { hasNext: true },
+      [handleIncrementalSymbol]: true,
     })
   ).toStrictEqualTyped({
     complete: false,
@@ -396,7 +396,7 @@ test('keeps incomplete fields inside a defer boundary when returnPartialData is 
     query,
     optimistic: true,
     returnPartialData: true,
-    [incrementalInfoSymbol]: { hasNext: true },
+    [handleIncrementalSymbol]: true,
   });
 
   expect(diff.complete).toBe(false);
@@ -461,7 +461,7 @@ test("does not treat overlapping non-deferred fields as partial when only deferr
       query,
       optimistic: true,
       returnPartialData: false,
-      [incrementalInfoSymbol]: { hasNext: true },
+      [handleIncrementalSymbol]: true,
     })
   ).toStrictEqualTyped({
     complete: false,
@@ -519,7 +519,7 @@ test("strips incomplete fields inside a deferred named fragment with returnParti
       query,
       optimistic: true,
       returnPartialData: false,
-      [incrementalInfoSymbol]: { hasNext: true },
+      [handleIncrementalSymbol]: true,
     })
   ).toStrictEqualTyped({
     complete: false,
@@ -578,7 +578,7 @@ test("strips incomplete nested fields inside a nested defer boundary with return
       query,
       optimistic: true,
       returnPartialData: false,
-      [incrementalInfoSymbol]: { hasNext: true },
+      [handleIncrementalSymbol]: true,
     })
   ).toStrictEqualTyped({
     complete: false,
@@ -624,7 +624,7 @@ test("returns incomplete deferred data written only inside the boundary without 
       query,
       optimistic: true,
       returnPartialData: false,
-      [incrementalInfoSymbol]: { hasNext: true },
+      [handleIncrementalSymbol]: true,
     })
   ).toStrictEqualTyped({
     complete: false,
@@ -665,7 +665,7 @@ test('returns dataState "complete" for pure @stream when all selected fields on 
       query,
       optimistic: true,
       returnPartialData: false,
-      [incrementalInfoSymbol]: { hasNext: true },
+      [handleIncrementalSymbol]: true,
     })
   ).toStrictEqualTyped({
     complete: true,
@@ -709,7 +709,7 @@ test("keeps complete stream list items and drops incomplete ones when returnPart
       query,
       optimistic: true,
       returnPartialData: false,
-      [incrementalInfoSymbol]: { hasNext: true },
+      [handleIncrementalSymbol]: true,
     })
   ).toStrictEqualTyped({
     complete: true,
@@ -752,7 +752,7 @@ test('returns dataState "empty" when every stream list item is incomplete with r
       query,
       optimistic: true,
       returnPartialData: false,
-      [incrementalInfoSymbol]: { hasNext: true },
+      [handleIncrementalSymbol]: true,
     })
   ).toStrictEqualTyped({
     complete: false,
@@ -789,7 +789,7 @@ test('keeps incomplete stream list items when returnPartialData is true and repo
     query,
     optimistic: true,
     returnPartialData: true,
-    [incrementalInfoSymbol]: { hasNext: true },
+    [handleIncrementalSymbol]: true,
   });
 
   expect(diff.complete).toBe(false);
@@ -848,7 +848,7 @@ test("drops incomplete stream items and strips deferred holes under a combined @
       query,
       optimistic: true,
       returnPartialData: false,
-      [incrementalInfoSymbol]: { hasNext: true },
+      [handleIncrementalSymbol]: true,
     })
   ).toStrictEqualTyped({
     complete: false,
@@ -898,7 +898,7 @@ test("returns streaming for complete non-deferred stream fields when only deferr
       query,
       optimistic: true,
       returnPartialData: false,
-      [incrementalInfoSymbol]: { hasNext: true },
+      [handleIncrementalSymbol]: true,
     })
   ).toStrictEqualTyped({
     complete: false,
@@ -946,7 +946,7 @@ test("complete is only true when dataState is complete", () => {
     query,
     optimistic: true,
     returnPartialData: false,
-    [incrementalInfoSymbol]: { hasNext: true },
+    [handleIncrementalSymbol]: true,
   });
 
   expect(streamingDiff.dataState).toBe("streaming");
@@ -972,7 +972,7 @@ test("complete is only true when dataState is complete", () => {
     query,
     optimistic: true,
     returnPartialData: true,
-    [incrementalInfoSymbol]: { hasNext: true },
+    [handleIncrementalSymbol]: true,
   });
 
   expect(partialDiff.dataState).toBe("partial");
@@ -997,7 +997,7 @@ test("complete is only true when dataState is complete", () => {
     query,
     optimistic: true,
     returnPartialData: false,
-    [incrementalInfoSymbol]: { hasNext: false },
+    [handleIncrementalSymbol]: true,
   });
 
   expect(completeDiff.dataState).toBe("complete");

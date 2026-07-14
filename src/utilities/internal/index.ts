@@ -80,7 +80,7 @@ export { canonicalStringify } from "./canonicalStringify.js";
 export { mapObservableFragmentMemoized } from "./mapObservableFragment.js";
 export {
   extensionsSymbol,
-  incrementalInfoSymbol,
+  handleIncrementalSymbol,
   streamInfoSymbol,
   variablesUnknownSymbol,
 } from "./constants.js";

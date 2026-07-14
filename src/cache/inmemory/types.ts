@@ -8,10 +8,12 @@ import type {
 } from "@apollo/client/utilities";
 import type {
   ExtensionsWithStreamInfo,
+  incrementalInfoSymbol,
   RemoveIndexSignature,
 } from "@apollo/client/utilities/internal";
 
 import type { ApolloCache, Transaction } from "../core/cache.js";
+import type { Cache } from "../core/types/Cache.js";
 import type {
   AllFieldsModifier,
   CanReadFunction,
@@ -133,6 +135,7 @@ export type ReadQueryOptions = {
 
 export type DiffQueryAgainstStoreOptions = ReadQueryOptions & {
   returnPartialData?: boolean;
+  [incrementalInfoSymbol]?: Cache.InternalIncrementalInfo;
 };
 
 export type ApolloReducerConfig = {

@@ -358,12 +358,10 @@ export class StoreReader {
       return result.result;
     }
 
-    const workSet = new Set(selectionSet.selections);
-
-    workSet.forEach((selection) => {
+    for (const selection of selectionSet.selections) {
       // Omit fields with directives @skip(if: <truthy value>) or
       // @include(if: <falsy value>).
-      if (!shouldInclude(selection, variables)) return;
+      if (!shouldInclude(selection, variables)) continue;
 
       if (isField(selection)) {
         let fieldValue = policies.readField(
@@ -488,7 +486,7 @@ export class StoreReader {
           }
         }
       }
-    });
+    }
 
     const result = mergeDeepArray(objectsToMerge);
     const finalResult: ExecResult = { result, missing, dataState };

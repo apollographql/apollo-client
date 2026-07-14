@@ -488,7 +488,12 @@ export class StoreReader {
       }
     }
 
-    const result = mergeDeepArray(objectsToMerge);
+    const result =
+      // if we don't tolerate partial data, don't waste time merging the result
+      // since it will be cleared anyways
+      context.returnPartialData || dataState !== "partial" ?
+        mergeDeepArray(objectsToMerge)
+      : undefined;
     const finalResult: ExecResult = { result, missing, dataState };
     const frozen = maybeDeepFreeze(finalResult);
 

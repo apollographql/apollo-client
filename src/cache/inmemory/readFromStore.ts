@@ -494,6 +494,10 @@ export class StoreReader {
       context.returnPartialData || dataState !== "partial" ?
         mergeDeepArray(objectsToMerge)
       : undefined;
+
+    if (!context.returnPartialData && dataState === "partial") {
+      dataState = "empty";
+    }
     const finalResult: ExecResult = { result, missing, dataState };
     const frozen = maybeDeepFreeze(finalResult);
 

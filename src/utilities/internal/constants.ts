@@ -26,8 +26,9 @@ export const variablesUnknownSymbol = Symbol.for(
  * Used to tell `ApolloCache.diff` whether to current result is an incremental
  * result. The cache is expected to return a well-formed `data` value where the
  * only holes in the data are at defer boundaries with `returnPartialData:
- *  false`. It is also expected to return a `dataState` property to provide
- * the state of data.
+ *   false`. It is also expected to return a `dataState` property to provide
+ * the state of data. Caches that use this symbol should set
+ * `supportsIncrementalResults` to `true`.
  *
  * Meant for cache implementers only. This should not be used in userland code.
  */

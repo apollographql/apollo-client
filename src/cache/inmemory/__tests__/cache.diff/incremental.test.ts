@@ -967,6 +967,187 @@ test("complete is only true when dataState is complete", () => {
   expect(completeDiff.complete).toBe(true);
 });
 
+test('returns dataState "empty" for incomplete fields under @defer(if: false) with returnPartialData: false', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer(if: false) {
+          recipient {
+            name
+            email
+          }
+        }
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+          recipient: {
+            __typename: "Person",
+            name: "Cached Alice",
+          },
+        },
+      },
+    });
+  }
+
+  const missingObject = { __typename: "Person", name: "Cached Alice" };
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    complete: false,
+    dataState: "empty",
+    missing: new MissingFieldError(
+      getMissingMessage("email", missingObject),
+      {
+        greeting: {
+          recipient: {
+            email: getMissingMessage("email", missingObject),
+          },
+        },
+      },
+      query,
+      {}
+    ),
+    result: null,
+  });
+});
+
+test('returns dataState "empty" for incomplete fields under @defer(if: $shouldDefer) when the variable disables defer with returnPartialData: false', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query ($shouldDefer: Boolean!) {
+      greeting {
+        message
+        ... on Greeting @defer(if: $shouldDefer) {
+          recipient {
+            name
+            email
+          }
+        }
+      }
+    }
+  `;
+  const variables = { shouldDefer: false };
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      variables,
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+          recipient: {
+            __typename: "Person",
+            name: "Cached Alice",
+          },
+        },
+      },
+    });
+  }
+
+  const missingObject = { __typename: "Person", name: "Cached Alice" };
+
+  expect(
+    cache.diff({
+      query,
+      variables,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    complete: false,
+    dataState: "empty",
+    missing: new MissingFieldError(
+      getMissingMessage("email", missingObject),
+      {
+        greeting: {
+          recipient: {
+            email: getMissingMessage("email", missingObject),
+          },
+        },
+      },
+      query,
+      variables
+    ),
+    result: null,
+  });
+});
+
+test('returns dataState "streaming" for incomplete fields under @defer(if: $shouldDefer) when the variable enables defer with returnPartialData: false', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query ($shouldDefer: Boolean!) {
+      greeting {
+        message
+        ... on Greeting @defer(if: $shouldDefer) {
+          recipient {
+            name
+            email
+          }
+        }
+      }
+    }
+  `;
+  const variables = { shouldDefer: true };
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      variables,
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+          recipient: {
+            __typename: "Person",
+            name: "Cached Alice",
+          },
+        },
+      },
+    });
+  }
+
+  expect(
+    cache.diff({
+      query,
+      variables,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    complete: false,
+    dataState: "streaming",
+    missing: undefined,
+    result: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+      },
+    }),
+  });
+});
+
 function getMissingMessage(fieldName: string, obj: Record<string, unknown>) {
   return `Can't find field '${fieldName}' on object ${JSON.stringify(
     obj,

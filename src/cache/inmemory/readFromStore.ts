@@ -66,6 +66,7 @@ interface ReadContext extends ReadMergeModifyContext {
   policies: Policies;
   fragmentMap: FragmentMap;
   lookupFragment: FragmentMapFunction;
+  returnPartialData: boolean;
 }
 
 type ExecResult<R = any> = {
@@ -240,6 +241,7 @@ export class StoreReader {
         policies,
         variables,
         varString: canonicalStringify(variables),
+        returnPartialData,
         ...extractFragmentContext(query, this.config.fragments),
       },
       [handleIncrementalSymbol]: handleIncremental,

@@ -270,26 +270,22 @@ export class StoreReader {
         : null,
       complete,
       missing,
-    } as Cache.DiffResult<T>;
-
-    if (!handleIncremental) {
-      return diffResult;
-    }
-
-    const withDataState = {
-      ...diffResult,
       dataState,
     } as Cache.InternalDiffResultWithDataState<T>;
 
-    if (withDataState.result === null) {
-      withDataState.dataState = "empty";
+    if (diffResult.result === null) {
+      diffResult.dataState = "empty";
     }
 
     if (streaming) {
-      withDataState.missing = undefined;
+      diffResult.missing = undefined;
     }
 
-    return withDataState as any;
+    if (!handleIncremental) {
+      delete (diffResult as any).dataState;
+    }
+
+    return diffResult as Cache.DiffResult<T>;
   }
 
   public isFresh(

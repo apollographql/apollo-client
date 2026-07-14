@@ -257,7 +257,7 @@ export class StoreReader {
     }
 
     const { result, dataState } = execResult;
-    const complete = handleIncremental ? dataState === "complete" : !missing;
+    const complete = dataState === "complete";
 
     const diffResult = {
       result:

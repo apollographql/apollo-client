@@ -181,26 +181,34 @@ test('returns dataState "partial" when non-deferred fields are missing with retu
     });
   }
 
-  const diff = cache.diff({
-    query,
-    optimistic: true,
-    returnPartialData: true,
-    [handleIncrementalSymbol]: true,
-  });
+  const missingObject = { __typename: "Greeting", message: "Hello world" };
 
-  expect(diff.complete).toBe(false);
-  expect(diff.dataState).toBe("partial");
-  expect(diff.result).toStrictEqualTyped({
-    greeting: {
-      __typename: "Greeting",
-      message: "Hello world",
-    },
-  });
-  expect(diff.missing).toBeInstanceOf(MissingFieldError);
-  expect(diff.missing?.missing).toEqual({
-    greeting: {
-      author: expect.any(String),
-      recipient: expect.any(String),
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: true,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    complete: false,
+    dataState: "partial",
+    missing: new MissingFieldError(
+      getMissingMessage("author", missingObject),
+      {
+        greeting: {
+          author: getMissingMessage("author", missingObject),
+          recipient: getMissingMessage("recipient", missingObject),
+        },
+      },
+      query,
+      {}
+    ),
+    result: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+      },
     },
   });
 });
@@ -347,30 +355,38 @@ test('keeps incomplete fields inside a defer boundary when returnPartialData is 
     });
   }
 
-  const diff = cache.diff({
-    query,
-    optimistic: true,
-    returnPartialData: true,
-    [handleIncrementalSymbol]: true,
-  });
+  const missingObject = { __typename: "Person", name: "Cached Alice" };
 
-  expect(diff.complete).toBe(false);
-  expect(diff.dataState).toBe("partial");
-  expect(diff.result).toStrictEqualTyped({
-    greeting: {
-      __typename: "Greeting",
-      message: "Hello world",
-      recipient: {
-        __typename: "Person",
-        name: "Cached Alice",
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: true,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    complete: false,
+    dataState: "partial",
+    missing: new MissingFieldError(
+      getMissingMessage("email", missingObject),
+      {
+        greeting: {
+          recipient: {
+            email: getMissingMessage("email", missingObject),
+          },
+        },
       },
-    },
-  });
-  expect(diff.missing).toBeInstanceOf(MissingFieldError);
-  expect(diff.missing?.missing).toEqual({
-    greeting: {
-      recipient: {
-        email: expect.any(String),
+      query,
+      {}
+    ),
+    result: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Cached Alice",
+        },
       },
     },
   });
@@ -746,27 +762,35 @@ test('keeps incomplete stream list items when returnPartialData is true and repo
     });
   }
 
-  const diff = cache.diff({
-    query,
-    optimistic: true,
-    returnPartialData: true,
-    [handleIncrementalSymbol]: true,
-  });
+  const missingObject = { __typename: "Friend", id: "2" };
 
-  expect(diff.complete).toBe(false);
-  expect(diff.dataState).toBe("partial");
-  expect(diff.result).toStrictEqualTyped({
-    friendList: [
-      { __typename: "Friend", id: "1", name: "Luke" },
-      { __typename: "Friend", id: "2" },
-    ],
-  });
-  expect(diff.missing).toBeInstanceOf(MissingFieldError);
-  expect(diff.missing?.missing).toEqual({
-    friendList: {
-      1: {
-        name: expect.any(String),
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: true,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    complete: false,
+    dataState: "partial",
+    missing: new MissingFieldError(
+      getMissingMessage("name", missingObject),
+      {
+        friendList: {
+          1: {
+            name: getMissingMessage("name", missingObject),
+          },
+        },
       },
+      query,
+      {}
+    ),
+    result: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2" },
+      ],
     },
   });
 });
@@ -904,15 +928,24 @@ test("complete is only true when dataState is complete", () => {
     },
   });
 
-  const streamingDiff = cache.diff({
-    query,
-    optimistic: true,
-    returnPartialData: false,
-    [handleIncrementalSymbol]: true,
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    complete: false,
+    dataState: "streaming",
+    missing: undefined,
+    result: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+      },
+    }),
   });
-
-  expect(streamingDiff.dataState).toBe("streaming");
-  expect(streamingDiff.complete).toBe(false);
 
   {
     using _ = spyOnConsole("error");
@@ -931,15 +964,41 @@ test("complete is only true when dataState is complete", () => {
     });
   }
 
-  const partialDiff = cache.diff({
-    query,
-    optimistic: true,
-    returnPartialData: true,
-    [handleIncrementalSymbol]: true,
-  });
+  const missingObject = { __typename: "Person", name: "Alice" };
 
-  expect(partialDiff.dataState).toBe("partial");
-  expect(partialDiff.complete).toBe(false);
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: true,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    complete: false,
+    dataState: "partial",
+    missing: new MissingFieldError(
+      getMissingMessage("email", missingObject),
+      {
+        greeting: {
+          recipient: {
+            email: getMissingMessage("email", missingObject),
+          },
+        },
+      },
+      query,
+      {}
+    ),
+    result: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+        },
+      },
+    },
+  });
 
   cache.writeQuery({
     query,
@@ -956,15 +1015,29 @@ test("complete is only true when dataState is complete", () => {
     },
   });
 
-  const completeDiff = cache.diff({
-    query,
-    optimistic: true,
-    returnPartialData: false,
-    [handleIncrementalSymbol]: true,
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    complete: true,
+    dataState: "complete",
+    missing: undefined,
+    result: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+          email: "alice@example.com",
+        },
+      },
+    },
   });
-
-  expect(completeDiff.dataState).toBe("complete");
-  expect(completeDiff.complete).toBe(true);
 });
 
 test('returns dataState "empty" for incomplete fields under @defer(if: false) with returnPartialData: false', () => {

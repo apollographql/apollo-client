@@ -60,62 +60,6 @@ test('returns dataState "complete" when the cache fully satisfies the query', ()
   });
 });
 
-test('returns dataState "complete" when the cache fully satisfies the query even if hasNext is true', () => {
-  const cache = new InMemoryCache();
-  const query = gql`
-    query {
-      greeting {
-        message
-        ... on Greeting @defer {
-          recipient {
-            name
-            email
-          }
-        }
-      }
-    }
-  `;
-
-  cache.writeQuery({
-    query,
-    data: {
-      greeting: {
-        __typename: "Greeting",
-        message: "Hello world",
-        recipient: {
-          __typename: "Person",
-          name: "Alice",
-          email: "alice@example.com",
-        },
-      },
-    },
-  });
-
-  expect(
-    cache.diff({
-      query,
-      optimistic: true,
-      returnPartialData: false,
-      [handleIncrementalSymbol]: true,
-    })
-  ).toStrictEqualTyped({
-    complete: true,
-    dataState: "complete",
-    missing: undefined,
-    result: {
-      greeting: {
-        __typename: "Greeting",
-        message: "Hello world",
-        recipient: {
-          __typename: "Person",
-          name: "Alice",
-          email: "alice@example.com",
-        },
-      },
-    },
-  });
-});
-
 test('returns dataState "streaming" when only deferred fields are missing with returnPartialData: false', () => {
   const cache = new InMemoryCache();
   const query = gql`

@@ -435,14 +435,25 @@ export class StoreReader {
 
           fieldValue = execResult.result;
 
+          if (fieldValue !== void 0) {
+            objectsToMerge.push({ [resultName]: fieldValue });
+          }
+
+          if (!dataState) {
+            dataState = execResult.dataState;
+          }
+
           if (dataState === execResult.dataState) {
             continue;
           }
 
-          if (dataState === "empty" && execResult.dataState !== "empty") {
+          if (dataState === "empty") {
             dataState = "partial";
-          } else if (dataState === undefined) {
-            dataState = execResult.dataState;
+          } else if (dataState === "streaming") {
+            dataState =
+              execResult.dataState === "complete" ? "streaming" : "partial";
+          } else if (dataState === "complete") {
+            dataState = "partial";
           }
         }
 

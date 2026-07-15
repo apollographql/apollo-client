@@ -405,6 +405,17 @@ export class StoreReader {
             if (!dataState) {
               dataState = execResult.dataState;
             }
+
+            if (dataState !== execResult.dataState) {
+              dataState =
+                (
+                  (dataState === "complete" || dataState === "streaming") &&
+                  (execResult.dataState === "complete" ||
+                    execResult.dataState === "streaming")
+                ) ?
+                  "streaming"
+                : "partial";
+            }
           }
         } else if (!selection.selectionSet) {
           dataState =

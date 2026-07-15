@@ -181,8 +181,7 @@ export class StoreReader {
             return context.store.makeCacheKey(
               selectionSet,
               isReference(parent) ? parent.__ref : parent,
-              context.varString,
-              context.returnPartialData
+              context.varString
             );
           }
         },
@@ -203,12 +202,7 @@ export class StoreReader {
           defaultCacheSizes["inMemoryCache.executeSubSelectedArray"],
         makeCacheKey({ field, array, context }) {
           if (supportsResultCaching(context.store)) {
-            return context.store.makeCacheKey(
-              field,
-              array,
-              context.varString,
-              context.returnPartialData
-            );
+            return context.store.makeCacheKey(field, array, context.varString);
           }
         },
       }
@@ -257,7 +251,6 @@ export class StoreReader {
         policies,
         variables,
         varString: canonicalStringify(variables),
-        returnPartialData,
         ...extractFragmentContext(query, this.config.fragments),
       },
       [handleIncrementalSymbol]: handleIncremental,
@@ -273,17 +266,23 @@ export class StoreReader {
       );
     }
 
-    const { result, dataState } = execResult;
+    let { result, dataState } = execResult;
+
+    if (dataState === "partial" && !returnPartialData) {
+      dataState = "empty";
+    }
+
+    const complete = dataState === "complete";
 
     const diffResult = {
       result:
-        (
-          result === undefined ||
-          (Object.keys(result).length === 0 && dataState !== "complete")
-        ) ?
-          null
-        : result,
-      complete: dataState === "complete",
+        complete || dataState === "streaming" ? result
+        : returnPartialData ?
+          Object.keys(result).length === 0 ?
+            null
+          : result
+        : null,
+      complete,
       missing,
     } as Cache.DiffResult<T>;
 
@@ -616,26 +615,9 @@ export class StoreReader {
       }
     }
 
-    if (
-      dataState === undefined ||
-      (dataState === "partial" && !context.returnPartialData)
-    ) {
-      dataState = "empty";
-    }
+    dataState ||= "empty";
 
-    // Even when the selection set is "empty" (none of the explicitly selected
-    // fields are present), the object may still carry data merged from the
-    // store, such as the implicitly included `__typename`. When we opt into
-    // partial data we surface that object instead of discarding it.
-    // The `dataState` is intentionally left as "empty" so an enclosing defer
-    // boundary can still recognize it as unresolved.
-    const result =
-      (
-        dataState !== "empty" ||
-        (context.returnPartialData && objectsToMerge.length > 0)
-      ) ?
-        mergeDeepArray(objectsToMerge)
-      : undefined;
+    const result = mergeDeepArray(objectsToMerge);
 
     const finalResult: ExecResult = {
       result,

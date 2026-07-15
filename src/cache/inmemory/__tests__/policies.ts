@@ -3336,7 +3336,10 @@ describe("type policies", function () {
         `,
       });
 
-      const missingFieldErrorMessage = `Can't find field 'secret' on object Person`;
+      const missingFieldErrorMessage = `Can't find field 'secret' on object {
+  "__typename": "Person",
+  "name": "Ben Newman"
+}`;
 
       expect(diff.complete).toBe(false);
       expect(diff.result).toBeNull();

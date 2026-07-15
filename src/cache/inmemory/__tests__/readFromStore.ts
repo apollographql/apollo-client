@@ -805,13 +805,19 @@ describe("reading from the store", () => {
 
     expect(missing).toEqual(
       new MissingFieldError(
-        `Can't find field 'missing' on object`,
+        `Can't find field 'missing' on object {
+  "present": "here"
+}`,
         {
           normal: {
-            missing: `Can't find field 'missing' on object`,
+            missing: `Can't find field 'missing' on object {
+  "present": "here"
+}`,
           },
           clientOnly: {
-            missing: `Can't find field 'missing' on object`,
+            missing: `Can't find field 'missing' on object {
+  "present": "also here"
+}`,
           },
         },
         query,
@@ -1390,12 +1396,12 @@ describe("reading from the store", () => {
     expect(diffChickens()).toEqual({
       complete: false,
       missing: new MissingFieldError(
-        "Can't find field 'id' on object",
+        'Can\'t find field \'id\' on object {}',
         {
           chickens: {
             1: {
-              id: "Can't find field 'id' on object",
-              inCoop: "Can't find field 'inCoop' on object",
+              id: 'Can\'t find field \'id\' on object {}',
+              inCoop: 'Can\'t find field \'inCoop\' on object {}',
             },
           },
         },
@@ -2228,7 +2234,7 @@ describe("lazy MissingFieldError diagnostics", () => {
     });
   });
 
-  it("missing message no longer embeds full object dumps for embedded parents", () => {
+  it("missing message uses JSON.stringify for non-normalized embedded parents", () => {
     const cache = new InMemoryCache();
 
     const query = gql`
@@ -2264,12 +2270,10 @@ describe("lazy MissingFieldError diagnostics", () => {
 
     expect(diff.complete).toBe(false);
 
-    // The missing message should NOT contain the full bio string
+    // Non-normalized embedded parents use JSON.stringify for debuggability
     const message = diff.missing!.message;
-    expect(message).not.toContain("a".repeat(1000));
     expect(message).toContain("Can't find field 'largeField'");
-    expect(message).toContain("object Profile");
-    // The message should be short - no large embedded content
-    expect(message.length).toBeLessThan(100);
+    expect(message).toContain('"__typename": "Profile"');
+    expect(message).toContain("a".repeat(1000));
   });
 });

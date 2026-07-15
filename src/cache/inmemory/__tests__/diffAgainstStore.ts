@@ -391,7 +391,11 @@ describe("diffing queries against the store", () => {
       returnPartialData: false,
     });
 
-    const missingFieldErrorMessage = `Can't find field 'address' on object Author`;
+    const missingFieldErrorMessage = `Can't find field 'address' on object {
+  "__typename": "Author",
+  "firstName": "John",
+  "lastName": "Smith"
+}`;
 
     expect(complete).toBe(false);
     expect(result).toBe(null);

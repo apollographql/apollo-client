@@ -533,7 +533,10 @@ export class StoreReader {
                 : "partial";
             } else if (dataState === "complete") {
               dataState =
-                isDeferBoundary && execResult.dataState === "empty" ?
+                (
+                  execResult.dataState === "streaming" ||
+                  (isDeferBoundary && execResult.dataState === "empty")
+                ) ?
                   "streaming"
                 : "partial";
             }

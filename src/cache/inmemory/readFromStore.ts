@@ -239,7 +239,7 @@ export class StoreReader {
     };
 
     const rootRef = makeReference(rootId);
-    const execResult = this.executeSelectionSet({
+    let execResult = this.executeSelectionSet({
       selectionSet: getMainDefinition(query).selectionSet,
       objectOrReference: rootRef,
       enclosingRef: rootRef,
@@ -252,6 +252,14 @@ export class StoreReader {
         ...extractFragmentContext(query, this.config.fragments),
       },
     });
+
+    if (
+      handleIncremental &&
+      !returnPartialData &&
+      execResult.dataState === "partial"
+    ) {
+      execResult = maybeStripPartialDeferredFragments(query, execResult);
+    }
 
     let missing: MissingFieldError | undefined;
     if (
@@ -738,4 +746,83 @@ function assertSelectionSetForIdValue(
       }
     });
   }
+}
+
+function maybeStripPartialDeferredFragments<T>(
+  document: DocumentNode,
+  execResult: ExecResult<T>
+): ExecResult<T> {
+  if (!execResult.deferBoundaryResults) return execResult;
+
+  // We only need to process partial fragments in this function. If all
+  // fragments are either complete or streaming, we don't need to process
+  // anything and can short-circuit.
+  if (
+    Array.from(execResult.deferBoundaryResults).every(
+      ([, { dataState }]) => dataState !== "partial"
+    )
+  ) {
+    return execResult;
+  }
+
+  function removePartialFragmentData(
+    selectionSet: SelectionSetNode,
+    data: any
+  ): any {
+    if (data == null) return data;
+
+    let changed = false;
+
+    let newData =
+      Array.isArray(data) ? ([] as any[]) : ({} as Record<string, any>);
+
+    for (const selection of selectionSet.selections) {
+      if (isField(selection)) {
+        if (!selection.selectionSet) continue;
+
+        const resultName = resultKeyNameFromField(selection);
+
+        if (Array.isArray(data)) {
+          // TODO
+        } else {
+          const result = removePartialFragmentData(
+            selection.selectionSet,
+            data[resultName]
+          );
+
+          (newData as any)[resultName] = result;
+
+          changed ||= result !== data[resultName];
+        }
+      } else {
+        const fragmentResult = execResult.deferBoundaryResults?.get(selection);
+        if (fragmentResult?.dataState !== "partial") continue;
+
+        newData = { ...data };
+
+        for (const key of Object.keys(fragmentResult.result)) {
+          // Always retain __typename
+          if (key === "__typename") continue;
+
+          delete (newData as any)[key];
+        }
+
+        changed = true;
+      }
+    }
+
+    console.log("return", changed ? newData : data);
+
+    return changed ? newData : data;
+  }
+
+  return {
+    ...execResult,
+    // Removing partial defer boundaries puts the data in a streaming state
+    dataState: "streaming",
+    result: removePartialFragmentData(
+      getMainDefinition(document).selectionSet,
+      execResult.result
+    ),
+  };
 }

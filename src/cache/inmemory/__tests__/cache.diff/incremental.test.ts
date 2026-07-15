@@ -744,7 +744,17 @@ test('returns dataState "empty" when every stream list item is incomplete with r
     result: null,
     dataState: "empty",
     complete: false,
-    missing: undefined,
+    missing: new MissingFieldError(
+      getMissingMessage("name", { __ref: "Friend:1" }),
+      {
+        friendList: {
+          0: { name: getMissingMessage("name", { __ref: "Friend:1" }) },
+          1: { name: getMissingMessage("name", { __ref: "Friend:2" }) },
+        },
+      },
+      query,
+      {}
+    ),
   });
 });
 
@@ -772,7 +782,7 @@ test('keeps incomplete stream list items when returnPartialData is true and repo
     });
   }
 
-  const missingObject = { __typename: "Friend", id: "2" };
+  const missingRef = { __ref: "Friend:2" };
 
   expect(
     cache.diff({
@@ -791,11 +801,11 @@ test('keeps incomplete stream list items when returnPartialData is true and repo
     dataState: "partial",
     complete: false,
     missing: new MissingFieldError(
-      getMissingMessage("name", missingObject),
+      getMissingMessage("name", missingRef),
       {
         friendList: {
           1: {
-            name: getMissingMessage("name", missingObject),
+            name: getMissingMessage("name", missingRef),
           },
         },
       },

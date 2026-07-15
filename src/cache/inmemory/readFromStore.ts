@@ -539,12 +539,6 @@ export class StoreReader {
       dataState = "empty";
     }
 
-    // If all missing fields are in a defer boundary, we don't need to report
-    // those fields as missing
-    if (dataState === "streaming") {
-      missing = undefined;
-    }
-
     const result =
       dataState === "empty" ? undefined : mergeDeepArray(objectsToMerge);
 

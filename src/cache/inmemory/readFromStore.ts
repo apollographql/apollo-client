@@ -435,6 +435,10 @@ export class StoreReader {
 
           fieldValue = execResult.result;
 
+          if (dataState === execResult.dataState) {
+            continue;
+          }
+
           if (dataState === "empty" && execResult.dataState !== "empty") {
             dataState = "partial";
           } else if (dataState === undefined) {

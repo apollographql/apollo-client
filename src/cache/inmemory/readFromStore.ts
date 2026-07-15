@@ -789,21 +789,28 @@ function maybeStripPartialDeferredFragments<T>(
 
     for (const selection of selectionSet.selections) {
       if (isField(selection)) {
-        if (!selection.selectionSet) continue;
+        const { selectionSet } = selection;
+
+        if (!selectionSet) continue;
 
         const resultName = resultKeyNameFromField(selection);
+        const value = data[resultName];
 
-        if (Array.isArray(data)) {
-          // TODO
+        if (Array.isArray(value)) {
+          const result = value.map((item) => {
+            const newItem = removePartialFragmentData(selectionSet, item);
+            changed ||= newItem !== item;
+
+            return newItem;
+          });
+
+          (newData as any)[resultName] = result;
         } else {
-          const result = removePartialFragmentData(
-            selection.selectionSet,
-            data[resultName]
-          );
+          const result = removePartialFragmentData(selectionSet, value);
 
           (newData as any)[resultName] = result;
 
-          changed ||= result !== data[resultName];
+          changed ||= result !== value;
         }
       } else {
         const fragmentResult = execResult.deferBoundaryResults?.get(selection);

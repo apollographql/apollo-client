@@ -800,9 +800,21 @@ function maybeStripPartialDeferredFragments<T>(
 
         newData = { ...data };
 
+        const siblingFieldNames = selectionSet.selections.reduce(
+          (set, selection) => {
+            if (isField(selection)) {
+              set.add(resultKeyNameFromField(selection));
+            }
+
+            return set;
+          },
+          new Set<string>()
+        );
+
         for (const key of Object.keys(fragmentResult.result)) {
-          // Always retain __typename
-          if (key === "__typename") continue;
+          // Always retain __typename and other overlapping fields outside the
+          // defer boundary
+          if (key === "__typename" || siblingFieldNames.has(key)) continue;
 
           delete (newData as any)[key];
         }

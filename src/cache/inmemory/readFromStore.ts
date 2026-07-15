@@ -504,7 +504,14 @@ export class StoreReader {
           }
 
           if (!dataState) {
-            dataState = execResult.dataState;
+            // An unresolved defer boundary is not "missing" data because the
+            // object is waiting for its deferred fields to stream in. Initiate
+            // with "streaming" so any data we have (such as `__typename`) is
+            // surfaced instead of discarded as "empty".
+            dataState =
+              isDeferBoundary && execResult.dataState === "empty" ?
+                "streaming"
+              : execResult.dataState;
           }
 
           if (handleIncremental && dataState !== execResult.dataState) {
@@ -539,8 +546,19 @@ export class StoreReader {
       dataState = "empty";
     }
 
+    // Even when the selection set is "empty" (none of the explicitly selected
+    // fields are present), the object may still carry data merged from the
+    // store, such as the implicitly included `__typename`. When we opt into
+    // partial data we surface that object instead of discarding it.
+    // The `dataState` is intentionally left as "empty" so an enclosing defer
+    // boundary can still recognize it as unresolved.
     const result =
-      dataState === "empty" ? undefined : mergeDeepArray(objectsToMerge);
+      (
+        dataState !== "empty" ||
+        (context.returnPartialData && objectsToMerge.length > 0)
+      ) ?
+        mergeDeepArray(objectsToMerge)
+      : undefined;
 
     const finalResult: ExecResult = { result, missing, dataState };
     const frozen = maybeDeepFreeze(finalResult);

@@ -606,7 +606,16 @@ export class StoreReader {
           [handleIncrementalSymbol]: handleIncremental,
         });
 
-        dataState = execResult.dataState;
+        if (dataState !== execResult.dataState) {
+          dataState =
+            (
+              (dataState === "complete" || dataState === "streaming") &&
+              (execResult.dataState === "streaming" ||
+                execResult.dataState === "complete")
+            ) ?
+              "streaming"
+            : "partial";
+        }
 
         return handleMissing(execResult, i);
       }

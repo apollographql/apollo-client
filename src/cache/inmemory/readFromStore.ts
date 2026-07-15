@@ -17,10 +17,12 @@ import {
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
+  FieldMap,
   FragmentMap,
   FragmentMapFunction,
 } from "@apollo/client/utilities/internal";
 import {
+  collectSiblingFields,
   DeepMerger,
   getDefaultValues,
   getFragmentFromSelection,
@@ -239,6 +241,10 @@ export class StoreReader {
     };
 
     const rootRef = makeReference(rootId);
+    const fragmentContext = extractFragmentContext(
+      query,
+      this.config.fragments
+    );
     let execResult = this.executeSelectionSet({
       selectionSet: getMainDefinition(query).selectionSet,
       objectOrReference: rootRef,
@@ -249,7 +255,7 @@ export class StoreReader {
         policies,
         variables,
         varString: canonicalStringify(variables),
-        ...extractFragmentContext(query, this.config.fragments),
+        ...fragmentContext,
       },
     });
 
@@ -258,7 +264,11 @@ export class StoreReader {
       !returnPartialData &&
       execResult.dataState === "partial"
     ) {
-      execResult = maybeStripPartialDeferredFragments(query, execResult);
+      execResult = maybeStripPartialDeferredFragments(
+        query,
+        execResult,
+        fragmentContext.fragmentMap
+      );
     }
 
     let missing: MissingFieldError | undefined;
@@ -750,7 +760,8 @@ function assertSelectionSetForIdValue(
 
 function maybeStripPartialDeferredFragments<T>(
   document: DocumentNode,
-  execResult: ExecResult<T>
+  execResult: ExecResult<T>,
+  fragmentMap: FragmentMap
 ): ExecResult<T> {
   if (!execResult.deferBoundaryResults) return execResult;
 
@@ -798,32 +809,17 @@ function maybeStripPartialDeferredFragments<T>(
         const fragmentResult = execResult.deferBoundaryResults?.get(selection);
         if (fragmentResult?.dataState !== "partial") continue;
 
-        newData = { ...data };
-
-        const siblingFieldNames = selectionSet.selections.reduce(
-          (set, selection) => {
-            if (isField(selection)) {
-              set.add(resultKeyNameFromField(selection));
-            }
-
-            return set;
-          },
-          new Set<string>()
+        newData = keepFieldsFromFieldMap(
+          data,
+          collectSiblingFields(selectionSet, {
+            exclude: selection,
+            fragmentMap,
+          })
         );
-
-        for (const key of Object.keys(fragmentResult.result)) {
-          // Always retain __typename and other overlapping fields outside the
-          // defer boundary
-          if (key === "__typename" || siblingFieldNames.has(key)) continue;
-
-          delete (newData as any)[key];
-        }
 
         changed = true;
       }
     }
-
-    console.log("return", changed ? newData : data);
 
     return changed ? newData : data;
   }
@@ -837,4 +833,20 @@ function maybeStripPartialDeferredFragments<T>(
       execResult.result
     ),
   };
+}
+
+function keepFieldsFromFieldMap(data: Record<string, any>, fieldMap: FieldMap) {
+  const result: Record<string, any> = {};
+
+  for (const [key, value] of Object.entries(data)) {
+    const siblingField = fieldMap[key];
+
+    if (siblingField === true || key === "__typename") {
+      result[key] = value;
+    } else if (typeof siblingField === "object") {
+      result[key] = keepFieldsFromFieldMap(data[key], siblingField);
+    }
+  }
+
+  return result;
 }

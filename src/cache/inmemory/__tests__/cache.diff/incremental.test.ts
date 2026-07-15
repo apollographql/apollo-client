@@ -2362,7 +2362,7 @@ test('returns dataState "complete" when an object selection set is only a deferr
   });
 });
 
-test('returns dataState "empty" when an object selection set is only a deferred fragment, that data is absent, and __typename is not selected', () => {
+test('returns dataState "streaming" when an object selection set is only a deferred fragment and that data is absent', () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -2391,8 +2391,12 @@ test('returns dataState "empty" when an object selection set is only a deferred 
       [handleIncrementalSymbol]: true,
     })
   ).toStrictEqualTyped({
-    result: null,
-    dataState: "empty",
+    result: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+      },
+    }),
+    dataState: "streaming",
     complete: false,
     missing: undefined,
   });

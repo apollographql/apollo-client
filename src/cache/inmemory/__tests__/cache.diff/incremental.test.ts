@@ -813,7 +813,7 @@ test('keeps incomplete stream list items when returnPartialData is true and repo
   });
 });
 
-test("drops incomplete stream items and strips deferred holes under a combined @stream and @defer selection", () => {
+test('returns dataState "empty" with incomplete stream items outside defer boundaries under a combined @stream and @defer selection', () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -855,18 +855,21 @@ test("drops incomplete stream items and strips deferred holes under a combined @
       [handleIncrementalSymbol]: true,
     })
   ).toStrictEqualTyped({
-    result: markAsStreaming({
-      friendList: [
-        {
-          __typename: "Friend",
-          id: "1",
-          name: "Luke",
-        },
-      ],
-    }),
-    dataState: "streaming",
+    result: null,
+    dataState: "empty",
     complete: false,
-    missing: undefined,
+    missing: new MissingFieldError(
+      getMissingMessage("name", { __ref: "Friend:2" }),
+      {
+        friendList: {
+          1: {
+            name: getMissingMessage("name", { __ref: "Friend:2" }),
+          },
+        },
+      },
+      query,
+      {}
+    ),
   });
 });
 

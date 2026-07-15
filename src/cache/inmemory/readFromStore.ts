@@ -416,6 +416,9 @@ export class StoreReader {
                   "streaming"
                 : "partial";
             }
+          } else if (!dataState) {
+            // empty arrays are considered complete
+            dataState = "complete";
           }
         } else if (!selection.selectionSet) {
           dataState =

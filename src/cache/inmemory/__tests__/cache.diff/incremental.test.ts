@@ -1242,6 +1242,1871 @@ test('returns dataState "streaming" for incomplete fields under @defer(if: $shou
   });
 });
 
+test('returns dataState "empty" when an incomplete list item appears before complete items with returnPartialData: false', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      friendList {
+        id
+        name
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        friendList: [
+          { __typename: "Friend", id: "1" },
+          { __typename: "Friend", id: "2", name: "Han" },
+        ],
+      },
+    });
+  }
+
+  const missingRef = { __ref: "Friend:1" };
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: null,
+    dataState: "empty",
+    complete: false,
+    missing: new MissingFieldError(
+      getMissingMessage("name", missingRef),
+      {
+        friendList: {
+          0: { name: getMissingMessage("name", missingRef) },
+        },
+      },
+      query,
+      {}
+    ),
+  });
+});
+
+test('returns dataState "partial" when an incomplete list item appears before complete items with returnPartialData: true', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      friendList {
+        id
+        name
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        friendList: [
+          { __typename: "Friend", id: "1" },
+          { __typename: "Friend", id: "2", name: "Han" },
+        ],
+      },
+    });
+  }
+
+  const missingRef = { __ref: "Friend:1" };
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: true,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: {
+      friendList: [
+        { __typename: "Friend", id: "1" },
+        { __typename: "Friend", id: "2", name: "Han" },
+      ],
+    },
+    dataState: "partial",
+    complete: false,
+    missing: new MissingFieldError(
+      getMissingMessage("name", missingRef),
+      {
+        friendList: {
+          0: { name: getMissingMessage("name", missingRef) },
+        },
+      },
+      query,
+      {}
+    ),
+  });
+});
+
+test('returns dataState "streaming" when an earlier list item is still streaming and a later item is complete', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      friendList {
+        id
+        name
+        ... on Friend @defer {
+          email
+        }
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        {
+          __typename: "Friend",
+          id: "2",
+          name: "Han",
+          email: "han@example.com",
+        },
+      ],
+    },
+  });
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        {
+          __typename: "Friend",
+          id: "2",
+          name: "Han",
+          email: "han@example.com",
+        },
+      ],
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
+test('returns dataState "streaming" when an earlier list item is complete and a later item is still streaming', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      friendList {
+        id
+        name
+        ... on Friend @defer {
+          email
+        }
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      friendList: [
+        {
+          __typename: "Friend",
+          id: "1",
+          name: "Luke",
+          email: "luke@example.com",
+        },
+        { __typename: "Friend", id: "2", name: "Han" },
+      ],
+    },
+  });
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      friendList: [
+        {
+          __typename: "Friend",
+          id: "1",
+          name: "Luke",
+          email: "luke@example.com",
+        },
+        { __typename: "Friend", id: "2", name: "Han" },
+      ],
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
+test('returns dataState "partial" when a complete scalar sibling precedes a partial list with returnPartialData: true', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      meta
+      friendList {
+        id
+        name
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        meta: "ok",
+        friendList: [{ __typename: "Friend", id: "1" }],
+      },
+    });
+  }
+
+  const missingRef = { __ref: "Friend:1" };
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: true,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: {
+      meta: "ok",
+      friendList: [{ __typename: "Friend", id: "1" }],
+    },
+    dataState: "partial",
+    complete: false,
+    missing: new MissingFieldError(
+      getMissingMessage("name", missingRef),
+      {
+        friendList: {
+          0: { name: getMissingMessage("name", missingRef) },
+        },
+      },
+      query,
+      {}
+    ),
+  });
+});
+
+test('returns dataState "empty" when a complete scalar sibling precedes a partial list with returnPartialData: false', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      meta
+      friendList {
+        id
+        name
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        meta: "ok",
+        friendList: [{ __typename: "Friend", id: "1" }],
+      },
+    });
+  }
+
+  const missingRef = { __ref: "Friend:1" };
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: null,
+    dataState: "empty",
+    complete: false,
+    missing: new MissingFieldError(
+      getMissingMessage("name", missingRef),
+      {
+        friendList: {
+          0: { name: getMissingMessage("name", missingRef) },
+        },
+      },
+      query,
+      {}
+    ),
+  });
+});
+
+test('returns dataState "streaming" when a complete scalar sibling precedes a streaming list', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      meta
+      friendList {
+        id
+        name
+        ... on Friend @defer {
+          email
+        }
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      meta: "ok",
+      friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+    },
+  });
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      meta: "ok",
+      friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
+test('returns dataState "streaming" when a complete object field precedes a streaming sibling object field', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      a {
+        x
+      }
+      b {
+        y
+        ... on B @defer {
+          z
+        }
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      a: { __typename: "A", x: 1 },
+      b: { __typename: "B", y: 2 },
+    },
+  });
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      a: { __typename: "A", x: 1 },
+      b: { __typename: "B", y: 2 },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
+test('returns dataState "streaming" when a streaming object field precedes a complete sibling object field', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      b {
+        y
+        ... on B @defer {
+          z
+        }
+      }
+      a {
+        x
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      a: { __typename: "A", x: 1 },
+      b: { __typename: "B", y: 2 },
+    },
+  });
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      b: { __typename: "B", y: 2 },
+      a: { __typename: "A", x: 1 },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
+test('returns dataState "complete" for a fragment-only root selection set when the cache is fully populated', () => {
+  const cache = new InMemoryCache({ addTypename: false });
+  const query = gql`
+    query {
+      ... on Query {
+        hello
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: { hello: "world" },
+  });
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: { hello: "world" },
+    dataState: "complete",
+    complete: true,
+    missing: undefined,
+  });
+});
+
+test('returns dataState "complete" when an object selection set is only a deferred fragment and that data is fully present', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        ... on Greeting @defer {
+          message
+        }
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+      },
+    },
+  });
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+      },
+    },
+    dataState: "complete",
+    complete: true,
+    missing: undefined,
+  });
+});
+
+test('returns dataState "streaming" when an object selection set is only a deferred fragment and that data is absent', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        ... on Greeting @defer {
+          message
+        }
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+      },
+    },
+  });
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
+test('returns dataState "complete" for an empty list', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      friendList {
+        id
+        name
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      friendList: [],
+    },
+  });
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: {
+      friendList: [],
+    },
+    dataState: "complete",
+    complete: true,
+    missing: undefined,
+  });
+});
+
+test('returns dataState "complete" when a nullable object field is explicitly null', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        recipient {
+          name
+        }
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: null,
+      },
+    },
+  });
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: null,
+      },
+    },
+    dataState: "complete",
+    complete: true,
+    missing: undefined,
+  });
+});
+
+test("does not reuse a returnPartialData: false empty result when the same query is later read with returnPartialData: true", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        author
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+        },
+      },
+    });
+  }
+
+  const missingObject = { __typename: "Greeting", message: "Hello world" };
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: null,
+    dataState: "empty",
+    complete: false,
+    missing: new MissingFieldError(
+      getMissingMessage("author", missingObject),
+      {
+        greeting: {
+          author: getMissingMessage("author", missingObject),
+        },
+      },
+      query,
+      {}
+    ),
+  });
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: true,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+      },
+    },
+    dataState: "partial",
+    complete: false,
+    missing: new MissingFieldError(
+      getMissingMessage("author", missingObject),
+      {
+        greeting: {
+          author: getMissingMessage("author", missingObject),
+        },
+      },
+      query,
+      {}
+    ),
+  });
+});
+
+test("does not reuse a returnPartialData: true partial result when the same query is later read with returnPartialData: false", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        author
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+        },
+      },
+    });
+  }
+
+  const missingObject = { __typename: "Greeting", message: "Hello world" };
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: true,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+      },
+    },
+    dataState: "partial",
+    complete: false,
+    missing: new MissingFieldError(
+      getMissingMessage("author", missingObject),
+      {
+        greeting: {
+          author: getMissingMessage("author", missingObject),
+        },
+      },
+      query,
+      {}
+    ),
+  });
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: null,
+    dataState: "empty",
+    complete: false,
+    missing: new MissingFieldError(
+      getMissingMessage("author", missingObject),
+      {
+        greeting: {
+          author: getMissingMessage("author", missingObject),
+        },
+      },
+      query,
+      {}
+    ),
+  });
+});
+
+test('returns dataState "streaming" when one of two sibling defer boundaries is still empty', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+          }
+        }
+        ... on Greeting @defer {
+          author
+        }
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+        },
+      },
+    },
+  });
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+        },
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
+test('returns dataState "complete" when both sibling defer boundaries are fully present', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+          }
+        }
+        ... on Greeting @defer {
+          author
+        }
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+        },
+        author: "Jerel",
+      },
+    },
+  });
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+        },
+        author: "Jerel",
+      },
+    },
+    dataState: "complete",
+    complete: true,
+    missing: undefined,
+  });
+});
+
+test('returns dataState "empty" when a deferred fragment is excluded via @skip and a non-deferred field is missing', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query ($skipDefer: Boolean!) {
+      greeting {
+        message
+        author
+        ... on Greeting @defer @skip(if: $skipDefer) {
+          recipient {
+            name
+          }
+        }
+      }
+    }
+  `;
+  const variables = { skipDefer: true };
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      variables,
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+        },
+      },
+    });
+  }
+
+  const missingObject = { __typename: "Greeting", message: "Hello world" };
+
+  expect(
+    cache.diff({
+      query,
+      variables,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: null,
+    dataState: "empty",
+    complete: false,
+    missing: new MissingFieldError(
+      getMissingMessage("author", missingObject),
+      {
+        greeting: {
+          author: getMissingMessage("author", missingObject),
+        },
+      },
+      query,
+      variables
+    ),
+  });
+});
+
+test('returns dataState "streaming" when a deferred fragment is included via @include and only deferred fields are missing', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query ($includeDefer: Boolean!) {
+      greeting {
+        message
+        ... on Greeting @defer @include(if: $includeDefer) {
+          recipient {
+            name
+          }
+        }
+      }
+    }
+  `;
+  const variables = { includeDefer: true };
+
+  cache.writeQuery({
+    query,
+    variables,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+      },
+    },
+  });
+
+  expect(
+    cache.diff({
+      query,
+      variables,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
+test('returns dataState "complete" when a deferred fragment is excluded via @include(if: false) even if deferred fields are absent', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query ($includeDefer: Boolean!) {
+      greeting {
+        message
+        ... on Greeting @defer @include(if: $includeDefer) {
+          recipient {
+            name
+          }
+        }
+      }
+    }
+  `;
+  const variables = { includeDefer: false };
+
+  cache.writeQuery({
+    query,
+    variables,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+      },
+    },
+  });
+
+  expect(
+    cache.diff({
+      query,
+      variables,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+      },
+    },
+    dataState: "complete",
+    complete: true,
+    missing: undefined,
+  });
+});
+
+test('returns dataState "streaming" for nested @defer when the outer boundary is complete and the inner boundary is still empty', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+            ... on Person @defer {
+              email
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+        },
+      },
+    },
+  });
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+        },
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
+test('returns dataState "streaming" for nested @defer when both defer boundaries are still empty', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+            ... on Person @defer {
+              email
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+      },
+    },
+  });
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
+test('returns dataState "complete" for nested @defer when both defer boundaries are fully present', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+            ... on Person @defer {
+              email
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+          email: "alice@example.com",
+        },
+      },
+    },
+  });
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+          email: "alice@example.com",
+        },
+      },
+    },
+    dataState: "complete",
+    complete: true,
+    missing: undefined,
+  });
+});
+
+test('returns dataState "partial" for nested @defer when the outer boundary is complete and the inner boundary is incomplete with returnPartialData: true', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+            ... on Person @defer {
+              email
+              phone
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+          recipient: {
+            __typename: "Person",
+            name: "Alice",
+            email: "alice@example.com",
+          },
+        },
+      },
+    });
+  }
+
+  const missingObject = {
+    __typename: "Person",
+    name: "Alice",
+    email: "alice@example.com",
+  };
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: true,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+          email: "alice@example.com",
+        },
+      },
+    },
+    dataState: "partial",
+    complete: false,
+    missing: new MissingFieldError(
+      getMissingMessage("phone", missingObject),
+      {
+        greeting: {
+          recipient: {
+            phone: getMissingMessage("phone", missingObject),
+          },
+        },
+      },
+      query,
+      {}
+    ),
+  });
+});
+
+test("strips an incomplete nested inner @defer while keeping a complete outer @defer result as streaming when returnPartialData is false", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+            ... on Person @defer {
+              email
+              phone
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+          recipient: {
+            __typename: "Person",
+            name: "Alice",
+            email: "alice@example.com",
+          },
+        },
+      },
+    });
+  }
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+        },
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
+test('returns dataState "partial" for nested @defer when the outer boundary has incomplete non-deferred fields with returnPartialData: true', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+            phone
+            ... on Person @defer {
+              email
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+          recipient: {
+            __typename: "Person",
+            name: "Alice",
+          },
+        },
+      },
+    });
+  }
+
+  const missingObject = { __typename: "Person", name: "Alice" };
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: true,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+        },
+      },
+    },
+    dataState: "partial",
+    complete: false,
+    missing: new MissingFieldError(
+      getMissingMessage("phone", missingObject),
+      {
+        greeting: {
+          recipient: {
+            phone: getMissingMessage("phone", missingObject),
+          },
+        },
+      },
+      query,
+      {}
+    ),
+  });
+});
+
+test("strips an incomplete outer @defer boundary that contains a nested @defer when returnPartialData is false", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+            phone
+            ... on Person @defer {
+              email
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+          recipient: {
+            __typename: "Person",
+            name: "Alice",
+          },
+        },
+      },
+    });
+  }
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
+test('returns dataState "streaming" for nested @defer when only the outer boundary is empty and the inner selection would otherwise be complete', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+            ... on Person @defer {
+              email
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  // recipient exists in the cache from another write path, but the outer
+  // deferred field path is not linked from greeting yet.
+  cache.writeQuery({
+    query: gql`
+      query {
+        greeting {
+          message
+        }
+      }
+    `,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+      },
+    },
+  });
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
+test('returns dataState "complete" for a fully populated 2d scalar array', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      matrix
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      matrix: [
+        [1, 2],
+        [3, 4],
+      ],
+    },
+  });
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: {
+      matrix: [
+        [1, 2],
+        [3, 4],
+      ],
+    },
+    dataState: "complete",
+    complete: true,
+    missing: undefined,
+  });
+});
+
+test('returns dataState "complete" for a fully populated 2d object array', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      friendGroups {
+        id
+        name
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      friendGroups: [
+        [
+          { __typename: "Friend", id: "1", name: "Luke" },
+          { __typename: "Friend", id: "2", name: "Han" },
+        ],
+        [{ __typename: "Friend", id: "3", name: "Leia" }],
+      ],
+    },
+  });
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: {
+      friendGroups: [
+        [
+          { __typename: "Friend", id: "1", name: "Luke" },
+          { __typename: "Friend", id: "2", name: "Han" },
+        ],
+        [{ __typename: "Friend", id: "3", name: "Leia" }],
+      ],
+    },
+    dataState: "complete",
+    complete: true,
+    missing: undefined,
+  });
+});
+
+test('returns dataState "empty" for a 2d object array with an incomplete nested item when returnPartialData is false', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      friendGroups {
+        id
+        name
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        friendGroups: [
+          [
+            { __typename: "Friend", id: "1", name: "Luke" },
+            { __typename: "Friend", id: "2" },
+          ],
+          [{ __typename: "Friend", id: "3", name: "Leia" }],
+        ],
+      },
+    });
+  }
+
+  const missingRef = { __ref: "Friend:2" };
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: null,
+    dataState: "empty",
+    complete: false,
+    missing: new MissingFieldError(
+      getMissingMessage("name", missingRef),
+      {
+        friendGroups: {
+          0: {
+            1: { name: getMissingMessage("name", missingRef) },
+          },
+        },
+      },
+      query,
+      {}
+    ),
+  });
+});
+
+test('returns dataState "partial" for a 2d object array with an incomplete nested item when returnPartialData is true', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      friendGroups {
+        id
+        name
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        friendGroups: [
+          [
+            { __typename: "Friend", id: "1", name: "Luke" },
+            { __typename: "Friend", id: "2" },
+          ],
+          [{ __typename: "Friend", id: "3", name: "Leia" }],
+        ],
+      },
+    });
+  }
+
+  const missingRef = { __ref: "Friend:2" };
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: true,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: {
+      friendGroups: [
+        [
+          { __typename: "Friend", id: "1", name: "Luke" },
+          { __typename: "Friend", id: "2" },
+        ],
+        [{ __typename: "Friend", id: "3", name: "Leia" }],
+      ],
+    },
+    dataState: "partial",
+    complete: false,
+    missing: new MissingFieldError(
+      getMissingMessage("name", missingRef),
+      {
+        friendGroups: {
+          0: {
+            1: { name: getMissingMessage("name", missingRef) },
+          },
+        },
+      },
+      query,
+      {}
+    ),
+  });
+});
+
+test('returns dataState "streaming" for a 2d object array when only deferred fields are missing on a nested item', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      friendGroups {
+        id
+        name
+        ... on Friend @defer {
+          email
+        }
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      friendGroups: [
+        [
+          { __typename: "Friend", id: "1", name: "Luke" },
+          {
+            __typename: "Friend",
+            id: "2",
+            name: "Han",
+            email: "han@example.com",
+          },
+        ],
+        [{ __typename: "Friend", id: "3", name: "Leia" }],
+      ],
+    },
+  });
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      friendGroups: [
+        [
+          { __typename: "Friend", id: "1", name: "Luke" },
+          {
+            __typename: "Friend",
+            id: "2",
+            name: "Han",
+            email: "han@example.com",
+          },
+        ],
+        [{ __typename: "Friend", id: "3", name: "Leia" }],
+      ],
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
+test('returns dataState "partial" for a 2d object array when a nested item has incomplete non-deferred fields with returnPartialData: true', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      friendGroups {
+        id
+        name
+        ... on Friend @defer {
+          email
+        }
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        friendGroups: [
+          [{ __typename: "Friend", id: "1" }],
+          [{ __typename: "Friend", id: "2", name: "Leia" }],
+        ],
+      },
+    });
+  }
+
+  const missingRef = { __ref: "Friend:1" };
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: true,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: {
+      friendGroups: [
+        [{ __typename: "Friend", id: "1" }],
+        [{ __typename: "Friend", id: "2", name: "Leia" }],
+      ],
+    },
+    dataState: "partial",
+    complete: false,
+    missing: new MissingFieldError(
+      getMissingMessage("name", missingRef),
+      {
+        friendGroups: {
+          0: {
+            0: { name: getMissingMessage("name", missingRef) },
+          },
+        },
+      },
+      query,
+      {}
+    ),
+  });
+});
+
 function getMissingMessage(fieldName: string, obj: Record<string, unknown>) {
   return `Can't find field '${fieldName}' on ${
     isReference(obj) ?

@@ -523,7 +523,11 @@ export class StoreReader {
               : execResult.dataState;
           }
 
-          if (handleIncremental && dataState !== execResult.dataState) {
+          if (handleIncremental) {
+            if (dataState === execResult.dataState) {
+              continue;
+            }
+
             if (dataState === "empty") {
               dataState = "partial";
             } else if (dataState === "streaming") {
@@ -542,6 +546,15 @@ export class StoreReader {
                 ) ?
                   "streaming"
                 : "partial";
+            }
+          } else {
+            // Since we have no streaming state, the only case where we don't
+            // end up partial is when both results are either both empty
+            // (dataState remains empty) or when both are complete (dataState
+            // stays complete). All mismatching data states otherwise end up
+            // as a partial response.
+            if (dataState !== execResult.dataState) {
+              dataState = "partial";
             }
           }
         }

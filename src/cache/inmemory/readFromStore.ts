@@ -835,18 +835,26 @@ function maybeStripPartialDeferredFragments<T>(
   };
 }
 
-function keepFieldsFromFieldMap(data: Record<string, any>, fieldMap: FieldMap) {
-  const result: Record<string, any> = {};
-
-  for (const [key, value] of Object.entries(data)) {
-    const siblingField = fieldMap[key];
-
-    if (siblingField === true || key === "__typename") {
-      result[key] = value;
-    } else if (typeof siblingField === "object") {
-      result[key] = keepFieldsFromFieldMap(data[key], siblingField);
-    }
+function keepFieldsFromFieldMap(
+  data: Record<string, any> | any[],
+  fieldMap: FieldMap
+): any {
+  if (Array.isArray(data)) {
+    return data.map((item) => keepFieldsFromFieldMap(item, fieldMap));
   }
 
-  return result;
+  return Object.entries(data).reduce<Record<string, any>>(
+    (memo, [key, value]) => {
+      const siblingField = fieldMap[key];
+
+      if (siblingField === true || key === "__typename") {
+        memo[key] = value;
+      } else if (typeof siblingField === "object") {
+        memo[key] = keepFieldsFromFieldMap(data[key], siblingField);
+      }
+
+      return memo;
+    },
+    {}
+  );
 }

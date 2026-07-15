@@ -2312,7 +2312,6 @@ test('returns dataState "complete" for a fragment-only root selection set when t
     })
   ).toStrictEqualTyped({
     result: {
-      __typename: "Query",
       hello: "world",
     },
     dataState: "complete",

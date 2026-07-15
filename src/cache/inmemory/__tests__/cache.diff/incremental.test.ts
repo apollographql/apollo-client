@@ -1682,7 +1682,7 @@ test('returns dataState "streaming" when a streaming object field precedes a com
 });
 
 test('returns dataState "complete" for a fragment-only root selection set when the cache is fully populated', () => {
-  const cache = new InMemoryCache({ addTypename: false });
+  const cache = new InMemoryCache();
   const query = gql`
     query {
       ... on Query {
@@ -1704,7 +1704,10 @@ test('returns dataState "complete" for a fragment-only root selection set when t
       [handleIncrementalSymbol]: true,
     })
   ).toStrictEqualTyped({
-    result: { hello: "world" },
+    result: {
+      __typename: "Query",
+      hello: "world",
+    },
     dataState: "complete",
     complete: true,
     missing: undefined,

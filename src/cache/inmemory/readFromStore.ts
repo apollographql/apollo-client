@@ -1,4 +1,9 @@
-import type { DocumentNode, FieldNode, SelectionSetNode } from "graphql";
+import type {
+  DocumentNode,
+  FieldNode,
+  SelectionNode,
+  SelectionSetNode,
+} from "graphql";
 import { Kind } from "graphql";
 import type { OptimisticWrapperFunction } from "optimism";
 import { wrap } from "optimism";
@@ -68,9 +73,15 @@ interface ReadContext extends ReadMergeModifyContext {
   lookupFragment: FragmentMapFunction;
 }
 
+type DeferBoundaryResultsMap = Map<
+  Exclude<SelectionNode, { kind: "Field" }>,
+  ExecResult
+>;
+
 type ExecResult<R = any> = {
   result: R;
   dataState: DataState;
+  deferBoundaryResults?: DeferBoundaryResultsMap;
   missing?: MissingTree;
 };
 
@@ -337,6 +348,23 @@ export class StoreReader {
     let missing: MissingTree | undefined;
     const missingMerger = new DeepMerger();
 
+    // We can't make executeSelectionSet aware of returnPartialData because of
+    // the isFresh method that uses this method's cached result. Using
+    // returnPartialData for this method means it would have to be part of this
+    // method's cache key since returnPartialData affects the returned result,
+    // but writeToStore has no way to reliably get a returnPartialData value
+    // (there is no returnPartialData option when writing to the cache).
+    //
+    // Not having returnPartialData becomes a problem for partial data written
+    // inside defer boundaries. When returnPartialData is false, we want to keep
+    // all non-deferred fields, but strip any partial data inside the defer
+    // boundary. This has to happen in diffQueryAgainstStore since it is aware
+    // of returnPartialData, but to avoid having to traverse the whole object
+    // again, we use this map to store the result of a fragment with its result.
+    // This makes it cheaper to determine when we need to actually iterate on
+    // the returned object to remove partial data from a defer boundary.
+    const deferBoundaryResults: DeferBoundaryResultsMap = new Map();
+
     if (typeof typename === "string" && !policies.rootIdsByTypename[typename]) {
       // Ensure we always include a default value for the __typename
       // field, if we have one. Note that this field can be overridden by other
@@ -419,6 +447,13 @@ export class StoreReader {
                   "streaming"
                 : "partial";
             }
+
+            // Copy over any inner defer boundary results so that the top-most
+            // execResult contains a flat map of results
+            execResult.deferBoundaryResults?.forEach(
+              (innerExecResult, innerSelection) =>
+                deferBoundaryResults.set(innerSelection, innerExecResult)
+            );
           } else if (!dataState) {
             // empty arrays are considered complete
             dataState = "complete";
@@ -472,6 +507,13 @@ export class StoreReader {
                 execResult.dataState === "streaming" ? "streaming" : "partial";
             }
           }
+
+          // Copy over any inner defer boundary results so that the top-most
+          // execResult contains a flat map of results
+          execResult.deferBoundaryResults?.forEach(
+            (innerExecResult, innerSelection) =>
+              deferBoundaryResults.set(innerSelection, innerExecResult)
+          );
         }
 
         if (fieldValue !== void 0) {
@@ -499,6 +541,17 @@ export class StoreReader {
             context,
             [handleIncrementalSymbol]: handleIncremental,
           });
+
+          if (isDeferBoundary) {
+            deferBoundaryResults.set(selection, execResult);
+          }
+
+          // Copy over any inner defer boundary results so that the top-most
+          // execResult contains a flat map of results
+          execResult.deferBoundaryResults?.forEach(
+            (innerExecResult, innerSelection) =>
+              deferBoundaryResults.set(innerSelection, innerExecResult)
+          );
 
           // If the defer boundary has no data yet, we don't consider its
           // fields "missing" so we reset its missing value to undefined.
@@ -584,7 +637,12 @@ export class StoreReader {
         mergeDeepArray(objectsToMerge)
       : undefined;
 
-    const finalResult: ExecResult = { result, missing, dataState };
+    const finalResult: ExecResult = {
+      result,
+      missing,
+      dataState,
+      deferBoundaryResults,
+    };
     const frozen = maybeDeepFreeze(finalResult);
 
     // Store this result with its selection set so that we can quickly

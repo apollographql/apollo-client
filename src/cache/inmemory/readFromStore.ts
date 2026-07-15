@@ -783,9 +783,7 @@ function maybeStripPartialDeferredFragments<T>(
     if (data == null) return data;
 
     let changed = false;
-
-    let newData =
-      Array.isArray(data) ? ([] as any[]) : ({} as Record<string, any>);
+    let newData: Record<string, any> = {};
 
     for (const selection of selectionSet.selections) {
       if (isField(selection)) {
@@ -797,19 +795,16 @@ function maybeStripPartialDeferredFragments<T>(
         const value = data[resultName];
 
         if (Array.isArray(value)) {
-          const result = value.map((item) => {
+          newData[resultName] = value.map((item) => {
             const newItem = removePartialFragmentData(selectionSet, item);
             changed ||= newItem !== item;
 
             return newItem;
           });
-
-          (newData as any)[resultName] = result;
         } else {
           const result = removePartialFragmentData(selectionSet, value);
 
-          (newData as any)[resultName] = result;
-
+          newData[resultName] = result;
           changed ||= result !== value;
         }
       } else {

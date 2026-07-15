@@ -266,7 +266,10 @@ export class StoreReader {
 
     const diffResult = {
       result:
-        result === undefined || Object.keys(result).length === 0 ?
+        (
+          result === undefined ||
+          (Object.keys(result).length === 0 && dataState !== "complete")
+        ) ?
           null
         : result,
       complete: dataState === "complete",
@@ -353,7 +356,13 @@ export class StoreReader {
     for (const selection of selectionSet.selections) {
       // Omit fields with directives @skip(if: <truthy value>) or
       // @include(if: <falsy value>).
-      if (!shouldInclude(selection, variables)) continue;
+      if (!shouldInclude(selection, variables)) {
+        if (!dataState) {
+          dataState = "complete";
+        }
+
+        continue;
+      }
 
       if (isField(selection)) {
         let fieldValue = policies.readField(

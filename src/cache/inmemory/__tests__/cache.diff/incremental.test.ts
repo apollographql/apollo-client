@@ -3757,6 +3757,30 @@ test('returns dataState "partial" for a 2d object array when a nested item has i
   });
 });
 
+test('returns dataState "complete" with an empty object when all fields are skipped', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      firstName @include(if: false)
+      lastName @skip(if: true)
+    }
+  `;
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: {},
+    dataState: "complete",
+    complete: true,
+    missing: undefined,
+  });
+});
+
 function getMissingMessage(fieldName: string, obj: Record<string, unknown>) {
   return `Can't find field '${fieldName}' on ${
     isReference(obj) ?

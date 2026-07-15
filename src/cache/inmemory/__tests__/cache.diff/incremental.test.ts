@@ -654,7 +654,7 @@ test('returns dataState "complete" for pure @stream when all selected fields on 
   });
 });
 
-test("keeps complete stream list items and drops incomplete ones when returnPartialData is false", () => {
+test('returns dataState "empty" with incomplete stream list items when returnPartialData is false', () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -679,6 +679,8 @@ test("keeps complete stream list items and drops incomplete ones when returnPart
     });
   }
 
+  const missingRef = { __ref: "Friend:3" };
+
   expect(
     cache.diff({
       query,
@@ -687,15 +689,19 @@ test("keeps complete stream list items and drops incomplete ones when returnPart
       [handleIncrementalSymbol]: true,
     })
   ).toStrictEqualTyped({
-    result: {
-      friendList: [
-        { __typename: "Friend", id: "1", name: "Luke" },
-        { __typename: "Friend", id: "2", name: "Han" },
-      ],
-    },
-    dataState: "complete",
-    complete: true,
-    missing: undefined,
+    result: null,
+    dataState: "empty",
+    complete: false,
+    missing: new MissingFieldError(
+      getMissingMessage("name", missingRef),
+      {
+        friendList: {
+          2: { name: getMissingMessage("name", missingRef) },
+        },
+      },
+      query,
+      {}
+    ),
   });
 });
 

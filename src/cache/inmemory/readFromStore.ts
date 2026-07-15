@@ -338,7 +338,7 @@ export class StoreReader {
     );
 
     const objectsToMerge: Record<string, any>[] = [];
-    let dataState: DataState = "empty";
+    let dataState: DataState | undefined;
     let missing: MissingTree | undefined;
     const missingMerger = new DeepMerger();
 
@@ -386,9 +386,7 @@ export class StoreReader {
               }`,
             });
 
-            if (dataState !== "empty") {
-              dataState = "partial";
-            }
+            dataState = dataState === undefined ? "empty" : "partial";
           }
         } else if (isArray(fieldValue)) {
           if (fieldValue.length > 0) {
@@ -404,11 +402,8 @@ export class StoreReader {
             );
           }
         } else if (!selection.selectionSet) {
-          // Don't promote the dataState if we've already detected a streaming
-          // or partial response.
-          if (dataState === "empty") {
-            dataState = "complete";
-          }
+          dataState =
+            dataState === "empty" ? "partial" : dataState || "complete";
         } else if (fieldValue != null) {
           if (__DEV__) {
             const fieldName = selection.name.value;
@@ -440,7 +435,9 @@ export class StoreReader {
 
           fieldValue = execResult.result;
 
-          if (dataState === "empty") {
+          if (dataState === "empty" && execResult.dataState !== "empty") {
+            dataState = "partial";
+          } else if (dataState === undefined) {
             dataState = execResult.dataState;
           }
         }
@@ -488,16 +485,16 @@ export class StoreReader {
       }
     }
 
-    const result =
-      // if we don't tolerate partial data, don't waste time merging the result
-      // since it will be cleared anyways
-      context.returnPartialData || dataState !== "partial" ?
-        mergeDeepArray(objectsToMerge)
-      : undefined;
-
-    if (!context.returnPartialData && dataState === "partial") {
+    if (
+      dataState === undefined ||
+      (dataState === "partial" && !context.returnPartialData)
+    ) {
       dataState = "empty";
     }
+
+    const result =
+      dataState === "empty" ? undefined : mergeDeepArray(objectsToMerge);
+
     const finalResult: ExecResult = { result, missing, dataState };
     const frozen = maybeDeepFreeze(finalResult);
 

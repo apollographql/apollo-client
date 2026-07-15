@@ -545,12 +545,6 @@ export class StoreReader {
               deferBoundaryResults.set(innerSelection, innerExecResult)
           );
 
-          // If the defer boundary has no data yet, we don't consider its
-          // fields "missing" so we reset its missing value to undefined.
-          if (isDeferBoundary && execResult.dataState === "empty") {
-            execResult = maybeDeepFreeze({ ...execResult, missing: undefined });
-          }
-
           if (execResult.result !== void 0) {
             objectsToMerge.push(execResult.result);
           }

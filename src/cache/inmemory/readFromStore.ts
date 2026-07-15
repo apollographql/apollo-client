@@ -506,11 +506,7 @@ export class StoreReader {
             dataState = execResult.dataState;
           }
 
-          if (dataState === execResult.dataState) {
-            continue;
-          }
-
-          if (handleIncremental) {
+          if (handleIncremental && dataState !== execResult.dataState) {
             if (dataState === "empty") {
               dataState = "partial";
             } else if (dataState === "streaming") {

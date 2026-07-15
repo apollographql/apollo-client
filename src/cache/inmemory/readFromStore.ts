@@ -440,10 +440,6 @@ export class StoreReader {
 
           fieldValue = execResult.result;
 
-          if (fieldValue !== void 0) {
-            objectsToMerge.push({ [resultName]: fieldValue });
-          }
-
           if (!dataState) {
             dataState = execResult.dataState;
           }

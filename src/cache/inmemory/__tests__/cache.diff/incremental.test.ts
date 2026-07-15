@@ -208,6 +208,7 @@ test('returns dataState "partial" when non-deferred fields are missing with retu
       {
         greeting: {
           author: getMissingMessage("author", missingObject),
+          recipient: getMissingMessage("recipient", missingObject),
         },
       },
       query,
@@ -263,6 +264,7 @@ test('returns dataState "empty" when non-deferred fields are missing with return
       {
         greeting: {
           author: getMissingMessage("author", missingObject),
+          recipient: getMissingMessage("recipient", missingObject),
         },
       },
       query,
@@ -1466,11 +1468,15 @@ test('returns dataState "empty" with incomplete stream items outside defer bound
     dataState: "empty",
     complete: false,
     missing: new MissingFieldError(
-      getMissingMessage("name", { __ref: "Friend:2" }),
+      getMissingMessage("email", { __ref: "Friend:1" }),
       {
         friendList: {
+          0: {
+            email: getMissingMessage("email", { __ref: "Friend:1" }),
+          },
           1: {
             name: getMissingMessage("name", { __ref: "Friend:2" }),
+            email: getMissingMessage("email", { __ref: "Friend:2" }),
           },
         },
       },
@@ -3313,6 +3319,7 @@ test('returns dataState "partial" for nested @defer when the outer boundary has 
         greeting: {
           recipient: {
             phone: getMissingMessage("phone", missingObject),
+            email: getMissingMessage("email", missingObject),
           },
         },
       },
@@ -3747,7 +3754,15 @@ test('returns dataState "partial" for a 2d object array when a nested item has i
       {
         friendGroups: {
           0: {
-            0: { name: getMissingMessage("name", missingRef) },
+            0: {
+              name: getMissingMessage("name", missingRef),
+              email: getMissingMessage("email", missingRef),
+            },
+          },
+          1: {
+            0: {
+              email: getMissingMessage("email", { __ref: "Friend:2" }),
+            },
           },
         },
       },

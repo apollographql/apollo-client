@@ -66,7 +66,6 @@ interface ReadContext extends ReadMergeModifyContext {
   policies: Policies;
   fragmentMap: FragmentMap;
   lookupFragment: FragmentMapFunction;
-  returnPartialData: boolean;
 }
 
 type ExecResult<R = any> = {
@@ -171,7 +170,8 @@ export class StoreReader {
             return context.store.makeCacheKey(
               selectionSet,
               isReference(parent) ? parent.__ref : parent,
-              context.varString
+              context.varString,
+              context.returnPartialData
             );
           }
         },
@@ -192,7 +192,12 @@ export class StoreReader {
           defaultCacheSizes["inMemoryCache.executeSubSelectedArray"],
         makeCacheKey({ field, array, context }) {
           if (supportsResultCaching(context.store)) {
-            return context.store.makeCacheKey(field, array, context.varString);
+            return context.store.makeCacheKey(
+              field,
+              array,
+              context.varString,
+              context.returnPartialData
+            );
           }
         },
       }

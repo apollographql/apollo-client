@@ -184,6 +184,7 @@ export interface ReadMergeModifyContext {
   // A JSON.stringify-serialized version of context.variables.
   varString?: string;
   extensions?: ExtensionsWithStreamInfo;
+  returnPartialData?: boolean;
 }
 
 export type KnownScalars = RemoveIndexSignature<ApolloCache.Scalars>;

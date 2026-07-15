@@ -508,7 +508,7 @@ export class StoreReader {
             missing = missingMerger.merge(missing, execResult.missing);
           }
 
-          if (!dataState === undefined) {
+          if (!dataState) {
             dataState = execResult.dataState;
           }
 

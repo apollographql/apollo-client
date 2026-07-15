@@ -357,6 +357,8 @@ export class StoreReader {
       // Omit fields with directives @skip(if: <truthy value>) or
       // @include(if: <falsy value>).
       if (!shouldInclude(selection, variables)) {
+        // A skipped field is considered complete, but it should only count
+        // toward the data state if we haven't processed any other fields yet.
         if (!dataState) {
           dataState = "complete";
         }

@@ -90,7 +90,6 @@ type ExecSelectionSetOptions = {
   objectOrReference: StoreObject | Reference;
   enclosingRef: Reference;
   context: ReadContext;
-  [handleIncrementalSymbol]: true | undefined;
 };
 
 type ExecSubSelectedArrayOptions = {
@@ -98,7 +97,6 @@ type ExecSubSelectedArrayOptions = {
   array: readonly any[];
   enclosingRef: Reference;
   context: ReadContext;
-  [handleIncrementalSymbol]: true | undefined;
 };
 
 interface StoreReaderConfig {
@@ -253,7 +251,6 @@ export class StoreReader {
         varString: canonicalStringify(variables),
         ...extractFragmentContext(query, this.config.fragments),
       },
-      [handleIncrementalSymbol]: handleIncremental,
     });
 
     let missing: MissingFieldError | undefined;
@@ -322,7 +319,6 @@ export class StoreReader {
     objectOrReference,
     enclosingRef,
     context,
-    [handleIncrementalSymbol]: handleIncremental,
   }: ExecSelectionSetOptions): ExecResult {
     if (
       isReference(objectOrReference) &&
@@ -425,7 +421,6 @@ export class StoreReader {
               array: fieldValue,
               enclosingRef,
               context,
-              [handleIncrementalSymbol]: handleIncremental,
             });
 
             handleMissing(execResult, resultName);
@@ -484,7 +479,6 @@ export class StoreReader {
             objectOrReference: fieldValue as StoreObject | Reference,
             enclosingRef: isReference(fieldValue) ? fieldValue : enclosingRef,
             context,
-            [handleIncrementalSymbol]: handleIncremental,
           });
 
           handleMissing(execResult, resultName);
@@ -538,7 +532,6 @@ export class StoreReader {
             objectOrReference,
             enclosingRef,
             context,
-            [handleIncrementalSymbol]: handleIncremental,
           });
 
           if (isDeferBoundary) {
@@ -577,39 +570,28 @@ export class StoreReader {
               : execResult.dataState;
           }
 
-          if (handleIncremental) {
-            if (dataState === execResult.dataState) {
-              continue;
-            }
+          if (dataState === execResult.dataState) {
+            continue;
+          }
 
-            if (dataState === "empty") {
-              dataState = "partial";
-            } else if (dataState === "streaming") {
-              dataState =
-                (
-                  execResult.dataState === "complete" ||
-                  (isDeferBoundary && execResult.dataState === "empty")
-                ) ?
-                  "streaming"
-                : "partial";
-            } else if (dataState === "complete") {
-              dataState =
-                (
-                  execResult.dataState === "streaming" ||
-                  (isDeferBoundary && execResult.dataState === "empty")
-                ) ?
-                  "streaming"
-                : "partial";
-            }
-          } else {
-            // Since we have no streaming state, the only case where we don't
-            // end up partial is when both results are either both empty
-            // (dataState remains empty) or when both are complete (dataState
-            // stays complete). All mismatching data states otherwise end up
-            // as a partial response.
-            if (dataState !== execResult.dataState) {
-              dataState = "partial";
-            }
+          if (dataState === "empty") {
+            dataState = "partial";
+          } else if (dataState === "streaming") {
+            dataState =
+              (
+                execResult.dataState === "complete" ||
+                (isDeferBoundary && execResult.dataState === "empty")
+              ) ?
+                "streaming"
+              : "partial";
+          } else if (dataState === "complete") {
+            dataState =
+              (
+                execResult.dataState === "streaming" ||
+                (isDeferBoundary && execResult.dataState === "empty")
+              ) ?
+                "streaming"
+              : "partial";
           }
         }
       }
@@ -642,7 +624,6 @@ export class StoreReader {
     array,
     enclosingRef,
     context,
-    [handleIncrementalSymbol]: handleIncremental,
   }: ExecSubSelectedArrayOptions): ExecResult {
     let dataState: DataState = "complete";
     let missing: MissingTree | undefined;
@@ -674,7 +655,6 @@ export class StoreReader {
           array: item,
           enclosingRef,
           context,
-          [handleIncrementalSymbol]: handleIncremental,
         });
 
         if (dataState !== execResult.dataState) {
@@ -698,7 +678,6 @@ export class StoreReader {
           objectOrReference: item,
           enclosingRef: isReference(item) ? item : enclosingRef,
           context,
-          [handleIncrementalSymbol]: handleIncremental,
         });
 
         if (dataState !== execResult.dataState) {

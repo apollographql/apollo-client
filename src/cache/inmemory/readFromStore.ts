@@ -587,30 +587,32 @@ export class StoreReader {
 
       // This is a nested array, recurse
       if (isArray(item)) {
-        return handleMissing(
-          this.executeSubSelectedArray({
-            field,
-            array: item,
-            enclosingRef,
-            context,
-            [handleIncrementalSymbol]: handleIncremental,
-          }),
-          i
-        );
+        const execResult = this.executeSubSelectedArray({
+          field,
+          array: item,
+          enclosingRef,
+          context,
+          [handleIncrementalSymbol]: handleIncremental,
+        });
+
+        dataState = execResult.dataState;
+
+        return handleMissing(execResult, i);
       }
 
       // This is an object, run the selection set on it
       if (field.selectionSet) {
-        return handleMissing(
-          this.executeSelectionSet({
-            selectionSet: field.selectionSet,
-            objectOrReference: item,
-            enclosingRef: isReference(item) ? item : enclosingRef,
-            context,
-            [handleIncrementalSymbol]: handleIncremental,
-          }),
-          i
-        );
+        const execResult = this.executeSelectionSet({
+          selectionSet: field.selectionSet,
+          objectOrReference: item,
+          enclosingRef: isReference(item) ? item : enclosingRef,
+          context,
+          [handleIncrementalSymbol]: handleIncremental,
+        });
+
+        dataState = execResult.dataState;
+
+        return handleMissing(execResult, i);
       }
 
       if (__DEV__) {
@@ -619,10 +621,6 @@ export class StoreReader {
 
       return item;
     });
-
-    if (missing) {
-      dataState = "partial";
-    }
 
     return {
       result: array,

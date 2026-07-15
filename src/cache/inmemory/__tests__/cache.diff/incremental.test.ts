@@ -2362,11 +2362,48 @@ test('returns dataState "complete" when an object selection set is only a deferr
   });
 });
 
-test('returns dataState "streaming" when an object selection set is only a deferred fragment and that data is absent', () => {
+test('returns dataState "empty" when an object selection set is only a deferred fragment, that data is absent, and __typename is not selected', () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
       greeting {
+        ... on Greeting @defer {
+          message
+        }
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+      },
+    },
+  });
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: null,
+    dataState: "empty",
+    complete: false,
+    missing: undefined,
+  });
+});
+
+test('returns dataState "streaming" when an object selection set is only a deferred fragment, that data is absent, and __typename is selected', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        __typename
         ... on Greeting @defer {
           message
         }

@@ -208,7 +208,6 @@ test('returns dataState "partial" when non-deferred fields are missing with retu
       {
         greeting: {
           author: getMissingMessage("author", missingObject),
-          recipient: getMissingMessage("recipient", missingObject),
         },
       },
       query,
@@ -264,7 +263,6 @@ test('returns dataState "empty" when non-deferred fields are missing with return
       {
         greeting: {
           author: getMissingMessage("author", missingObject),
-          recipient: getMissingMessage("recipient", missingObject),
         },
       },
       query,

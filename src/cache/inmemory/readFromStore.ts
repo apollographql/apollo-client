@@ -480,13 +480,19 @@ export class StoreReader {
             selection,
             context.variables
           );
-          const execResult = this.executeSelectionSet({
+          let execResult = this.executeSelectionSet({
             selectionSet: fragment.selectionSet,
             objectOrReference,
             enclosingRef,
             context,
             [handleIncrementalSymbol]: handleIncremental,
           });
+
+          // If the defer boundary has no data yet, we don't consider its
+          // fields "missing" so we reset its missing value to undefined.
+          if (isDeferBoundary && execResult.dataState === "empty") {
+            execResult = maybeDeepFreeze({ ...execResult, missing: undefined });
+          }
 
           if (execResult.result !== void 0) {
             objectsToMerge.push(execResult.result);

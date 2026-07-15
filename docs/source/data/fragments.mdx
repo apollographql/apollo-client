@@ -43,7 +43,7 @@ Changes to the `NameParts` fragment automatically update the fields included in 
 
 ## Unique fragment names {#unique-names}
 
-Fragment names must be unique across your entire application. If you accidentally define two fragments with the same name but different field selections, `graphql-tag` warns you about the conflict at runtime to prevent subtle bugs:
+Fragment names must be unique across your entire application. If you accidentally reuse a fragment name, `graphql-tag` warns you about the conflict at runtime to prevent subtle bugs:
 
 ```text
 Warning: fragment with name SomeFragment already exists.

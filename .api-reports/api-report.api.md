@@ -38,8 +38,9 @@ type AllFieldsModifier<Entity extends Record<string, any>> = Modifier<Entity[key
 
 // @public (undocumented)
 export namespace ApolloCache {
-    // Warning: (ae-forgotten-export) The symbol "NoInfer_2" needs to be exported by the entry point index.d.ts
-    export type FromOptionValue<TData> = StoreObject | Reference | FragmentType<NoInfer_2<TData>> | string;
+    // Warning: (ae-forgotten-export) The symbol "ApplyHKTImplementationWithDefault" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "CacheIdentifierTypes" needs to be exported by the entry point index.d.ts
+    export type FromOptionValue<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "CacheIdentifier", CacheIdentifierTypes.Defaults, TData>;
     // (undocumented)
     export interface ObservableFragment<TData = unknown> extends Observable<ApolloCache.WatchFragmentResult<TData>> {
         getCurrentResult: () => ApolloCache.WatchFragmentResult<TData>;
@@ -582,7 +583,6 @@ export type ApolloClientOptions = ApolloClient.Options;
 
 // @public (undocumented)
 export namespace ApolloLink {
-    // Warning: (ae-forgotten-export) The symbol "ApplyHKTImplementationWithDefault" needs to be exported by the entry point index.d.ts
     // Warning: (ae-forgotten-export) The symbol "NotImplementedHandler" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -901,6 +901,26 @@ class CacheGroup {
     keyMaker: Trie<object>;
     // (undocumented)
     resetCaching(): void;
+}
+
+// @public (undocumented)
+namespace CacheIdentifierTypes {
+    // (undocumented)
+    interface CacheIdentifier extends HKT {
+        // (undocumented)
+        arg1: unknown;
+        // Warning: (ae-forgotten-export) The symbol "NoInfer_2" needs to be exported by the entry point index.d.ts
+        //
+        // (undocumented)
+        return: StoreObject | Reference | FragmentType<NoInfer_2<this["arg1"]>> | string;
+    }
+    // (undocumented)
+    interface Defaults {
+        // Warning: (ae-forgotten-export) The symbol "CacheIdentifierTypes" needs to be exported by the entry point index.d.ts
+        //
+        // (undocumented)
+        CacheIdentifier: CacheIdentifier;
+    }
 }
 
 // @public (undocumented)
@@ -3062,7 +3082,7 @@ interface WriteContext extends ReadMergeModifyContext {
 
 // Warnings were encountered during analysis:
 //
-// src/cache/core/cache.ts:126:11 - (ae-forgotten-export) The symbol "MissingTree" needs to be exported by the entry point index.d.ts
+// src/cache/core/cache.ts:188:11 - (ae-forgotten-export) The symbol "MissingTree" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:101:3 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:173:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:173:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts

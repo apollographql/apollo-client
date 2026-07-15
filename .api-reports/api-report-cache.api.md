@@ -5,6 +5,7 @@
 ```ts
 
 import type { ApolloCache as ApolloCache_2 } from '@apollo/client';
+import type { ApplyHKTImplementationWithDefault } from '@apollo/client/utilities/internal';
 import type { AsStoreObject } from '@apollo/client/utilities';
 import { canonicalStringify } from '@apollo/client/utilities';
 import type { DataValue } from '@apollo/client';
@@ -20,6 +21,7 @@ import type { FragmentType } from '@apollo/client/masking';
 import { getApolloCacheMemoryInternals } from '@apollo/client/utilities/internal';
 import type { GetDataState } from '@apollo/client';
 import { getInMemoryCacheMemoryInternals } from '@apollo/client/utilities/internal';
+import type { HKT } from '@apollo/client/utilities';
 import type { Incremental } from '@apollo/client/incremental';
 import type { InlineFragmentNode } from 'graphql';
 import type { IsAny } from '@apollo/client/utilities/internal';
@@ -34,6 +36,7 @@ import type { StoreObject } from '@apollo/client/utilities';
 import type { StoreValue } from '@apollo/client/utilities';
 import { Trie } from '@wry/trie';
 import type { TypedDocumentNode } from '@apollo/client';
+import type { TypeOverrides } from '@apollo/client';
 import type { Unmasked } from '@apollo/client/masking';
 
 // Warning: (ae-forgotten-export) The symbol "StoreObjectValueMaybeReference" needs to be exported by the entry point index.d.ts
@@ -43,7 +46,8 @@ type AllFieldsModifier<Entity extends Record<string, any>> = Modifier<Entity[key
 
 // @public (undocumented)
 export namespace ApolloCache {
-    export type FromOptionValue<TData> = StoreObject | Reference | FragmentType<NoInfer_2<TData>> | string;
+    // Warning: (ae-forgotten-export) The symbol "CacheIdentifierTypes" needs to be exported by the entry point index.d.ts
+    export type FromOptionValue<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "CacheIdentifier", CacheIdentifierTypes.Defaults, TData>;
     // (undocumented)
     export interface ObservableFragment<TData = unknown> extends Observable<ApolloCache.WatchFragmentResult<TData>> {
         getCurrentResult: () => ApolloCache.WatchFragmentResult<TData>;
@@ -318,6 +322,24 @@ class CacheGroup {
     keyMaker: Trie<object>;
     // (undocumented)
     resetCaching(): void;
+}
+
+// @public (undocumented)
+namespace CacheIdentifierTypes {
+    // (undocumented)
+    interface CacheIdentifier extends HKT {
+        // (undocumented)
+        arg1: unknown;
+        // (undocumented)
+        return: StoreObject | Reference | FragmentType<NoInfer_2<this["arg1"]>> | string;
+    }
+    // (undocumented)
+    interface Defaults {
+        // Warning: (ae-forgotten-export) The symbol "CacheIdentifierTypes" needs to be exported by the entry point index.d.ts
+        //
+        // (undocumented)
+        CacheIdentifier: CacheIdentifier;
+    }
 }
 
 // @public (undocumented)

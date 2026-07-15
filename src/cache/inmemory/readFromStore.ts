@@ -462,7 +462,8 @@ export class StoreReader {
               dataState =
                 execResult.dataState === "complete" ? "streaming" : "partial";
             } else if (dataState === "complete") {
-              dataState = "partial";
+              dataState =
+                execResult.dataState === "streaming" ? "streaming" : "partial";
             }
           }
         }

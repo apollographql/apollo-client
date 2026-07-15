@@ -448,17 +448,15 @@ export class StoreReader {
             dataState = execResult.dataState;
           }
 
-          if (dataState === execResult.dataState) {
-            continue;
-          }
-
-          if (dataState === "empty") {
-            dataState = "partial";
-          } else if (dataState === "streaming") {
-            dataState =
-              execResult.dataState === "complete" ? "streaming" : "partial";
-          } else if (dataState === "complete") {
-            dataState = "partial";
+          if (dataState !== execResult.dataState) {
+            if (dataState === "empty") {
+              dataState = "partial";
+            } else if (dataState === "streaming") {
+              dataState =
+                execResult.dataState === "complete" ? "streaming" : "partial";
+            } else if (dataState === "complete") {
+              dataState = "partial";
+            }
           }
         }
 

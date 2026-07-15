@@ -3781,6 +3781,230 @@ test('returns dataState "complete" with an empty object when all fields are skip
   });
 });
 
+// --- Backwards compatibility tests ---
+// We want to make the cache fully incremental aware in v5 without the symbol
+// workaround to maintain the backwards compatibility that we have in 4.x. Once
+// v5 is in place, we can delete the following tests since the standard behavior
+// should be tested by everything above.
+
+test("without handleIncrementalSymbol, missing deferred fields yield null when returnPartialData is false", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+            email
+          }
+        }
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+      },
+    },
+  });
+
+  const missingObject = { __typename: "Greeting", message: "Hello world" };
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+    })
+  ).toStrictEqualTyped({
+    result: null,
+    complete: false,
+    missing: new MissingFieldError(
+      getMissingMessage("recipient", missingObject),
+      {
+        greeting: {
+          recipient: getMissingMessage("recipient", missingObject),
+        },
+      },
+      query,
+      {}
+    ),
+  });
+});
+
+test("without handleIncrementalSymbol, missing deferred fields return partial data when returnPartialData is true", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+            email
+          }
+        }
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+      },
+    },
+  });
+
+  const missingObject = { __typename: "Greeting", message: "Hello world" };
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: true,
+    })
+  ).toStrictEqualTyped({
+    result: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+      },
+    },
+    complete: false,
+    missing: new MissingFieldError(
+      getMissingMessage("recipient", missingObject),
+      {
+        greeting: {
+          recipient: getMissingMessage("recipient", missingObject),
+        },
+      },
+      query,
+      {}
+    ),
+  });
+});
+
+test("without handleIncrementalSymbol, incomplete fields inside a defer boundary yield null when returnPartialData is false", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+            email
+          }
+        }
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+          recipient: {
+            __typename: "Person",
+            name: "Cached Alice",
+          },
+        },
+      },
+    });
+  }
+
+  const missingObject = { __typename: "Person", name: "Cached Alice" };
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+    })
+  ).toStrictEqualTyped({
+    result: null,
+    complete: false,
+    missing: new MissingFieldError(
+      getMissingMessage("email", missingObject),
+      {
+        greeting: {
+          recipient: {
+            email: getMissingMessage("email", missingObject),
+          },
+        },
+      },
+      query,
+      {}
+    ),
+  });
+});
+
+test("without handleIncrementalSymbol, a fully satisfied deferred query is complete and omits dataState", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+            email
+          }
+        }
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+          email: "alice@example.com",
+        },
+      },
+    },
+  });
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+    })
+  ).toStrictEqualTyped({
+    result: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+          email: "alice@example.com",
+        },
+      },
+    },
+    complete: true,
+    missing: undefined,
+  });
+});
+
 function getMissingMessage(fieldName: string, obj: Record<string, unknown>) {
   return `Can't find field '${fieldName}' on ${
     isReference(obj) ?

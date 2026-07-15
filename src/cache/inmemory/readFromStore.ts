@@ -472,14 +472,35 @@ export class StoreReader {
             objectsToMerge.push(execResult.result);
           }
 
-          if (isDeferBoundary && handleIncremental) {
-            if (execResult.dataState === "empty" && dataState !== "partial") {
-              dataState = "streaming";
-            } else {
-              missing = missingMerger.merge(missing, execResult.missing);
-            }
-          } else if (execResult.missing) {
+          if (execResult.missing) {
             missing = missingMerger.merge(missing, execResult.missing);
+          }
+
+          if (!dataState === undefined) {
+            dataState = execResult.dataState;
+          }
+
+          if (dataState === execResult.dataState) {
+            continue;
+          }
+
+          if (handleIncremental) {
+            if (dataState === "empty") {
+              dataState = "partial";
+            } else if (dataState === "streaming") {
+              dataState =
+                (
+                  execResult.dataState === "complete" ||
+                  (isDeferBoundary && execResult.dataState === "empty")
+                ) ?
+                  "streaming"
+                : "partial";
+            } else if (dataState === "complete") {
+              dataState =
+                isDeferBoundary && execResult.dataState === "empty" ?
+                  "streaming"
+                : "partial";
+            }
           }
         }
       }

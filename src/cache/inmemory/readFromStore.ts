@@ -390,16 +390,21 @@ export class StoreReader {
           }
         } else if (isArray(fieldValue)) {
           if (fieldValue.length > 0) {
-            fieldValue = handleMissing(
-              this.executeSubSelectedArray({
-                field: selection,
-                array: fieldValue,
-                enclosingRef,
-                context,
-                [handleIncrementalSymbol]: handleIncremental,
-              }),
-              resultName
-            );
+            const execResult = this.executeSubSelectedArray({
+              field: selection,
+              array: fieldValue,
+              enclosingRef,
+              context,
+              [handleIncrementalSymbol]: handleIncremental,
+            });
+
+            handleMissing(execResult, resultName);
+
+            fieldValue = execResult.result;
+
+            if (!dataState) {
+              dataState = execResult.dataState;
+            }
           }
         } else if (!selection.selectionSet) {
           dataState =
@@ -557,6 +562,7 @@ export class StoreReader {
     context,
     [handleIncrementalSymbol]: handleIncremental,
   }: ExecSubSelectedArrayOptions): ExecResult {
+    let dataState: DataState = "complete";
     let missing: MissingTree | undefined;
     let missingMerger = new DeepMerger();
 
@@ -614,9 +620,13 @@ export class StoreReader {
       return item;
     });
 
+    if (missing) {
+      dataState = "partial";
+    }
+
     return {
       result: array,
-      dataState: "complete",
+      dataState,
       missing,
     };
   }

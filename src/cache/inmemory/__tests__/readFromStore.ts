@@ -1396,12 +1396,12 @@ describe("reading from the store", () => {
     expect(diffChickens()).toEqual({
       complete: false,
       missing: new MissingFieldError(
-        'Can\'t find field \'id\' on object {}',
+        "Can't find field 'id' on object {}",
         {
           chickens: {
             1: {
-              id: 'Can\'t find field \'id\' on object {}',
-              inCoop: 'Can\'t find field \'inCoop\' on object {}',
+              id: "Can't find field 'id' on object {}",
+              inCoop: "Can't find field 'inCoop' on object {}",
             },
           },
         },

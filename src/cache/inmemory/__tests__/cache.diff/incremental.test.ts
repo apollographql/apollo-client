@@ -1,6 +1,10 @@
 import { gql } from "graphql-tag";
 
-import { InMemoryCache, MissingFieldError } from "@apollo/client/cache";
+import {
+  InMemoryCache,
+  isReference,
+  MissingFieldError,
+} from "@apollo/client/cache";
 import { markAsStreaming, spyOnConsole } from "@apollo/client/testing/internal";
 import { handleIncrementalSymbol } from "@apollo/client/utilities/internal";
 
@@ -1228,9 +1232,9 @@ test('returns dataState "streaming" for incomplete fields under @defer(if: $shou
 });
 
 function getMissingMessage(fieldName: string, obj: Record<string, unknown>) {
-  return `Can't find field '${fieldName}' on object ${JSON.stringify(
-    obj,
-    null,
-    2
-  )}`;
+  return `Can't find field '${fieldName}' on ${
+    isReference(obj) ?
+      obj.__ref + " object"
+    : "object " + JSON.stringify(obj, null, 2)
+  }`;
 }

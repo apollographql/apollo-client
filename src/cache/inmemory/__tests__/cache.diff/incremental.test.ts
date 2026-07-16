@@ -4964,6 +4964,303 @@ test("does not reintroduce fields from a partial @defer via a non-matching sibli
   });
 });
 
+test('returns dataState "complete" when a deferred object field is explicitly null', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+            email
+          }
+        }
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: null,
+      },
+    },
+  });
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: null,
+      },
+    },
+    dataState: "complete",
+    complete: true,
+    missing: undefined,
+  });
+});
+
+test('returns dataState "complete" when a deferred scalar field is explicitly null', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+            email
+          }
+        }
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+          email: null,
+        },
+      },
+    },
+  });
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+          email: null,
+        },
+      },
+    },
+    dataState: "complete",
+    complete: true,
+    missing: undefined,
+  });
+});
+
+test("preserves an explicitly null list item while stripping partial deferred fields on sibling items when returnPartialData is false", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      friends {
+        id
+        name
+        ... on Friend @defer {
+          email
+          phone
+        }
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        friends: [
+          null,
+          {
+            __typename: "Friend",
+            id: "1",
+            name: "Alice",
+            email: "alice@example.com",
+            phone: "555-0100",
+          },
+          {
+            __typename: "Friend",
+            id: "2",
+            name: "Bob",
+            email: "bob@example.com",
+          },
+        ],
+      },
+    });
+  }
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      friends: [
+        null,
+        {
+          __typename: "Friend",
+          id: "1",
+          name: "Alice",
+          email: "alice@example.com",
+          phone: "555-0100",
+        },
+        {
+          __typename: "Friend",
+          id: "2",
+          name: "Bob",
+        },
+      ],
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
+test("preserves a null list field under a parent that also has a partial sibling @defer when returnPartialData is false", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        recipients
+        ... on Greeting @defer {
+          author {
+            name
+            email
+          }
+        }
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+          recipients: null,
+          author: {
+            __typename: "Person",
+            name: "Bob",
+          },
+        },
+      },
+    });
+  }
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipients: null,
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
+test("preserves an explicitly null nested object while stripping a partial sibling nested @defer when returnPartialData is false", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+          }
+          author {
+            name
+            ... on Person @defer {
+              email
+              phone
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+          recipient: null,
+          author: {
+            __typename: "Person",
+            name: "Bob",
+            email: "bob@example.com",
+          },
+        },
+      },
+    });
+  }
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: null,
+        author: {
+          __typename: "Person",
+          name: "Bob",
+        },
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
 test('returns dataState "complete" for a fully populated 2d scalar array', () => {
   const cache = new InMemoryCache();
   const query = gql`

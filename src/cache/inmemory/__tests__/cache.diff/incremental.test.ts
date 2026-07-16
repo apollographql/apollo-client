@@ -4889,6 +4889,210 @@ test('returns dataState "partial" for a 2d object array when a nested item has i
   });
 });
 
+test('returns dataState "streaming" when a partial @defer inside every list item is stripped with returnPartialData: false', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      friends {
+        id
+        name
+        ... on Friend @defer {
+          email
+          phone
+        }
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        friends: [
+          {
+            __typename: "Friend",
+            id: "1",
+            name: "Luke",
+            email: "luke@example.com",
+          },
+          {
+            __typename: "Friend",
+            id: "2",
+            name: "Leia",
+            email: "leia@example.com",
+          },
+        ],
+      },
+    });
+  }
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      friends: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Leia" },
+      ],
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
+test('returns dataState "partial" when a partial @defer inside a list item is present with returnPartialData: true', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      friends {
+        id
+        name
+        ... on Friend @defer {
+          email
+          phone
+        }
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        friends: [
+          {
+            __typename: "Friend",
+            id: "1",
+            name: "Luke",
+            email: "luke@example.com",
+          },
+          {
+            __typename: "Friend",
+            id: "2",
+            name: "Leia",
+            email: "leia@example.com",
+          },
+        ],
+      },
+    });
+  }
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: true,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: {
+      friends: [
+        {
+          __typename: "Friend",
+          id: "1",
+          name: "Luke",
+          email: "luke@example.com",
+        },
+        {
+          __typename: "Friend",
+          id: "2",
+          name: "Leia",
+          email: "leia@example.com",
+        },
+      ],
+    },
+    dataState: "partial",
+    complete: false,
+    missing: new MissingFieldError(
+      getMissingMessage("phone", { __ref: "Friend:1" }),
+      {
+        friends: {
+          0: { phone: getMissingMessage("phone", { __ref: "Friend:1" }) },
+          1: { phone: getMissingMessage("phone", { __ref: "Friend:2" }) },
+        },
+      },
+      query,
+      {}
+    ),
+  });
+});
+
+test.failing(
+  'returns dataState "streaming" keeping complete per-item @defer data while stripping a partial sibling item with returnPartialData: false',
+  () => {
+    const cache = new InMemoryCache();
+    const query = gql`
+      query {
+        friends {
+          id
+          name
+          ... on Friend @defer {
+            email
+            phone
+          }
+        }
+      }
+    `;
+
+    {
+      using _ = spyOnConsole("error");
+      cache.writeQuery({
+        query,
+        data: {
+          friends: [
+            {
+              __typename: "Friend",
+              id: "1",
+              name: "Luke",
+              email: "luke@example.com",
+              phone: "555-0001",
+            },
+            {
+              __typename: "Friend",
+              id: "2",
+              name: "Leia",
+              email: "leia@example.com",
+            },
+          ],
+        },
+      });
+    }
+
+    expect(
+      cache.diff({
+        query,
+        optimistic: true,
+        returnPartialData: false,
+        [handleIncrementalSymbol]: true,
+      })
+    ).toStrictEqualTyped({
+      result: markAsStreaming({
+        friends: [
+          {
+            __typename: "Friend",
+            id: "1",
+            name: "Luke",
+            email: "luke@example.com",
+            phone: "555-0001",
+          },
+          { __typename: "Friend", id: "2", name: "Leia" },
+        ],
+      }),
+      dataState: "streaming",
+      complete: false,
+      missing: undefined,
+    });
+  }
+);
+
 test('returns dataState "complete" with an empty object when all fields are skipped', () => {
   const cache = new InMemoryCache();
   const query = gql`

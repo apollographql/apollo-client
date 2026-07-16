@@ -691,9 +691,8 @@ function maybeStripPartialDeferredFragments<T>(
   execResult: ExecResult<T>,
   fragmentMap: FragmentMap
 ): ExecResult<T> {
-  // This is only called when the top-level dataState is "deferPartial", which
-  // guarantees at least one partial defer boundary exists, so there is always
-  // something to strip.
+  // This function is only called when the top-level dataState is "deferPartial"
+  // which guarantees at least one partial defer boundary exists to remove.
   function stripPartialDeferredData(
     selectionSet: SelectionSetNode,
     data: any,
@@ -716,7 +715,8 @@ function maybeStripPartialDeferredFragments<T>(
     const result: Record<string, any> = {};
 
     // __typename might not be part of the selection set, so preserve it when
-    // available—otherwise it gets stripped since it's never visited below.
+    // available, otherwise it gets removed since it's never visited when
+    // iterating the selection set.
     if (Object.hasOwn(data, "__typename")) {
       result.__typename = data.__typename;
     }
@@ -829,9 +829,6 @@ class DeferBoundaries {
     this.children.set(key, merged);
   }
 
-  // Fold `source` into `target` at the same object level. `target` must be a
-  // freshly created node (it is the only thing mutated); `source` is read only,
-  // so a cached/shared node can safely be a source.
   merge(deferBoundaries: DeferBoundaries) {
     deferBoundaries.partial.forEach((selection) => this.partial.add(selection));
     deferBoundaries.children.forEach((child, key) => this.set(key, child));

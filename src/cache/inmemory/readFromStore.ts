@@ -790,6 +790,11 @@ function maybeStripPartialDeferredFragments<T>(
           );
 
           changed = true;
+        } else {
+          // If the fragment is complete, make sure its fields are copied over
+          // to newData in case a sibling ends up removing partial fragments and
+          // returning newData
+          newData = { ...data };
         }
       }
     }

@@ -733,6 +733,8 @@ function maybeStripPartialDeferredFragments<T>(
   ): any {
     if (data == null) return data;
 
+    // Keep referential equality on as many subtrees as possible. Only return
+    // the mutated result when its subtree has been changed.
     let changed = false;
     // __typename might not be part of the selection set so we want to preserve
     // it when available, otherwise it gets stripped since its never visited in

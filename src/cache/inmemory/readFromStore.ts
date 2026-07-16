@@ -141,6 +141,7 @@ export class StoreReader {
   };
 
   private knownResults = new WeakMap<Record<string, any>, SelectionSetNode>();
+  private transformedDeferResults = new WeakMap<ExecResult, ExecResult>();
 
   constructor(config: StoreReaderConfig) {
     this.config = config;
@@ -265,11 +266,19 @@ export class StoreReader {
       !returnPartialData &&
       execResult.dataState === "deferPartial"
     ) {
-      execResult = maybeStripPartialDeferredFragments(
-        query,
-        execResult,
-        fragmentContext.fragmentMap
-      );
+      let transformed = this.transformedDeferResults.get(execResult);
+
+      if (!transformed) {
+        transformed = maybeStripPartialDeferredFragments(
+          query,
+          execResult,
+          fragmentContext.fragmentMap
+        );
+
+        this.transformedDeferResults.set(execResult, transformed);
+      }
+
+      execResult = transformed;
     }
 
     let missing: MissingFieldError | undefined;

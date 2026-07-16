@@ -4208,6 +4208,356 @@ test("strips nested partial data from one sibling outer @defer while stripping a
   });
 });
 
+test("keeps overlapping recipient fields selected by a complete sibling @defer when another sibling @defer is partial with returnPartialData: false", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      ... @defer {
+        recipient {
+          name
+        }
+      }
+      ... @defer {
+        recipient {
+          name
+          email
+        }
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+        },
+      },
+    });
+  }
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      recipient: {
+        __typename: "Person",
+        name: "Alice",
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
+test("keeps overlapping recipient fields when the complete sibling @defer is written after the partial sibling in the selection set with returnPartialData: false", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      ... @defer {
+        recipient {
+          name
+          email
+        }
+      }
+      ... @defer {
+        recipient {
+          name
+        }
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+        },
+      },
+    });
+  }
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      recipient: {
+        __typename: "Person",
+        name: "Alice",
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
+test("strips fields from a partial sibling @defer that appears before a complete sibling @defer with disjoint selections when returnPartialData is false", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+            email
+          }
+        }
+        ... on Greeting @defer {
+          author {
+            name
+          }
+        }
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+          recipient: {
+            __typename: "Person",
+            name: "Alice",
+          },
+          author: {
+            __typename: "Person",
+            name: "Bob",
+          },
+        },
+      },
+    });
+  }
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        author: {
+          __typename: "Person",
+          name: "Bob",
+        },
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
+test("strips fields from a partial sibling @defer that appears after a complete sibling @defer with disjoint selections when returnPartialData is false", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          author {
+            name
+          }
+        }
+        ... on Greeting @defer {
+          recipient {
+            name
+            email
+          }
+        }
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+          recipient: {
+            __typename: "Person",
+            name: "Alice",
+          },
+          author: {
+            __typename: "Person",
+            name: "Bob",
+          },
+        },
+      },
+    });
+  }
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        author: {
+          __typename: "Person",
+          name: "Bob",
+        },
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
+test("strips overlapping recipient fields when both sibling @defer boundaries selecting them are partial with returnPartialData: false", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      ... @defer {
+        recipient {
+          name
+          email
+        }
+      }
+      ... @defer {
+        recipient {
+          name
+          phone
+        }
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+        },
+      },
+    });
+  }
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({}),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
+test("does not reintroduce nested stripped @defer fields when a later sibling outer @defer is partial with returnPartialData: false", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        recipient {
+          name
+          ... on Person @defer {
+            email
+            phone
+          }
+        }
+        ... on Greeting @defer {
+          author {
+            name
+            email
+          }
+        }
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+          recipient: {
+            __typename: "Person",
+            name: "Alice",
+            email: "alice@example.com",
+          },
+          author: {
+            __typename: "Person",
+            name: "Bob",
+          },
+        },
+      },
+    });
+  }
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+        },
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
 test('returns dataState "complete" for a fully populated 2d scalar array', () => {
   const cache = new InMemoryCache();
   const query = gql`

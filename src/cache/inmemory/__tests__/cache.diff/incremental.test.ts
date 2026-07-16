@@ -4955,56 +4955,26 @@ test('returns dataState "partial" when a partial @defer inside a list item is pr
   });
 });
 
-test.failing(
-  'returns dataState "streaming" keeping complete per-item @defer data while stripping a partial sibling item with returnPartialData: false',
-  () => {
-    const cache = new InMemoryCache();
-    const query = gql`
-      query {
-        friends {
-          id
-          name
-          ... on Friend @defer {
-            email
-            phone
-          }
+test('returns dataState "streaming" keeping complete per-item @defer data while stripping a partial sibling item with returnPartialData: false', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      friends {
+        id
+        name
+        ... on Friend @defer {
+          email
+          phone
         }
       }
-    `;
-
-    {
-      using _ = spyOnConsole("error");
-      cache.writeQuery({
-        query,
-        data: {
-          friends: [
-            {
-              __typename: "Friend",
-              id: "1",
-              name: "Luke",
-              email: "luke@example.com",
-              phone: "555-0001",
-            },
-            {
-              __typename: "Friend",
-              id: "2",
-              name: "Leia",
-              email: "leia@example.com",
-            },
-          ],
-        },
-      });
     }
+  `;
 
-    expect(
-      cache.diff({
-        query,
-        optimistic: true,
-        returnPartialData: false,
-        [handleIncrementalSymbol]: true,
-      })
-    ).toStrictEqualTyped({
-      result: markAsStreaming({
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
         friends: [
           {
             __typename: "Friend",
@@ -5013,15 +4983,42 @@ test.failing(
             email: "luke@example.com",
             phone: "555-0001",
           },
-          { __typename: "Friend", id: "2", name: "Leia" },
+          {
+            __typename: "Friend",
+            id: "2",
+            name: "Leia",
+            email: "leia@example.com",
+          },
         ],
-      }),
-      dataState: "streaming",
-      complete: false,
-      missing: undefined,
+      },
     });
   }
-);
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      friends: [
+        {
+          __typename: "Friend",
+          id: "1",
+          name: "Luke",
+          email: "luke@example.com",
+          phone: "555-0001",
+        },
+        { __typename: "Friend", id: "2", name: "Leia" },
+      ],
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
 
 test('returns dataState "complete" with an empty object when all fields are skipped', () => {
   const cache = new InMemoryCache();

@@ -17,7 +17,6 @@ import {
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
-  FieldMap,
   FragmentMap,
   FragmentMapFunction,
 } from "@apollo/client/utilities/internal";
@@ -84,15 +83,22 @@ interface ReadContext extends ReadMergeModifyContext {
   lookupFragment: FragmentMapFunction;
 }
 
-type DeferBoundaryResultsMap = Map<
-  Exclude<SelectionNode, { kind: "Field" }>,
-  ExecResult
->;
+interface DeferBoundaries {
+  // Defer boundaries at this object whose data is partial and therefore need to
+  // be stripped. Complete, deferPartial, empty, and streaming boundaries (and
+  // non-defer fragments) don't need recording since the strip simply recurses
+  // into them.
+  partial: Set<Exclude<SelectionNode, { kind: "Field" }>>;
+  // Nested boundaries keyed by response key (object fields) or array index. This
+  // lets the strip resolve a boundary's state per list item instead of
+  // collapsing every item onto a single shared selection node.
+  children: Map<string | number, DeferBoundaries>;
+}
 
 type ExecResult<R = any> = {
   result: R;
   dataState: DataState;
-  deferBoundaryResults: DeferBoundaryResultsMap;
+  deferBoundaries: DeferBoundaries;
   missing?: MissingTree;
 };
 
@@ -373,7 +379,7 @@ export class StoreReader {
         result: {},
         dataState: "empty",
         missing: `Dangling reference to missing ${objectOrReference.__ref} object`,
-        deferBoundaryResults: new Map(),
+        deferBoundaries: emptyBoundaries(),
       };
     }
 
@@ -403,7 +409,7 @@ export class StoreReader {
     // again, we use this map to store the result of a fragment with its result.
     // This makes it cheaper to determine when we need to actually iterate on
     // the returned object to remove partial data from a defer boundary.
-    const deferBoundaryResults: DeferBoundaryResultsMap = new Map();
+    const deferBoundaries = emptyBoundaries();
 
     if (typeof typename === "string" && !policies.rootIdsByTypename[typename]) {
       // Ensure we always include a default value for the __typename
@@ -476,12 +482,9 @@ export class StoreReader {
 
             dataState = transitionTo(dataState, execResult.dataState);
 
-            // Copy over any inner defer boundary results so that the top-most
-            // execResult contains a flat map of results
-            execResult.deferBoundaryResults.forEach(
-              (innerExecResult, innerSelection) =>
-                deferBoundaryResults.set(innerSelection, innerExecResult)
-            );
+            // Nest the array's per-item boundaries under this field's response
+            // key so the strip can resolve each item independently.
+            setChild(deferBoundaries, resultName, execResult.deferBoundaries);
           } else {
             // empty arrays are considered complete
             dataState = transitionTo(dataState, "complete");
@@ -519,12 +522,8 @@ export class StoreReader {
           fieldValue = execResult.result;
           dataState = transitionTo(dataState, execResult.dataState);
 
-          // Copy over any inner defer boundary results so that the top-most
-          // execResult contains a flat map of results
-          execResult.deferBoundaryResults.forEach(
-            (innerExecResult, innerSelection) =>
-              deferBoundaryResults.set(innerSelection, innerExecResult)
-          );
+          // Nest the child's boundaries under this field's response key.
+          setChild(deferBoundaries, resultName, execResult.deferBoundaries);
         }
 
         if (fieldValue !== void 0) {
@@ -554,21 +553,19 @@ export class StoreReader {
           let newDataState = execResult.dataState;
 
           if (isDeferBoundary) {
-            deferBoundaryResults.set(selection, execResult);
-
             if (newDataState === "empty") {
               newDataState = "streaming";
             } else if (newDataState === "partial") {
+              // The boundary's own data is partial, so it must be stripped when
+              // the caller can't tolerate incremental results.
+              deferBoundaries.partial.add(selection);
               newDataState = "deferPartial";
             }
           }
 
-          // Copy over any inner defer boundary results so that the top-most
-          // execResult contains a flat map of results
-          execResult.deferBoundaryResults.forEach(
-            (innerExecResult, innerSelection) =>
-              deferBoundaryResults.set(innerSelection, innerExecResult)
-          );
+          // The fragment applies to this same object, so fold its boundaries in
+          // at this level (nested @defers under fields land in `children`).
+          mergeInto(deferBoundaries, execResult.deferBoundaries);
 
           if (execResult.result !== void 0) {
             objectsToMerge.push(execResult.result);
@@ -591,7 +588,7 @@ export class StoreReader {
       result,
       missing,
       dataState,
-      deferBoundaryResults,
+      deferBoundaries,
     };
     const frozen = maybeDeepFreeze(finalResult);
 
@@ -614,7 +611,7 @@ export class StoreReader {
     let dataState: DataState = "complete";
     let missing: MissingTree | undefined;
     let missingMerger = new DeepMerger();
-    const deferBoundaryResults: DeferBoundaryResultsMap = new Map();
+    const deferBoundaries = emptyBoundaries();
 
     function handleMissing<T>(childResult: ExecResult<T>, i: number): T {
       if (childResult.missing) {
@@ -646,12 +643,8 @@ export class StoreReader {
 
         dataState = transitionTo(dataState, execResult.dataState);
 
-        // Copy over any inner defer boundary results so that the top-most
-        // execResult contains a flat map of results
-        execResult.deferBoundaryResults.forEach(
-          (innerExecResult, innerSelection) =>
-            deferBoundaryResults.set(innerSelection, innerExecResult)
-        );
+        // Nest this item's boundaries under its index.
+        setChild(deferBoundaries, i, execResult.deferBoundaries);
 
         return handleMissing(execResult, i);
       }
@@ -667,12 +660,8 @@ export class StoreReader {
 
         dataState = transitionTo(dataState, execResult.dataState);
 
-        // Copy over any inner defer boundary results so that the top-most
-        // execResult contains a flat map of results
-        execResult.deferBoundaryResults.forEach(
-          (innerExecResult, innerSelection) =>
-            deferBoundaryResults.set(innerSelection, innerExecResult)
-        );
+        // Nest this item's boundaries under its index.
+        setChild(deferBoundaries, i, execResult.deferBoundaries);
 
         return handleMissing(execResult, i);
       }
@@ -688,7 +677,7 @@ export class StoreReader {
       result: array,
       dataState,
       missing,
-      deferBoundaryResults,
+      deferBoundaries,
     };
   }
 }
@@ -725,97 +714,133 @@ function assertSelectionSetForIdValue(
   }
 }
 
+function emptyBoundaries(): DeferBoundaries {
+  return { partial: new Set(), children: new Map() };
+}
+
+// Fold `source` into `target` at the same object level. `target` must be a
+// freshly created node (it is the only thing mutated); `source` is read only,
+// so a cached/shared node can safely be a source.
+function mergeInto(target: DeferBoundaries, source: DeferBoundaries) {
+  source.partial.forEach((selection) => target.partial.add(selection));
+  source.children.forEach((child, key) => setChild(target, key, child));
+}
+
+// Nest `child` under `key` in `target`. When a child already exists for that
+// key (an overlapping selection contributing the same response key), the two
+// are merged into a new node so neither input—both potentially cached—is
+// mutated.
+function setChild(
+  target: DeferBoundaries,
+  key: string | number,
+  child: DeferBoundaries
+) {
+  const existing = target.children.get(key);
+
+  if (!existing) {
+    target.children.set(key, child);
+    return;
+  }
+
+  const merged = emptyBoundaries();
+  mergeInto(merged, existing);
+  mergeInto(merged, child);
+  target.children.set(key, merged);
+}
+
 function maybeStripPartialDeferredFragments<T>(
   document: DocumentNode,
   execResult: ExecResult<T>,
   fragmentMap: FragmentMap
 ): ExecResult<T> {
-  // We only need to process partial fragments in this function. If all
-  // fragments are either complete or streaming, we don't need to process
-  // anything and can short-circuit.
-  if (
-    Array.from(execResult.deferBoundaryResults).every(
-      ([, { dataState }]) => dataState !== "partial"
-    )
-  ) {
-    return execResult;
-  }
+  // This is only called when the top-level dataState is "deferPartial", which
+  // guarantees at least one partial defer boundary exists, so there is always
+  // something to strip.
+  function stripPartialDeferredData(
+    selectionSet: SelectionSetNode,
+    data: any,
+    boundaries: DeferBoundaries | undefined
+  ): any {
+    if (data == null) return data;
 
-  // Build a map of the fields to keep across the entire selection set.
-  // Every selection contributes fields it selects except for partial defer
-  // boundaries which are removed entirely. Merging all non-partial selections
-  // into a single map makes the result independent of selection order.
-  function collectKeptFields(selectionSet: SelectionSetNode): FieldMap {
-    let fieldMap: FieldMap = {};
+    if (Array.isArray(data)) {
+      // Resolve each item against its own boundaries so a partial item can be
+      // stripped without affecting a complete sibling item.
+      return data.map((item, index) =>
+        stripPartialDeferredData(
+          selectionSet,
+          item,
+          boundaries?.children.get(index)
+        )
+      );
+    }
 
-    for (const selection of selectionSet.selections) {
-      if (isField(selection)) {
-        const resultName = resultKeyNameFromField(selection);
+    const result: Record<string, any> = {};
 
-        if (!selection.selectionSet) {
-          fieldMap[resultName] = true;
-          continue;
+    // __typename might not be part of the selection set, so preserve it when
+    // available—otherwise it gets stripped since it's never visited below.
+    if (Object.hasOwn(data, "__typename")) {
+      result.__typename = data.__typename;
+    }
+
+    function keepSelectionSet(sel: SelectionSetNode) {
+      for (const selection of sel.selections) {
+        if (isField(selection)) {
+          const resultName = resultKeyNameFromField(selection);
+
+          if (!Object.hasOwn(data, resultName)) {
+            continue;
+          }
+
+          if (!selection.selectionSet) {
+            result[resultName] = data[resultName];
+            continue;
+          }
+
+          const stripped = stripPartialDeferredData(
+            selection.selectionSet,
+            data[resultName],
+            boundaries?.children.get(resultName)
+          );
+
+          // A response key can be selected by more than one selection (e.g. a
+          // field and an overlapping fragment), so merge their kept fields.
+          result[resultName] =
+            Object.hasOwn(result, resultName) ?
+              new DeepMerger().merge(result[resultName], stripped)
+            : stripped;
+        } else {
+          // Drop a partial defer boundary entirely; its incomplete data streams
+          // in later. Everything else (complete, deferPartial, empty, and
+          // streaming boundaries, plus non-defer fragments) is inlined against
+          // this same object.
+          if (boundaries?.partial.has(selection)) {
+            continue;
+          }
+
+          const fragment = getFragmentFromSelection(selection, fragmentMap);
+          if (fragment) {
+            keepSelectionSet(fragment.selectionSet);
+          }
         }
-
-        const fields = collectKeptFields(selection.selectionSet);
-
-        fieldMap[resultName] =
-          Object.hasOwn(fieldMap, resultName) ?
-            new DeepMerger().merge(fieldMap[resultName], fields)
-          : fields;
-      } else {
-        const deferBoundary = execResult.deferBoundaryResults.get(selection);
-
-        if (deferBoundary?.dataState === "partial") {
-          continue;
-        }
-
-        const fragment = getFragmentFromSelection(selection, fragmentMap);
-        if (!fragment) continue;
-
-        fieldMap = new DeepMerger().merge(
-          fieldMap,
-          collectKeptFields(fragment.selectionSet)
-        );
       }
     }
 
-    return fieldMap;
+    keepSelectionSet(selectionSet);
+
+    return result;
   }
 
   return {
     ...execResult,
     // Removing partial defer boundaries puts the data in a streaming state
     dataState: "streaming",
-    result: keepFieldsFromFieldMap(
+    result: stripPartialDeferredData(
+      getMainDefinition(document).selectionSet,
       execResult.result as Record<string, any>,
-      collectKeptFields(getMainDefinition(document).selectionSet)
+      execResult.deferBoundaries
     ),
   };
-}
-
-function keepFieldsFromFieldMap(
-  data: Record<string, any> | any[],
-  fieldMap: FieldMap
-): any {
-  if (Array.isArray(data)) {
-    return data.map((item) => keepFieldsFromFieldMap(item, fieldMap));
-  }
-
-  return Object.entries(data).reduce<Record<string, any>>(
-    (memo, [key, value]) => {
-      const siblingField = fieldMap[key];
-
-      if (siblingField === true || key === "__typename") {
-        memo[key] = value;
-      } else if (typeof siblingField === "object") {
-        memo[key] = keepFieldsFromFieldMap(data[key], siblingField);
-      }
-
-      return memo;
-    },
-    {}
-  );
 }
 
 const TRANSITIONS: Record<DataState, Partial<Record<DataState, DataState>>> = {

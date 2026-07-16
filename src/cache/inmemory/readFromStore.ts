@@ -66,7 +66,17 @@ import type {
   ReadMergeModifyContext,
 } from "./types.js";
 
-type DataState = "empty" | "partial" | "streaming" | "complete";
+type DataState =
+  // no data
+  | "empty"
+  // at least 1 non-deferred field is partial
+  | "partial"
+  // at least 1 defer boundary is partial. All non-deferred fields complete
+  | "deferPartial"
+  // All defer boundaries are complete or empty (but not partial)
+  | "streaming"
+  // All fields have data
+  | "complete";
 
 interface ReadContext extends ReadMergeModifyContext {
   query: DocumentNode;
@@ -262,7 +272,7 @@ export class StoreReader {
     if (
       handleIncremental &&
       !returnPartialData &&
-      execResult.dataState === "partial"
+      execResult.dataState === "deferPartial"
     ) {
       execResult = maybeStripPartialDeferredFragments(
         query,
@@ -287,6 +297,13 @@ export class StoreReader {
     }
 
     let { result, dataState } = execResult;
+
+    // If maybeStripPartialDeferredFragments didn't reassign dataState to
+    // streaming, deferPartial is treated the same as partial since it means
+    // one of the defer boundaries is partial
+    if (dataState === "deferPartial") {
+      dataState = "partial";
+    }
 
     if (dataState === "partial" && !returnPartialData) {
       dataState = "empty";
@@ -529,9 +546,16 @@ export class StoreReader {
             enclosingRef,
             context,
           });
+          let newDataState = execResult.dataState;
 
           if (isDeferBoundary) {
             deferBoundaryResults.set(selection, execResult);
+
+            if (newDataState === "empty") {
+              newDataState = "streaming";
+            } else if (newDataState === "partial") {
+              newDataState = "deferPartial";
+            }
           }
 
           // Copy over any inner defer boundary results so that the top-most
@@ -549,12 +573,7 @@ export class StoreReader {
             missing = missingMerger.merge(missing, execResult.missing);
           }
 
-          dataState = transitionTo(
-            dataState,
-            isDeferBoundary && execResult.dataState === "empty" ?
-              "streaming"
-            : execResult.dataState
-          );
+          dataState = transitionTo(dataState, newDataState);
         }
       }
     }
@@ -755,7 +774,6 @@ function maybeStripPartialDeferredFragments<T>(
 
   return {
     ...execResult,
-    // Removing partial defer boundaries puts the data in a streaming state
     dataState: "streaming",
     result: removePartialFragmentData(
       getMainDefinition(document).selectionSet,
@@ -793,14 +811,21 @@ const TRANSITIONS: Record<DataState, Partial<Record<DataState, DataState>>> = {
     partial: "partial",
     complete: "partial",
     streaming: "partial",
+    deferPartial: "partial",
+  },
+  deferPartial: {
+    partial: "partial",
+    empty: "partial",
   },
   streaming: {
+    deferPartial: "deferPartial",
     partial: "partial",
     empty: "partial",
   },
   complete: {
     partial: "partial",
     streaming: "streaming",
+    deferPartial: "deferPartial",
     empty: "partial",
   },
   // partial is a final state because no other state change it

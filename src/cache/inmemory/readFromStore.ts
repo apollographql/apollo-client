@@ -444,7 +444,7 @@ export class StoreReader {
               }`,
             });
 
-            dataState = dataState === undefined ? "empty" : "partial";
+            dataState = transitionTo(dataState, "empty");
           }
         } else if (isArray(fieldValue)) {
           if (fieldValue.length > 0) {

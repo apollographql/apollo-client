@@ -381,22 +381,6 @@ export class StoreReader {
     let dataState: DataState | undefined;
     let missing: MissingTree | undefined;
     const missingMerger = new DeepMerger();
-
-    // We can't make executeSelectionSet aware of returnPartialData because of
-    // the isFresh method that uses this method's cached result. Using
-    // returnPartialData for this method means it would have to be part of this
-    // method's cache key since returnPartialData affects the returned result,
-    // but writeToStore has no way to reliably get a returnPartialData value
-    // (there is no returnPartialData option when writing to the cache).
-    //
-    // Not having returnPartialData becomes a problem for partial data written
-    // inside defer boundaries. When returnPartialData is false, we want to keep
-    // all non-deferred fields, but strip any partial data inside the defer
-    // boundary. This has to happen in diffQueryAgainstStore since it is aware
-    // of returnPartialData, but to avoid having to traverse the whole object
-    // again, we use this map to store the result of a fragment with its result.
-    // This makes it cheaper to determine when we need to actually iterate on
-    // the returned object to remove partial data from a defer boundary.
     const deferBoundaries = new DeferBoundaries();
 
     if (typeof typename === "string" && !policies.rootIdsByTypename[typename]) {
@@ -797,6 +781,24 @@ function maybeStripPartialDeferredFragments<T>(
   };
 }
 
+// We can't make executeSelectionSet aware of returnPartialData because of
+// the isFresh method that uses executeSelectionSet's cached result. Using
+// returnPartialData inside executeSelectionSetImpl means it would have to be
+// part its cache key since returnPartialData affects the returned result.
+// However, writeToStore (which calls isFresh) has no way to reliably get a
+// returnPartialData value (there is no returnPartialData option when writing
+// to the cache). so that it can reliably get a cache hit.
+//
+// Not having access to returnPartialData becomes a problem for partial data
+// written inside defer boundaries. When returnPartialData is false, we keep
+// all non-deferred fields, but remove data from any partial defer boundary in
+// order to maintain completeness. This has to happen in diffQueryAgainstStore
+// since it is aware of returnPartialData, but we want to avoid having to
+// traverse the entire data object again just to figure out whether there are
+// partial defer boundaries inside of it. DeferBoundaries records the locations
+// of all partial defer boundaries so that we can traverse as little as
+// possible. This makes it cheaper to determine when we need to actually iterate
+// on the returned object to remove partial data from a defer boundary.
 class DeferBoundaries {
   // Defer boundaries at this object whose data is partial and therefore need to
   // be stripped. Complete, deferPartial, empty, and streaming boundaries (and

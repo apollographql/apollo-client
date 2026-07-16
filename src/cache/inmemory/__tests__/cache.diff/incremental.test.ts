@@ -4741,6 +4741,229 @@ test("does not reintroduce nested stripped @defer fields when a later sibling ou
   });
 });
 
+test("strips a partial @defer nested under an interface fragment that matches a concrete typename via possibleTypes when returnPartialData is false", () => {
+  const cache = new InMemoryCache({
+    possibleTypes: {
+      Character: ["Human", "Droid"],
+    },
+  });
+  const query = gql`
+    query {
+      hero {
+        id
+        ... on Character {
+          name
+          ... on Character @defer {
+            homePlanet
+            friendsCount
+          }
+        }
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        hero: {
+          __typename: "Human",
+          id: "1",
+          name: "Luke",
+          homePlanet: "Tatooine",
+        },
+      },
+    });
+  }
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      hero: {
+        __typename: "Human",
+        id: "1",
+        name: "Luke",
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
+test("strips a partial @defer on an interface type condition that matches a concrete typename via possibleTypes when returnPartialData is false", () => {
+  const cache = new InMemoryCache({
+    possibleTypes: {
+      Character: ["Human", "Droid"],
+    },
+  });
+  const query = gql`
+    query {
+      hero {
+        id
+        ... on Character @defer {
+          name
+          homePlanet
+        }
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        hero: {
+          __typename: "Human",
+          id: "1",
+          name: "Luke",
+        },
+      },
+    });
+  }
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      hero: {
+        __typename: "Human",
+        id: "1",
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
+test("strips a partial @defer nested under a named fragment on an interface that matches via possibleTypes when returnPartialData is false", () => {
+  const cache = new InMemoryCache({
+    possibleTypes: {
+      Character: ["Human", "Droid"],
+    },
+  });
+  const query = gql`
+    query {
+      hero {
+        id
+        ...CharacterFields
+      }
+    }
+
+    fragment CharacterFields on Character {
+      name
+      ... on Character @defer {
+        homePlanet
+        friendsCount
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        hero: {
+          __typename: "Human",
+          id: "1",
+          name: "Luke",
+          homePlanet: "Tatooine",
+        },
+      },
+    });
+  }
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      hero: {
+        __typename: "Human",
+        id: "1",
+        name: "Luke",
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
+test("does not reintroduce fields from a partial @defer via a non-matching sibling type condition when returnPartialData is false", () => {
+  const cache = new InMemoryCache({
+    possibleTypes: {
+      Character: ["Human", "Droid"],
+    },
+  });
+  const query = gql`
+    query {
+      hero {
+        id
+        ... on Human @defer {
+          name
+          homePlanet
+        }
+        ... on Droid {
+          name
+        }
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        hero: {
+          __typename: "Human",
+          id: "1",
+          name: "Luke",
+        },
+      },
+    });
+  }
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      hero: {
+        __typename: "Human",
+        id: "1",
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
 test('returns dataState "complete" for a fully populated 2d scalar array', () => {
   const cache = new InMemoryCache();
   const query = gql`

@@ -543,6 +543,13 @@ test("returns a referentially stable result across reads, rebuilding only the pa
             phone
           }
         }
+        manager {
+          id
+          name
+          ... on Person @defer {
+            salary
+          }
+        }
         ... on Greeting @defer {
           recipient {
             name
@@ -597,7 +604,17 @@ test("returns a referentially stable result across reads, rebuilding only the pa
               name: "Grace",
               email: "grace@example.com",
             },
+            // No deferred fields written at all, so this item's defer boundary is
+            // empty (streaming) with nothing to strip
+            {
+              __typename: "Person",
+              id: "12",
+              name: "Turing",
+            },
           ],
+          // Non-deferred fields present but its nested defer boundary is empty
+          // (streaming) so it has nothing to strip
+          manager: { __typename: "Person", id: "200", name: "Katherine" },
           // email is missing, so this deferred fragment is partial and stripped.
           recipient: { __typename: "Person", name: "Alice" },
           // Fully present, so this deferred fragment is complete and retained.
@@ -645,7 +662,9 @@ test("returns a referentially stable result across reads, rebuilding only the pa
             phone: "555-0010",
           },
           { __typename: "Person", id: "11", name: "Grace" },
+          { __typename: "Person", id: "12", name: "Turing" },
         ],
+        manager: { __typename: "Person", id: "200", name: "Katherine" },
         sender: {
           __typename: "Person",
           name: "Sam",
@@ -690,6 +709,8 @@ test("returns a referentially stable result across reads, rebuilding only the pa
   expect(greeting3.friends).toBe(greeting1.friends);
   expect(greeting3.friends[0]).toBe(greeting1.friends[0]);
   expect(greeting3.colleagues[0]).toBe(greeting1.colleagues[0]);
+  expect(greeting3.colleagues[2]).toBe(greeting1.colleagues[2]);
+  expect(greeting3.manager).toBe(greeting1.manager);
   expect(greeting3.sender).toBe(greeting1.sender);
   expect(greeting3.sender.location).toBe(greeting1.sender.location);
 
@@ -716,6 +737,8 @@ test("returns a referentially stable result across reads, rebuilding only the pa
   expect(greeting4.friends[1]).toBe(greeting3.friends[1]);
   expect(greeting4.author).toBe(greeting3.author);
   expect(greeting4.colleagues[0]).toBe(greeting3.colleagues[0]);
+  expect(greeting4.colleagues[2]).toBe(greeting3.colleagues[2]);
+  expect(greeting4.manager).toBe(greeting3.manager);
   expect(greeting4.sender).toBe(greeting3.sender);
 
   // Update a field in a partial deferred fragment that is stripped. Object
@@ -741,6 +764,8 @@ test("returns a referentially stable result across reads, rebuilding only the pa
   expect(greeting5.colleagues[1]).not.toBe(greeting4.colleagues[1]);
 
   expect(greeting5.colleagues[0]).toBe(greeting4.colleagues[0]);
+  expect(greeting5.colleagues[2]).toBe(greeting4.colleagues[2]);
+  expect(greeting5.manager).toBe(greeting4.manager);
   expect(greeting5.friends).toBe(greeting4.friends);
   expect(greeting5.author).toBe(greeting4.author);
   expect(greeting5.sender).toBe(greeting4.sender);

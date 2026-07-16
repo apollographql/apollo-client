@@ -619,16 +619,7 @@ export class StoreReader {
           context,
         });
 
-        if (dataState !== execResult.dataState) {
-          dataState =
-            (
-              (dataState === "complete" || dataState === "streaming") &&
-              (execResult.dataState === "streaming" ||
-                execResult.dataState === "complete")
-            ) ?
-              "streaming"
-            : "partial";
-        }
+        dataState = transitionTo(dataState, execResult.dataState);
 
         return handleMissing(execResult, i);
       }
@@ -642,16 +633,7 @@ export class StoreReader {
           context,
         });
 
-        if (dataState !== execResult.dataState) {
-          dataState =
-            (
-              (dataState === "complete" || dataState === "streaming") &&
-              (execResult.dataState === "streaming" ||
-                execResult.dataState === "complete")
-            ) ?
-              "streaming"
-            : "partial";
-        }
+        dataState = transitionTo(dataState, execResult.dataState);
 
         return handleMissing(execResult, i);
       }

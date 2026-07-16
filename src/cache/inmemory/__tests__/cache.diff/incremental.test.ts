@@ -396,6 +396,220 @@ test('keeps incomplete fields inside a defer boundary when returnPartialData is 
   });
 });
 
+test('returns dataState "partial" with a __typename-only deferred object when selected fields are missing with returnPartialData: true', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            email
+          }
+        }
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query: gql`
+      query {
+        greeting {
+          message
+          recipient {
+            phone
+          }
+        }
+      }
+    `,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          phone: "555-0100",
+        },
+      },
+    },
+  });
+
+  const missingObject = {
+    __typename: "Person",
+    phone: "555-0100",
+  };
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: true,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+        },
+      },
+    },
+    dataState: "partial",
+    complete: false,
+    missing: new MissingFieldError(
+      getMissingMessage("email", missingObject),
+      {
+        greeting: {
+          recipient: {
+            email: getMissingMessage("email", missingObject),
+          },
+        },
+      },
+      query,
+      {}
+    ),
+  });
+});
+
+test("strips a __typename-only deferred object when selected fields are missing with returnPartialData: false", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            email
+          }
+        }
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query: gql`
+      query {
+        greeting {
+          message
+          recipient {
+            phone
+          }
+        }
+      }
+    `,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          phone: "555-0100",
+        },
+      },
+    },
+  });
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
+test('returns dataState "partial" when all selected fields under a deferred object are missing but __typename is present with returnPartialData: true', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+            email
+          }
+        }
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query: gql`
+      query {
+        greeting {
+          message
+          recipient {
+            phone
+          }
+        }
+      }
+    `,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          phone: "555-0100",
+        },
+      },
+    },
+  });
+
+  const missingObject = {
+    __typename: "Person",
+    phone: "555-0100",
+  };
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: true,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+        },
+      },
+    },
+    dataState: "partial",
+    complete: false,
+    missing: new MissingFieldError(
+      getMissingMessage("name", missingObject),
+      {
+        greeting: {
+          recipient: {
+            name: getMissingMessage("name", missingObject),
+            email: getMissingMessage("email", missingObject),
+          },
+        },
+      },
+      query,
+      {}
+    ),
+  });
+});
+
 test("does not treat overlapping non-deferred fields as partial when only deferred siblings are missing", () => {
   const cache = new InMemoryCache();
   const query = gql`

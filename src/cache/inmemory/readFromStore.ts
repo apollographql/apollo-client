@@ -751,11 +751,9 @@ function maybeStripPartialDeferredFragments<T>(
         return;
       }
 
-      // Drop a partial defer boundary entirely; its incomplete data streams
-      // in later. Everything else (complete, deferPartial, empty, and
-      // streaming boundaries, plus non-defer fragments) is inlined against
-      // this same object.
-      if (deferBoundaries.partial.has(selection)) {
+      // If this fragment selection is one of the recorded partial boundaries,
+      // drop all fields entirely
+      if (!deferBoundaries.partial.has(selection)) {
         return;
       }
 

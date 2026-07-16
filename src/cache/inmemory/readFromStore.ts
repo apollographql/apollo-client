@@ -76,6 +76,8 @@ type DataState =
   // All fields have data
   | "complete";
 
+type FragmentSelection = Exclude<SelectionNode, { kind: "Field" }>;
+
 interface ReadContext extends ReadMergeModifyContext {
   query: DocumentNode;
   policies: Policies;
@@ -751,15 +753,12 @@ function maybeStripPartialDeferredFragments<T>(
         return;
       }
 
-      // If this fragment selection is one of the recorded partial boundaries,
-      // drop all fields entirely
-      if (deferBoundaries.partial.has(selection)) {
-        return;
-      }
-
-      const fragment = getFragmentFromSelection(selection, fragmentMap);
-      if (fragment) {
-        fragment.selectionSet.selections.forEach(workSet.add, workSet);
+      // Only process fragments that aren't partial.
+      if (!deferBoundaries.partial.has(selection)) {
+        getFragmentNode(selection, fragmentMap).selectionSet.selections.forEach(
+          workSet.add,
+          workSet
+        );
       }
     });
 
@@ -776,6 +775,16 @@ function maybeStripPartialDeferredFragments<T>(
       execResult.deferBoundaries
     ),
   };
+}
+
+function getFragmentNode(
+  selection: FragmentSelection,
+  fragmentMap: FragmentMap
+) {
+  // getFragmentFromSelection accepts all SelectionNode types (including field
+  // selections) and only returns `null` if the selection isn't a fragment
+  // selection. By removing `null`, we can avoid conditionals unnecessarily.
+  return getFragmentFromSelection(selection, fragmentMap)!;
 }
 
 // We can't make executeSelectionSet aware of returnPartialData because of

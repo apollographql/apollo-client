@@ -753,7 +753,7 @@ function maybeStripPartialDeferredFragments<T>(
 
       // If this fragment selection is one of the recorded partial boundaries,
       // drop all fields entirely
-      if (!deferBoundaries.partial.has(selection)) {
+      if (deferBoundaries.partial.has(selection)) {
         return;
       }
 

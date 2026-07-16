@@ -518,6 +518,234 @@ test("does not surface incomplete cached defer-only fields under an overlapping 
   });
 });
 
+test("returns a referentially stable result across reads, rebuilding only the paths changed by a write, when partial @defer boundaries are stripped with returnPartialData: false", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        author {
+          id
+          name
+          profile {
+            bio
+          }
+        }
+        friends {
+          id
+          name
+        }
+        colleagues {
+          id
+          name
+          ... on Person @defer {
+            email
+            phone
+          }
+        }
+        ... on Greeting @defer {
+          recipient {
+            name
+            email
+          }
+        }
+        ... on Greeting @defer {
+          sender {
+            name
+            location {
+              city
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+          author: {
+            __typename: "Person",
+            id: "100",
+            name: "Bob",
+            profile: { __typename: "Profile", bio: "Author bio" },
+          },
+          // Complete non-deferred list
+          friends: [
+            { __typename: "Person", id: "1", name: "Leia" },
+            { __typename: "Person", id: "2", name: "Han" },
+          ],
+          // List with a nested @defer with mixed partial + complete items.
+          // complete items remain unchanged,but partial items lose partial
+          // defer fields.
+          colleagues: [
+            {
+              __typename: "Person",
+              id: "10",
+              name: "Ada",
+              email: "ada@example.com",
+              phone: "555-0010",
+            },
+            {
+              __typename: "Person",
+              id: "11",
+              name: "Grace",
+              email: "grace@example.com",
+            },
+          ],
+          // email is missing, so this deferred fragment is partial and stripped.
+          recipient: { __typename: "Person", name: "Alice" },
+          // Fully present, so this deferred fragment is complete and retained.
+          sender: {
+            __typename: "Person",
+            name: "Sam",
+            location: { __typename: "Location", city: "Portland" },
+          },
+        },
+      },
+    });
+  }
+
+  const options = {
+    query,
+    optimistic: true,
+    returnPartialData: false,
+    [handleIncrementalSymbol]: true,
+  } as const;
+
+  const diff1 = cache.diff(options);
+  const diff2 = cache.diff(options);
+
+  expect(diff1).toStrictEqualTyped({
+    result: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        author: {
+          __typename: "Person",
+          id: "100",
+          name: "Bob",
+          profile: { __typename: "Profile", bio: "Author bio" },
+        },
+        friends: [
+          { __typename: "Person", id: "1", name: "Leia" },
+          { __typename: "Person", id: "2", name: "Han" },
+        ],
+        colleagues: [
+          {
+            __typename: "Person",
+            id: "10",
+            name: "Ada",
+            email: "ada@example.com",
+            phone: "555-0010",
+          },
+          { __typename: "Person", id: "11", name: "Grace" },
+        ],
+        sender: {
+          __typename: "Person",
+          name: "Sam",
+          location: { __typename: "Location", city: "Portland" },
+        },
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+
+  expect(diff2.result).toBe(diff1.result);
+
+  // Update a nested object. The nested object and all parent objects
+  cache.writeFragment({
+    id: cache.identify({ __typename: "Person", id: "100" })!,
+    fragment: gql`
+      fragment UpdatedAuthor on Person {
+        profile {
+          bio
+        }
+      }
+    `,
+    data: {
+      __typename: "Person",
+      profile: { __typename: "Profile", bio: "Updated bio" },
+    },
+  });
+
+  const diff3 = cache.diff(options);
+
+  const greeting1 = (diff1.result as any).greeting;
+  const greeting3 = (diff3.result as any).greeting;
+
+  expect(diff3.result).not.toBe(diff1.result);
+  expect(greeting1).not.toBe(greeting3);
+  expect(greeting3.author).not.toBe(greeting1.author);
+  expect(greeting3.author.profile).not.toBe(greeting1.author.profile);
+  expect(greeting3.author.profile.bio).toBe("Updated bio");
+
+  expect(greeting3.friends).toBe(greeting1.friends);
+  expect(greeting3.friends[0]).toBe(greeting1.friends[0]);
+  expect(greeting3.colleagues[0]).toBe(greeting1.colleagues[0]);
+  expect(greeting3.sender).toBe(greeting1.sender);
+  expect(greeting3.sender.location).toBe(greeting1.sender.location);
+
+  // Update a list item to ensure it changes identity along with the parent
+  // array, but other list items do not.
+  cache.writeFragment({
+    id: cache.identify({ __typename: "Person", id: "1" })!,
+    fragment: gql`
+      fragment UpdatedFriend on Person {
+        name
+      }
+    `,
+    data: { __typename: "Person", name: "Leia Organa" },
+  });
+
+  const diff4 = cache.diff(options);
+  const greeting4 = (diff4.result as any).greeting;
+
+  expect(diff4.result).not.toBe(diff3.result);
+  expect(greeting4.friends).not.toBe(greeting3.friends);
+  expect(greeting4.friends[0]).not.toBe(greeting3.friends[0]);
+
+  expect(greeting4.friends[0].name).toBe("Leia Organa");
+  expect(greeting4.friends[1]).toBe(greeting3.friends[1]);
+  expect(greeting4.author).toBe(greeting3.author);
+  expect(greeting4.colleagues[0]).toBe(greeting3.colleagues[0]);
+  expect(greeting4.sender).toBe(greeting3.sender);
+
+  // Update a field in a partial deferred fragment that is stripped. Object
+  // identity changes, but the field should remain absent
+  cache.writeFragment({
+    id: cache.identify({ __typename: "Person", id: "11" })!,
+    fragment: gql`
+      fragment UpdatedColleagueEmail on Person {
+        email
+      }
+    `,
+    data: { __typename: "Person", email: "grace.hopper@example.com" },
+  });
+
+  const diff5 = cache.diff(options);
+  const greeting5 = (diff5.result as any).greeting;
+
+  expect(greeting5.colleagues[1]).toStrictEqual({
+    __typename: "Person",
+    id: "11",
+    name: "Grace",
+  });
+  expect(greeting5.colleagues[1]).not.toBe(greeting4.colleagues[1]);
+
+  expect(greeting5.colleagues[0]).toBe(greeting4.colleagues[0]);
+  expect(greeting5.friends).toBe(greeting4.friends);
+  expect(greeting5.author).toBe(greeting4.author);
+  expect(greeting5.sender).toBe(greeting4.sender);
+});
+
 test('returns dataState "partial" under an overlapping parent when a defer-only field is present and another is still missing with returnPartialData: true', () => {
   const cache = new InMemoryCache();
   const query = gql`

@@ -5261,6 +5261,71 @@ test("preserves an explicitly null nested object while stripping a partial sibli
   });
 });
 
+test("honors field aliases when stripping a partial @defer boundary with returnPartialData: false", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        text: message
+        primary: recipient {
+          fullName: name
+        }
+        ... on Greeting @defer {
+          contact: recipient {
+            fullName: name
+            emailAddress: email
+          }
+        }
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          text: "Hello world",
+          primary: {
+            __typename: "Person",
+            fullName: "Alice",
+          },
+          contact: {
+            __typename: "Person",
+            fullName: "Alice",
+            // emailAddress missing → partial deferred boundary
+          },
+        },
+      },
+    });
+  }
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        text: "Hello world",
+        primary: {
+          __typename: "Person",
+          fullName: "Alice",
+        },
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
 test('returns dataState "complete" for a fully populated 2d scalar array', () => {
   const cache = new InMemoryCache();
   const query = gql`

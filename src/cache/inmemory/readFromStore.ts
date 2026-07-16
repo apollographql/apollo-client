@@ -747,19 +747,21 @@ function maybeStripPartialDeferredFragments<T>(
           Object.hasOwn(result, resultName) ?
             new DeepMerger().merge(result[resultName], stripped)
           : stripped;
-      } else {
-        // Drop a partial defer boundary entirely; its incomplete data streams
-        // in later. Everything else (complete, deferPartial, empty, and
-        // streaming boundaries, plus non-defer fragments) is inlined against
-        // this same object.
-        if (deferBoundaries.partial.has(selection)) {
-          return;
-        }
 
-        const fragment = getFragmentFromSelection(selection, fragmentMap);
-        if (fragment) {
-          fragment.selectionSet.selections.forEach(workSet.add, workSet);
-        }
+        return;
+      }
+
+      // Drop a partial defer boundary entirely; its incomplete data streams
+      // in later. Everything else (complete, deferPartial, empty, and
+      // streaming boundaries, plus non-defer fragments) is inlined against
+      // this same object.
+      if (deferBoundaries.partial.has(selection)) {
+        return;
+      }
+
+      const fragment = getFragmentFromSelection(selection, fragmentMap);
+      if (fragment) {
+        fragment.selectionSet.selections.forEach(workSet.add, workSet);
       }
     });
 

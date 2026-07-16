@@ -734,16 +734,22 @@ function maybeStripPartialDeferredFragments<T>(
     if (data == null) return data;
 
     let changed = false;
-    let newData: Record<string, any> = {};
+    // __typename might not be part of the selection set so we want to preserve
+    // it when available, otherwise it gets stripped since its never visited in
+    // the selectionSet
+    let newData: Record<string, any> =
+      Object.hasOwn(data, "__typename") ? { __typename: data.__typename } : {};
 
     for (const selection of selectionSet.selections) {
       if (isField(selection)) {
         const { selectionSet } = selection;
-
-        if (!selectionSet) continue;
-
         const resultName = resultKeyNameFromField(selection);
         const value = data[resultName];
+
+        if (!selectionSet) {
+          newData[resultName] = value;
+          continue;
+        }
 
         if (Array.isArray(value)) {
           newData[resultName] = value.map((item) => {
@@ -760,17 +766,31 @@ function maybeStripPartialDeferredFragments<T>(
         }
       } else {
         const fragmentResult = execResult.deferBoundaryResults?.get(selection);
-        if (fragmentResult?.dataState !== "partial") continue;
+        const dataState = fragmentResult?.dataState;
 
-        newData = keepFieldsFromFieldMap(
-          data,
-          collectSiblingFields(selectionSet, {
-            exclude: selection,
-            fragmentMap,
-          })
-        );
+        // deferPartial -> this fragment satisfies its selection set, but a
+        // nested defer boundary is partial
+        if (dataState === "deferPartial") {
+          const fragment = getFragmentFromSelection(selection, fragmentMap);
+          if (!fragment) continue;
 
-        changed = true;
+          newData = {
+            ...newData,
+            ...removePartialFragmentData(fragment.selectionSet, data),
+          };
+
+          changed = true;
+        } else if (dataState === "partial") {
+          newData = keepFieldsFromFieldMap(
+            data,
+            collectSiblingFields(selectionSet, {
+              exclude: selection,
+              fragmentMap,
+            })
+          );
+
+          changed = true;
+        }
       }
     }
 

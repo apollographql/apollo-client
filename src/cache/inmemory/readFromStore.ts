@@ -613,6 +613,7 @@ export class StoreReader {
     let dataState: DataState = "complete";
     let missing: MissingTree | undefined;
     let missingMerger = new DeepMerger();
+    const deferBoundaryResults: DeferBoundaryResultsMap = new Map();
 
     function handleMissing<T>(childResult: ExecResult<T>, i: number): T {
       if (childResult.missing) {
@@ -644,6 +645,13 @@ export class StoreReader {
 
         dataState = transitionTo(dataState, execResult.dataState);
 
+        // Copy over any inner defer boundary results so that the top-most
+        // execResult contains a flat map of results
+        execResult.deferBoundaryResults?.forEach(
+          (innerExecResult, innerSelection) =>
+            deferBoundaryResults.set(innerSelection, innerExecResult)
+        );
+
         return handleMissing(execResult, i);
       }
 
@@ -657,6 +665,13 @@ export class StoreReader {
         });
 
         dataState = transitionTo(dataState, execResult.dataState);
+
+        // Copy over any inner defer boundary results so that the top-most
+        // execResult contains a flat map of results
+        execResult.deferBoundaryResults?.forEach(
+          (innerExecResult, innerSelection) =>
+            deferBoundaryResults.set(innerSelection, innerExecResult)
+        );
 
         return handleMissing(execResult, i);
       }
@@ -672,6 +687,7 @@ export class StoreReader {
       result: array,
       dataState,
       missing,
+      deferBoundaryResults,
     };
   }
 }

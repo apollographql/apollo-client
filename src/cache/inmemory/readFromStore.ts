@@ -450,20 +450,7 @@ export class StoreReader {
 
             fieldValue = execResult.result;
 
-            if (!dataState) {
-              dataState = execResult.dataState;
-            }
-
-            if (dataState !== execResult.dataState) {
-              dataState =
-                (
-                  (dataState === "complete" || dataState === "streaming") &&
-                  (execResult.dataState === "complete" ||
-                    execResult.dataState === "streaming")
-                ) ?
-                  "streaming"
-                : "partial";
-            }
+            dataState = transitionTo(dataState, execResult.dataState);
 
             // Copy over any inner defer boundary results so that the top-most
             // execResult contains a flat map of results
@@ -471,13 +458,12 @@ export class StoreReader {
               (innerExecResult, innerSelection) =>
                 deferBoundaryResults.set(innerSelection, innerExecResult)
             );
-          } else if (!dataState) {
+          } else {
             // empty arrays are considered complete
-            dataState = "complete";
+            dataState = transitionTo(dataState, "complete");
           }
         } else if (!selection.selectionSet) {
-          dataState =
-            dataState === "empty" ? "partial" : dataState || "complete";
+          dataState = transitionTo(dataState, "complete");
         } else if (fieldValue != null) {
           if (__DEV__) {
             const fieldName = selection.name.value;
@@ -507,22 +493,7 @@ export class StoreReader {
           handleMissing(execResult, resultName);
 
           fieldValue = execResult.result;
-
-          if (!dataState) {
-            dataState = execResult.dataState;
-          }
-
-          if (dataState !== execResult.dataState) {
-            if (dataState === "empty") {
-              dataState = "partial";
-            } else if (dataState === "streaming") {
-              dataState =
-                execResult.dataState === "complete" ? "streaming" : "partial";
-            } else if (dataState === "complete") {
-              dataState =
-                execResult.dataState === "streaming" ? "streaming" : "partial";
-            }
-          }
+          dataState = transitionTo(dataState, execResult.dataState);
 
           // Copy over any inner defer boundary results so that the top-most
           // execResult contains a flat map of results
@@ -576,40 +547,12 @@ export class StoreReader {
             missing = missingMerger.merge(missing, execResult.missing);
           }
 
-          if (!dataState) {
-            // An unresolved defer boundary is not "missing" data because the
-            // object is waiting for its deferred fields to stream in. Initiate
-            // with "streaming" so any data we have (such as `__typename`) is
-            // surfaced instead of discarded as "empty".
-            dataState =
-              isDeferBoundary && execResult.dataState === "empty" ?
-                "streaming"
-              : execResult.dataState;
-          }
-
-          if (dataState === execResult.dataState) {
-            continue;
-          }
-
-          if (dataState === "empty") {
-            dataState = "partial";
-          } else if (dataState === "streaming") {
-            dataState =
-              (
-                execResult.dataState === "complete" ||
-                (isDeferBoundary && execResult.dataState === "empty")
-              ) ?
-                "streaming"
-              : "partial";
-          } else if (dataState === "complete") {
-            dataState =
-              (
-                execResult.dataState === "streaming" ||
-                (isDeferBoundary && execResult.dataState === "empty")
-              ) ?
-                "streaming"
-              : "partial";
-          }
+          dataState = transitionTo(
+            dataState,
+            isDeferBoundary && execResult.dataState === "empty" ?
+              "streaming"
+            : execResult.dataState
+          );
         }
       }
     }
@@ -859,4 +802,34 @@ function keepFieldsFromFieldMap(
     },
     {}
   );
+}
+
+const TRANSITIONS: Record<DataState, Partial<Record<DataState, DataState>>> = {
+  empty: {
+    partial: "partial",
+    complete: "partial",
+    streaming: "partial",
+  },
+  streaming: {
+    partial: "partial",
+    empty: "partial",
+  },
+  complete: {
+    partial: "partial",
+    streaming: "streaming",
+    empty: "partial",
+  },
+  // partial is a final state because no other state change it
+  partial: {},
+};
+
+function transitionTo(
+  dataState: DataState | undefined,
+  newDataState: DataState
+) {
+  if (!dataState || dataState === newDataState) {
+    return newDataState;
+  }
+
+  return TRANSITIONS[dataState][newDataState] || dataState;
 }

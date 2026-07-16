@@ -737,8 +737,8 @@ function maybeStripPartialDeferredFragments<T>(
       result.__typename = data.__typename;
     }
 
-    function keepSelectionSet(sel: SelectionSetNode) {
-      for (const selection of sel.selections) {
+    const keepSelectionSet = (selectionSet: SelectionSetNode) => {
+      for (const selection of selectionSet.selections) {
         if (isField(selection)) {
           const resultName = resultKeyNameFromField(selection);
 
@@ -754,7 +754,7 @@ function maybeStripPartialDeferredFragments<T>(
           const stripped = stripPartialDeferredData(
             selection.selectionSet,
             data[resultName],
-            deferBoundaries?.children.get(resultName)
+            deferBoundaries.children.get(resultName)
           );
 
           // A response key can be selected by more than one selection (e.g. a
@@ -768,7 +768,7 @@ function maybeStripPartialDeferredFragments<T>(
           // in later. Everything else (complete, deferPartial, empty, and
           // streaming boundaries, plus non-defer fragments) is inlined against
           // this same object.
-          if (deferBoundaries?.partial.has(selection)) {
+          if (deferBoundaries.partial.has(selection)) {
             continue;
           }
 
@@ -778,7 +778,7 @@ function maybeStripPartialDeferredFragments<T>(
           }
         }
       }
-    }
+    };
 
     keepSelectionSet(selectionSet);
 

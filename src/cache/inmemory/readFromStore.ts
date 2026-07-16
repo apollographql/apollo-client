@@ -405,6 +405,8 @@ export class StoreReader {
       if (!shouldInclude(selection, variables)) {
         // A skipped field is considered complete, but it should only count
         // toward the data state if we haven't processed any other fields yet.
+        // This ensures we report a complete result even if all fields inside
+        // the selection set are skipped
         if (!dataState) {
           dataState = "complete";
         }

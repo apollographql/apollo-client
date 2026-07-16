@@ -92,7 +92,7 @@ type DeferBoundaryResultsMap = Map<
 type ExecResult<R = any> = {
   result: R;
   dataState: DataState;
-  deferBoundaryResults?: DeferBoundaryResultsMap;
+  deferBoundaryResults: DeferBoundaryResultsMap;
   missing?: MissingTree;
 };
 
@@ -373,6 +373,7 @@ export class StoreReader {
         result: {},
         dataState: "empty",
         missing: `Dangling reference to missing ${objectOrReference.__ref} object`,
+        deferBoundaryResults: new Map(),
       };
     }
 
@@ -477,7 +478,7 @@ export class StoreReader {
 
             // Copy over any inner defer boundary results so that the top-most
             // execResult contains a flat map of results
-            execResult.deferBoundaryResults?.forEach(
+            execResult.deferBoundaryResults.forEach(
               (innerExecResult, innerSelection) =>
                 deferBoundaryResults.set(innerSelection, innerExecResult)
             );
@@ -520,7 +521,7 @@ export class StoreReader {
 
           // Copy over any inner defer boundary results so that the top-most
           // execResult contains a flat map of results
-          execResult.deferBoundaryResults?.forEach(
+          execResult.deferBoundaryResults.forEach(
             (innerExecResult, innerSelection) =>
               deferBoundaryResults.set(innerSelection, innerExecResult)
           );
@@ -564,7 +565,7 @@ export class StoreReader {
 
           // Copy over any inner defer boundary results so that the top-most
           // execResult contains a flat map of results
-          execResult.deferBoundaryResults?.forEach(
+          execResult.deferBoundaryResults.forEach(
             (innerExecResult, innerSelection) =>
               deferBoundaryResults.set(innerSelection, innerExecResult)
           );
@@ -647,7 +648,7 @@ export class StoreReader {
 
         // Copy over any inner defer boundary results so that the top-most
         // execResult contains a flat map of results
-        execResult.deferBoundaryResults?.forEach(
+        execResult.deferBoundaryResults.forEach(
           (innerExecResult, innerSelection) =>
             deferBoundaryResults.set(innerSelection, innerExecResult)
         );
@@ -668,7 +669,7 @@ export class StoreReader {
 
         // Copy over any inner defer boundary results so that the top-most
         // execResult contains a flat map of results
-        execResult.deferBoundaryResults?.forEach(
+        execResult.deferBoundaryResults.forEach(
           (innerExecResult, innerSelection) =>
             deferBoundaryResults.set(innerSelection, innerExecResult)
         );
@@ -729,8 +730,6 @@ function maybeStripPartialDeferredFragments<T>(
   execResult: ExecResult<T>,
   fragmentMap: FragmentMap
 ): ExecResult<T> {
-  if (!execResult.deferBoundaryResults) return execResult;
-
   // We only need to process partial fragments in this function. If all
   // fragments are either complete or streaming, we don't need to process
   // anything and can short-circuit.
@@ -765,7 +764,7 @@ function maybeStripPartialDeferredFragments<T>(
             new DeepMerger().merge(fieldMap[resultName], fields)
           : fields;
       } else {
-        const deferBoundary = execResult.deferBoundaryResults?.get(selection);
+        const deferBoundary = execResult.deferBoundaryResults.get(selection);
 
         if (deferBoundary?.dataState === "partial") {
           continue;

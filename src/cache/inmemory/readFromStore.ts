@@ -553,7 +553,9 @@ export class StoreReader {
       }
     }
 
-    dataState ||= "empty";
+    // This is hit when a field has a selection set, but its field value
+    // is null. `null` is considered complete.
+    dataState ||= "complete";
 
     const result = mergeDeepArray(objectsToMerge);
 

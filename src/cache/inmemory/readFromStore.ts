@@ -721,50 +721,47 @@ function maybeStripPartialDeferredFragments<T>(
       result.__typename = data.__typename;
     }
 
-    const keepSelectionSet = (selectionSet: SelectionSetNode) => {
-      for (const selection of selectionSet.selections) {
-        if (isField(selection)) {
-          const resultName = resultKeyNameFromField(selection);
+    const workSet = new Set(selectionSet.selections);
+    workSet.forEach((selection) => {
+      if (isField(selection)) {
+        const resultName = resultKeyNameFromField(selection);
 
-          if (!Object.hasOwn(data, resultName)) {
-            continue;
-          }
+        if (!Object.hasOwn(data, resultName)) {
+          return;
+        }
 
-          if (!selection.selectionSet) {
-            result[resultName] = data[resultName];
-            continue;
-          }
+        if (!selection.selectionSet) {
+          result[resultName] = data[resultName];
+          return;
+        }
 
-          const stripped = stripPartialDeferredData(
-            selection.selectionSet,
-            data[resultName],
-            deferBoundaries.children.get(resultName)
-          );
+        const stripped = stripPartialDeferredData(
+          selection.selectionSet,
+          data[resultName],
+          deferBoundaries.children.get(resultName)
+        );
 
-          // A response key can be selected by more than one selection (e.g. a
-          // field and an overlapping fragment), so merge their kept fields.
-          result[resultName] =
-            Object.hasOwn(result, resultName) ?
-              new DeepMerger().merge(result[resultName], stripped)
-            : stripped;
-        } else {
-          // Drop a partial defer boundary entirely; its incomplete data streams
-          // in later. Everything else (complete, deferPartial, empty, and
-          // streaming boundaries, plus non-defer fragments) is inlined against
-          // this same object.
-          if (deferBoundaries.partial.has(selection)) {
-            continue;
-          }
+        // A response key can be selected by more than one selection (e.g. a
+        // field and an overlapping fragment), so merge their kept fields.
+        result[resultName] =
+          Object.hasOwn(result, resultName) ?
+            new DeepMerger().merge(result[resultName], stripped)
+          : stripped;
+      } else {
+        // Drop a partial defer boundary entirely; its incomplete data streams
+        // in later. Everything else (complete, deferPartial, empty, and
+        // streaming boundaries, plus non-defer fragments) is inlined against
+        // this same object.
+        if (deferBoundaries.partial.has(selection)) {
+          return;
+        }
 
-          const fragment = getFragmentFromSelection(selection, fragmentMap);
-          if (fragment) {
-            keepSelectionSet(fragment.selectionSet);
-          }
+        const fragment = getFragmentFromSelection(selection, fragmentMap);
+        if (fragment) {
+          fragment.selectionSet.selections.forEach(workSet.add, workSet);
         }
       }
-    };
-
-    keepSelectionSet(selectionSet);
+    });
 
     return result;
   }

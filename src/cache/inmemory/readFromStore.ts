@@ -715,7 +715,7 @@ function maybeStripPartialDeferredFragments<T>(
     data: any,
     deferBoundaries: DeferBoundaries | undefined
   ): any {
-    if (data == null) return data;
+    if (data == null || !deferBoundaries) return data;
 
     if (Array.isArray(data)) {
       // Resolve each item against its own boundaries so a partial item can be
@@ -724,7 +724,7 @@ function maybeStripPartialDeferredFragments<T>(
         stripPartialDeferredData(
           selectionSet,
           item,
-          deferBoundaries?.children.get(index)
+          deferBoundaries.children.get(index)
         )
       );
     }

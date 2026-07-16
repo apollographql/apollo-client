@@ -272,7 +272,8 @@ export class StoreReader {
         transformed = maybeStripPartialDeferredFragments(
           query,
           execResult,
-          fragmentContext.fragmentMap
+          fragmentContext.fragmentMap,
+          policies
         );
 
         this.transformedDeferResults.set(execResult, transformed);
@@ -689,7 +690,8 @@ function assertSelectionSetForIdValue(
 function maybeStripPartialDeferredFragments<T>(
   document: DocumentNode,
   execResult: ExecResult<T>,
-  fragmentMap: FragmentMap
+  fragmentMap: FragmentMap,
+  policies: Policies
 ): ExecResult<T> {
   // This function is only called when the top-level dataState is "deferPartial"
   // which guarantees at least one partial defer boundary exists to remove.
@@ -755,6 +757,12 @@ function maybeStripPartialDeferredFragments<T>(
             new DeepMerger().merge(result[resultName], stripped)
           : stripped;
 
+        return;
+      }
+
+      const fragment = getFragmentNode(selection, fragmentMap);
+
+      if (!policies.fragmentMatches(fragment, data.__typename)) {
         return;
       }
 

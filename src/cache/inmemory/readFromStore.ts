@@ -699,17 +699,22 @@ function maybeStripPartialDeferredFragments<T>(
     deferBoundaries: DeferBoundaries | undefined
   ): any {
     if (data == null || !deferBoundaries) return data;
+    let changed = false;
 
     if (Array.isArray(data)) {
-      // Resolve each item against its own boundaries so a partial item can be
-      // stripped without affecting a complete sibling item.
-      return data.map((item, index) =>
-        stripPartialDeferredData(
+      const stripped = data.map((item, index) => {
+        const stripped = stripPartialDeferredData(
           selectionSet,
           item,
           deferBoundaries.children.get(index)
-        )
-      );
+        );
+
+        changed ||= stripped !== item;
+
+        return stripped;
+      });
+
+      return changed ? stripped : data;
     }
 
     const result: Record<string, any> = {};
@@ -741,6 +746,8 @@ function maybeStripPartialDeferredFragments<T>(
           deferBoundaries.children.get(resultName)
         );
 
+        changed ||= stripped !== data[resultName];
+
         // A response key can be selected by more than one selection (e.g. a
         // field and an overlapping fragment), so merge their kept fields.
         result[resultName] =
@@ -752,15 +759,23 @@ function maybeStripPartialDeferredFragments<T>(
       }
 
       // Only process fragments that aren't partial.
-      if (!deferBoundaries.partial.has(selection)) {
-        getFragmentNode(selection, fragmentMap).selectionSet.selections.forEach(
-          workSet.add,
-          workSet
-        );
+      if (deferBoundaries.partial.has(selection)) {
+        changed = true;
+        return;
       }
+
+      getFragmentNode(selection, fragmentMap).selectionSet.selections.forEach(
+        workSet.add,
+        workSet
+      );
     });
 
-    return result;
+    // data is a union of all selections, so if we drop any fields and end up
+    // with a different key length, we want to always use the computed result
+    // since it is more correct.
+    return changed || Object.keys(result).length !== Object.keys(data).length ?
+        result
+      : data;
   }
 
   return {

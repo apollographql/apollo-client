@@ -22,7 +22,6 @@ import type {
   FragmentMapFunction,
 } from "@apollo/client/utilities/internal";
 import {
-  collectSiblingFields,
   DeepMerger,
   getDefaultValues,
   getFragmentFromSelection,
@@ -727,89 +726,55 @@ function maybeStripPartialDeferredFragments<T>(
     return execResult;
   }
 
-  function removePartialFragmentData(
-    selectionSet: SelectionSetNode,
-    data: any
-  ): any {
-    if (data == null) return data;
-
-    // Keep referential equality on as many subtrees as possible. Only return
-    // the mutated result when its subtree has been changed.
-    let changed = false;
-    // __typename might not be part of the selection set so we want to preserve
-    // it when available, otherwise it gets stripped since its never visited in
-    // the selectionSet
-    let newData: Record<string, any> =
-      Object.hasOwn(data, "__typename") ? { __typename: data.__typename } : {};
+  // Build a map of the fields to keep across the entire selection set.
+  // Every selection contributes fields it selects except for partial defer
+  // boundaries which are removed entirely. Merging all non-partial selections
+  // into a single map makes the result independent of selection order.
+  function collectKeptFields(selectionSet: SelectionSetNode): FieldMap {
+    let fieldMap: FieldMap = {};
 
     for (const selection of selectionSet.selections) {
       if (isField(selection)) {
-        const { selectionSet } = selection;
         const resultName = resultKeyNameFromField(selection);
-        const value = data[resultName];
 
-        if (!selectionSet) {
-          newData[resultName] = value;
+        if (!selection.selectionSet) {
+          fieldMap[resultName] = true;
           continue;
         }
 
-        if (Array.isArray(value)) {
-          newData[resultName] = value.map((item) => {
-            const newItem = removePartialFragmentData(selectionSet, item);
-            changed ||= newItem !== item;
+        const fields = collectKeptFields(selection.selectionSet);
 
-            return newItem;
-          });
-        } else {
-          const result = removePartialFragmentData(selectionSet, value);
-
-          newData[resultName] = result;
-          changed ||= result !== value;
-        }
+        fieldMap[resultName] =
+          Object.hasOwn(fieldMap, resultName) ?
+            new DeepMerger().merge(fieldMap[resultName], fields)
+          : fields;
       } else {
-        const fragmentResult = execResult.deferBoundaryResults?.get(selection);
-        const dataState = fragmentResult?.dataState;
+        const deferBoundary = execResult.deferBoundaryResults?.get(selection);
 
-        // deferPartial -> this fragment satisfies its selection set, but a
-        // nested defer boundary is partial
-        if (dataState === "deferPartial") {
-          const fragment = getFragmentFromSelection(selection, fragmentMap);
-          if (!fragment) continue;
-
-          newData = {
-            ...newData,
-            ...removePartialFragmentData(fragment.selectionSet, data),
-          };
-
-          changed = true;
-        } else if (dataState === "partial") {
-          newData = keepFieldsFromFieldMap(
-            data,
-            collectSiblingFields(selectionSet, {
-              exclude: selection,
-              fragmentMap,
-            })
-          );
-
-          changed = true;
-        } else {
-          // If the fragment is complete, make sure its fields are copied over
-          // to newData in case a sibling ends up removing partial fragments and
-          // returning newData
-          newData = { ...data };
+        if (deferBoundary?.dataState === "partial") {
+          continue;
         }
+
+        const fragment = getFragmentFromSelection(selection, fragmentMap);
+        if (!fragment) continue;
+
+        fieldMap = new DeepMerger().merge(
+          fieldMap,
+          collectKeptFields(fragment.selectionSet)
+        );
       }
     }
 
-    return changed ? newData : data;
+    return fieldMap;
   }
 
   return {
     ...execResult,
+    // Removing partial defer boundaries puts the data in a streaming state
     dataState: "streaming",
-    result: removePartialFragmentData(
-      getMainDefinition(document).selectionSet,
-      execResult.result
+    result: keepFieldsFromFieldMap(
+      execResult.result as Record<string, any>,
+      collectKeptFields(getMainDefinition(document).selectionSet)
     ),
   };
 }

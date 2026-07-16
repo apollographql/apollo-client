@@ -83,18 +83,6 @@ interface ReadContext extends ReadMergeModifyContext {
   lookupFragment: FragmentMapFunction;
 }
 
-interface DeferBoundaries {
-  // Defer boundaries at this object whose data is partial and therefore need to
-  // be stripped. Complete, deferPartial, empty, and streaming boundaries (and
-  // non-defer fragments) don't need recording since the strip simply recurses
-  // into them.
-  partial: Set<Exclude<SelectionNode, { kind: "Field" }>>;
-  // Nested boundaries keyed by response key (object fields) or array index. This
-  // lets the strip resolve a boundary's state per list item instead of
-  // collapsing every item onto a single shared selection node.
-  children: Map<string | number, DeferBoundaries>;
-}
-
 type ExecResult<R = any> = {
   result: R;
   dataState: DataState;
@@ -379,7 +367,7 @@ export class StoreReader {
         result: {},
         dataState: "empty",
         missing: `Dangling reference to missing ${objectOrReference.__ref} object`,
-        deferBoundaries: emptyBoundaries(),
+        deferBoundaries: new DeferBoundaries(),
       };
     }
 
@@ -409,7 +397,7 @@ export class StoreReader {
     // again, we use this map to store the result of a fragment with its result.
     // This makes it cheaper to determine when we need to actually iterate on
     // the returned object to remove partial data from a defer boundary.
-    const deferBoundaries = emptyBoundaries();
+    const deferBoundaries = new DeferBoundaries();
 
     if (typeof typename === "string" && !policies.rootIdsByTypename[typename]) {
       // Ensure we always include a default value for the __typename
@@ -484,7 +472,7 @@ export class StoreReader {
 
             // Nest the array's per-item boundaries under this field's response
             // key so the strip can resolve each item independently.
-            setChild(deferBoundaries, resultName, execResult.deferBoundaries);
+            deferBoundaries.set(resultName, execResult.deferBoundaries);
           } else {
             // empty arrays are considered complete
             dataState = transitionTo(dataState, "complete");
@@ -523,7 +511,7 @@ export class StoreReader {
           dataState = transitionTo(dataState, execResult.dataState);
 
           // Nest the child's boundaries under this field's response key.
-          setChild(deferBoundaries, resultName, execResult.deferBoundaries);
+          deferBoundaries.set(resultName, execResult.deferBoundaries);
         }
 
         if (fieldValue !== void 0) {
@@ -565,7 +553,7 @@ export class StoreReader {
 
           // The fragment applies to this same object, so fold its boundaries in
           // at this level (nested @defers under fields land in `children`).
-          mergeInto(deferBoundaries, execResult.deferBoundaries);
+          deferBoundaries.merge(execResult.deferBoundaries);
 
           if (execResult.result !== void 0) {
             objectsToMerge.push(execResult.result);
@@ -611,7 +599,7 @@ export class StoreReader {
     let dataState: DataState = "complete";
     let missing: MissingTree | undefined;
     let missingMerger = new DeepMerger();
-    const deferBoundaries = emptyBoundaries();
+    const deferBoundaries = new DeferBoundaries();
 
     function handleMissing<T>(childResult: ExecResult<T>, i: number): T {
       if (childResult.missing) {
@@ -644,7 +632,7 @@ export class StoreReader {
         dataState = transitionTo(dataState, execResult.dataState);
 
         // Nest this item's boundaries under its index.
-        setChild(deferBoundaries, i, execResult.deferBoundaries);
+        deferBoundaries.set(i, execResult.deferBoundaries);
 
         return handleMissing(execResult, i);
       }
@@ -661,7 +649,7 @@ export class StoreReader {
         dataState = transitionTo(dataState, execResult.dataState);
 
         // Nest this item's boundaries under its index.
-        setChild(deferBoundaries, i, execResult.deferBoundaries);
+        deferBoundaries.set(i, execResult.deferBoundaries);
 
         return handleMissing(execResult, i);
       }
@@ -712,40 +700,6 @@ function assertSelectionSetForIdValue(
       }
     });
   }
-}
-
-function emptyBoundaries(): DeferBoundaries {
-  return { partial: new Set(), children: new Map() };
-}
-
-// Fold `source` into `target` at the same object level. `target` must be a
-// freshly created node (it is the only thing mutated); `source` is read only,
-// so a cached/shared node can safely be a source.
-function mergeInto(target: DeferBoundaries, source: DeferBoundaries) {
-  source.partial.forEach((selection) => target.partial.add(selection));
-  source.children.forEach((child, key) => setChild(target, key, child));
-}
-
-// Nest `child` under `key` in `target`. When a child already exists for that
-// key (an overlapping selection contributing the same response key), the two
-// are merged into a new node so neither input—both potentially cached—is
-// mutated.
-function setChild(
-  target: DeferBoundaries,
-  key: string | number,
-  child: DeferBoundaries
-) {
-  const existing = target.children.get(key);
-
-  if (!existing) {
-    target.children.set(key, child);
-    return;
-  }
-
-  const merged = emptyBoundaries();
-  mergeInto(merged, existing);
-  mergeInto(merged, child);
-  target.children.set(key, merged);
 }
 
 function maybeStripPartialDeferredFragments<T>(
@@ -841,6 +795,45 @@ function maybeStripPartialDeferredFragments<T>(
       execResult.deferBoundaries
     ),
   };
+}
+
+class DeferBoundaries {
+  // Defer boundaries at this object whose data is partial and therefore need to
+  // be stripped. Complete, deferPartial, empty, and streaming boundaries (and
+  // non-defer fragments) don't need recording since the strip simply recurses
+  // into them.
+  partial = new Set<Exclude<SelectionNode, { kind: "Field" }>>();
+
+  // Nested boundaries keyed by response key (object fields) or array index. This
+  // lets the strip resolve a boundary's state per list item instead of
+  // collapsing every item onto a single shared selection node.
+  children = new Map<string | number, DeferBoundaries>();
+
+  // Nest `child` under `key` in `target`. When a child already exists for that
+  // key (an overlapping selection contributing the same response key), the two
+  // are merged into a new node so neither input—both potentially cached—is
+  // mutated.
+  set(key: string | number, deferBoundary: DeferBoundaries) {
+    const existing = this.children.get(key);
+
+    if (!existing) {
+      this.children.set(key, deferBoundary);
+      return;
+    }
+
+    const merged = new DeferBoundaries();
+    merged.merge(existing);
+    merged.merge(deferBoundary);
+    this.children.set(key, merged);
+  }
+
+  // Fold `source` into `target` at the same object level. `target` must be a
+  // freshly created node (it is the only thing mutated); `source` is read only,
+  // so a cached/shared node can safely be a source.
+  merge(deferBoundaries: DeferBoundaries) {
+    deferBoundaries.partial.forEach((selection) => this.partial.add(selection));
+    deferBoundaries.children.forEach((child, key) => this.set(key, child));
+  }
 }
 
 const TRANSITIONS: Record<DataState, Partial<Record<DataState, DataState>>> = {

@@ -6266,6 +6266,148 @@ test("without handleIncrementalSymbol, incomplete fields inside a defer boundary
   });
 });
 
+test("without handleIncrementalSymbol, retains a __typename-only deferred object when selected fields are missing with returnPartialData: true", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            email
+          }
+        }
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query: gql`
+      query {
+        greeting {
+          message
+          recipient {
+            phone
+          }
+        }
+      }
+    `,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          phone: "555-0100",
+        },
+      },
+    },
+  });
+
+  const missingObject = {
+    __typename: "Person",
+    phone: "555-0100",
+  };
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: true,
+    })
+  ).toStrictEqualTyped({
+    result: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+        },
+      },
+    },
+    complete: false,
+    missing: new MissingFieldError(
+      getMissingMessage("email", missingObject),
+      {
+        greeting: {
+          recipient: {
+            email: getMissingMessage("email", missingObject),
+          },
+        },
+      },
+      query,
+      {}
+    ),
+  });
+});
+
+test("without handleIncrementalSymbol, a __typename-only deferred object yields null when selected fields are missing with returnPartialData: false", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            email
+          }
+        }
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query: gql`
+      query {
+        greeting {
+          message
+          recipient {
+            phone
+          }
+        }
+      }
+    `,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          phone: "555-0100",
+        },
+      },
+    },
+  });
+
+  const missingObject = {
+    __typename: "Person",
+    phone: "555-0100",
+  };
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+    })
+  ).toStrictEqualTyped({
+    result: null,
+    complete: false,
+    missing: new MissingFieldError(
+      getMissingMessage("email", missingObject),
+      {
+        greeting: {
+          recipient: {
+            email: getMissingMessage("email", missingObject),
+          },
+        },
+      },
+      query,
+      {}
+    ),
+  });
+});
+
 test("without handleIncrementalSymbol, a fully satisfied deferred query is complete and omits dataState", () => {
   const cache = new InMemoryCache();
   const query = gql`

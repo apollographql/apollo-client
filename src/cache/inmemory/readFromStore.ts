@@ -298,10 +298,15 @@ export class StoreReader {
 
     let { result, dataState } = execResult;
 
-    // If maybeStripPartialDeferredFragments didn't reassign dataState to
-    // streaming, deferPartial is treated the same as partial since it means
-    // one of the defer boundaries is partial
-    if (dataState === "deferPartial") {
+    if (
+      // If maybeStripPartialDeferredFragments didn't reassign dataState to
+      // streaming, deferPartial is treated the same as partial since it means
+      // one of the defer boundaries is partial
+      dataState === "deferPartial" ||
+      // When we don't tolerate incremental responses, streaming becomes the
+      // same as partial since at least one defer boundary has missing data.
+      (dataState === "streaming" && !handleIncremental)
+    ) {
       dataState = "partial";
     }
 

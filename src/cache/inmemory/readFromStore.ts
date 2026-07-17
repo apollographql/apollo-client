@@ -273,12 +273,10 @@ export class StoreReader {
       let transformed = this.transformedDeferResults.get(execResult);
 
       if (!transformed) {
-        transformed = maybeStripPartialDeferredFragments(
-          query,
-          execResult,
-          fragmentContext.fragmentMap,
-          policies
-        );
+        transformed = maybeStripPartialDeferredFragments(query, execResult, {
+          policies,
+          lookupFragment: fragmentContext.lookupFragment,
+        });
 
         this.transformedDeferResults.set(execResult, transformed);
       }
@@ -720,8 +718,7 @@ function assertSelectionSetForIdValue(
 function maybeStripPartialDeferredFragments<T>(
   document: DocumentNode,
   execResult: ExecResult<T>,
-  fragmentMap: FragmentMap,
-  policies: Policies
+  { policies, lookupFragment }: Pick<ReadContext, "lookupFragment" | "policies">
 ): ExecResult<T> {
   // This function is only called when the top-level dataState is "deferPartial"
   // which guarantees at least one partial defer boundary exists to remove.
@@ -790,7 +787,7 @@ function maybeStripPartialDeferredFragments<T>(
         return;
       }
 
-      const fragment = getFragmentNode(selection, fragmentMap);
+      const fragment = getFragmentNode(selection, lookupFragment);
 
       if (!policies.fragmentMatches(fragment, data.__typename)) {
         return;
@@ -802,10 +799,10 @@ function maybeStripPartialDeferredFragments<T>(
         return;
       }
 
-      getFragmentNode(selection, fragmentMap).selectionSet.selections.forEach(
-        workSet.add,
-        workSet
-      );
+      getFragmentNode(
+        selection,
+        lookupFragment
+      ).selectionSet.selections.forEach(workSet.add, workSet);
     });
 
     // data is a union of all selections, so if we drop any fields and end up

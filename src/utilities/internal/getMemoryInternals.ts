@@ -103,6 +103,7 @@ function getCurrentCacheSizes() {
   const defaults: Record<keyof CacheSizes, number> = {
     canonicalStringify: defaultCacheSizes["canonicalStringify"],
     checkDocument: defaultCacheSizes["checkDocument"],
+    isDeferredFragment: defaultCacheSizes["isDeferredFragment"],
     print: defaultCacheSizes["print"],
     "documentTransform.cache": defaultCacheSizes["documentTransform.cache"],
     "queryManager.getDocumentInfo":

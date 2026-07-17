@@ -414,17 +414,7 @@ export class StoreReader {
     workSet.forEach((selection) => {
       // Omit fields with directives @skip(if: <truthy value>) or
       // @include(if: <falsy value>).
-      if (!shouldInclude(selection, variables)) {
-        // A skipped field is considered complete, but it should only count
-        // toward the data state if we haven't processed any other fields yet.
-        // This ensures we report a complete result even if all fields inside
-        // the selection set are skipped
-        if (!dataState) {
-          dataState = "complete";
-        }
-
-        return;
-      }
+      if (!shouldInclude(selection, variables)) return;
 
       if (isField(selection)) {
         let fieldValue = policies.readField(

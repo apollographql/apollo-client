@@ -653,35 +653,27 @@ export class StoreReader {
         return null;
       }
 
+      let execResult: ExecResult | undefined;
+
       // This is a nested array, recurse
       if (isArray(item)) {
-        const execResult = this.executeSubSelectedArray({
+        execResult = this.executeSubSelectedArray({
           field,
           array: item,
           enclosingRef,
           context,
         });
-
-        dataState = transitionTo(dataState, execResult.dataState);
-
-        // Nest this item's boundaries under its index.
-        deferBoundaries.set(i, execResult.deferBoundaries);
-
-        return handleMissing(execResult, i);
-      }
-
-      // This is an object, run the selection set on it
-      if (field.selectionSet) {
-        const execResult = this.executeSelectionSet({
+      } else if (field.selectionSet) {
+        execResult = this.executeSelectionSet({
           selectionSet: field.selectionSet,
           objectOrReference: item,
           enclosingRef: isReference(item) ? item : enclosingRef,
           context,
         });
+      }
 
+      if (execResult) {
         dataState = transitionTo(dataState, execResult.dataState);
-
-        // Nest this item's boundaries under its index.
         deferBoundaries.set(i, execResult.deferBoundaries);
 
         return handleMissing(execResult, i);

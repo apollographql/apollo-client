@@ -6055,6 +6055,232 @@ test("strips overlapping recipient fields when both sibling @defer boundaries se
   });
 });
 
+test("strips nested partial @defer fields contributed under the same response key by sibling fragments with returnPartialData: false", () => {
+  const queries = [
+    // email/bio fragment first
+    gql`
+      query {
+        greeting {
+          message
+          ... on Greeting {
+            recipient {
+              name
+              ... on Person @defer {
+                email
+                bio
+              }
+            }
+          }
+          ... on Greeting {
+            recipient {
+              name
+              ... on Person @defer {
+                phone
+                age
+              }
+            }
+          }
+        }
+      }
+    `,
+    // phone/age fragment first
+    gql`
+      query {
+        greeting {
+          message
+          ... on Greeting {
+            recipient {
+              name
+              ... on Person @defer {
+                phone
+                age
+              }
+            }
+          }
+          ... on Greeting {
+            recipient {
+              name
+              ... on Person @defer {
+                email
+                bio
+              }
+            }
+          }
+        }
+      }
+    `,
+  ];
+
+  for (const query of queries) {
+    const cache = new InMemoryCache();
+
+    {
+      using _ = spyOnConsole("error");
+      cache.writeQuery({
+        query,
+        data: {
+          greeting: {
+            __typename: "Greeting",
+            message: "Hello world",
+            recipient: {
+              __typename: "Person",
+              name: "Alice",
+              email: "alice@example.com",
+              phone: "555-0100",
+            },
+          },
+        },
+      });
+    }
+
+    expect(
+      cache.diff({
+        query,
+        optimistic: true,
+        returnPartialData: false,
+        [handleIncrementalSymbol]: true,
+      })
+    ).toStrictEqualTyped({
+      result: markAsStreaming({
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+          recipient: {
+            __typename: "Person",
+            name: "Alice",
+          },
+        },
+      }),
+      dataState: "streaming",
+      complete: false,
+      missing: undefined,
+    });
+  }
+});
+
+test("strips nested partial @defer fields under the same list field contributed by sibling fragments with returnPartialData: false", () => {
+  const queries = [
+    gql`
+      query {
+        greeting {
+          message
+          ... on Greeting {
+            friends {
+              id
+              name
+              ... on Friend @defer {
+                email
+                bio
+              }
+            }
+          }
+          ... on Greeting {
+            friends {
+              id
+              name
+              ... on Friend @defer {
+                phone
+                age
+              }
+            }
+          }
+        }
+      }
+    `,
+    gql`
+      query {
+        greeting {
+          message
+          ... on Greeting {
+            friends {
+              id
+              name
+              ... on Friend @defer {
+                phone
+                age
+              }
+            }
+          }
+          ... on Greeting {
+            friends {
+              id
+              name
+              ... on Friend @defer {
+                email
+                bio
+              }
+            }
+          }
+        }
+      }
+    `,
+  ];
+
+  for (const query of queries) {
+    const cache = new InMemoryCache();
+
+    {
+      using _ = spyOnConsole("error");
+      cache.writeQuery({
+        query,
+        data: {
+          greeting: {
+            __typename: "Greeting",
+            message: "Hello world",
+            friends: [
+              {
+                __typename: "Friend",
+                id: "1",
+                name: "Luke",
+                email: "luke@example.com",
+                phone: "555-0001",
+              },
+              {
+                __typename: "Friend",
+                id: "2",
+                name: "Leia",
+                email: "leia@example.com",
+                phone: "555-0002",
+              },
+            ],
+          },
+        },
+      });
+    }
+
+    expect(
+      cache.diff({
+        query,
+        optimistic: true,
+        returnPartialData: false,
+        [handleIncrementalSymbol]: true,
+      })
+    ).toStrictEqualTyped({
+      result: markAsStreaming({
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+          friends: [
+            {
+              __typename: "Friend",
+              id: "1",
+              name: "Luke",
+            },
+            {
+              __typename: "Friend",
+              id: "2",
+              name: "Leia",
+            },
+          ],
+        },
+      }),
+      dataState: "streaming",
+      complete: false,
+      missing: undefined,
+    });
+  }
+});
+
 test("does not reintroduce nested stripped @defer fields when a later sibling outer @defer is partial with returnPartialData: false", () => {
   const cache = new InMemoryCache();
   const query = gql`

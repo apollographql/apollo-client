@@ -888,24 +888,20 @@ class DeferBoundaries {
   }
 }
 
-const STATES: Record<DataState, Partial<Record<DataState, DataState>>> = {
+const COMBINATIONS: Record<DataState, Partial<Record<DataState, DataState>>> = {
   empty: {
-    partial: "partial",
     complete: "partial",
     streaming: "partial",
     deferPartial: "partial",
   },
   deferPartial: {
-    partial: "partial",
     empty: "partial",
   },
   streaming: {
     deferPartial: "deferPartial",
-    partial: "partial",
     empty: "partial",
   },
   complete: {
-    partial: "partial",
     streaming: "streaming",
     deferPartial: "deferPartial",
     empty: "partial",
@@ -913,10 +909,17 @@ const STATES: Record<DataState, Partial<Record<DataState, DataState>>> = {
   partial: {},
 };
 
-function computeDataState(current: DataState | undefined, next: DataState) {
+function computeDataState(
+  current: DataState | undefined,
+  next: DataState
+): DataState {
+  if (next === "partial") {
+    return "partial";
+  }
+
   if (!current || current === next) {
     return next;
   }
 
-  return STATES[current][next] || current;
+  return COMBINATIONS[current][next] || current;
 }

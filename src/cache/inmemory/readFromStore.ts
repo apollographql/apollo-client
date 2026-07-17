@@ -888,6 +888,9 @@ class DeferBoundaries {
   }
 }
 
+// Describes the final data states when the current state (outer object) is
+// combined with the next state (inner object). A missing dataState in the inner
+// object means the dataState should remain the same.
 const COMBINATIONS: Record<DataState, Partial<Record<DataState, DataState>>> = {
   empty: {
     complete: "partial",

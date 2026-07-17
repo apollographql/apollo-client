@@ -77,8 +77,6 @@ type DataState =
   // All fields have data
   | "complete";
 
-type FragmentSelection = Exclude<SelectionNode, { kind: "Field" }>;
-
 interface ReadContext extends ReadMergeModifyContext {
   query: DocumentNode;
   policies: Policies;
@@ -89,7 +87,7 @@ interface ReadContext extends ReadMergeModifyContext {
 type ExecResult<R = any> = {
   result: R;
   dataState: DataState;
-  deferBoundaries: DeferBoundaries;
+  partialBoundaries: PartialBoundaries;
   missing?: MissingTree;
 };
 
@@ -275,7 +273,7 @@ export class StoreReader {
       execResult.dataState === "deferPartial" &&
       !returnPartialData
     ) {
-      execResult = this.prunePartialDeferBoundaries(query, execResult, {
+      execResult = this.prunePartialBoundaries(query, execResult, {
         policies,
         lookupFragment: fragmentContext.lookupFragment,
         variables,
@@ -380,7 +378,7 @@ export class StoreReader {
         result: {},
         dataState: "empty",
         missing: `Dangling reference to missing ${objectOrReference.__ref} object`,
-        deferBoundaries: new DeferBoundaries(),
+        partialBoundaries: new PartialBoundaries(),
       };
     }
 
@@ -394,7 +392,7 @@ export class StoreReader {
     let dataState: DataState | undefined;
     let missing: MissingTree | undefined;
     const missingMerger = new DeepMerger();
-    const deferBoundaries = new DeferBoundaries();
+    const partialBoundaries = new PartialBoundaries();
 
     if (typeof typename === "string" && !policies.rootIdsByTypename[typename]) {
       // Ensure we always include a default value for the __typename
@@ -458,7 +456,7 @@ export class StoreReader {
 
             fieldValue = execResult.result;
             dataState = mergeDataState(dataState, execResult.dataState);
-            deferBoundaries.set(resultName, execResult.deferBoundaries);
+            partialBoundaries.set(resultName, execResult.partialBoundaries);
           } else {
             dataState = mergeDataState(dataState, "complete");
           }
@@ -494,7 +492,7 @@ export class StoreReader {
           );
 
           fieldValue = execResult.result;
-          deferBoundaries.set(resultName, execResult.deferBoundaries);
+          partialBoundaries.set(resultName, execResult.partialBoundaries);
 
           // If the object's fields resolved to an "empty" dataState (e.g. no
           // field resolved with a non-undefined value), but the fieldValue
@@ -557,7 +555,7 @@ export class StoreReader {
           });
           const { result, dataState: nextDataState } = execResult;
 
-          deferBoundaries.merge(execResult.deferBoundaries);
+          partialBoundaries.merge(execResult.partialBoundaries);
 
           if (result !== void 0) {
             objectsToMerge.push(result);
@@ -568,7 +566,7 @@ export class StoreReader {
           }
 
           if (isDeferBoundary && nextDataState === "partial") {
-            deferBoundaries.add(selection);
+            partialBoundaries.add(selection);
           }
 
           dataState = mergeDataState(
@@ -591,7 +589,7 @@ export class StoreReader {
       result,
       missing,
       dataState,
-      deferBoundaries,
+      partialBoundaries,
     };
     const frozen = maybeDeepFreeze(finalResult);
 
@@ -614,7 +612,7 @@ export class StoreReader {
     let dataState: DataState = "complete";
     let missing: MissingTree | undefined;
     let missingMerger = new DeepMerger();
-    const deferBoundaries = new DeferBoundaries();
+    const partialBoundaries = new PartialBoundaries();
 
     function handleMissing<T>(childResult: ExecResult<T>, i: number): T {
       if (childResult.missing) {
@@ -656,7 +654,7 @@ export class StoreReader {
 
       if (execResult) {
         dataState = mergeDataState(dataState, execResult.dataState);
-        deferBoundaries.set(i, execResult.deferBoundaries);
+        partialBoundaries.set(i, execResult.partialBoundaries);
 
         return handleMissing(execResult, i);
       }
@@ -672,12 +670,12 @@ export class StoreReader {
       result: array,
       dataState,
       missing,
-      deferBoundaries,
+      partialBoundaries,
     };
   }
 
   private prunedEntries = new Trie<{ data: any }>();
-  private prunePartialDeferBoundaries<T>(
+  private prunePartialBoundaries<T>(
     document: DocumentNode,
     execResult: ExecResult<T>,
     context: Pick<ReadContext, "lookupFragment" | "policies" | "variables">
@@ -688,14 +686,10 @@ export class StoreReader {
     const prune = (
       selectionSet: SelectionSetNode,
       data: any,
-      deferBoundaries: DeferBoundaries | undefined
+      boundaries: PartialBoundaries | undefined
     ): any => {
-      if (data == null || !deferBoundaries) return data;
-      const entry = this.prunedEntries.lookup(
-        selectionSet,
-        data,
-        deferBoundaries
-      );
+      if (data == null || !boundaries) return data;
+      const entry = this.prunedEntries.lookup(selectionSet, data, boundaries);
 
       if (entry.data) return entry.data;
 
@@ -706,7 +700,7 @@ export class StoreReader {
           const prunedItem = prune(
             selectionSet,
             item,
-            deferBoundaries.getChild(index)
+            boundaries.getChild(index)
           );
 
           changed ||= prunedItem !== item;
@@ -745,7 +739,7 @@ export class StoreReader {
           const pruned = prune(
             selection.selectionSet,
             data[resultName],
-            deferBoundaries.getChild(resultName)
+            boundaries.getChild(resultName)
           );
 
           changed ||= pruned !== data[resultName];
@@ -767,7 +761,7 @@ export class StoreReader {
         }
 
         // Only process fragments that aren't partial.
-        if (deferBoundaries.has(selection)) {
+        if (boundaries.has(selection)) {
           return (changed = true);
         }
 
@@ -791,7 +785,7 @@ export class StoreReader {
       result: prune(
         getMainDefinition(document).selectionSet,
         execResult.result,
-        execResult.deferBoundaries
+        execResult.partialBoundaries
       ),
     };
   }
@@ -839,15 +833,15 @@ function assertSelectionSetForIdValue(
 // a path: overlapping non-deferred selections must still be rebuilt so fields
 // contributed only by a partial deferred sibling are removed. The pruner can
 // then skip unrelated result branches.
-class DeferBoundaries {
-  private selections = new Set<FragmentSelection>();
-  private children = new Map<string | number, DeferBoundaries>();
+class PartialBoundaries {
+  private selections = new Set<SelectionNode>();
+  private children = new Map<string | number, PartialBoundaries>();
 
-  add(selection: FragmentSelection) {
+  add(selection: SelectionNode) {
     this.selections.add(selection);
   }
 
-  has(selection: FragmentSelection) {
+  has(selection: SelectionNode) {
     return this.selections.has(selection);
   }
 
@@ -855,20 +849,18 @@ class DeferBoundaries {
     return this.children.get(key);
   }
 
-  set(key: string | number, deferBoundary: DeferBoundaries) {
+  set(key: string | number, boundary: PartialBoundaries) {
     const child = this.getChild(key);
 
     this.children.set(
       key,
-      child ?
-        new DeferBoundaries().merge(child).merge(deferBoundary)
-      : deferBoundary
+      child ? new PartialBoundaries().merge(child).merge(boundary) : boundary
     );
   }
 
-  merge(deferBoundaries: DeferBoundaries) {
-    deferBoundaries.selections.forEach((selection) => this.add(selection));
-    deferBoundaries.children.forEach((child, key) => this.set(key, child));
+  merge(boundaries: PartialBoundaries) {
+    boundaries.selections.forEach((selection) => this.add(selection));
+    boundaries.children.forEach((child, key) => this.set(key, child));
 
     return this;
   }

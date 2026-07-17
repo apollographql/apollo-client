@@ -255,6 +255,12 @@ export interface CacheSizes {
    * fragment selection node is a deferred fragment.
    */
   isDeferredFragment: number;
+
+  /**
+   * Used by the internal `isStreamField` utility that determines whether a
+   * field selection node is a streamed field.
+   */
+  isStreamField: number;
 }
 
 const cacheSizeSymbol = Symbol.for("apollo.cacheSize");
@@ -285,6 +291,7 @@ export const cacheSizes: Partial<CacheSizes> = { ...global[cacheSizeSymbol] };
 export const enum defaultCacheSizes {
   checkDocument = 2000,
   isDeferredFragment = 2000,
+  isStreamField = 2000,
   canonicalStringify = 1000,
   print = 2000,
   "documentTransform.cache" = 2000,

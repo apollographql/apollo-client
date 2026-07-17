@@ -104,6 +104,7 @@ function getCurrentCacheSizes() {
     canonicalStringify: defaultCacheSizes["canonicalStringify"],
     checkDocument: defaultCacheSizes["checkDocument"],
     isDeferredFragment: defaultCacheSizes["isDeferredFragment"],
+    isStreamField: defaultCacheSizes["isStreamField"],
     print: defaultCacheSizes["print"],
     "documentTransform.cache": defaultCacheSizes["documentTransform.cache"],
     "queryManager.getDocumentInfo":

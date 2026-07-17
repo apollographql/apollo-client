@@ -290,7 +290,7 @@ export class StoreReader {
       // We don't need to report missing fields inside defer boundaries since
       // the "streaming" dataState tells us that the only missing fields in
       // the object is inside a defer boundary.
-      (!handleIncremental || dataState !== "streaming")
+      (dataState !== "streaming" || !handleIncremental)
     ) {
       missing = new MissingFieldError(
         firstMissing(execResult.missing)!,

@@ -913,13 +913,10 @@ const TRANSITIONS: Record<DataState, Partial<Record<DataState, DataState>>> = {
   partial: {},
 };
 
-function transitionTo(
-  dataState: DataState | undefined,
-  newDataState: DataState
-) {
-  if (!dataState || dataState === newDataState) {
-    return newDataState;
+function transitionTo(current: DataState | undefined, next: DataState) {
+  if (!current || current === next) {
+    return next;
   }
 
-  return TRANSITIONS[dataState][newDataState] || dataState;
+  return TRANSITIONS[current][next] || current;
 }

@@ -500,7 +500,24 @@ export class StoreReader {
           handleMissing(execResult, resultName);
 
           fieldValue = execResult.result;
-          dataState = transitionTo(dataState, execResult.dataState);
+
+          // If the object's fields resolved to an "empty" dataState (e.g. no
+          // field resolved with a non-undefined value), but the fieldValue
+          // object itself is present, this object should be considered
+          // partial instead of empty. This also ensures defer boundaries that
+          // select this object remain as partial defer boundaries rather than
+          // mistakenly get reported as streaming. This is especially necessary
+          // when combined with GraphQL Codegen which generates its type and
+          // relies on the outer object to be absent when its fields haven't
+          // streamed in. Reporting the defer boundary as "streaming" instead of
+          // "partial" would otherwise have the potential to cause runtime
+          // crashes since the runtime values and types would not line up
+          // properly (types expect object to be undefined, but its instead
+          // present without its fields)
+          dataState = transitionTo(
+            dataState,
+            execResult.dataState === "empty" ? "partial" : execResult.dataState
+          );
 
           // Nest the child's boundaries under this field's response key.
           deferBoundaries.set(resultName, execResult.deferBoundaries);

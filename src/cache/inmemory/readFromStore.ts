@@ -829,24 +829,16 @@ function assertSelectionSetForIdValue(
   }
 }
 
-// We can't make executeSelectionSet aware of returnPartialData because of
-// the isFresh method that uses executeSelectionSet's cached result. Using
-// returnPartialData inside executeSelectionSetImpl means it would have to be
-// part its cache key since returnPartialData affects the returned result.
-// However, writeToStore (which calls isFresh) has no way to reliably get a
-// returnPartialData value (there is no returnPartialData option when writing
-// to the cache). so that it can reliably get a cache hit.
+// We deliberately leave `returnPartialData` out of `executeSelectionSet`'s
+// cache key. `isFresh` runs during writes and cannot provide a reliable value
+// for this option, so including it would prevent a reliable cache hit.
 //
-// Not having access to returnPartialData becomes a problem for partial data
-// written inside defer boundaries. When returnPartialData is false, we keep
-// all non-deferred fields, but remove data from any partial defer boundary in
-// order to maintain completeness. This has to happen in diffQueryAgainstStore
-// since it is aware of returnPartialData, but we want to avoid having to
-// traverse the entire data object again just to figure out whether there are
-// partial defer boundaries inside of it. DeferBoundaries records the locations
-// of all partial defer boundaries so that we can traverse as little as
-// possible. This makes it cheaper to determine when we need to actually iterate
-// on the returned object to remove partial data from a defer boundary.
+// When `returnPartialData` is false, `diffQueryAgainstStore` prunes data from
+// partial @defer boundaries after reading the cached result. `DeferBoundaries`
+// records the selection paths needed for that pass, including empty nodes along
+// a path: overlapping non-deferred selections must still be rebuilt so fields
+// contributed only by a partial deferred sibling are removed. The pruner can
+// then skip unrelated result branches.
 class DeferBoundaries {
   private selections = new Set<FragmentSelection>();
   private children = new Map<string | number, DeferBoundaries>();

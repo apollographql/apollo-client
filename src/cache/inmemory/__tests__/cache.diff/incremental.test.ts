@@ -741,6 +741,159 @@ test('returns dataState "partial" when all selected fields under a deferred obje
   });
 });
 
+test("strips a deferred object whose own nested object is present but incomplete with returnPartialData: false", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          author {
+            profile {
+              bio
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query: gql`
+        query {
+          greeting {
+            message
+            author {
+              id
+              profile {
+                __typename
+              }
+            }
+          }
+        }
+      `,
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+          author: {
+            __typename: "Person",
+            id: "100",
+            profile: { __typename: "Profile" },
+          },
+        },
+      },
+    });
+  }
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
+test('returns dataState "partial" for a deferred object whose own nested object is present but incomplete with returnPartialData: true', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          author {
+            profile {
+              bio
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query: gql`
+        query {
+          greeting {
+            message
+            author {
+              id
+              profile {
+                __typename
+              }
+            }
+          }
+        }
+      `,
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+          author: {
+            __typename: "Person",
+            id: "100",
+            profile: { __typename: "Profile" },
+          },
+        },
+      },
+    });
+  }
+
+  const missingObject = { __typename: "Profile" };
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: true,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        author: {
+          __typename: "Person",
+          profile: { __typename: "Profile" },
+        },
+      },
+    },
+    dataState: "partial",
+    complete: false,
+    missing: new MissingFieldError(
+      getMissingMessage("bio", missingObject),
+      {
+        greeting: {
+          author: {
+            profile: {
+              bio: getMissingMessage("bio", missingObject),
+            },
+          },
+        },
+      },
+      query,
+      {}
+    ),
+  });
+});
+
 test("does not treat overlapping non-deferred fields as partial when only deferred siblings are missing", () => {
   const cache = new InMemoryCache();
   const query = gql`

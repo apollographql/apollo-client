@@ -146,7 +146,6 @@ export class StoreReader {
   };
 
   private knownResults = new WeakMap<Record<string, any>, SelectionSetNode>();
-  private transformedDeferResults = new WeakMap<ExecResult, ExecResult>();
 
   constructor(config: StoreReaderConfig) {
     this.config = config;
@@ -271,19 +270,11 @@ export class StoreReader {
       !returnPartialData &&
       execResult.dataState === "deferPartial"
     ) {
-      let transformed = this.transformedDeferResults.get(execResult);
-
-      if (!transformed) {
-        transformed = this.removePartialDeferFragments(query, execResult, {
-          policies,
-          lookupFragment: fragmentContext.lookupFragment,
-          variables,
-        });
-
-        this.transformedDeferResults.set(execResult, transformed);
-      }
-
-      execResult = transformed;
+      execResult = this.prunePartialDeferBoundaries(query, execResult, {
+        policies,
+        lookupFragment: fragmentContext.lookupFragment,
+        variables,
+      });
     }
 
     let missing: MissingFieldError | undefined;
@@ -675,43 +666,45 @@ export class StoreReader {
     };
   }
 
-  private deferCache = new Trie<{ data: any }>();
-  private removePartialDeferFragments<T>(
+  private pruneCache = new Trie<{ data: any }>();
+  private prunedExecResults = new WeakMap<ExecResult, ExecResult>();
+  private prunePartialDeferBoundaries<T>(
     document: DocumentNode,
     execResult: ExecResult<T>,
     context: Pick<ReadContext, "lookupFragment" | "policies" | "variables">
   ): ExecResult<T> {
-    const { policies, lookupFragment, variables } = context;
-    const cache = this.deferCache;
+    if (this.prunedExecResults.has(execResult)) {
+      return this.prunedExecResults.get(execResult)!;
+    }
 
-    // This function is only called when the top-level dataState is "deferPartial"
-    // which guarantees at least one partial defer boundary exists to remove.
-    function stripPartialDeferredData(
+    const { policies, lookupFragment, variables } = context;
+
+    const prune = (
       selectionSet: SelectionSetNode,
       data: any,
       deferBoundaries: DeferBoundaries | undefined
-    ): any {
+    ): any => {
       if (data == null || !deferBoundaries) return data;
-      const entry = cache.lookup(selectionSet, data, deferBoundaries);
+      const entry = this.pruneCache.lookup(selectionSet, data, deferBoundaries);
 
       if (entry.data) return entry.data;
 
       let changed = false;
 
       if (Array.isArray(data)) {
-        const stripped = data.map((item, index) => {
-          const stripped = stripPartialDeferredData(
+        const pruned = data.map((item, index) => {
+          const prunedItem = prune(
             selectionSet,
             item,
             deferBoundaries.getChild(index)
           );
 
-          changed ||= stripped !== item;
+          changed ||= prunedItem !== item;
 
-          return stripped;
+          return prunedItem;
         });
 
-        return changed ? (entry.data = stripped) : data;
+        return changed ? (entry.data = pruned) : data;
       }
 
       const result: Record<string, any> = {};
@@ -739,20 +732,20 @@ export class StoreReader {
             return;
           }
 
-          const stripped = stripPartialDeferredData(
+          const pruned = prune(
             selection.selectionSet,
             data[resultName],
             deferBoundaries.getChild(resultName)
           );
 
-          changed ||= stripped !== data[resultName];
+          changed ||= pruned !== data[resultName];
 
           // A response key can be selected by more than one selection (e.g. a
           // field and an overlapping fragment), so merge their kept fields.
           result[resultName] =
             Object.hasOwn(result, resultName) ?
-              new DeepMerger().merge(result[resultName], stripped)
-            : stripped;
+              new DeepMerger().merge(result[resultName], pruned)
+            : pruned;
 
           return;
         }
@@ -779,18 +772,22 @@ export class StoreReader {
       // with a different key length, we want to always use the computed result
       // since it is more correct.
       return data;
-    }
+    };
 
-    return {
+    const result: ExecResult = {
       ...execResult,
       // Removing partial defer boundaries puts the data in a streaming state
       dataState: "streaming",
-      result: stripPartialDeferredData(
+      result: prune(
         getMainDefinition(document).selectionSet,
         execResult.result,
         execResult.deferBoundaries
       ),
     };
+
+    this.prunedExecResults.set(execResult, result);
+
+    return result;
   }
 }
 

@@ -676,7 +676,7 @@ export class StoreReader {
     };
   }
 
-  private pruned = new Trie<{ data: any }>();
+  private prunedEntries = new Trie<{ data: any }>();
   private prunePartialDeferBoundaries<T>(
     document: DocumentNode,
     execResult: ExecResult<T>,
@@ -690,7 +690,11 @@ export class StoreReader {
       deferBoundaries: DeferBoundaries | undefined
     ): any => {
       if (data == null || !deferBoundaries) return data;
-      const entry = this.pruned.lookup(selectionSet, data, deferBoundaries);
+      const entry = this.prunedEntries.lookup(
+        selectionSet,
+        data,
+        deferBoundaries
+      );
 
       if (entry.data) return entry.data;
 

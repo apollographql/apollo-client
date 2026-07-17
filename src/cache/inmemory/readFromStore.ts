@@ -672,9 +672,6 @@ export class StoreReader {
     execResult: ExecResult<T>,
     context: Pick<ReadContext, "lookupFragment" | "policies" | "variables">
   ): ExecResult<T> {
-    const execEntry = this.pruned.lookup(execResult);
-    if (execEntry.data) return execEntry.data;
-
     const { policies, lookupFragment, variables } = context;
 
     const prune = (
@@ -772,7 +769,7 @@ export class StoreReader {
       return data;
     };
 
-    const result: ExecResult = {
+    return {
       ...execResult,
       // Removing partial defer boundaries puts the data in a streaming state
       dataState: "streaming",
@@ -782,8 +779,6 @@ export class StoreReader {
         execResult.deferBoundaries
       ),
     };
-
-    return (execEntry.data = result);
   }
 }
 

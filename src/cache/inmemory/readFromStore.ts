@@ -272,15 +272,11 @@ export class StoreReader {
       let transformed = this.transformedDeferResults.get(execResult);
 
       if (!transformed) {
-        transformed = this.maybeStripPartialDeferredFragments(
-          query,
-          execResult,
-          {
-            policies,
-            lookupFragment: fragmentContext.lookupFragment,
-            variables,
-          }
-        );
+        transformed = this.removePartialDeferFragments(query, execResult, {
+          policies,
+          lookupFragment: fragmentContext.lookupFragment,
+          variables,
+        });
 
         this.transformedDeferResults.set(execResult, transformed);
       }
@@ -705,7 +701,7 @@ export class StoreReader {
   }
 
   private deferCache = new Trie<{ data: any }>();
-  private maybeStripPartialDeferredFragments<T>(
+  private removePartialDeferFragments<T>(
     document: DocumentNode,
     execResult: ExecResult<T>,
     context: Pick<ReadContext, "lookupFragment" | "policies" | "variables">

@@ -407,7 +407,9 @@ export class StoreReader {
       return result.result;
     }
 
-    for (const selection of selectionSet.selections) {
+    const workSet = new Set(selectionSet.selections);
+
+    workSet.forEach((selection) => {
       // Omit fields with directives @skip(if: <truthy value>) or
       // @include(if: <falsy value>).
       if (!shouldInclude(selection, variables)) {
@@ -419,7 +421,7 @@ export class StoreReader {
           dataState = "complete";
         }
 
-        continue;
+        return;
       }
 
       if (isField(selection)) {
@@ -575,7 +577,7 @@ export class StoreReader {
           dataState = transitionTo(dataState, newDataState);
         }
       }
-    }
+    });
 
     // This is hit when a field has a selection set, but its field value
     // is null. `null` is considered complete.

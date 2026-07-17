@@ -89,19 +89,16 @@ We regularly update our [public roadmap](https://github.com/apollographql/apollo
 | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | What do you like best about Apollo Client? What needs to be improved? Please tell us by taking a [one-minute survey](https://docs.google.com/forms/d/e/1FAIpQLSczNDXfJne3ZUOXjk9Ursm9JYvhTh1_nFTDfdq3XBAFWCzplQ/viewform?usp=pp_url&entry.1170701325=Apollo+Client&entry.204965213=Readme). Your responses will help us understand Apollo Client usage and allow us to serve you better. |
 
+
 ## 🗓️ Events
 
-Join these live events to meet other GraphQL users and learn more:
+Join these live events to meet other GraphQL users and learn more: 
 
-🎪 [**GraphQL Summit 2025**](https://summit.graphql.com?utm_source=github&utm_medium=apollographql_apollo-client&utm_campaign=readme)
-Oct 6-8, 2025 • San Francisco
-_1000+ engineers, talks, workshops, and office hours_
+🎪 [**Apollo Summit 2026**](https://apollosummit.dev/)
+ Oct 6-8, 2026 • San Francisco  
+ *1000+ engineers, talks, workshops, and office hours*
 
-🌟 [**GraphQLConf 2025**](https://graphql.org/conf/2025)
-Sep 8-10, 2025 • Amsterdam
-_Celebrating 10 Years of GraphQL_
-
-[**View All Events →**](https://www.apollographql.com/events?utm_source=github&utm_medium=apollographql_apollo-client&utm_campaign=readme)
+[**View All Events →**](https://www.apollographql.com/events?utm_source=github&utm_medium=apollographql_apollo-kotlin&utm_campaign=readme)
 
 ## 🏆 Contributing
 

@@ -543,7 +543,23 @@ export class StoreReader {
             selection,
             context.variables
           );
-          const execResult = this.executeSelectionSet({
+          // Prior to 4.3, this branch just flattened the fragment's
+          // selectionSet into the existing workSet so that it continued
+          // iterating as if the fragment didn't exist. The cache is
+          // incremental aware as of 4.3 and as such, we need to resolve the
+          // per-fragment selection set so that we can properly strip partial
+          // defer fragment data when returnPartialData is false. We need to
+          // call execSelectionSetImpl directly (non-cached version) so that we
+          // scope the dataState correctly for its fields. Using the cached
+          // executeSelectionSet can result in cache poisoning when combined
+          // with the fragment registry where it might cache either a) an error
+          // thrown when a registered fragment references a named fragment that
+          // the query is expected to supply and doesn't or b) resolve to the
+          // wrong data result when combined with queries that provide different
+          // implementations of the same fragment (see inmemory/fragmentRegistry and
+          // cache.diff/incremental tests which provide guards against this
+          // behavior).
+          const execResult = this.execSelectionSetImpl({
             selectionSet: fragment.selectionSet,
             objectOrReference,
             enclosingRef,

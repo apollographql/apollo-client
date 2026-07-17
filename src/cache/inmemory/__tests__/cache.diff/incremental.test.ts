@@ -4059,6 +4059,79 @@ test('returns dataState "complete" when a deferred fragment is excluded via @inc
   });
 });
 
+test("does not reintroduce partial deferred data through skipped or excluded overlapping selections", () => {
+  const queries = [
+    gql`
+      query {
+        greeting {
+          recipient @skip(if: true) {
+            name
+          }
+          ... on Greeting @defer {
+            recipient {
+              name
+              email
+            }
+          }
+        }
+      }
+    `,
+    gql`
+      query {
+        greeting {
+          recipient @include(if: false) {
+            name
+          }
+          ... on Greeting @defer {
+            recipient {
+              name
+              email
+            }
+          }
+        }
+      }
+    `,
+  ];
+
+  for (const query of queries) {
+    const cache = new InMemoryCache();
+
+    {
+      using _ = spyOnConsole("error");
+      cache.writeQuery({
+        query,
+        data: {
+          greeting: {
+            __typename: "Greeting",
+            recipient: {
+              __typename: "Person",
+              name: "Alice",
+            },
+          },
+        },
+      });
+    }
+
+    expect(
+      cache.diff({
+        query,
+        optimistic: true,
+        returnPartialData: false,
+        [handleIncrementalSymbol]: true,
+      })
+    ).toStrictEqualTyped({
+      result: markAsStreaming({
+        greeting: {
+          __typename: "Greeting",
+        },
+      }),
+      dataState: "streaming",
+      complete: false,
+      missing: undefined,
+    });
+  }
+});
+
 test('returns dataState "streaming" for nested @defer when the outer boundary is complete and the inner boundary is still empty', () => {
   const cache = new InMemoryCache();
   const query = gql`

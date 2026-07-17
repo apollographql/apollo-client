@@ -859,17 +859,14 @@ class DeferBoundaries {
   }
 
   set(key: string | number, deferBoundary: DeferBoundaries) {
-    const existing = this.getChild(key);
+    const child = this.getChild(key);
 
-    if (!existing) {
-      this.children.set(key, deferBoundary);
-      return;
-    }
-
-    const merged = new DeferBoundaries();
-    merged.merge(existing);
-    merged.merge(deferBoundary);
-    this.children.set(key, merged);
+    this.children.set(
+      key,
+      child ?
+        new DeferBoundaries().merge(child).merge(deferBoundary)
+      : deferBoundary
+    );
   }
 
   merge(deferBoundaries: DeferBoundaries) {

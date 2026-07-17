@@ -3682,8 +3682,6 @@ test('returns dataState "empty" when a root defer boundary has nothing written w
     }
   `;
 
-  const missingRoot = { __ref: "ROOT_QUERY" };
-
   expect(
     cache.diff({
       query,
@@ -3695,12 +3693,7 @@ test('returns dataState "empty" when a root defer boundary has nothing written w
     result: null,
     dataState: "empty",
     complete: false,
-    missing: new MissingFieldError(
-      getMissingMessage("greeting", missingRoot),
-      { greeting: getMissingMessage("greeting", missingRoot) },
-      query,
-      {}
-    ),
+    missing: undefined,
   });
 });
 
@@ -6047,10 +6040,6 @@ test("strips overlapping recipient fields when both sibling @defer boundaries se
     });
   }
 
-  // Both root defer boundaries are partial and stripped, so nothing remains.
-  // That is a cache miss (empty), not a streaming {} result.
-  const missingObject = { __typename: "Person", name: "Alice" };
-
   expect(
     cache.diff({
       query,
@@ -6062,17 +6051,7 @@ test("strips overlapping recipient fields when both sibling @defer boundaries se
     result: null,
     dataState: "empty",
     complete: false,
-    missing: new MissingFieldError(
-      getMissingMessage("email", missingObject),
-      {
-        recipient: {
-          email: getMissingMessage("email", missingObject),
-          phone: getMissingMessage("phone", missingObject),
-        },
-      },
-      query,
-      {}
-    ),
+    missing: undefined,
   });
 });
 

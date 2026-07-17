@@ -764,9 +764,8 @@ export class StoreReader {
         }
 
         // Only process fragments that aren't partial.
-        if (deferBoundaries.partial.has(selection)) {
-          changed = true;
-          return;
+        if (deferBoundaries.has(selection)) {
+          return (changed = true);
         }
 
         fragment.selectionSet.selections.forEach(workSet.add, workSet);
@@ -846,11 +845,7 @@ function assertSelectionSetForIdValue(
 // possible. This makes it cheaper to determine when we need to actually iterate
 // on the returned object to remove partial data from a defer boundary.
 class DeferBoundaries {
-  // Defer boundaries at this object whose data is partial and therefore need to
-  // be stripped. Complete, deferPartial, empty, and streaming boundaries (and
-  // non-defer fragments) don't need recording since the strip simply recurses
-  // into them.
-  partial = new Set<FragmentSelection>();
+  selections = new Set<FragmentSelection>();
 
   // Nested boundaries keyed by response key (object fields) or array index. This
   // lets the strip resolve a boundary's state per list item instead of
@@ -858,7 +853,11 @@ class DeferBoundaries {
   children = new Map<string | number, DeferBoundaries>();
 
   add(selection: FragmentSelection) {
-    this.partial.add(selection);
+    this.selections.add(selection);
+  }
+
+  has(selection: FragmentSelection) {
+    return this.selections.has(selection);
   }
 
   // Nest `child` under `key` in `target`. When a child already exists for that
@@ -880,7 +879,7 @@ class DeferBoundaries {
   }
 
   merge(deferBoundaries: DeferBoundaries) {
-    deferBoundaries.partial.forEach((selection) => this.add(selection));
+    deferBoundaries.selections.forEach((selection) => this.add(selection));
     deferBoundaries.children.forEach((child, key) => this.set(key, child));
   }
 }

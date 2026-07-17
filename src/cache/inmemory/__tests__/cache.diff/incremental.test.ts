@@ -1353,6 +1353,114 @@ test("returns a referentially stable result across reads, rebuilding only the pa
   expect(greeting6.friendGroups[1][0]).toBe(greeting5.friendGroups[1][0]);
 });
 
+test("preserves shared object identity for repeated list entities after stripping partial @defer fields with returnPartialData: false", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      friends {
+        id
+        ... on Person @defer {
+          name
+          email
+        }
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        friends: [
+          { __typename: "Person", id: "1", name: "Alice" },
+          { __typename: "Person", id: "1", name: "Alice" },
+          {
+            __typename: "Person",
+            id: "2",
+            name: "Bob",
+            email: "bob@example.com",
+          },
+        ],
+      },
+    });
+  }
+
+  const partialDiff = cache.diff({
+    query,
+    optimistic: true,
+    returnPartialData: true,
+    [handleIncrementalSymbol]: true,
+  });
+
+  const missingPerson1 = { __ref: "Person:1" };
+
+  expect(partialDiff).toStrictEqualTyped({
+    result: {
+      friends: [
+        { __typename: "Person", id: "1", name: "Alice" },
+        { __typename: "Person", id: "1", name: "Alice" },
+        {
+          __typename: "Person",
+          id: "2",
+          name: "Bob",
+          email: "bob@example.com",
+        },
+      ],
+    },
+    dataState: "partial",
+    complete: false,
+    missing: new MissingFieldError(
+      getMissingMessage("email", missingPerson1),
+      {
+        friends: {
+          0: { email: getMissingMessage("email", missingPerson1) },
+          1: { email: getMissingMessage("email", missingPerson1) },
+        },
+      },
+      query,
+      {}
+    ),
+  });
+
+  const partialFriends = (partialDiff.result as any).friends;
+
+  // Precondition: memoized read shares identity for the duplicate entity.
+  expect(partialFriends[0]).toBe(partialFriends[1]);
+  expect(partialFriends[0]).not.toBe(partialFriends[2]);
+
+  const strippedDiff = cache.diff({
+    query,
+    optimistic: true,
+    returnPartialData: false,
+    [handleIncrementalSymbol]: true,
+  });
+
+  expect(strippedDiff).toStrictEqualTyped({
+    result: markAsStreaming({
+      friends: [
+        { __typename: "Person", id: "1" },
+        { __typename: "Person", id: "1" },
+        {
+          __typename: "Person",
+          id: "2",
+          name: "Bob",
+          email: "bob@example.com",
+        },
+      ],
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+
+  const strippedFriends = (strippedDiff.result as any).friends;
+
+  // Same entity at two indexes must still be the same object after strip.
+  expect(strippedFriends[0]).toBe(strippedFriends[1]);
+  expect(strippedFriends[0]).not.toBe(strippedFriends[2]);
+});
+
 test("returns a referentially stable streaming result when a __typename-only deferred object is stripped, rebuilding only written paths with returnPartialData: false", () => {
   const cache = new InMemoryCache();
   const query = gql`

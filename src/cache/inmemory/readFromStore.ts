@@ -654,7 +654,12 @@ export class StoreReader {
       }
 
       if (execResult) {
-        dataState = mergeDataState(dataState, execResult.dataState);
+        dataState = mergeDataState(
+          dataState,
+          execResult.dataState === "partial" ?
+            "streamPartial"
+          : execResult.dataState
+        );
         partialBoundaries.set(i, execResult.partialBoundaries);
 
         return handleMissing(execResult, i);

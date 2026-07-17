@@ -442,7 +442,7 @@ export class StoreReader {
               }`,
             });
 
-            dataState = computeDataState(dataState, "empty");
+            dataState = mergeDataState(dataState, "empty");
           }
         } else if (isArray(fieldValue)) {
           if (fieldValue.length > 0) {
@@ -457,13 +457,13 @@ export class StoreReader {
             );
 
             fieldValue = execResult.result;
-            dataState = computeDataState(dataState, execResult.dataState);
+            dataState = mergeDataState(dataState, execResult.dataState);
             deferBoundaries.set(resultName, execResult.deferBoundaries);
           } else {
-            dataState = computeDataState(dataState, "complete");
+            dataState = mergeDataState(dataState, "complete");
           }
         } else if (!selection.selectionSet) {
-          dataState = computeDataState(dataState, "complete");
+          dataState = mergeDataState(dataState, "complete");
         } else if (fieldValue != null) {
           if (__DEV__) {
             const fieldName = selection.name.value;
@@ -509,7 +509,7 @@ export class StoreReader {
           // crashes since the runtime values and types would not line up
           // properly (types expect object to be undefined, but its instead
           // present without its fields)
-          dataState = computeDataState(
+          dataState = mergeDataState(
             dataState,
             execResult.dataState === "empty" ? "partial" : execResult.dataState
           );
@@ -571,7 +571,7 @@ export class StoreReader {
             deferBoundaries.add(selection);
           }
 
-          dataState = computeDataState(
+          dataState = mergeDataState(
             dataState,
             isDeferBoundary ?
               nextDataState === "empty" ? "streaming"
@@ -655,7 +655,7 @@ export class StoreReader {
       }
 
       if (execResult) {
-        dataState = computeDataState(dataState, execResult.dataState);
+        dataState = mergeDataState(dataState, execResult.dataState);
         deferBoundaries.set(i, execResult.deferBoundaries);
 
         return handleMissing(execResult, i);
@@ -880,7 +880,10 @@ class DeferBoundaries {
 // Describes the final data states when the current state (outer object) is
 // combined with the next state (inner object). A missing dataState in the inner
 // object means the dataState should remain the same.
-const COMBINATIONS: Record<DataState, Partial<Record<DataState, DataState>>> = {
+const DATA_STATE_MERGES: Record<
+  DataState,
+  Partial<Record<DataState, DataState>>
+> = {
   empty: {
     complete: "partial",
     streaming: "partial",
@@ -901,7 +904,7 @@ const COMBINATIONS: Record<DataState, Partial<Record<DataState, DataState>>> = {
   partial: {},
 };
 
-function computeDataState(
+function mergeDataState(
   current: DataState | undefined,
   next: DataState
 ): DataState {
@@ -913,5 +916,5 @@ function computeDataState(
     return next;
   }
 
-  return COMBINATIONS[current][next] || current;
+  return DATA_STATE_MERGES[current][next] || current;
 }

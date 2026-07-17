@@ -77,6 +77,8 @@ type DataState =
   // All fields have data
   | "complete";
 
+type FragmentSelection = Exclude<SelectionNode, { kind: "Field" }>;
+
 interface ReadContext extends ReadMergeModifyContext {
   query: DocumentNode;
   policies: Policies;
@@ -565,7 +567,7 @@ export class StoreReader {
           }
 
           if (isDeferBoundary && nextDataState === "partial") {
-            deferBoundaries.partial.add(selection);
+            deferBoundaries.add(selection);
           }
 
           dataState = computeDataState(
@@ -848,12 +850,16 @@ class DeferBoundaries {
   // be stripped. Complete, deferPartial, empty, and streaming boundaries (and
   // non-defer fragments) don't need recording since the strip simply recurses
   // into them.
-  partial = new Set<Exclude<SelectionNode, { kind: "Field" }>>();
+  partial = new Set<FragmentSelection>();
 
   // Nested boundaries keyed by response key (object fields) or array index. This
   // lets the strip resolve a boundary's state per list item instead of
   // collapsing every item onto a single shared selection node.
   children = new Map<string | number, DeferBoundaries>();
+
+  add(selection: FragmentSelection) {
+    this.partial.add(selection);
+  }
 
   // Nest `child` under `key` in `target`. When a child already exists for that
   // key (an overlapping selection contributing the same response key), the two
@@ -874,7 +880,7 @@ class DeferBoundaries {
   }
 
   merge(deferBoundaries: DeferBoundaries) {
-    deferBoundaries.partial.forEach((selection) => this.partial.add(selection));
+    deferBoundaries.partial.forEach((selection) => this.add(selection));
     deferBoundaries.children.forEach((child, key) => this.set(key, child));
   }
 }

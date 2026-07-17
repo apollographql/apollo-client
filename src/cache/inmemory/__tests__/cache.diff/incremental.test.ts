@@ -1,6 +1,7 @@
 import { gql } from "graphql-tag";
 
 import {
+  createFragmentRegistry,
   InMemoryCache,
   isReference,
   MissingFieldError,
@@ -1943,6 +1944,73 @@ test("strips incomplete fields inside a deferred named fragment with returnParti
     using _ = spyOnConsole("error");
     cache.writeQuery({
       query,
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+          recipient: {
+            __typename: "Person",
+            name: "Cached Alice",
+          },
+        },
+      },
+    });
+  }
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
+test("strips incomplete fields inside a defer boundary contributed by a registered named fragment with returnPartialData: false", () => {
+  const cache = new InMemoryCache({
+    fragments: createFragmentRegistry(gql`
+      fragment GreetingRecipient on Greeting {
+        recipient {
+          name
+          email
+        }
+      }
+    `),
+  });
+  const query = gql`
+    query {
+      greeting {
+        message
+        ...GreetingRecipient @defer
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query: gql`
+        query {
+          greeting {
+            message
+            recipient {
+              __typename
+              name
+            }
+          }
+        }
+      `,
       data: {
         greeting: {
           __typename: "Greeting",

@@ -6487,6 +6487,150 @@ test('returns dataState "complete" with an empty object when all fields are skip
   });
 });
 
+test("strips a __typename-only deferred object nested inside a list item with returnPartialData: false", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      colleagues {
+        id
+        name
+        ... on Person @defer {
+          profile {
+            bio
+          }
+        }
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query: gql`
+        query {
+          colleagues {
+            __typename
+            id
+            name
+            profile {
+              __typename
+            }
+          }
+        }
+      `,
+      data: {
+        colleagues: [
+          {
+            __typename: "Person",
+            id: "1",
+            name: "Grace",
+            profile: { __typename: "Profile" },
+          },
+        ],
+      },
+    });
+  }
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      colleagues: [{ __typename: "Person", id: "1", name: "Grace" }],
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
+test('returns dataState "partial" for a __typename-only deferred object nested inside a list item with returnPartialData: true', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      colleagues {
+        id
+        name
+        ... on Person @defer {
+          profile {
+            bio
+          }
+        }
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query: gql`
+        query {
+          colleagues {
+            __typename
+            id
+            name
+            profile {
+              __typename
+            }
+          }
+        }
+      `,
+      data: {
+        colleagues: [
+          {
+            __typename: "Person",
+            id: "1",
+            name: "Grace",
+            profile: { __typename: "Profile" },
+          },
+        ],
+      },
+    });
+  }
+
+  const missingObject = { __typename: "Profile" };
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: true,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: {
+      colleagues: [
+        {
+          __typename: "Person",
+          id: "1",
+          name: "Grace",
+          profile: { __typename: "Profile" },
+        },
+      ],
+    },
+    dataState: "partial",
+    complete: false,
+    missing: new MissingFieldError(
+      getMissingMessage("bio", missingObject),
+      {
+        colleagues: {
+          0: {
+            profile: {
+              bio: getMissingMessage("bio", missingObject),
+            },
+          },
+        },
+      },
+      query,
+      {}
+    ),
+  });
+});
+
 // --- Backwards compatibility tests ---
 // We want to make the cache fully incremental aware in v5 without the symbol
 // workaround to maintain the backwards compatibility that we have in 4.x. Once

@@ -3376,6 +3376,100 @@ test('returns dataState "empty" when a complete scalar sibling precedes a partia
   });
 });
 
+test('returns dataState "partial" when an empty list is present and a sibling field is missing with returnPartialData: true', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      name
+      friends {
+        id
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query: gql`
+      query {
+        friends {
+          id
+        }
+      }
+    `,
+    data: {
+      friends: [],
+    },
+  });
+
+  const missingRoot = { __ref: "ROOT_QUERY" };
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: true,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: {
+      friends: [],
+    },
+    dataState: "partial",
+    complete: false,
+    missing: new MissingFieldError(
+      getMissingMessage("name", missingRoot),
+      { name: getMissingMessage("name", missingRoot) },
+      query,
+      {}
+    ),
+  });
+});
+
+test('returns dataState "empty" when an empty list is present and a sibling field is missing with returnPartialData: false', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      name
+      friends {
+        id
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query: gql`
+      query {
+        friends {
+          id
+        }
+      }
+    `,
+    data: {
+      friends: [],
+    },
+  });
+
+  const missingRoot = { __ref: "ROOT_QUERY" };
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: null,
+    dataState: "empty",
+    complete: false,
+    missing: new MissingFieldError(
+      getMissingMessage("name", missingRoot),
+      { name: getMissingMessage("name", missingRoot) },
+      query,
+      {}
+    ),
+  });
+});
+
 test('returns dataState "streaming" when a complete scalar sibling precedes a streaming list', () => {
   const cache = new InMemoryCache();
   const query = gql`

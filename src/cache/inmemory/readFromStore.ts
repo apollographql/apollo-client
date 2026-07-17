@@ -564,19 +564,16 @@ export class StoreReader {
             missing = missingMerger.merge(missing, execResult.missing);
           }
 
-          if (!isDeferBoundary) {
-            dataState = computeDataState(dataState, nextDataState);
-            return;
-          }
-
-          if (nextDataState === "partial") {
+          if (isDeferBoundary && nextDataState === "partial") {
             deferBoundaries.partial.add(selection);
           }
 
           dataState = computeDataState(
             dataState,
-            nextDataState === "empty" ? "streaming"
-            : nextDataState === "partial" ? "deferPartial"
+            isDeferBoundary ?
+              nextDataState === "empty" ? "streaming"
+              : nextDataState === "partial" ? "deferPartial"
+              : nextDataState
             : nextDataState
           );
         }

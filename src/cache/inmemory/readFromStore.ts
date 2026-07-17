@@ -875,6 +875,8 @@ class DeferBoundaries {
   merge(deferBoundaries: DeferBoundaries) {
     deferBoundaries.selections.forEach((selection) => this.add(selection));
     deferBoundaries.children.forEach((child, key) => this.set(key, child));
+
+    return this;
   }
 }
 

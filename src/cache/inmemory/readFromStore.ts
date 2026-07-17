@@ -787,7 +787,7 @@ export class StoreReader {
       dataState: "streaming",
       result: stripPartialDeferredData(
         getMainDefinition(document).selectionSet,
-        execResult.result as Record<string, any>,
+        execResult.result,
         execResult.deferBoundaries
       ),
     };

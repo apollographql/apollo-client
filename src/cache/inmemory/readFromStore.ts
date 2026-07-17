@@ -559,16 +559,16 @@ export class StoreReader {
             enclosingRef,
             context,
           });
-          let newDataState = execResult.dataState;
+          let nextDataState = execResult.dataState;
 
           if (isDeferBoundary) {
-            if (newDataState === "empty") {
-              newDataState = "streaming";
-            } else if (newDataState === "partial") {
+            if (nextDataState === "empty") {
+              nextDataState = "streaming";
+            } else if (nextDataState === "partial") {
               // The boundary's own data is partial, so it must be stripped when
               // the caller can't tolerate incremental results.
               deferBoundaries.partial.add(selection);
-              newDataState = "deferPartial";
+              nextDataState = "deferPartial";
             }
           }
 
@@ -584,7 +584,7 @@ export class StoreReader {
             missing = missingMerger.merge(missing, execResult.missing);
           }
 
-          dataState = computeDataState(dataState, newDataState);
+          dataState = computeDataState(dataState, nextDataState);
         }
       }
     });

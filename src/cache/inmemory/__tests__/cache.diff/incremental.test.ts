@@ -1256,6 +1256,7 @@ test("returns a referentially stable result across reads, rebuilding only the pa
 
   expect(greeting3.friends).toBe(greeting1.friends);
   expect(greeting3.friends[0]).toBe(greeting1.friends[0]);
+  expect(greeting3.colleagues).toBe(greeting1.colleagues);
   expect(greeting3.colleagues[0]).toBe(greeting1.colleagues[0]);
   expect(greeting3.colleagues[2]).toBe(greeting1.colleagues[2]);
   expect(greeting3.friendGroups).toBe(greeting1.friendGroups);

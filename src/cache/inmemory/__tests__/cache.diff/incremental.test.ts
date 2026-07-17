@@ -4141,8 +4141,9 @@ test('returns dataState "complete" when a deferred fragment is excluded via @inc
   });
 });
 
-test("does not reintroduce partial deferred data through skipped or excluded overlapping selections", () => {
-  const queries = [
+test.each([
+  [
+    "@skip(if: true)",
     gql`
       query {
         greeting {
@@ -4158,6 +4159,10 @@ test("does not reintroduce partial deferred data through skipped or excluded ove
         }
       }
     `,
+    {},
+  ],
+  [
+    "@include(if: false)",
     gql`
       query {
         greeting {
@@ -4173,15 +4178,56 @@ test("does not reintroduce partial deferred data through skipped or excluded ove
         }
       }
     `,
-  ];
-
-  for (const query of queries) {
+    {},
+  ],
+  [
+    "@skip(if: $skipRecipient) with $skipRecipient: true",
+    gql`
+      query ($skipRecipient: Boolean!) {
+        greeting {
+          recipient @skip(if: $skipRecipient) {
+            name
+          }
+          ... on Greeting @defer {
+            recipient {
+              name
+              email
+            }
+          }
+        }
+      }
+    `,
+    { skipRecipient: true },
+  ],
+  [
+    "@include(if: $includeRecipient) with $includeRecipient: false",
+    gql`
+      query ($includeRecipient: Boolean!) {
+        greeting {
+          recipient @include(if: $includeRecipient) {
+            name
+          }
+          ... on Greeting @defer {
+            recipient {
+              name
+              email
+            }
+          }
+        }
+      }
+    `,
+    { includeRecipient: false },
+  ],
+])(
+  "does not reintroduce partial deferred data through an overlapping %s selection",
+  (_, query, variables) => {
     const cache = new InMemoryCache();
 
     {
       using _ = spyOnConsole("error");
       cache.writeQuery({
         query,
+        variables,
         data: {
           greeting: {
             __typename: "Greeting",
@@ -4197,6 +4243,7 @@ test("does not reintroduce partial deferred data through skipped or excluded ove
     expect(
       cache.diff({
         query,
+        variables,
         optimistic: true,
         returnPartialData: false,
         [handleIncrementalSymbol]: true,
@@ -4212,7 +4259,7 @@ test("does not reintroduce partial deferred data through skipped or excluded ove
       missing: undefined,
     });
   }
-});
+);
 
 test('returns dataState "streaming" for nested @defer when the outer boundary is complete and the inner boundary is still empty', () => {
   const cache = new InMemoryCache();

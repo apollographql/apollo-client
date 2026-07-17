@@ -703,7 +703,7 @@ export class StoreReader {
           const stripped = stripPartialDeferredData(
             selectionSet,
             item,
-            deferBoundaries.children.get(index)
+            deferBoundaries.getChild(index)
           );
 
           changed ||= stripped !== item;
@@ -742,7 +742,7 @@ export class StoreReader {
           const stripped = stripPartialDeferredData(
             selection.selectionSet,
             data[resultName],
-            deferBoundaries.children.get(resultName)
+            deferBoundaries.getChild(resultName)
           );
 
           changed ||= stripped !== data[resultName];
@@ -845,12 +845,8 @@ function assertSelectionSetForIdValue(
 // possible. This makes it cheaper to determine when we need to actually iterate
 // on the returned object to remove partial data from a defer boundary.
 class DeferBoundaries {
-  selections = new Set<FragmentSelection>();
-
-  // Nested boundaries keyed by response key (object fields) or array index. This
-  // lets the strip resolve a boundary's state per list item instead of
-  // collapsing every item onto a single shared selection node.
-  children = new Map<string | number, DeferBoundaries>();
+  private selections = new Set<FragmentSelection>();
+  private children = new Map<string | number, DeferBoundaries>();
 
   add(selection: FragmentSelection) {
     this.selections.add(selection);
@@ -860,12 +856,16 @@ class DeferBoundaries {
     return this.selections.has(selection);
   }
 
+  getChild(key: string | number) {
+    return this.children.get(key);
+  }
+
   // Nest `child` under `key` in `target`. When a child already exists for that
   // key (an overlapping selection contributing the same response key), the two
   // are merged into a new node so neither input—both potentially cached—is
   // mutated.
   set(key: string | number, deferBoundary: DeferBoundaries) {
-    const existing = this.children.get(key);
+    const existing = this.getChild(key);
 
     if (!existing) {
       this.children.set(key, deferBoundary);

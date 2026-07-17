@@ -98,7 +98,7 @@ Join these live events to meet other GraphQL users and learn more:
  Oct 6-8, 2026 • San Francisco  
  *1000+ engineers, talks, workshops, and office hours*
 
-[**View All Events →**](https://www.apollographql.com/events?utm_source=github&utm_medium=apollographql_apollo-kotlin&utm_campaign=readme)
+[**View All Events →**](https://www.apollographql.com/events?utm_source=github&utm_medium=apollographql_apollo-client&utm_campaign=readme)
 
 ## 🏆 Contributing
 

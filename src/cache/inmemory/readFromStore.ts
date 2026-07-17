@@ -282,6 +282,25 @@ export class StoreReader {
       });
     }
 
+    let { result, dataState } = execResult;
+
+    // If we get all root @defer boundaries with an empty result, report it as
+    // empty instead of streaming.
+    if (dataState === "streaming" && Object.keys(result).length === 0) {
+      dataState = "empty";
+    }
+
+    if (
+      dataState === "deferPartial" ||
+      (dataState === "streaming" && !handleIncremental)
+    ) {
+      dataState = "partial";
+    }
+
+    if (dataState === "partial" && !returnPartialData) {
+      dataState = "empty";
+    }
+
     let missing: MissingFieldError | undefined;
     if (
       execResult.missing &&
@@ -296,19 +315,6 @@ export class StoreReader {
         query,
         variables
       );
-    }
-
-    let { result, dataState } = execResult;
-
-    if (
-      dataState === "deferPartial" ||
-      (dataState === "streaming" && !handleIncremental)
-    ) {
-      dataState = "partial";
-    }
-
-    if (dataState === "partial" && !returnPartialData) {
-      dataState = "empty";
     }
 
     const complete = dataState === "complete";

@@ -2044,6 +2044,97 @@ test("strips incomplete fields inside a defer boundary contributed by a register
   });
 });
 
+test("does not reuse a cached fragment-resolution error across queries when a registered deferred fragment's spread is later defined", () => {
+  const cache = new InMemoryCache({
+    fragments: createFragmentRegistry(gql`
+      fragment GreetingWithDeferredRecipient on Greeting {
+        message
+        ... @defer {
+          ...DeferredRecipientFields
+        }
+      }
+    `),
+  });
+
+  cache.writeQuery({
+    query: gql`
+      query {
+        greeting {
+          message
+          recipient {
+            __typename
+            name
+          }
+        }
+      }
+    `,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Alice" },
+      },
+    },
+  });
+
+  const queryMissingFragment = gql`
+    query MissingFragment {
+      greeting {
+        ...GreetingWithDeferredRecipient
+      }
+    }
+  `;
+
+  const queryProvidingFragment = gql`
+    query ProvidingFragment {
+      greeting {
+        ...GreetingWithDeferredRecipient
+      }
+    }
+
+    fragment DeferredRecipientFields on Greeting {
+      recipient {
+        name
+      }
+    }
+  `;
+
+  // Reading the registered deferred fragment without a definition for its
+  // `...DeferredRecipientFields` spread throws. This must not poison the cache
+  // entry for the shared registry fragment node.
+  expect(() => {
+    cache.diff({
+      query: queryMissingFragment,
+      optimistic: true,
+      returnPartialData: true,
+      [handleIncrementalSymbol]: true,
+    });
+  }).toThrow(/No fragment named DeferredRecipientFields/);
+
+  // Reading the same registered deferred fragment from a query that defines
+  // `DeferredRecipientFields` must succeed rather than re-throwing the error
+  // cached from the previous read.
+  expect(
+    cache.diff({
+      query: queryProvidingFragment,
+      optimistic: true,
+      returnPartialData: true,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Alice" },
+      },
+    },
+    dataState: "complete",
+    complete: true,
+    missing: undefined,
+  });
+});
+
 test("strips incomplete nested fields inside a nested defer boundary with returnPartialData: false", () => {
   const cache = new InMemoryCache();
   const query = gql`

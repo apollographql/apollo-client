@@ -285,8 +285,9 @@ export class StoreReader {
     let missing: MissingFieldError | undefined;
     if (
       execResult.missing &&
-      // Ignore reporting missing if we ask for an incremental result and the
-      // only missing fields are at defer boundaries
+      // We don't need to report missing fields inside defer boundaries since
+      // the "streaming" dataState tells us that the only missing fields in
+      // the object is inside a defer boundary.
       (!handleIncremental || execResult.dataState !== "streaming")
     ) {
       missing = new MissingFieldError(

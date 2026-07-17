@@ -3702,6 +3702,95 @@ test("does not reuse a returnPartialData: true partial result when the same quer
   });
 });
 
+test("does not reuse a stripped deferred result when the same query is later read with returnPartialData: true", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+            email
+          }
+        }
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+          recipient: {
+            __typename: "Person",
+            name: "Alice",
+          },
+        },
+      },
+    });
+  }
+
+  const missingObject = { __typename: "Person", name: "Alice" };
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: true,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+        },
+      },
+    },
+    dataState: "partial",
+    complete: false,
+    missing: new MissingFieldError(
+      getMissingMessage("email", missingObject),
+      {
+        greeting: {
+          recipient: {
+            email: getMissingMessage("email", missingObject),
+          },
+        },
+      },
+      query,
+      {}
+    ),
+  });
+});
+
 test('returns dataState "streaming" when one of two sibling defer boundaries is still empty', () => {
   const cache = new InMemoryCache();
   const query = gql`

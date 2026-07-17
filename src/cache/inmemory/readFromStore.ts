@@ -666,16 +666,14 @@ export class StoreReader {
     };
   }
 
-  private pruneCache = new Trie<{ data: any }>();
-  private prunedExecResults = new WeakMap<ExecResult, ExecResult>();
+  private pruned = new Trie<{ data: any }>();
   private prunePartialDeferBoundaries<T>(
     document: DocumentNode,
     execResult: ExecResult<T>,
     context: Pick<ReadContext, "lookupFragment" | "policies" | "variables">
   ): ExecResult<T> {
-    if (this.prunedExecResults.has(execResult)) {
-      return this.prunedExecResults.get(execResult)!;
-    }
+    const execEntry = this.pruned.lookup(execResult);
+    if (execEntry.data) return execEntry.data;
 
     const { policies, lookupFragment, variables } = context;
 
@@ -685,7 +683,7 @@ export class StoreReader {
       deferBoundaries: DeferBoundaries | undefined
     ): any => {
       if (data == null || !deferBoundaries) return data;
-      const entry = this.pruneCache.lookup(selectionSet, data, deferBoundaries);
+      const entry = this.pruned.lookup(selectionSet, data, deferBoundaries);
 
       if (entry.data) return entry.data;
 
@@ -785,9 +783,7 @@ export class StoreReader {
       ),
     };
 
-    this.prunedExecResults.set(execResult, result);
-
-    return result;
+    return (execEntry.data = result);
   }
 }
 

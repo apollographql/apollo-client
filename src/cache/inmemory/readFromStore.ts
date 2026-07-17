@@ -265,10 +265,15 @@ export class StoreReader {
       },
     });
 
+    // Since executeSelectionSet doesn't know about returnPartialData, we need
+    // to perform a 2nd pass over the result to prune any fields inside
+    // partial defer boundaries. The "deferPartial" data state tells us that the
+    // only part of the result that contributed to its partiality is data inside
+    // a defer boundary.
     if (
       handleIncremental &&
-      !returnPartialData &&
-      execResult.dataState === "deferPartial"
+      execResult.dataState === "deferPartial" &&
+      !returnPartialData
     ) {
       execResult = this.prunePartialDeferBoundaries(query, execResult, {
         policies,

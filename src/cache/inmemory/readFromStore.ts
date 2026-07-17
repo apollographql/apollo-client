@@ -683,6 +683,7 @@ export class StoreReader {
     context: Pick<ReadContext, "lookupFragment" | "policies" | "variables">
   ): ExecResult<T> {
     const { policies, lookupFragment, variables } = context;
+    const merger = new DeepMerger();
 
     const prune = (
       selectionSet: SelectionSetNode,
@@ -753,7 +754,7 @@ export class StoreReader {
           // field and an overlapping fragment), so merge their kept fields.
           result[resultName] =
             Object.hasOwn(result, resultName) ?
-              new DeepMerger().merge(result[resultName], pruned)
+              merger.merge(result[resultName], pruned)
             : pruned;
 
           return;

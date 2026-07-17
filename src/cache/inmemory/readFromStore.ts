@@ -858,10 +858,6 @@ class DeferBoundaries {
     return this.children.get(key);
   }
 
-  // Nest `child` under `key` in `target`. When a child already exists for that
-  // key (an overlapping selection contributing the same response key), the two
-  // are merged into a new node so neither input—both potentially cached—is
-  // mutated.
   set(key: string | number, deferBoundary: DeferBoundaries) {
     const existing = this.getChild(key);
 

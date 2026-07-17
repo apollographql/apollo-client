@@ -874,9 +874,9 @@ class DeferBoundaries {
   }
 }
 
-// Describes the final data states when the current state (outer object) is
-// combined with the next state (inner object). A missing dataState in the inner
-// object means the dataState should remain the same.
+// Describes the data state transitions that change the running state when it's
+// combined with the next data state. Omitted object values represent
+// "impossible" merges where the data state should remain the same.
 const DATA_STATE_MERGES: Record<
   DataState,
   Partial<Record<DataState, DataState>>

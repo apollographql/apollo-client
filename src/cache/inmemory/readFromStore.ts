@@ -439,7 +439,7 @@ export class StoreReader {
               }`,
             });
 
-            dataState = transitionTo(dataState, "empty");
+            dataState = computeDataState(dataState, "empty");
           }
         } else if (isArray(fieldValue)) {
           if (fieldValue.length > 0) {
@@ -455,17 +455,17 @@ export class StoreReader {
 
             fieldValue = execResult.result;
 
-            dataState = transitionTo(dataState, execResult.dataState);
+            dataState = computeDataState(dataState, execResult.dataState);
 
             // Nest the array's per-item boundaries under this field's response
             // key so the strip can resolve each item independently.
             deferBoundaries.set(resultName, execResult.deferBoundaries);
           } else {
             // empty arrays are considered complete
-            dataState = transitionTo(dataState, "complete");
+            dataState = computeDataState(dataState, "complete");
           }
         } else if (!selection.selectionSet) {
-          dataState = transitionTo(dataState, "complete");
+          dataState = computeDataState(dataState, "complete");
         } else if (fieldValue != null) {
           if (__DEV__) {
             const fieldName = selection.name.value;
@@ -510,7 +510,7 @@ export class StoreReader {
           // crashes since the runtime values and types would not line up
           // properly (types expect object to be undefined, but its instead
           // present without its fields)
-          dataState = transitionTo(
+          dataState = computeDataState(
             dataState,
             execResult.dataState === "empty" ? "partial" : execResult.dataState
           );
@@ -584,7 +584,7 @@ export class StoreReader {
             missing = missingMerger.merge(missing, execResult.missing);
           }
 
-          dataState = transitionTo(dataState, newDataState);
+          dataState = computeDataState(dataState, newDataState);
         }
       }
     });
@@ -661,7 +661,7 @@ export class StoreReader {
       }
 
       if (execResult) {
-        dataState = transitionTo(dataState, execResult.dataState);
+        dataState = computeDataState(dataState, execResult.dataState);
         deferBoundaries.set(i, execResult.deferBoundaries);
 
         return handleMissing(execResult, i);
@@ -888,7 +888,7 @@ class DeferBoundaries {
   }
 }
 
-const TRANSITIONS: Record<DataState, Partial<Record<DataState, DataState>>> = {
+const STATES: Record<DataState, Partial<Record<DataState, DataState>>> = {
   empty: {
     partial: "partial",
     complete: "partial",
@@ -913,10 +913,10 @@ const TRANSITIONS: Record<DataState, Partial<Record<DataState, DataState>>> = {
   partial: {},
 };
 
-function transitionTo(current: DataState | undefined, next: DataState) {
+function computeDataState(current: DataState | undefined, next: DataState) {
   if (!current || current === next) {
     return next;
   }
 
-  return TRANSITIONS[current][next] || current;
+  return STATES[current][next] || current;
 }

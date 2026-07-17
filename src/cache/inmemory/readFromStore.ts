@@ -1,3 +1,4 @@
+import { Trie } from "@wry/trie";
 import type {
   DocumentNode,
   FieldNode,
@@ -271,11 +272,15 @@ export class StoreReader {
       let transformed = this.transformedDeferResults.get(execResult);
 
       if (!transformed) {
-        transformed = maybeStripPartialDeferredFragments(query, execResult, {
-          policies,
-          lookupFragment: fragmentContext.lookupFragment,
-          variables,
-        });
+        transformed = this.maybeStripPartialDeferredFragments(
+          query,
+          execResult,
+          {
+            policies,
+            lookupFragment: fragmentContext.lookupFragment,
+            variables,
+          }
+        );
 
         this.transformedDeferResults.set(execResult, transformed);
       }
@@ -698,6 +703,125 @@ export class StoreReader {
       deferBoundaries,
     };
   }
+
+  private deferCache = new Trie<{ data: any }>();
+  private maybeStripPartialDeferredFragments<T>(
+    document: DocumentNode,
+    execResult: ExecResult<T>,
+    context: Pick<ReadContext, "lookupFragment" | "policies" | "variables">
+  ): ExecResult<T> {
+    const { policies, lookupFragment, variables } = context;
+    const cache = this.deferCache;
+
+    // This function is only called when the top-level dataState is "deferPartial"
+    // which guarantees at least one partial defer boundary exists to remove.
+    function stripPartialDeferredData(
+      selectionSet: SelectionSetNode,
+      data: any,
+      deferBoundaries: DeferBoundaries | undefined
+    ): any {
+      if (data == null || !deferBoundaries) return data;
+      const entry = cache.lookup(selectionSet, data, deferBoundaries);
+
+      if (entry.data) return entry.data;
+
+      let changed = false;
+
+      if (Array.isArray(data)) {
+        const stripped = data.map((item, index) => {
+          const stripped = stripPartialDeferredData(
+            selectionSet,
+            item,
+            deferBoundaries.children.get(index)
+          );
+
+          changed ||= stripped !== item;
+
+          return stripped;
+        });
+
+        return changed ? (entry.data = stripped) : data;
+      }
+
+      const result: Record<string, any> = {};
+
+      // __typename might not be part of the selection set, so preserve it when
+      // available, otherwise it gets removed since it's never visited when
+      // iterating the selection set.
+      if (Object.hasOwn(data, "__typename")) {
+        result.__typename = data.__typename;
+      }
+
+      const workSet = new Set(selectionSet.selections);
+      workSet.forEach((selection) => {
+        if (!shouldInclude(selection, variables)) return;
+
+        if (isField(selection)) {
+          const resultName = resultKeyNameFromField(selection);
+
+          if (!Object.hasOwn(data, resultName)) {
+            return;
+          }
+
+          if (!selection.selectionSet) {
+            result[resultName] = data[resultName];
+            return;
+          }
+
+          const stripped = stripPartialDeferredData(
+            selection.selectionSet,
+            data[resultName],
+            deferBoundaries.children.get(resultName)
+          );
+
+          changed ||= stripped !== data[resultName];
+
+          // A response key can be selected by more than one selection (e.g. a
+          // field and an overlapping fragment), so merge their kept fields.
+          result[resultName] =
+            Object.hasOwn(result, resultName) ?
+              new DeepMerger().merge(result[resultName], stripped)
+            : stripped;
+
+          return;
+        }
+
+        const fragment = getFragmentFromSelection(selection, lookupFragment);
+
+        if (!fragment || !policies.fragmentMatches(fragment, data.__typename)) {
+          return;
+        }
+
+        // Only process fragments that aren't partial.
+        if (deferBoundaries.partial.has(selection)) {
+          changed = true;
+          return;
+        }
+
+        fragment.selectionSet.selections.forEach(workSet.add, workSet);
+      });
+
+      if (changed || Object.keys(result).length !== Object.keys(data).length) {
+        return (entry.data = result);
+      }
+
+      // data is a union of all selections, so if we drop any fields and end up
+      // with a different key length, we want to always use the computed result
+      // since it is more correct.
+      return data;
+    }
+
+    return {
+      ...execResult,
+      // Removing partial defer boundaries puts the data in a streaming state
+      dataState: "streaming",
+      result: stripPartialDeferredData(
+        getMainDefinition(document).selectionSet,
+        execResult.result as Record<string, any>,
+        execResult.deferBoundaries
+      ),
+    };
+  }
 }
 
 function firstMissing(tree: MissingTree): string | undefined {
@@ -730,116 +854,6 @@ function assertSelectionSetForIdValue(
       }
     });
   }
-}
-
-function maybeStripPartialDeferredFragments<T>(
-  document: DocumentNode,
-  execResult: ExecResult<T>,
-  context: Pick<ReadContext, "lookupFragment" | "policies" | "variables">
-): ExecResult<T> {
-  const { policies, lookupFragment, variables } = context;
-  // This function is only called when the top-level dataState is "deferPartial"
-  // which guarantees at least one partial defer boundary exists to remove.
-  function stripPartialDeferredData(
-    selectionSet: SelectionSetNode,
-    data: any,
-    deferBoundaries: DeferBoundaries | undefined
-  ): any {
-    if (data == null || !deferBoundaries) return data;
-    let changed = false;
-
-    if (Array.isArray(data)) {
-      const stripped = data.map((item, index) => {
-        const stripped = stripPartialDeferredData(
-          selectionSet,
-          item,
-          deferBoundaries.children.get(index)
-        );
-
-        changed ||= stripped !== item;
-
-        return stripped;
-      });
-
-      return changed ? stripped : data;
-    }
-
-    const result: Record<string, any> = {};
-
-    // __typename might not be part of the selection set, so preserve it when
-    // available, otherwise it gets removed since it's never visited when
-    // iterating the selection set.
-    if (Object.hasOwn(data, "__typename")) {
-      result.__typename = data.__typename;
-    }
-
-    const workSet = new Set(selectionSet.selections);
-    workSet.forEach((selection) => {
-      if (!shouldInclude(selection, variables)) return;
-
-      if (isField(selection)) {
-        const resultName = resultKeyNameFromField(selection);
-
-        if (!Object.hasOwn(data, resultName)) {
-          return;
-        }
-
-        if (!selection.selectionSet) {
-          result[resultName] = data[resultName];
-          return;
-        }
-
-        const stripped = stripPartialDeferredData(
-          selection.selectionSet,
-          data[resultName],
-          deferBoundaries.children.get(resultName)
-        );
-
-        changed ||= stripped !== data[resultName];
-
-        // A response key can be selected by more than one selection (e.g. a
-        // field and an overlapping fragment), so merge their kept fields.
-        result[resultName] =
-          Object.hasOwn(result, resultName) ?
-            new DeepMerger().merge(result[resultName], stripped)
-          : stripped;
-
-        return;
-      }
-
-      const fragment = getFragmentFromSelection(selection, lookupFragment);
-
-      if (!fragment || !policies.fragmentMatches(fragment, data.__typename)) {
-        return;
-      }
-
-      // Only process fragments that aren't partial.
-      if (deferBoundaries.partial.has(selection)) {
-        changed = true;
-        return;
-      }
-
-      fragment.selectionSet.selections.forEach(workSet.add, workSet);
-    });
-
-    // data is a union of all selections, so if we drop any fields and end up
-    // with a different key length, we want to always use the computed result
-    // since it is more correct.
-    return changed || Object.keys(result).length !== Object.keys(data).length ?
-        result
-      : data;
-  }
-
-  return {
-    ...execResult,
-    // Removing partial defer boundaries puts the data in a streaming state
-    dataState: "streaming",
-    result: stripPartialDeferredData(
-      getMainDefinition(document).selectionSet,
-      execResult.result as Record<string, any>,
-      execResult.deferBoundaries
-    ),
-  };
 }
 
 // We can't make executeSelectionSet aware of returnPartialData because of

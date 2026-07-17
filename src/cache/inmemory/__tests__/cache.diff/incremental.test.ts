@@ -1269,6 +1269,113 @@ test("returns a referentially stable result across reads, rebuilding only the pa
   expect(greeting5.sender).toBe(greeting4.sender);
 });
 
+test("returns a referentially stable streaming result when a __typename-only deferred object is stripped, rebuilding only written paths with returnPartialData: false", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        author {
+          id
+          name
+        }
+        ... on Greeting @defer {
+          recipient {
+            email
+          }
+        }
+        ... on Greeting @defer {
+          sender {
+            id
+            name
+          }
+        }
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query: gql`
+        query {
+          greeting {
+            message
+            author {
+              id
+              name
+            }
+            recipient {
+              __typename
+              name
+            }
+            sender {
+              id
+              name
+            }
+          }
+        }
+      `,
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+          author: { __typename: "Person", id: "100", name: "Bob" },
+          recipient: { __typename: "Person", name: "Alice" },
+          sender: { __typename: "Person", id: "200", name: "Sam" },
+        },
+      },
+    });
+  }
+
+  const options = {
+    query,
+    optimistic: true,
+    returnPartialData: false,
+    [handleIncrementalSymbol]: true,
+  } as const;
+
+  const diff1 = cache.diff(options);
+  const diff2 = cache.diff(options);
+
+  expect(diff1).toStrictEqualTyped({
+    result: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        author: { __typename: "Person", id: "100", name: "Bob" },
+        sender: { __typename: "Person", id: "200", name: "Sam" },
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+
+  expect(diff2.result).toBe(diff1.result);
+
+  const greeting1 = (diff1.result as any).greeting;
+
+  cache.writeFragment({
+    id: cache.identify({ __typename: "Person", id: "100" })!,
+    fragment: gql`
+      fragment UpdatedAuthor on Person {
+        name
+      }
+    `,
+    data: { __typename: "Person", id: "100", name: "Robert" },
+  });
+
+  const diff3 = cache.diff(options);
+  const greeting3 = (diff3.result as any).greeting;
+
+  expect(diff3.result).not.toBe(diff1.result);
+  expect(greeting3).not.toBe(greeting1);
+  expect(greeting3.author).not.toBe(greeting1.author);
+  expect(greeting3.author.name).toBe("Robert");
+  expect(greeting3.sender).toBe(greeting1.sender);
+});
+
 test('returns dataState "partial" under an overlapping parent when a defer-only field is present and another is still missing with returnPartialData: true', () => {
   const cache = new InMemoryCache();
   const query = gql`

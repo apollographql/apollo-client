@@ -541,7 +541,7 @@ export class StoreReader {
             selection,
             context.variables
           );
-          let execResult = this.executeSelectionSet({
+          const execResult = this.executeSelectionSet({
             selectionSet: fragment.selectionSet,
             objectOrReference,
             enclosingRef,

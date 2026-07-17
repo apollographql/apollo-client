@@ -1042,6 +1042,14 @@ test("returns a referentially stable result across reads, rebuilding only the pa
             phone
           }
         }
+        friendGroups {
+          id
+          name
+          ... on Person @defer {
+            email
+            phone
+          }
+        }
         manager {
           id
           name
@@ -1111,6 +1119,34 @@ test("returns a referentially stable result across reads, rebuilding only the pa
               name: "Turing",
             },
           ],
+          // Nested list with mixed partial + complete items. This ensures
+          // partial deferred fields are stripped without rebuilding untouched
+          // nested list branches.
+          friendGroups: [
+            [
+              {
+                __typename: "Person",
+                id: "20",
+                name: "Mara",
+                email: "mara@example.com",
+              },
+              {
+                __typename: "Person",
+                id: "21",
+                name: "Wedge",
+                email: "wedge@example.com",
+                phone: "555-0021",
+              },
+            ],
+            [
+              {
+                __typename: "Person",
+                id: "22",
+                name: "Rose",
+                email: "rose@example.com",
+              },
+            ],
+          ],
           // Non-deferred fields present but its nested defer boundary is empty
           // (streaming) so it has nothing to strip
           manager: { __typename: "Person", id: "200", name: "Katherine" },
@@ -1163,6 +1199,19 @@ test("returns a referentially stable result across reads, rebuilding only the pa
           { __typename: "Person", id: "11", name: "Grace" },
           { __typename: "Person", id: "12", name: "Turing" },
         ],
+        friendGroups: [
+          [
+            { __typename: "Person", id: "20", name: "Mara" },
+            {
+              __typename: "Person",
+              id: "21",
+              name: "Wedge",
+              email: "wedge@example.com",
+              phone: "555-0021",
+            },
+          ],
+          [{ __typename: "Person", id: "22", name: "Rose" }],
+        ],
         manager: { __typename: "Person", id: "200", name: "Katherine" },
         sender: {
           __typename: "Person",
@@ -1209,6 +1258,9 @@ test("returns a referentially stable result across reads, rebuilding only the pa
   expect(greeting3.friends[0]).toBe(greeting1.friends[0]);
   expect(greeting3.colleagues[0]).toBe(greeting1.colleagues[0]);
   expect(greeting3.colleagues[2]).toBe(greeting1.colleagues[2]);
+  expect(greeting3.friendGroups).toBe(greeting1.friendGroups);
+  expect(greeting3.friendGroups[0]).toBe(greeting1.friendGroups[0]);
+  expect(greeting3.friendGroups[1]).toBe(greeting1.friendGroups[1]);
   expect(greeting3.manager).toBe(greeting1.manager);
   expect(greeting3.sender).toBe(greeting1.sender);
   expect(greeting3.sender.location).toBe(greeting1.sender.location);
@@ -1237,6 +1289,7 @@ test("returns a referentially stable result across reads, rebuilding only the pa
   expect(greeting4.author).toBe(greeting3.author);
   expect(greeting4.colleagues[0]).toBe(greeting3.colleagues[0]);
   expect(greeting4.colleagues[2]).toBe(greeting3.colleagues[2]);
+  expect(greeting4.friendGroups).toBe(greeting3.friendGroups);
   expect(greeting4.manager).toBe(greeting3.manager);
   expect(greeting4.sender).toBe(greeting3.sender);
 
@@ -1264,10 +1317,39 @@ test("returns a referentially stable result across reads, rebuilding only the pa
 
   expect(greeting5.colleagues[0]).toBe(greeting4.colleagues[0]);
   expect(greeting5.colleagues[2]).toBe(greeting4.colleagues[2]);
+  expect(greeting5.friendGroups).toBe(greeting4.friendGroups);
   expect(greeting5.manager).toBe(greeting4.manager);
   expect(greeting5.friends).toBe(greeting4.friends);
   expect(greeting5.author).toBe(greeting4.author);
   expect(greeting5.sender).toBe(greeting4.sender);
+
+  // Update a field in a partial deferred item nested in a 2d list. The item
+  // and its ancestor arrays change identity, while untouched sibling branches
+  // retain their identities.
+  cache.writeFragment({
+    id: cache.identify({ __typename: "Person", id: "20" })!,
+    fragment: gql`
+      fragment UpdatedFriendGroupEmail on Person {
+        email
+      }
+    `,
+    data: { __typename: "Person", email: "mara.jade@example.com" },
+  });
+
+  const diff6 = cache.diff(options);
+  const greeting6 = (diff6.result as any).greeting;
+
+  expect(greeting6.friendGroups).not.toBe(greeting5.friendGroups);
+  expect(greeting6.friendGroups[0]).not.toBe(greeting5.friendGroups[0]);
+  expect(greeting6.friendGroups[0][0]).not.toBe(greeting5.friendGroups[0][0]);
+  expect(greeting6.friendGroups[0][0]).toStrictEqual({
+    __typename: "Person",
+    id: "20",
+    name: "Mara",
+  });
+  expect(greeting6.friendGroups[0][1]).toBe(greeting5.friendGroups[0][1]);
+  expect(greeting6.friendGroups[1]).toBe(greeting5.friendGroups[1]);
+  expect(greeting6.friendGroups[1][0]).toBe(greeting5.friendGroups[1][0]);
 });
 
 test("returns a referentially stable streaming result when a __typename-only deferred object is stripped, rebuilding only written paths with returnPartialData: false", () => {

@@ -6047,6 +6047,10 @@ test("strips overlapping recipient fields when both sibling @defer boundaries se
     });
   }
 
+  // Both root defer boundaries are partial and stripped, so nothing remains.
+  // That is a cache miss (empty), not a streaming {} result.
+  const missingObject = { __typename: "Person", name: "Alice" };
+
   expect(
     cache.diff({
       query,
@@ -6055,10 +6059,20 @@ test("strips overlapping recipient fields when both sibling @defer boundaries se
       [handleIncrementalSymbol]: true,
     })
   ).toStrictEqualTyped({
-    result: markAsStreaming({}),
-    dataState: "streaming",
+    result: null,
+    dataState: "empty",
     complete: false,
-    missing: undefined,
+    missing: new MissingFieldError(
+      getMissingMessage("email", missingObject),
+      {
+        recipient: {
+          email: getMissingMessage("email", missingObject),
+          phone: getMissingMessage("phone", missingObject),
+        },
+      },
+      query,
+      {}
+    ),
   });
 });
 

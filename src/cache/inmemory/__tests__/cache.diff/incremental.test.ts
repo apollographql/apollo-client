@@ -3669,6 +3669,139 @@ test('returns dataState "complete" when an object selection set is only a deferr
   });
 });
 
+test('returns dataState "empty" when a root defer boundary has nothing written with returnPartialData: true', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      ... @defer {
+        greeting {
+          message
+          author
+        }
+      }
+    }
+  `;
+
+  const missingRoot = { __ref: "ROOT_QUERY" };
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: true,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: null,
+    dataState: "empty",
+    complete: false,
+    missing: new MissingFieldError(
+      getMissingMessage("greeting", missingRoot),
+      { greeting: getMissingMessage("greeting", missingRoot) },
+      query,
+      {}
+    ),
+  });
+});
+
+test('returns dataState "partial" when a root defer boundary is only partially written with returnPartialData: true', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      ... @defer {
+        greeting {
+          message
+          author
+        }
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+        },
+      },
+    });
+  }
+
+  const missingObject = { __typename: "Greeting", message: "Hello world" };
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: true,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+      },
+    },
+    dataState: "partial",
+    complete: false,
+    missing: new MissingFieldError(
+      getMissingMessage("author", missingObject),
+      {
+        greeting: {
+          author: getMissingMessage("author", missingObject),
+        },
+      },
+      query,
+      {}
+    ),
+  });
+});
+
+test('returns dataState "empty" without missing when a root defer boundary is only partially written with returnPartialData: false', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      ... @defer {
+        greeting {
+          message
+          author
+        }
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+        },
+      },
+    });
+  }
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: null,
+    dataState: "empty",
+    complete: false,
+    missing: undefined,
+  });
+});
+
 test('returns dataState "streaming" when an object selection set is only a deferred fragment and that data is absent', () => {
   const cache = new InMemoryCache();
   const query = gql`

@@ -396,6 +396,137 @@ test('keeps incomplete fields inside a defer boundary when returnPartialData is 
   });
 });
 
+test('returns dataState "streaming" and strips a dangling referenced object inside a defer boundary with returnPartialData: false', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+          }
+        }
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query: gql`
+      query {
+        greeting {
+          message
+          recipient {
+            __typename
+            id
+            name
+          }
+        }
+      }
+    `,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", id: "1", name: "Alice" },
+      },
+    },
+  });
+
+  // Cause a dangling reference on the recipient field
+  cache.evict({ id: "Person:1" });
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
+test('returns dataState "partial" for a dangling referenced object inside a defer boundary with returnPartialData: true', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+          }
+        }
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query: gql`
+      query {
+        greeting {
+          message
+          recipient {
+            __typename
+            id
+            name
+          }
+        }
+      }
+    `,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", id: "1", name: "Alice" },
+      },
+    },
+  });
+
+  cache.evict({ id: "Person:1" });
+
+  const danglingMessage = "Dangling reference to missing Person:1 object";
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: true,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {},
+      },
+    },
+    dataState: "partial",
+    complete: false,
+    missing: new MissingFieldError(
+      danglingMessage,
+      {
+        greeting: {
+          recipient: danglingMessage,
+        },
+      },
+      query,
+      {}
+    ),
+  });
+});
+
 test('returns dataState "partial" with a __typename-only deferred object when selected fields are missing with returnPartialData: true', () => {
   const cache = new InMemoryCache();
   const query = gql`

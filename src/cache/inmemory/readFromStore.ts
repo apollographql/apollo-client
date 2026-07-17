@@ -284,6 +284,22 @@ export class StoreReader {
 
     let { result, dataState } = execResult;
 
+    let missing: MissingFieldError | undefined;
+    if (
+      execResult.missing &&
+      // We don't need to report missing fields inside defer boundaries since
+      // the "streaming" dataState tells us that the only missing fields in
+      // the object is inside a defer boundary.
+      (!handleIncremental || dataState !== "streaming")
+    ) {
+      missing = new MissingFieldError(
+        firstMissing(execResult.missing)!,
+        execResult.missing,
+        query,
+        variables
+      );
+    }
+
     // If we get all root @defer boundaries with an empty result, report it as
     // empty instead of streaming.
     if (dataState === "streaming" && Object.keys(result).length === 0) {
@@ -299,22 +315,6 @@ export class StoreReader {
 
     if (dataState === "partial" && !returnPartialData) {
       dataState = "empty";
-    }
-
-    let missing: MissingFieldError | undefined;
-    if (
-      execResult.missing &&
-      // We don't need to report missing fields inside defer boundaries since
-      // the "streaming" dataState tells us that the only missing fields in
-      // the object is inside a defer boundary.
-      (!handleIncremental || execResult.dataState !== "streaming")
-    ) {
-      missing = new MissingFieldError(
-        firstMissing(execResult.missing)!,
-        execResult.missing,
-        query,
-        variables
-      );
     }
 
     const complete = dataState === "complete";

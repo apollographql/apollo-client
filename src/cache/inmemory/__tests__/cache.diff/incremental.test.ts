@@ -6442,6 +6442,84 @@ test('returns dataState "streaming" for a 2d object array when only deferred fie
   });
 });
 
+test("strips partial deferred fields from nested items in a 2d object array while retaining complete siblings with returnPartialData: false", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      friendGroups {
+        id
+        name
+        ... on Friend @defer {
+          email
+          phone
+        }
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        friendGroups: [
+          [
+            {
+              __typename: "Friend",
+              id: "1",
+              name: "Luke",
+              email: "luke@example.com",
+            },
+            {
+              __typename: "Friend",
+              id: "2",
+              name: "Han",
+              email: "han@example.com",
+              phone: "555-0102",
+            },
+          ],
+          [
+            {
+              __typename: "Friend",
+              id: "3",
+              name: "Leia",
+              email: "leia@example.com",
+            },
+          ],
+        ],
+      },
+    });
+  }
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      friendGroups: [
+        [
+          { __typename: "Friend", id: "1", name: "Luke" },
+          {
+            __typename: "Friend",
+            id: "2",
+            name: "Han",
+            email: "han@example.com",
+            phone: "555-0102",
+          },
+        ],
+        [{ __typename: "Friend", id: "3", name: "Leia" }],
+      ],
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
 test('returns dataState "partial" for a 2d object array when a nested item has incomplete non-deferred fields with returnPartialData: true', () => {
   const cache = new InMemoryCache();
   const query = gql`

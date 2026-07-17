@@ -400,13 +400,13 @@ export class StoreReader {
       objectsToMerge.push({ __typename: typename });
     }
 
-    function handleMissing<T>(result: ExecResult<T>, resultName: string): T {
+    function handleMissing<T>(result: ExecResult<T>, resultName: string) {
       if (result.missing) {
         missing = missingMerger.merge(missing, {
           [resultName]: result.missing,
         });
       }
-      return result.result;
+      return result;
     }
 
     const workSet = new Set(selectionSet.selections);
@@ -453,14 +453,15 @@ export class StoreReader {
           }
         } else if (isArray(fieldValue)) {
           if (fieldValue.length > 0) {
-            const execResult = this.executeSubSelectedArray({
-              field: selection,
-              array: fieldValue,
-              enclosingRef,
-              context,
-            });
-
-            handleMissing(execResult, resultName);
+            const execResult = handleMissing(
+              this.executeSubSelectedArray({
+                field: selection,
+                array: fieldValue,
+                enclosingRef,
+                context,
+              }),
+              resultName
+            );
 
             fieldValue = execResult.result;
 
@@ -494,14 +495,15 @@ export class StoreReader {
           // In this case, because we know the field has a selection set,
           // it must be trying to query a GraphQLObjectType, which is why
           // fieldValue must be != null.
-          const execResult = this.executeSelectionSet({
-            selectionSet: selection.selectionSet,
-            objectOrReference: fieldValue as StoreObject | Reference,
-            enclosingRef: isReference(fieldValue) ? fieldValue : enclosingRef,
-            context,
-          });
-
-          handleMissing(execResult, resultName);
+          const execResult = handleMissing(
+            this.executeSelectionSet({
+              selectionSet: selection.selectionSet,
+              objectOrReference: fieldValue as StoreObject | Reference,
+              enclosingRef: isReference(fieldValue) ? fieldValue : enclosingRef,
+              context,
+            }),
+            resultName
+          );
 
           fieldValue = execResult.result;
 

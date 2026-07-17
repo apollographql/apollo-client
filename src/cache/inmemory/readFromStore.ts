@@ -454,14 +454,9 @@ export class StoreReader {
             );
 
             fieldValue = execResult.result;
-
             dataState = computeDataState(dataState, execResult.dataState);
-
-            // Nest the array's per-item boundaries under this field's response
-            // key so the strip can resolve each item independently.
             deferBoundaries.set(resultName, execResult.deferBoundaries);
           } else {
-            // empty arrays are considered complete
             dataState = computeDataState(dataState, "complete");
           }
         } else if (!selection.selectionSet) {
@@ -496,6 +491,7 @@ export class StoreReader {
           );
 
           fieldValue = execResult.result;
+          deferBoundaries.set(resultName, execResult.deferBoundaries);
 
           // If the object's fields resolved to an "empty" dataState (e.g. no
           // field resolved with a non-undefined value), but the fieldValue
@@ -514,9 +510,6 @@ export class StoreReader {
             dataState,
             execResult.dataState === "empty" ? "partial" : execResult.dataState
           );
-
-          // Nest the child's boundaries under this field's response key.
-          deferBoundaries.set(resultName, execResult.deferBoundaries);
         }
 
         if (fieldValue !== void 0) {
@@ -559,32 +552,33 @@ export class StoreReader {
             enclosingRef,
             context,
           });
-          let nextDataState = execResult.dataState;
+          const { result, dataState: nextDataState } = execResult;
 
-          if (isDeferBoundary) {
-            if (nextDataState === "empty") {
-              nextDataState = "streaming";
-            } else if (nextDataState === "partial") {
-              // The boundary's own data is partial, so it must be stripped when
-              // the caller can't tolerate incremental results.
-              deferBoundaries.partial.add(selection);
-              nextDataState = "deferPartial";
-            }
-          }
-
-          // The fragment applies to this same object, so fold its boundaries in
-          // at this level (nested @defers under fields land in `children`).
           deferBoundaries.merge(execResult.deferBoundaries);
 
-          if (execResult.result !== void 0) {
-            objectsToMerge.push(execResult.result);
+          if (result !== void 0) {
+            objectsToMerge.push(result);
           }
 
           if (execResult.missing) {
             missing = missingMerger.merge(missing, execResult.missing);
           }
 
-          dataState = computeDataState(dataState, nextDataState);
+          if (!isDeferBoundary) {
+            dataState = computeDataState(dataState, nextDataState);
+            return;
+          }
+
+          if (nextDataState === "partial") {
+            deferBoundaries.partial.add(selection);
+          }
+
+          dataState = computeDataState(
+            dataState,
+            nextDataState === "empty" ? "streaming"
+            : nextDataState === "partial" ? "deferPartial"
+            : nextDataState
+          );
         }
       }
     });

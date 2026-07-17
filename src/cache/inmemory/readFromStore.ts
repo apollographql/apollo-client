@@ -910,7 +910,6 @@ const TRANSITIONS: Record<DataState, Partial<Record<DataState, DataState>>> = {
     deferPartial: "deferPartial",
     empty: "partial",
   },
-  // partial is a final state because no other state change it
   partial: {},
 };
 

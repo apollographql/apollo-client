@@ -4,6 +4,7 @@ import type {
   SelectionNode,
   SelectionSetNode,
 } from "graphql";
+import { Kind } from "graphql";
 import type { OptimisticWrapperFunction } from "optimism";
 import { wrap } from "optimism";
 
@@ -36,7 +37,10 @@ import {
   resultKeyNameFromField,
   shouldInclude,
 } from "@apollo/client/utilities/internal";
-import { invariant } from "@apollo/client/utilities/invariant";
+import {
+  invariant,
+  newInvariantError,
+} from "@apollo/client/utilities/invariant";
 
 import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 import type { Cache } from "../core/types/Cache.js";
@@ -527,9 +531,16 @@ export class StoreReader {
           objectsToMerge.push({ [resultName]: fieldValue });
         }
       } else {
-        const fragment = getFragmentNode(selection, context.lookupFragment);
+        const fragment = getFragmentFromSelection(
+          selection,
+          context.lookupFragment
+        );
 
-        if (policies.fragmentMatches(fragment, typename)) {
+        if (!fragment && selection.kind === Kind.FRAGMENT_SPREAD) {
+          throw newInvariantError(`No fragment named %s`, selection.name.value);
+        }
+
+        if (fragment && policies.fragmentMatches(fragment, typename)) {
           const isDeferBoundary = isDeferredFragment(
             selection,
             context.variables

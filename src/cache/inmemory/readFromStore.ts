@@ -1,3 +1,4 @@
+import { equal } from "@wry/equality";
 import { Trie } from "@wry/trie";
 import type {
   DocumentNode,
@@ -830,7 +831,15 @@ export class StoreReader {
         }
       });
 
-      changed ||= Object.keys(result).length !== Object.keys(data).length;
+      if (Object.keys(result).length !== Object.keys(data).length) {
+        changed = true;
+      } else if (changed && boundaries.hasSelections()) {
+        // Overlapping siblings may rebuild the same fields under a new object
+        // identity (e.g. changed === true) after a partial @defer is skipped.
+        // We perform a deep equality check to verify whether anything was
+        // actually dropped by the partial @defer fragment.
+        changed = !equal(result, data);
+      }
 
       return (entry.data = changed ? result : data);
     };
@@ -904,6 +913,10 @@ class PartialBoundaries {
 
   has(selection: SelectionNode) {
     return this.selections.has(selection);
+  }
+
+  hasSelections() {
+    return this.selections.size > 0;
   }
 
   getChild(key: string | number) {

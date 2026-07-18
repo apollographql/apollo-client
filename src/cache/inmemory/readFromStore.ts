@@ -249,22 +249,19 @@ export class StoreReader {
     };
 
     const rootRef = makeReference(rootId);
-    const fragmentContext = extractFragmentContext(
+    const context: ReadContext = {
+      store,
       query,
-      this.config.fragments
-    );
+      policies,
+      variables,
+      varString: canonicalStringify(variables),
+      ...extractFragmentContext(query, this.config.fragments),
+    };
     let execResult = this.executeSelectionSet({
       selectionSet: getMainDefinition(query).selectionSet,
       objectOrReference: rootRef,
       enclosingRef: rootRef,
-      context: {
-        store,
-        query,
-        policies,
-        variables,
-        varString: canonicalStringify(variables),
-        ...fragmentContext,
-      },
+      context,
     });
 
     // Since executeSelectionSet doesn't know about returnPartialData, we need
@@ -278,11 +275,7 @@ export class StoreReader {
       (execResult.dataState === "deferPartial" ||
         execResult.dataState === "streamPartial")
     ) {
-      execResult = this.prunePartialBoundaries(query, execResult, {
-        policies,
-        lookupFragment: fragmentContext.lookupFragment,
-        variables,
-      });
+      execResult = this.prunePartialBoundaries(query, execResult, context);
     }
 
     let { result, dataState } = execResult;
@@ -703,7 +696,7 @@ export class StoreReader {
   private prunePartialBoundaries<T>(
     document: DocumentNode,
     execResult: ExecResult<T>,
-    context: Pick<ReadContext, "lookupFragment" | "policies" | "variables">
+    context: ReadContext
   ): ExecResult<T> {
     const { policies, lookupFragment, variables } = context;
     const merger = new DeepMerger();

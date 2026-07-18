@@ -813,11 +813,9 @@ export class StoreReader {
         fragment.selectionSet.selections.forEach(workSet.add, workSet);
       });
 
-      if (changed || Object.keys(result).length !== Object.keys(data).length) {
-        return (entry.data = result);
-      }
+      changed ||= Object.keys(result).length !== Object.keys(data).length;
 
-      return data;
+      return changed ? (entry.data = result) : data;
     };
 
     // Omit `missing` property since pruning puts it in a state that doesn't

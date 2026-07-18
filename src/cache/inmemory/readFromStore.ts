@@ -271,11 +271,22 @@ export class StoreReader {
     // a defer boundary.
     if (
       handleIncremental &&
-      !returnPartialData &&
       (execResult.dataState === "deferPartial" ||
         execResult.dataState === "streamPartial")
     ) {
-      execResult = this.prunePartialBoundaries(query, execResult, context);
+      const pruned = this.prunePartialBoundaries(query, execResult, context);
+
+      // It's possible that pruning didn't actually change the result which can
+      // happen if a defer boundary is misclassified as "deferPartial" instead
+      // of "streaming" (which can happen when a sibling defer boundary has an
+      // overlapping selection set which itself is complete). In this case,
+      // pruning corrects the dataState to streaming instead of leaving it as
+      // partial. If we tolerate partial results and pruning changed the result
+      // by dropping fields, then we want to keep the original execResult which
+      // contains the partial data
+      if (execResult.result === pruned.result || !returnPartialData) {
+        execResult = pruned;
+      }
     }
 
     let { result, dataState } = execResult;

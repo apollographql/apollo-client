@@ -71,7 +71,9 @@ type DataState =
   | "empty"
   // at least 1 non-deferred field is partial
   | "partial"
-  // at least 1 defer or stream boundary is partial. All non-incremental fields complete
+  // at least 1 defer boundary is partial. All non-incremental fields complete
+  | "deferPartial"
+  // at least 1 stream boundary is partial. All non-incremental fields complete
   | "streamPartial"
   // All defer boundaries are complete or empty (but not partial) or all stream
   // boundaries are complete (but not partial)
@@ -272,8 +274,9 @@ export class StoreReader {
     // a defer boundary.
     if (
       handleIncremental &&
-      execResult.dataState === "streamPartial" &&
-      !returnPartialData
+      !returnPartialData &&
+      (execResult.dataState === "deferPartial" ||
+        execResult.dataState === "streamPartial")
     ) {
       execResult = this.prunePartialBoundaries(query, execResult, {
         policies,
@@ -307,6 +310,7 @@ export class StoreReader {
     }
 
     if (
+      dataState === "deferPartial" ||
       dataState === "streamPartial" ||
       (dataState === "streaming" && !handleIncremental)
     ) {
@@ -575,7 +579,7 @@ export class StoreReader {
             dataState,
             isDeferBoundary ?
               nextDataState === "empty" ? "streaming"
-              : nextDataState === "partial" ? "streamPartial"
+              : nextDataState === "partial" ? "deferPartial"
               : nextDataState
             : nextDataState
           );
@@ -821,9 +825,12 @@ export class StoreReader {
       return data;
     };
 
+    // Omit `missing` property since pruning puts it in a state that doesn't
+    // report missing fields.
     return {
-      ...execResult,
-      dataState: "streaming",
+      partialBoundaries: execResult.partialBoundaries,
+      dataState:
+        execResult.dataState === "streamPartial" ? "complete" : "streaming",
       result: prune(
         getMainDefinition(document).selectionSet,
         execResult.result,
@@ -919,17 +926,24 @@ const DATA_STATE_MERGES: Record<
 > = {
   empty: {
     complete: "partial",
+    deferPartial: "partial",
     streaming: "partial",
     streamPartial: "partial",
   },
+  deferPartial: {
+    empty: "partial",
+  },
   streamPartial: {
+    deferPartial: "deferPartial",
     empty: "partial",
   },
   streaming: {
-    streamPartial: "streamPartial",
+    deferPartial: "deferPartial",
     empty: "partial",
+    streamPartial: "deferPartial",
   },
   complete: {
+    deferPartial: "deferPartial",
     streaming: "streaming",
     streamPartial: "streamPartial",
     empty: "partial",

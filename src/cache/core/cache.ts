@@ -173,9 +173,9 @@ export abstract class ApolloCache {
   public readonly assumeImmutableResults: boolean = false;
 
   /**
-   * Determines whether the cache supports reading and writing incremental
-   * results. Caches that support it must set this to true and must support the
-   * `incrementalInfoSymbol` in the `diff` method.
+   * Determines whether this cache supports reading and writing incremental
+   * results. Caches that support it must set this flag to true and must support
+   * the `handleIncrementalSymbol` in the `diff` method.
    */
   public readonly supportsIncrementalResults: boolean = false;
 

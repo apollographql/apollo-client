@@ -658,9 +658,15 @@ export class StoreReader {
         const isStreamed = isStreamField(field, context.variables);
         const { dataState: nextDataState } = execResult;
 
-        if (nextDataState === "partial") {
-          execResult.partialBoundaries.add(field);
-        }
+        partialBoundaries.set(
+          i,
+          nextDataState === "partial" ?
+            // avoid mutating the execResult partialBoundaries object
+            new PartialBoundaries()
+              .merge(execResult.partialBoundaries)
+              .add(field)
+          : execResult.partialBoundaries
+        );
 
         dataState = mergeDataState(
           dataState,
@@ -670,7 +676,6 @@ export class StoreReader {
             : nextDataState
           : nextDataState
         );
-        partialBoundaries.set(i, execResult.partialBoundaries);
 
         return handleMissing(execResult, i);
       }

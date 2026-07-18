@@ -1958,6 +1958,80 @@ test('returns dataState "streaming" when non-deferred fields for the same respon
   });
 });
 
+test('returns dataState "streaming" when non-deferred named fragments contribute different subfields under the same response key with returnPartialData: true', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        ...RecipientName
+        ...RecipientId
+        ... on Greeting @defer {
+          recipient {
+            id
+            name
+            email
+          }
+        }
+      }
+    }
+
+    fragment RecipientName on Greeting {
+      recipient {
+        name
+      }
+    }
+
+    fragment RecipientId on Greeting {
+      recipient {
+        id
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+          recipient: {
+            __typename: "Person",
+            id: "1",
+            name: "Alice",
+          },
+        },
+      },
+    });
+  }
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: true,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          id: "1",
+          name: "Alice",
+        },
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
 test('returns dataState "streaming" when overlapping non-deferred list fields are complete and only defer-only item fields are missing', () => {
   const cache = new InMemoryCache();
   const query = gql`

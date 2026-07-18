@@ -1,35 +1,18 @@
 import { equal } from "@wry/equality";
-import type {
-  DocumentNode,
-  FormattedExecutionResult,
-  SelectionSetNode,
-} from "graphql";
+import type { DocumentNode, FormattedExecutionResult } from "graphql";
 
-import type { ApolloCache, Cache, MissingTree } from "@apollo/client/cache";
+import type { ApolloCache, Cache } from "@apollo/client/cache";
 import type { IgnoreModifier } from "@apollo/client/cache";
 import type { Incremental } from "@apollo/client/incremental";
 import type { ApolloLink } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
 import type { DeepPartial } from "@apollo/client/utilities";
-import type {
-  ExtensionsWithStreamInfo,
-  FieldMap,
-  FragmentMap,
-} from "@apollo/client/utilities/internal";
+import type { ExtensionsWithStreamInfo } from "@apollo/client/utilities/internal";
 import {
-  collectSiblingFields,
-  createFragmentMap,
-  getFragmentDefinitions,
-  getFragmentFromSelection,
-  getMainDefinition,
   getOperationName,
   graphQLResultHasError,
   handleIncrementalSymbol,
   hasDirectives,
-  isDeferredFragment,
-  isField,
-  isTypenameField,
-  resultKeyNameFromField,
   streamInfoSymbol,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
@@ -721,190 +704,4 @@ function shouldWriteResult<T>(
     writeWithErrors = true;
   }
   return writeWithErrors;
-}
-
-function isStreamingPartial(
-  diff: Cache.DiffResult<unknown>,
-  document: DocumentNode,
-  variables: OperationVariables
-) {
-  if (!diff.missing) return false;
-
-  const fragmentMap = createFragmentMap(getFragmentDefinitions(document));
-
-  return isPartialInSelectionSet(
-    getMainDefinition(document).selectionSet,
-    diff.missing.missing,
-    { fragmentMap, variables }
-  );
-}
-
-interface StreamingPartialContext {
-  fragmentMap: FragmentMap;
-  variables: OperationVariables;
-}
-
-function isPartialInSelectionSet(
-  selectionSet: SelectionSetNode,
-  missingTree: MissingTree | undefined,
-  context: StreamingPartialContext
-): boolean {
-  if (typeof missingTree === "string") return true;
-  if (missingTree === undefined) return false;
-
-  const missingKeys = Object.keys(missingTree);
-  if (missingKeys.length > 0 && missingKeys.every(isArrayIndex)) {
-    return missingKeys.some((key) => {
-      if (typeof missingTree[key] === "string") return true;
-
-      return isPartialInSelectionSet(selectionSet, missingTree[key], context);
-    });
-  }
-
-  const { fragmentMap, variables } = context;
-
-  for (const selection of selectionSet.selections) {
-    if (isField(selection)) {
-      if (isTypenameField(selection)) continue;
-
-      const missing = missingTree[resultKeyNameFromField(selection)];
-      // If a missing entry is absent, we have a value for this field
-      if (missing === undefined) continue;
-
-      if (
-        !selection.selectionSet ||
-        isPartialInSelectionSet(selection.selectionSet, missing, context)
-      ) {
-        return true;
-      }
-    } else {
-      const fragment = getFragmentFromSelection(selection, fragmentMap);
-      if (!fragment) continue;
-
-      if (isDeferredFragment(selection, variables)) {
-        // We need to know the non-deferred fields that might overlap with the
-        // deferred selection set so that we accurately report the right
-        // dataState when all the non-deferred fields are satisfied and only the
-        // selections inside the fragment are missing.
-        // For example:
-        //
-        // {
-        //   recipient {
-        //     name
-        //   }
-        //   ... @defer {
-        //     recipient {
-        //       name
-        //       email
-        //     }
-        //   }
-        // }
-        //
-        // dataState should be `streaming`, not `partial` if `name` is present,
-        // but `email` is absent since `name` is not deferred.
-        if (
-          isPartialDeferBoundary(
-            fragment.selectionSet,
-            missingTree,
-            collectSiblingFields(selectionSet, {
-              ...context,
-              exclude: selection,
-            }),
-            fragmentMap
-          )
-        ) {
-          return true;
-        }
-      } else if (
-        isPartialInSelectionSet(fragment.selectionSet, missingTree, context)
-      ) {
-        return true;
-      }
-    }
-  }
-
-  return false;
-}
-
-type MissingObject = Exclude<MissingTree, string>;
-
-function isPartialDeferBoundary(
-  selectionSet: SelectionSetNode,
-  missing: MissingObject,
-  nonDeferredFields: FieldMap | undefined,
-  fragmentMap: FragmentMap
-): boolean {
-  // This flag tracks whether all fields in this selection set should contain
-  // values or should all be missing. A defer boundary is only partial if some
-  // fields are missing. The first selection node will set this value and all
-  // sibling fields should match after that. As soon as we get a mismatch, we
-  // have a partial defer boundary.
-  let shouldContainValues: boolean | undefined;
-
-  for (const selection of selectionSet.selections) {
-    if (isField(selection)) {
-      if (isTypenameField(selection)) continue;
-
-      const name = resultKeyNameFromField(selection);
-      const nonDeferredField = nonDeferredFields?.[name];
-
-      // If this field is not exclusive to this selection set, we don't care
-      // what the value is as far as the defer boundary is concerned. Ignore it
-      // and continue checking other siblings.
-      if (nonDeferredField === true) continue;
-
-      // The value of missing means different things:
-      // - undefined: The field is fully satisfied (i.e. it has a value for the field)
-      // - string: the field is fully unsatisfied (no scalar value, or object is
-      //   missing all fields)
-      // - object: The field has a selection set and is partially satisfied.
-      const missingField = missing[name];
-
-      if (typeof missingField !== "object") {
-        const hasValue = missingField === undefined;
-
-        if (shouldContainValues === undefined) {
-          shouldContainValues = hasValue;
-        }
-
-        if (hasValue !== shouldContainValues) {
-          return true;
-        }
-
-        continue;
-      }
-
-      if (
-        selection.selectionSet &&
-        isPartialDeferBoundary(
-          selection.selectionSet,
-          missingField,
-          nonDeferredField,
-          fragmentMap
-        )
-      ) {
-        return true;
-      }
-    } else {
-      const fragment = getFragmentFromSelection(selection, fragmentMap);
-      if (!fragment) continue;
-
-      if (
-        isPartialDeferBoundary(
-          fragment.selectionSet,
-          missing,
-          nonDeferredFields,
-          fragmentMap
-        )
-      ) {
-        return true;
-      }
-    }
-  }
-
-  return false;
-}
-
-function isArrayIndex(key: string) {
-  return /^\d+$/.test(key);
 }

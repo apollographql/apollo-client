@@ -32,7 +32,6 @@ export { compact } from "./compact.js";
 export { createFragmentMap } from "./createFragmentMap.js";
 export { createFulfilledPromise } from "./createFulfilledPromise.js";
 export { createRejectedPromise } from "./createRejectedPromise.js";
-export { collectSiblingFields } from "./collectSiblingFields.js";
 export { dealias } from "./dealias.js";
 export { decoratePromise } from "./decoratePromise.js";
 export { DeepMerger } from "./DeepMerger.js";

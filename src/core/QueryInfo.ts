@@ -24,6 +24,7 @@ import {
   getMainDefinition,
   getOperationName,
   graphQLResultHasError,
+  handleIncrementalSymbol,
   hasDirectives,
   isDeferredFragment,
   isField,
@@ -245,7 +246,7 @@ export class QueryInfo<
     const diffOptions = {
       query,
       variables,
-      returnPartialData: true,
+      returnPartialData,
       optimistic: true,
     };
 
@@ -254,8 +255,7 @@ export class QueryInfo<
     this.observableQuery?.["resetNotifications"]();
 
     const skipCache = cacheWriteBehavior === CacheWriteBehavior.FORBID;
-    const lastDiff =
-      skipCache ? undefined : this.cache.diff<TData>(diffOptions);
+    const lastDiff = skipCache ? undefined : this.getDiff(diffOptions);
 
     const incrementalResult = this.maybeHandleIncrementalResult(
       lastDiff?.result,
@@ -403,6 +403,31 @@ export class QueryInfo<
     }
 
     return result;
+  }
+
+  private getDiff(
+    options: Cache.DiffOptions<TData>
+  ): Cache.InternalDiffResultWithDataState<TData> {
+    if (this.cache.supportsIncrementalResults) {
+      return this.cache.diff({
+        ...options,
+        [handleIncrementalSymbol]: true,
+      } as Cache.DiffOptions<TData>) as Cache.InternalDiffResultWithDataState<TData>;
+    }
+
+    // returnPartialData is overridden for backwards compatibility with caches
+    // that don't handle incremental results. Without this, in-flight
+    // incremental cache data would come back null when returnPartialData is
+    // false due to the partial result.
+    const diff = this.cache.diff({ ...options, returnPartialData: true });
+
+    return {
+      ...diff,
+      dataState:
+        diff.complete ? "complete"
+        : diff.result === null ? "empty"
+        : "partial",
+    } as Cache.InternalDiffResultWithDataState<TData>;
   }
 
   public markMutationResult(

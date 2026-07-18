@@ -366,35 +366,21 @@ export class QueryInfo<
             // re-reading the latest data with cache.diff, below.
           }
 
-          const diff = cache.diff<TData>(diffOptions);
+          const diff = this.getDiff(diffOptions);
 
-          // If we're allowed to write to the cache, and we can read a
-          // complete result from the cache, update result.data to be the
-          // result from the cache, rather than the raw network result.
-          // Set without setDiff to avoid triggering a notify call, since
-          // we have other ways of notifying for this result.
-          if (diff.complete) {
+          if (this.cache.supportsIncrementalResults) {
             result = {
               ...result,
               data: diff.result,
-              dataState: "complete",
+              dataState: diff.dataState,
             };
-          } else if (this.hasNext && diff.result !== null) {
-            const isPartial = isStreamingPartial(diff, query, variables);
-
-            // If we tolerate partial results always apply `diff.result` to
-            // ensure we return the result of any transforms in cache read
-            // functions or custom scalars. If we don't tolerate partial
-            // results, we only want to apply the diff result if the only hole
-            // in the data is at a defer boundary (e.g.
-            // `diff.complete === false && isStreamingPartial === false`)
-            if (returnPartialData || !isPartial) {
-              result = {
-                ...result,
-                data: diff.result,
-                dataState: isPartial ? "partial" : "streaming",
-              };
-            }
+          } else if (diff.complete) {
+            // If we're allowed to write to the cache, and we can read a
+            // complete result from the cache, update result.data to be the
+            // result from the cache, rather than the raw network result.
+            // Set without setDiff to avoid triggering a notify call, since
+            // we have other ways of notifying for this result.
+            result = { ...result, data: diff.dataState, dataState: "complete" };
           }
         },
       });

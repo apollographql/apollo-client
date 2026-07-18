@@ -5650,14 +5650,14 @@ test("does not treat `__typename`-only presence under a `@defer` as the fragment
   });
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       greeting: {
         __typename: "Greeting",
         message: "Hello world",
         recipient: { __typename: "Person" },
       },
-    }),
-    dataState: "streaming",
+    },
+    dataState: "partial",
     loading: true,
     networkStatus: NetworkStatus.streaming,
     partial: true,

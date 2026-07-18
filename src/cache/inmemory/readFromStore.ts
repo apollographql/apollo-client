@@ -32,6 +32,7 @@ import {
   isDeferredFragment,
   isField,
   isNonNullObject,
+  isStreamField,
   makeReference,
   maybeDeepFreeze,
   mergeDeepArray,
@@ -654,11 +655,20 @@ export class StoreReader {
       }
 
       if (execResult) {
+        const isStreamed = isStreamField(field, context.variables);
+        const { dataState: nextDataState } = execResult;
+
+        if (nextDataState === "partial") {
+          execResult.partialBoundaries.add(field);
+        }
+
         dataState = mergeDataState(
           dataState,
-          execResult.dataState === "partial" ?
-            "streamPartial"
-          : execResult.dataState
+          isStreamed ?
+            nextDataState === "partial" ?
+              "streamPartial"
+            : nextDataState
+          : nextDataState
         );
         partialBoundaries.set(i, execResult.partialBoundaries);
 
@@ -689,6 +699,39 @@ export class StoreReader {
     const { policies, lookupFragment, variables } = context;
     const merger = new DeepMerger();
 
+    const pruneArray = (
+      field: FieldNode,
+      array: any[],
+      boundaries: PartialBoundaries | undefined
+    ): any[] => {
+      if (!boundaries) return array;
+      const entry = this.prunedEntries.lookup(field, array, boundaries);
+      if (entry.data) return entry.data;
+
+      let changed = false;
+
+      const pruned = array.reduce<any[]>((memo, item, i) => {
+        let prunedItem = item;
+        const boundary = boundaries.getChild(i);
+
+        if (Array.isArray(item)) {
+          prunedItem = pruneArray(field, item, boundary);
+        } else if (field.selectionSet) {
+          prunedItem = prune(field.selectionSet, item, boundary);
+        }
+
+        if (!boundary?.has(field)) {
+          memo.push(prunedItem);
+        }
+
+        changed ||= boundary?.has(field) || prunedItem !== item;
+
+        return memo;
+      }, []);
+
+      return changed ? (entry.data = pruned) : array;
+    };
+
     const prune = (
       selectionSet: SelectionSetNode,
       data: any,
@@ -700,23 +743,6 @@ export class StoreReader {
       if (entry.data) return entry.data;
 
       let changed = false;
-
-      if (Array.isArray(data)) {
-        const pruned = data.map((item, index) => {
-          const prunedItem = prune(
-            selectionSet,
-            item,
-            boundaries.getChild(index)
-          );
-
-          changed ||= prunedItem !== item;
-
-          return prunedItem;
-        });
-
-        return changed ? (entry.data = pruned) : data;
-      }
-
       const result: Record<string, any> = {};
 
       // __typename might not be part of the selection set, so preserve it when
@@ -737,25 +763,35 @@ export class StoreReader {
             return;
           }
 
-          if (!selection.selectionSet) {
-            result[resultName] = data[resultName];
-            return;
+          const fieldValue = data[resultName];
+
+          if (Array.isArray(fieldValue)) {
+            const pruned = pruneArray(
+              selection,
+              fieldValue,
+              boundaries.getChild(resultName)
+            );
+
+            changed ||= pruned !== fieldValue;
+            result[resultName] = pruned;
+          } else if (!selection.selectionSet) {
+            result[resultName] = fieldValue;
+          } else {
+            const pruned = prune(
+              selection.selectionSet,
+              fieldValue,
+              boundaries.getChild(resultName)
+            );
+
+            changed ||= pruned !== fieldValue;
+
+            // A response key can be selected by more than one selection (e.g. a
+            // field and an overlapping fragment), so merge their kept fields.
+            result[resultName] =
+              Object.hasOwn(result, resultName) ?
+                merger.merge(result[resultName], pruned)
+              : pruned;
           }
-
-          const pruned = prune(
-            selection.selectionSet,
-            data[resultName],
-            boundaries.getChild(resultName)
-          );
-
-          changed ||= pruned !== data[resultName];
-
-          // A response key can be selected by more than one selection (e.g. a
-          // field and an overlapping fragment), so merge their kept fields.
-          result[resultName] =
-            Object.hasOwn(result, resultName) ?
-              merger.merge(result[resultName], pruned)
-            : pruned;
 
           return;
         }

@@ -881,6 +881,8 @@ class PartialBoundaries {
 
   add(selection: SelectionNode) {
     this.selections.add(selection);
+
+    return this;
   }
 
   has(selection: SelectionNode) {

@@ -807,7 +807,6 @@ export class StoreReader {
           return;
         }
 
-        // Only process fragments that aren't partial.
         if (boundaries.has(selection)) {
           return (changed = true);
         }
@@ -819,15 +818,11 @@ export class StoreReader {
         return (entry.data = result);
       }
 
-      // data is a union of all selections, so if we drop any fields and end up
-      // with a different key length, we want to always use the computed result
-      // since it is more correct.
       return data;
     };
 
     return {
       ...execResult,
-      // Removing partial defer boundaries puts the data in a streaming state
       dataState: "streaming",
       result: prune(
         getMainDefinition(document).selectionSet,

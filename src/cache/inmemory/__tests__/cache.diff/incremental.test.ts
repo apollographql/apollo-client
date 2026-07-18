@@ -6077,6 +6077,79 @@ test("keeps overlapping recipient fields selected by a complete sibling @defer w
   }
 });
 
+test('returns dataState "streaming" when two sibling @defer fragments overlap and only exclusive fields are missing with returnPartialData: true', () => {
+  const queries = [
+    // complete boundary first
+    gql`
+      query {
+        ... @defer {
+          recipient {
+            name
+          }
+        }
+        ... @defer {
+          recipient {
+            name
+            email
+          }
+        }
+      }
+    `,
+    // incomplete boundary first
+    gql`
+      query {
+        ... @defer {
+          recipient {
+            name
+            email
+          }
+        }
+        ... @defer {
+          recipient {
+            name
+          }
+        }
+      }
+    `,
+  ];
+
+  for (const query of queries) {
+    const cache = new InMemoryCache();
+
+    {
+      using _ = spyOnConsole("error");
+      cache.writeQuery({
+        query,
+        data: {
+          recipient: {
+            __typename: "Person",
+            name: "Alice",
+          },
+        },
+      });
+    }
+
+    expect(
+      cache.diff({
+        query,
+        optimistic: true,
+        returnPartialData: true,
+        [handleIncrementalSymbol]: true,
+      })
+    ).toStrictEqualTyped({
+      result: markAsStreaming({
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+        },
+      }),
+      dataState: "streaming",
+      complete: false,
+      missing: undefined,
+    });
+  }
+});
+
 test("strips fields from a partial sibling @defer with disjoint selections from a complete sibling @defer regardless of selection order when returnPartialData is false", () => {
   const queries = [
     // partial boundary first

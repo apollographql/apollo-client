@@ -15,7 +15,6 @@ import { GraphQL17Alpha9Handler } from "@apollo/client/incremental";
 import {
   executeSchemaGraphQL17Alpha9,
   friendListSchemaGraphQL17Alpha9,
-  markAsStreaming,
   ObservableStream,
   promiseWithResolvers,
 } from "@apollo/client/testing/internal";
@@ -2518,12 +2517,12 @@ test("GraphQL17Alpha9Handler can be used with `ApolloClient`", async () => {
 
   await expect(observableStream).toEmitTypedValue({
     loading: true,
-    data: markAsStreaming({
+    data: {
       friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitTypedValue({

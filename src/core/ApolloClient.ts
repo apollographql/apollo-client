@@ -106,7 +106,7 @@ export declare namespace ApolloClient {
      *
      * For more information, see [Configuring the cache](https://www.apollographql.com/docs/react/caching/cache-configuration/).
      */
-    cache: ApolloCache;
+    cache: Cache.Implementation;
     /**
      * The time interval (in milliseconds) before Apollo Client force-fetches queries after a server-side render.
      *
@@ -195,7 +195,7 @@ export declare namespace ApolloClient {
   export type MutateOptions<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
-    TCache extends ApolloCache = ApolloCache,
+    TCache extends Cache.Implementation = Cache.Implementation,
   > = {
     /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#optimisticResponse:member} */
     optimisticResponse?:
@@ -247,7 +247,7 @@ export declare namespace ApolloClient {
     export type ResultForOptions<
       TData,
       TVariables extends OperationVariables,
-      TCache extends ApolloCache,
+      TCache extends Cache.Implementation,
       TOptions extends
         | Record<string, unknown>
         | MutateOptions<any, TVariables, TCache>,
@@ -270,7 +270,7 @@ export declare namespace ApolloClient {
           options: ApolloClient.MutateOptions<
             TData,
             TVariables,
-            ApolloCache
+            Cache.Implementation
           > & { errorPolicy?: TErrorPolicy }
         ): Promise<ApolloClient.MutateResult<MaybeMasked<TData>, TErrorPolicy>>;
 
@@ -283,7 +283,7 @@ export declare namespace ApolloClient {
         <
           TData,
           TVariables extends OperationVariables = OperationVariables,
-          TCache extends ApolloCache = ApolloCache,
+          TCache extends Cache.Implementation = Cache.Implementation,
           TErrorPolicy extends ErrorPolicy | undefined = undefined,
         >(
           options: ApolloClient.MutateOptions<TData, TVariables, TCache> &
@@ -296,12 +296,11 @@ export declare namespace ApolloClient {
         <
           TData,
           TVariables extends OperationVariables,
-          TCache extends ApolloCache,
           // this overload should never be manually defined, it should always be inferred
           TOptions extends ApolloClient.MutateOptions<
             NoInfer<TData>,
             NoInfer<TVariables>,
-            TCache
+            Cache.Implementation
           > &
             VariablesOption<
               TVariables & {
@@ -319,7 +318,7 @@ export declare namespace ApolloClient {
           ApolloClient.mutate.ResultForOptions<
             TData,
             TVariables,
-            TCache,
+            Cache.Implementation,
             TOptions
           >
         >;
@@ -512,7 +511,10 @@ export declare namespace ApolloClient {
   /**
    * Options object for the `client.refetchQueries` method.
    */
-  export interface RefetchQueriesOptions<TCache extends ApolloCache, TResult> {
+  export interface RefetchQueriesOptions<
+    TCache extends Cache.Implementation,
+    TResult,
+  > {
     /**
      * Optional function that updates cached fields to trigger refetches of queries that include those fields.
      */
@@ -979,7 +981,7 @@ export declare namespace ApolloClient {
     function mutate<
       TData = unknown,
       TVariables extends OperationVariables = OperationVariables,
-      TCache extends ApolloCache = ApolloCache,
+      TCache extends Cache.Implementation = Cache.Implementation,
     >(
       options: ApolloClient.MutateOptions<TData, TVariables, TCache>
     ): Promise<ApolloClient.MutateResult<MaybeMasked<TData>>>;
@@ -994,7 +996,7 @@ export declare namespace ApolloClient {
  */
 export class ApolloClient {
   public link: ApolloLink;
-  public cache: ApolloCache;
+  public cache: Cache.Implementation;
   /**
    * @deprecated `disableNetworkFetches` has been renamed to `prioritizeCacheValues`.
    */
@@ -1399,7 +1401,7 @@ export class ApolloClient {
   public mutate: ApolloClient.mutate.Signature = <
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
-    TCache extends ApolloCache = ApolloCache,
+    TCache extends Cache.Implementation = Cache.Implementation,
   >(
     options: ApolloClient.MutateOptions<TData, TVariables, TCache>
   ): Promise<ApolloClient.MutateResult<MaybeMasked<TData>>> => {
@@ -1848,13 +1850,16 @@ export class ApolloClient {
    * active queries.
    */
   public refetchQueries<
-    TCache extends ApolloCache = ApolloCache,
+    TCache extends Cache.Implementation = Cache.Implementation,
     TResult = Promise<ApolloClient.QueryResult<any>>,
   >(
     options: ApolloClient.RefetchQueriesOptions<TCache, TResult>
   ): ApolloClient.RefetchQueriesResult<TResult> {
     const map = this.queryManager.refetchQueries(
-      options as ApolloClient.RefetchQueriesOptions<ApolloCache, TResult>
+      options as ApolloClient.RefetchQueriesOptions<
+        Cache.Implementation,
+        TResult
+      >
     );
     const queries: ObservableQuery<any>[] = [];
     const results: InternalRefetchQueriesResult<TResult>[] = [];

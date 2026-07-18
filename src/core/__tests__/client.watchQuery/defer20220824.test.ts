@@ -317,10 +317,11 @@ it.each([["cache-first"], ["no-cache"]] as const)(
               },
             ],
       }),
-      dataState: "streaming",
+      // no-cache is incomplete (lowercase still pending); cache policies merge residual lowercase
+      dataState: fetchPolicy === "no-cache" ? "streaming" : "complete",
       loading: true,
       networkStatus: NetworkStatus.streaming,
-      partial: true,
+      partial: fetchPolicy === "no-cache",
     });
 
     enqueueSubsequentChunk({

@@ -7,7 +7,7 @@ import type {
 import type { OptimisticWrapperFunction } from "optimism";
 import { wrap } from "optimism";
 
-import type { OperationVariables } from "@apollo/client";
+import type { OperationVariables, TypedDocumentNode } from "@apollo/client";
 import type {
   DeepPartial,
   Reference,
@@ -22,11 +22,21 @@ import {
   print,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import { getInMemoryCacheMemoryInternals } from "@apollo/client/utilities/internal";
+import type {
+  IsLooselyEqual,
+  NoInfer,
+} from "@apollo/client/utilities/internal";
+import {
+  getInMemoryCacheMemoryInternals,
+  getOperationDefinition,
+  getUnwrappedType,
+  isPlainObject,
+} from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 import { ApolloCache } from "../core/cache.js";
+import type { Scalar } from "../core/Scalar.js";
 import type { Cache } from "../core/types/Cache.js";
 
 import { EntityStore, supportsResultCaching } from "./entityStore.js";
@@ -34,13 +44,47 @@ import { hasOwn, normalizeConfig } from "./helpers.js";
 import { Policies } from "./policies.js";
 import { forgetCache, makeVar, recallCache } from "./reactiveVars.js";
 import { StoreReader } from "./readFromStore.js";
-import type { InMemoryCacheConfig, NormalizedCacheObject } from "./types.js";
+import type {
+  InMemoryCacheConfig,
+  KnownScalars,
+  NormalizedCacheObject,
+} from "./types.js";
 import { StoreWriter } from "./writeToStore.js";
 
 type BroadcastOptions = Pick<
   Cache.BatchOptions<InMemoryCache>,
   "optimistic" | "onWatchUpdated"
 >;
+
+export declare namespace InMemoryCache {
+  export type ScalarsOption = {
+    [ScalarName in keyof KnownScalars as IsLooselyEqual<
+      KnownScalars[ScalarName]["serialized"],
+      KnownScalars[ScalarName]["parsed"]
+    > extends true ?
+      ScalarName
+    : never]?: KnownScalars[ScalarName] extends (
+      { serialized: infer TSerialized; parsed: infer TParsed }
+    ) ?
+      Scalar<TSerialized, TParsed>
+    : never;
+  } & {
+    [ScalarName in keyof KnownScalars as IsLooselyEqual<
+      KnownScalars[ScalarName]["serialized"],
+      KnownScalars[ScalarName]["parsed"]
+    > extends true ?
+      never
+    : ScalarName]: KnownScalars[ScalarName] extends (
+      { serialized: infer TSerialized; parsed: infer TParsed }
+    ) ?
+      Scalar<TSerialized, TParsed>
+    : never;
+  } & (ApolloCache.Scalars extends (
+      Record<string, { serialized: infer TSerialized; parsed: infer TParsed }>
+    ) ?
+      Record<string, Scalar<TSerialized, TParsed>>
+    : {});
+}
 
 export class InMemoryCache extends ApolloCache {
   private data!: EntityStore;
@@ -70,9 +114,13 @@ export class InMemoryCache extends ApolloCache {
 
   public readonly makeVar = makeVar;
 
-  constructor(config: InMemoryCacheConfig = {}) {
+  constructor(
+    ...args: {} extends InMemoryCache.ScalarsOption ?
+      [config?: InMemoryCacheConfig]
+    : [config: InMemoryCacheConfig]
+  ) {
     super();
-    this.config = normalizeConfig(config);
+    this.config = normalizeConfig(args[0] ?? {});
 
     this.policies = new Policies({
       cache: this,
@@ -156,6 +204,150 @@ export class InMemoryCache extends ApolloCache {
     );
   }
 
+  public getScalar<TKey extends keyof ApolloCache.Scalars>(
+    key: TKey
+  ): ApolloCache.GetScalarType<TKey> extends (
+    Scalar<infer TSerialized, infer TParsed>
+  ) ?
+    IsLooselyEqual<TSerialized, TParsed> extends true ?
+      // We don't require scalars where the serialized/parsed types are equal, so we
+      // can't guarantee we will get a value
+      ApolloCache.GetScalarType<TKey> | undefined
+    : ApolloCache.GetScalarType<TKey>
+  : never {
+    return this.config.scalars?.[key as string] as any;
+  }
+
+  /**
+   * {@inheritDoc @apollo/client/cache!ApolloCache#serializeVariables:member(1)}
+   */
+  public serializeVariables<
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    document: DocumentNode | TypedDocumentNode<any, TVariables>,
+    variables: NoInfer<TVariables>
+  ): TVariables;
+
+  /**
+   * {@inheritDoc @apollo/client/cache!ApolloCache#serializeVariables:member(1)}
+   */
+  public serializeVariables<
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    document: DocumentNode | TypedDocumentNode<any, TVariables>,
+    variables: NoInfer<TVariables> | undefined
+  ): TVariables | undefined;
+
+  public serializeVariables<
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    document: DocumentNode | TypedDocumentNode<any, TVariables>,
+    variables: NoInfer<TVariables> | undefined
+  ): TVariables | undefined {
+    if (
+      !variables ||
+      Object.keys(variables).length === 0 ||
+      (!this.config.scalars && !this.config.inputObjects)
+    ) {
+      return variables;
+    }
+
+    const variableTypes = getOperationDefinition(
+      document
+    )?.variableDefinitions?.reduce<Record<string, string>>((memo, node) => {
+      memo[node.variable.name.value] = getUnwrappedType(node.type);
+
+      return memo;
+    }, {});
+
+    if (!variableTypes || Object.keys(variableTypes).length === 0) {
+      return variables;
+    }
+
+    return this.serializeVariablesValue(variables, variableTypes) as TVariables;
+  }
+
+  private serializeVariablesValue(
+    value: unknown,
+    variableTypes: Record<string, string>,
+    scalar?: Scalar<any, any>
+  ): unknown {
+    if (Array.isArray(value)) {
+      return this.serializeInputArray(value, variableTypes, scalar);
+    }
+
+    if (scalar && value != null) {
+      return scalar.coerceToSerialized(value);
+    }
+
+    if (isPlainObject(value)) {
+      return this.serializeInputObject(value, variableTypes);
+    }
+
+    return value;
+  }
+
+  private serializeInputArray(
+    value: unknown[],
+    variableTypes: Record<string, string>,
+    scalar?: Scalar<any, any>
+  ) {
+    let changed = false;
+
+    const newValue = value.map((item) => {
+      const newItem = this.serializeVariablesValue(item, variableTypes, scalar);
+      changed ||= newItem !== item;
+
+      return newItem;
+    });
+
+    return changed ? newValue : value;
+  }
+
+  private serializeInputObject(
+    value: Record<string, unknown>,
+    variableTypes: Record<string, string>
+  ) {
+    let changed = false;
+
+    const entries = Object.entries(value).map(([name, value]) => {
+      const type = variableTypes[name];
+
+      if (!type) {
+        return [name, value];
+      }
+
+      const inputObject = this.config.inputObjects?.[type];
+
+      if (inputObject) {
+        const newValue = this.serializeVariablesValue(
+          value,
+          inputObject.fields
+        );
+        changed ||= newValue !== value;
+
+        return [name, newValue];
+      }
+
+      const scalar = this.getScalar(type);
+
+      if (scalar) {
+        const newValue = this.serializeVariablesValue(
+          value,
+          variableTypes,
+          scalar
+        );
+        changed ||= newValue !== value;
+
+        return [name, newValue];
+      }
+
+      return [name, value];
+    });
+
+    return changed ? Object.fromEntries(entries) : value;
+  }
+
   public restore(data: NormalizedCacheObject): this {
     this.init();
     // Since calling this.init() discards/replaces the entire StoreReader, along
@@ -183,6 +375,8 @@ export class InMemoryCache extends ApolloCache {
     options: Cache.ReadOptions<TData, OperationVariables>
   ): TData | DeepPartial<TData> | null {
     const {
+      query,
+      variables,
       // Since read returns data or null, without any additional metadata
       // about whether/where there might have been missing fields, the
       // default behavior cannot be returnPartialData = true (like it is
@@ -195,6 +389,7 @@ export class InMemoryCache extends ApolloCache {
 
     return this.storeReader.diffQueryAgainstStore<TData>({
       ...options,
+      variables: this.serializeVariables(query, variables),
       store: options.optimistic ? this.optimisticData : this.data,
       config: this.config,
       returnPartialData,
@@ -205,9 +400,14 @@ export class InMemoryCache extends ApolloCache {
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(options: Cache.WriteOptions<TData, TVariables>): Reference | undefined {
+    const { query, variables } = options;
+
     try {
       ++this.txCount;
-      return this.storeWriter.writeToStore(this.data, options);
+      return this.storeWriter.writeToStore(this.data, {
+        ...options,
+        variables: this.serializeVariables(query, variables),
+      });
     } finally {
       if (!--this.txCount && options.broadcast !== false) {
         this.broadcastWatches();
@@ -250,8 +450,11 @@ export class InMemoryCache extends ApolloCache {
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(options: Cache.DiffOptions<TData, TVariables>): Cache.DiffResult<TData> {
+    const { variables } = options;
+
     return this.storeReader.diffQueryAgainstStore({
       ...options,
+      variables: this.serializeVariables(options.query, variables),
       store: options.optimistic ? this.optimisticData : this.data,
       rootId: options.id || "ROOT_QUERY",
       config: this.config,

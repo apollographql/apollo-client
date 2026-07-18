@@ -24,7 +24,7 @@ import {
   tap,
 } from "rxjs";
 
-import type { ApolloCache, Cache } from "@apollo/client/cache";
+import type { Cache } from "@apollo/client/cache";
 import { canonicalStringify } from "@apollo/client/cache";
 import {
   CombinedGraphQLErrors,
@@ -244,7 +244,7 @@ export class QueryManager {
     return this.client.link;
   }
 
-  get cache() {
+  get cache(): Cache.Implementation {
     return this.client.cache;
   }
 
@@ -268,7 +268,7 @@ export class QueryManager {
   public async mutate<
     TData,
     TVariables extends OperationVariables,
-    TCache extends ApolloCache,
+    TCache extends Cache.Implementation,
   >({
     mutation,
     variables,
@@ -314,7 +314,7 @@ export class QueryManager {
       this.mutationStore &&
       (this.mutationStore[queryInfo.id] = {
         mutation,
-        variables,
+        variables: this.cache.serializeVariables(mutation, variables),
         loading: true,
         error: null,
       } as MutationStoreValue);
@@ -904,6 +904,7 @@ export class QueryManager {
     const executeContext: ApolloLink.ExecuteContext = {
       client: this.client,
     };
+    variables = this.cache.serializeVariables(query, variables);
 
     if (serverQuery) {
       const { inFlightLinkObservables, link } = this;
@@ -1035,6 +1036,7 @@ export class QueryManager {
       context: DefaultContext | undefined;
       fetchPolicy: WatchQueryFetchPolicy;
       errorPolicy: ErrorPolicy;
+      returnPartialData: boolean | undefined;
     },
     {
       queryInfo,
@@ -1065,10 +1067,11 @@ export class QueryManager {
         // Use linkDocument rather than queryInfo.document so the
         // operation/fragments used to write the result are the same as the
         // ones used to obtain it from the link.
-        const result = queryInfo.markQueryResult(incoming, {
+        const { dataState, ...result } = queryInfo.markQueryResult(incoming, {
           ...options,
           document: linkDocument,
           cacheWriteBehavior,
+          returnPartialData: options.returnPartialData,
         });
         const hasErrors = graphQLResultHasError(result);
 
@@ -1080,20 +1083,21 @@ export class QueryManager {
           );
         }
 
+        const partial = dataState !== "complete";
         const aqr: QueryManager.Result<TData> = {
           data: result.data as TData,
           ...(queryInfo.hasNext ?
             {
               loading: true,
               networkStatus: NetworkStatus.streaming,
-              dataState: "streaming",
-              partial: true,
+              dataState,
+              partial,
             }
           : {
-              dataState: result.data ? "complete" : "empty",
+              dataState,
               loading: false,
               networkStatus: NetworkStatus.ready,
-              partial: !result.data,
+              partial,
             }),
         } as ObservableQuery.Result<TData>;
 
@@ -1110,7 +1114,7 @@ export class QueryManager {
             aqr.error = new CombinedGraphQLErrors(
               removeStreamDetailsFromExtensions(result)
             );
-            if (aqr.dataState !== "streaming") {
+            if (aqr.networkStatus !== NetworkStatus.streaming) {
               aqr.networkStatus = NetworkStatus.error;
             }
           }
@@ -1318,7 +1322,7 @@ export class QueryManager {
     removeOptimistic = optimistic ? makeUniqueId("refetchQueries") : void 0,
     onQueryUpdated,
   }: InternalRefetchQueriesOptions<
-    ApolloCache,
+    Cache.Implementation,
     TResult
   >): InternalRefetchQueriesMap<TResult> {
     const includedQueriesByOq = new Map<
@@ -1675,6 +1679,7 @@ export class QueryManager {
           context,
           fetchPolicy,
           errorPolicy,
+          returnPartialData,
         },
         {
           cacheWriteBehavior,

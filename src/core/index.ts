@@ -79,6 +79,8 @@ export type {
   IdGetter,
   IdGetterObj,
   InMemoryCacheConfig,
+  InputObjectConfig,
+  InputObjectsOption,
   MergeInfo,
   MergeTree,
   NormalizedCache,
@@ -104,6 +106,7 @@ export {
   InMemoryCache,
   makeVar,
   MissingFieldError,
+  Scalar,
 } from "@apollo/client/cache";
 
 /* Link */

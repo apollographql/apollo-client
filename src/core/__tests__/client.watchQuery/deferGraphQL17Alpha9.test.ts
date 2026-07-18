@@ -411,9 +411,7 @@ test.failing(
         data: {
           greeting: {
             __typename: "Greeting",
-            recipient: {
-              email: "test@example.com",
-            },
+            message: "Cached hello",
           },
         },
       });
@@ -428,8 +426,13 @@ test.failing(
     const stream = new ObservableStream(client.watchQuery({ query }));
 
     await expect(stream).toEmitTypedValue({
-      data: undefined,
-      dataState: "empty",
+      data: markAsStreaming({
+        greeting: {
+          __typename: "Greeting",
+          message: "Cached hello",
+        },
+      }),
+      dataState: "streaming",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -459,7 +462,11 @@ test.failing(
         {
           data: {
             __typename: "Greeting",
-            recipient: { name: "Alice", __typename: "Person" },
+            recipient: {
+              name: "Alice",
+              email: "alice@example.com",
+              __typename: "Person",
+            },
           },
           id: "0",
         },
@@ -473,7 +480,11 @@ test.failing(
         greeting: {
           __typename: "Greeting",
           message: "Hello world",
-          recipient: { __typename: "Person", name: "Alice" },
+          recipient: {
+            __typename: "Person",
+            name: "Alice",
+            email: "alice@example.com",
+          },
         },
       },
       dataState: "complete",

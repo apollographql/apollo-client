@@ -11,10 +11,7 @@ import { invariant } from "@apollo/client/utilities/invariant";
 function getRootField(document: DocumentNode) {
   const selection = getQueryDefinition(document).selectionSet.selections[0];
 
-  invariant(
-    selection.kind === Kind.FIELD,
-    "Root selection must be a field"
-  );
+  invariant(selection.kind === Kind.FIELD, "Root selection must be a field");
 
   return selection;
 }
@@ -88,9 +85,7 @@ test("returns true for @stream(if: $shouldStream) when the variable is true", ()
     }
   `;
 
-  expect(isStreamField(getRootField(query), { shouldStream: true })).toBe(
-    true
-  );
+  expect(isStreamField(getRootField(query), { shouldStream: true })).toBe(true);
 });
 
 test("returns false for @stream(if: $shouldStream) when the variable is false", () => {

@@ -1442,7 +1442,6 @@ test("does not treat cached `__typename`-only data inside a `@defer` boundary as
       greeting: {
         __typename: "Greeting",
         message: "Hello world",
-        recipient: { __typename: "Person" },
       },
     },
     pending: [{ id: "0", path: ["greeting"] }],
@@ -1454,7 +1453,6 @@ test("does not treat cached `__typename`-only data inside a `@defer` boundary as
       greeting: {
         __typename: "Greeting",
         message: "Hello world",
-        recipient: { __typename: "Person" },
       },
     }),
     dataState: "streaming",
@@ -5645,7 +5643,6 @@ test("does not treat `__typename`-only presence under a `@defer` as the fragment
       greeting: {
         __typename: "Greeting",
         message: "Hello world",
-        recipient: { __typename: "Person" },
       },
     },
     pending: [{ id: "0", path: ["greeting"] }],

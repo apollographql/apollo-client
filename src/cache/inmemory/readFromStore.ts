@@ -811,23 +811,23 @@ export class StoreReader {
           return;
         }
 
+        // Note: we do NOT set `changed` to true anywhere in this branch of the
+        // conditional, despite the fact that we might have encountered a
+        // partial @defer boundary. Dropping a fragment does not guarantee keys
+        // are actually dropped which can happen when overlapping sibling
+        // selections contribute to the construction of the object. The final
+        // Object.keys(result).length check actually detects whether keys were
+        // dropped or not.
+
         const fragment = getFragmentFromSelection(selection, lookupFragment);
 
-        if (!fragment || !policies.fragmentMatches(fragment, data.__typename)) {
-          return;
+        if (
+          fragment &&
+          policies.fragmentMatches(fragment, data.__typename) &&
+          !boundaries.has(selection)
+        ) {
+          fragment.selectionSet.selections.forEach(workSet.add, workSet);
         }
-
-        if (boundaries.has(selection)) {
-          // Note: we do NOT set `changed` to true here, despite the fact that
-          // we avoid traversing the fragment selection (which might remove
-          // keys). Skipping the fragment does not guarantee keys are dropped
-          // which can happen with overlapping sibling fragments. The final
-          // Object.keys(result).length check detects whether keys were dropped
-          // or not.
-          return;
-        }
-
-        fragment.selectionSet.selections.forEach(workSet.add, workSet);
       });
 
       changed ||= Object.keys(result).length !== Object.keys(data).length;

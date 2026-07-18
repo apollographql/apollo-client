@@ -659,9 +659,7 @@ export class StoreReader {
           i,
           nextDataState === "partial" ?
             // avoid mutating the execResult partialBoundaries object
-            new PartialBoundaries()
-              .merge(execResult.partialBoundaries)
-              .add(field)
+            execResult.partialBoundaries.clone().add(field)
           : execResult.partialBoundaries
         );
 
@@ -893,12 +891,18 @@ class PartialBoundaries {
     return this.children.get(key);
   }
 
+  clone() {
+    return new PartialBoundaries().merge(this);
+  }
+
   set(key: string | number, boundary: PartialBoundaries) {
     const child = this.getChild(key);
 
     this.children.set(
       key,
-      child ? new PartialBoundaries().merge(child).merge(boundary) : boundary
+      // Create a new PartialBoundaries instance to avoid mutating any cached
+      // execResult partialBoundaries objects
+      child ? child.clone().merge(boundary) : boundary
     );
   }
 

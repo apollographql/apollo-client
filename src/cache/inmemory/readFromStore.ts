@@ -807,7 +807,13 @@ export class StoreReader {
         }
 
         if (boundaries.has(selection)) {
-          return (changed = true);
+          // Note: we do NOT set `changed` to true here, despite the fact that
+          // we avoid traversing the fragment selection (which might remove
+          // keys). Skipping the fragment does not guarantee keys are dropped
+          // which can happen with overlapping sibling fragments. The final
+          // Object.keys(result).length check detects whether keys were dropped
+          // or not.
+          return;
         }
 
         fragment.selectionSet.selections.forEach(workSet.add, workSet);

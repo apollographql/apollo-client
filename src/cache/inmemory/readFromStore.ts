@@ -733,7 +733,7 @@ export class StoreReader {
         return memo;
       }, []);
 
-      return changed ? (entry.data = pruned) : array;
+      return (entry.data = changed ? pruned : array);
     };
 
     const prune = (
@@ -815,7 +815,7 @@ export class StoreReader {
 
       changed ||= Object.keys(result).length !== Object.keys(data).length;
 
-      return changed ? (entry.data = result) : data;
+      return (entry.data = changed ? result : data);
     };
 
     // Omit `missing` property since pruning puts it in a state that doesn't

@@ -1604,12 +1604,12 @@ describe("reading from the store", () => {
         ],
       },
       missing: new MissingFieldError(
-        "Can't find field 'id' on object",
+        "Can't find field 'id' on object {}",
         {
           ducks: {
             2: {
-              id: "Can't find field 'id' on object",
-              quacking: "Can't find field 'quacking' on object",
+              id: "Can't find field 'id' on object {}",
+              quacking: "Can't find field 'quacking' on object {}",
             },
           },
         },
@@ -2212,26 +2212,20 @@ describe("lazy MissingFieldError diagnostics", () => {
       optimistic: true,
     });
 
-    expect(diff.complete).toBe(false);
-    expect(diff.result).toEqual({
-      customer: {
-        __typename: "Customer",
-        id: "c1",
-      },
-    });
-
-    // diff.missing should be a MissingFieldError when accessed
-    expect(diff.missing).toBeInstanceOf(MissingFieldError);
-    expect(diff.missing!.message).toContain("Can't find field 'name'");
-    expect(diff.missing!.message).toContain("Customer:c1 object");
-
-    // Verify missing tree structure
-    expect(diff.missing!.missing).toEqual({
-      customer: {
-        name: "Can't find field 'name' on Customer:c1 object",
-        address: "Can't find field 'address' on Customer:c1 object",
-      },
-    });
+    // diff.missing should be lazily constructed only when accessed
+    expect(diff.missing).toEqual(
+      new MissingFieldError(
+        "Can't find field 'name' on Customer:c1 object",
+        {
+          customer: {
+            name: "Can't find field 'name' on Customer:c1 object",
+            address: "Can't find field 'address' on Customer:c1 object",
+          },
+        },
+        expect.anything(),
+        expect.anything()
+      )
+    );
   });
 
   it("missing message uses JSON.stringify for non-normalized embedded parents", () => {

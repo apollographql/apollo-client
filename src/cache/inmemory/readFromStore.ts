@@ -346,17 +346,15 @@ export class StoreReader {
                   objectOrReference.__ref + " object"
                 : objectOrReference ?
                   (() => {
-                    const [id] = policies.identify(
-                      objectOrReference as StoreObject
-                    );
+                    const [id] = policies.identify(objectOrReference);
                     if (id) {
-                      return id + " object";
+                      return `object ${id}`;
                     }
                     return (
                       "object " + JSON.stringify(objectOrReference, null, 2)
                     );
                   })()
-                : "object"
+                : "object {}"
               }`,
             });
           }

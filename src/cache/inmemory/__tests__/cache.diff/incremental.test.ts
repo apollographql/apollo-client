@@ -6,6 +6,7 @@ import {
   MissingFieldError,
 } from "@apollo/client/cache";
 import { markAsStreaming, spyOnConsole } from "@apollo/client/testing/internal";
+import { addTypenameToDocument } from "@apollo/client/utilities";
 import { handleIncrementalSymbol } from "@apollo/client/utilities/internal";
 
 test('returns dataState "complete" when the cache fully satisfies the query', () => {
@@ -125,6 +126,52 @@ test('returns dataState "streaming" when only deferred fields are missing with r
       }
     }
   `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+      },
+    },
+  });
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: true,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
+test('returns dataState "streaming" for a typename-added document when only deferred fields are missing with returnPartialData: true', () => {
+  const cache = new InMemoryCache();
+  const query = addTypenameToDocument(gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+            email
+          }
+        }
+      }
+    }
+  `);
 
   cache.writeQuery({
     query,

@@ -460,7 +460,11 @@ export class StoreReader {
             dataState = mergeDataState(dataState, "complete");
           }
         } else if (!selection.selectionSet) {
-          dataState = mergeDataState(dataState, "complete");
+          // Auto-inserted __typename should not affect dataState (see empty
+          // @defer boundaries, which must stay "empty" → parent "streaming").
+          if (!addTypenameToDocument.added(selection)) {
+            dataState = mergeDataState(dataState, "complete");
+          }
         } else if (fieldValue != null) {
           if (__DEV__) {
             const fieldName = selection.name.value;

@@ -229,7 +229,6 @@ export class QueryInfo<
     const diffOptions = {
       query,
       variables,
-      returnPartialData,
       optimistic: true,
     };
 
@@ -238,7 +237,16 @@ export class QueryInfo<
     this.observableQuery?.["resetNotifications"]();
 
     const skipCache = cacheWriteBehavior === CacheWriteBehavior.FORBID;
-    const lastDiff = skipCache ? undefined : this.getDiff(diffOptions);
+    const lastDiff =
+      skipCache ? undefined : (
+        this.getDiff({
+          ...diffOptions,
+          // Always request partial data to ensure the network incremental
+          // result is merged with all existing data (especially true to
+          // maintain @stream arrays with partial list items in the right order)
+          returnPartialData: true,
+        })
+      );
 
     const incrementalResult = this.maybeHandleIncrementalResult(
       lastDiff?.result,
@@ -351,7 +359,10 @@ export class QueryInfo<
             // re-reading the latest data with cache.diff, below.
           }
 
-          const { dataState, result: diffResult } = this.getDiff(diffOptions);
+          const { dataState, result: diffResult } = this.getDiff({
+            ...diffOptions,
+            returnPartialData,
+          });
 
           if (
             dataState === "complete" ||

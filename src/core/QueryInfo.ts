@@ -288,7 +288,9 @@ export class QueryInfo<
           }
         },
         update: (cache) => {
-          if (this.shouldWrite(result, variables)) {
+          const shouldWrite = this.shouldWrite(result, variables);
+
+          if (shouldWrite) {
             cache.writeQuery({
               query,
               data: result.data as Unmasked<any>,
@@ -349,21 +351,14 @@ export class QueryInfo<
             // re-reading the latest data with cache.diff, below.
           }
 
-          const diff = this.getDiff(diffOptions);
+          const { dataState, result: diffResult } = this.getDiff(diffOptions);
 
-          if (this.cache.supportsIncrementalResults) {
-            result = {
-              ...result,
-              data: diff.result,
-              dataState: diff.dataState,
-            };
-          } else if (diff.complete) {
-            // If we're allowed to write to the cache, and we can read a
-            // complete result from the cache, update result.data to be the
-            // result from the cache, rather than the raw network result.
-            // Set without setDiff to avoid triggering a notify call, since
-            // we have other ways of notifying for this result.
-            result = { ...result, data: diff.dataState, dataState: "complete" };
+          if (
+            dataState === "complete" ||
+            (returnPartialData && dataState === "partial" && shouldWrite) ||
+            (this.hasNext && dataState === "streaming")
+          ) {
+            result = { ...result, data: diffResult, dataState };
           }
         },
       });

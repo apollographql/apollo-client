@@ -21,6 +21,7 @@ import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
   FragmentMap,
   FragmentMapFunction,
+  StreamInfoTrie,
 } from "@apollo/client/utilities/internal";
 import {
   DeepMerger,
@@ -87,6 +88,7 @@ interface ReadContext extends ReadMergeModifyContext {
   policies: Policies;
   fragmentMap: FragmentMap;
   lookupFragment: FragmentMapFunction;
+  streamInfo?: StreamInfoTrie;
 }
 
 type ExecResult<R = any> = {
@@ -224,7 +226,7 @@ export class StoreReader {
    */
   public diffQueryAgainstStore<T>(
     options: DiffQueryAgainstStoreOptions & {
-      [handleIncrementalSymbol]: true;
+      [handleIncrementalSymbol]: true | { streamInfo: StreamInfoTrie };
     }
   ): Cache.InternalDiffResultWithDataState<T>;
 

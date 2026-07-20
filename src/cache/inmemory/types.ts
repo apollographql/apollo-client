@@ -10,6 +10,7 @@ import type {
   ExtensionsWithStreamInfo,
   handleIncrementalSymbol,
   RemoveIndexSignature,
+  StreamInfoTrie,
 } from "@apollo/client/utilities/internal";
 
 import type { ApolloCache, Transaction } from "../core/cache.js";
@@ -134,7 +135,7 @@ export type ReadQueryOptions = {
 
 export type DiffQueryAgainstStoreOptions = ReadQueryOptions & {
   returnPartialData?: boolean;
-  [handleIncrementalSymbol]?: true;
+  [handleIncrementalSymbol]?: true | { streamInfo?: StreamInfoTrie };
 };
 
 export type ApolloReducerConfig = {

@@ -2593,7 +2593,7 @@ test('returns dataState "complete" for pure @stream when all selected fields on 
   });
 });
 
-test('returns dataState "complete" with complete stream items until first incomplete item with returnPartialData: false', () => {
+test('returns dataState "complete" with empty array with incomplete item with returnPartialData: false', () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -2628,10 +2628,7 @@ test('returns dataState "complete" with complete stream items until first incomp
     })
   ).toStrictEqualTyped({
     result: {
-      friendList: [
-        { __typename: "Friend", id: "1", name: "Luke" },
-        { __typename: "Friend", id: "2", name: "Han" },
-      ],
+      friendList: [],
     },
     dataState: "complete",
     complete: true,
@@ -2737,7 +2734,7 @@ test('keeps incomplete stream list items when returnPartialData is true and repo
   });
 });
 
-test('returns dataState "streaming" with complete stream items until the first incomplete item under a combined @stream and @defer selection with returnPartialData: false', () => {
+test('returns dataState "complete" with empty array with partial array item under a combined @stream and @defer selection with returnPartialData: false', () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -2779,11 +2776,11 @@ test('returns dataState "streaming" with complete stream items until the first i
       [handleIncrementalSymbol]: true,
     })
   ).toStrictEqualTyped({
-    result: markAsStreaming({
-      friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
-    }),
-    dataState: "streaming",
-    complete: false,
+    result: {
+      friendList: [],
+    },
+    dataState: "complete",
+    complete: true,
     missing: undefined,
   });
 });
@@ -2961,10 +2958,7 @@ test('returns dataState "complete" with complete stream items until the first in
           name: "Alice",
         },
       },
-      friendList: [
-        { __typename: "Friend", id: "1", name: "Luke" },
-        { __typename: "Friend", id: "2", name: "Han" },
-      ],
+      friendList: [],
     },
     dataState: "complete",
     complete: true,

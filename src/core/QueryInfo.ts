@@ -258,6 +258,7 @@ export class QueryInfo<
       ...incrementalResult,
       dataState:
         incrementalResult.data == null ? "empty"
+          // TODO: This is too naive. For stream arrays, this might be complete
         : this.hasNext ? "streaming"
         : "complete",
     };

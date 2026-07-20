@@ -974,7 +974,7 @@ const DATA_STATE_MERGES: Record<
   streaming: {
     deferPartial: "deferPartial",
     empty: "partial",
-    streamPartial: "deferPartial",
+    streamPartial: "streamPartial",
   },
   complete: {
     deferPartial: "deferPartial",

@@ -727,23 +727,24 @@ export class StoreReader {
       if (entry.data) return entry.data;
 
       let changed = false;
+      let pruned: any[] = [];
 
-      const pruned: any[] = [];
       for (let i = 0; i < array.length; i++) {
         const item = array[i];
 
         let prunedItem = item;
         const boundary = boundaries.getChild(i);
 
+        if (boundary?.has(field)) {
+          changed = true;
+          pruned = [];
+          break;
+        }
+
         if (Array.isArray(item)) {
           prunedItem = pruneArray(field, item, boundary);
         } else if (field.selectionSet) {
           prunedItem = prune(field.selectionSet, item, boundary);
-        }
-
-        if (boundary?.has(field)) {
-          changed = true;
-          break;
         }
 
         pruned.push(prunedItem);

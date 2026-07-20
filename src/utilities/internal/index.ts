@@ -1,7 +1,6 @@
 export type { DecoratedPromise } from "./types/DecoratedPromise.js";
 export type { DeepOmit } from "./types/DeepOmit.js";
 export type { ExtensionsWithStreamInfo } from "./types/ExtensionsWithStreamDetails.js";
-export type { FieldMap } from "./collectSiblingFields.js";
 export type { FragmentMap } from "./types/FragmentMap.js";
 export type { FragmentMapFunction } from "./types/FragmentMapFunction.js";
 export type { FulfilledPromise } from "./types/FulfilledPromise.js";

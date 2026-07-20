@@ -95,7 +95,7 @@ class IncrementalRequest<TData>
   private extensions: Record<string, any> = {};
   private pending = new Map<string, GraphQL17Alpha9Handler.PendingResult>();
   private streamInfo: StreamInfoTrie = new Trie(false, () => ({
-    current: { isFirstChunk: true, isLastChunk: false },
+    current: { isFirstChunk: true, isLastChunk: false, length: 0 },
   }));
   // `streamPositions` maps `pending.id` to the index that should be set by the
   // next `incremental` stream chunk to ensure the streamed array item is placed
@@ -128,6 +128,7 @@ class IncrementalRequest<TData>
             this.streamInfo.lookupArray(pending.path as any[]).current = {
               isFirstChunk: true,
               isLastChunk: false,
+              length: this.streamPositions[pending.id],
             };
           }
         }
@@ -161,6 +162,7 @@ class IncrementalRequest<TData>
           this.streamInfo.lookupArray(path).current = {
             isFirstChunk: false,
             isLastChunk: false,
+            length: this.streamPositions[pending.id],
           };
           data = parent;
         } else {
@@ -225,6 +227,7 @@ class IncrementalRequest<TData>
           details.current = {
             isFirstChunk: false,
             isLastChunk: true,
+            length: streamPosition,
           };
         }
         this.pending.delete(completed.id);

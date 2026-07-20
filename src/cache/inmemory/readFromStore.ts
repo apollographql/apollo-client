@@ -258,6 +258,10 @@ export class StoreReader {
       policies,
       variables,
       varString: canonicalStringify(variables),
+      streamInfo:
+        typeof handleIncremental === "object" && !returnPartialData ?
+          handleIncremental.streamInfo
+        : undefined,
       ...extractFragmentContext(query, this.config.fragments),
     };
     let execResult = this.executeSelectionSet({
@@ -714,13 +718,14 @@ export class StoreReader {
     execResult: ExecResult<T>,
     context: ReadContext
   ): ExecResult<T> {
-    const { policies, lookupFragment, variables } = context;
+    const { policies, lookupFragment, variables, streamInfo } = context;
     const merger = new DeepMerger();
 
     const pruneArray = (
       field: FieldNode,
       array: any[],
-      boundaries: PartialBoundaries | undefined
+      boundaries: PartialBoundaries | undefined,
+      path: Array<string | number>
     ): any[] => {
       if (!boundaries) return array;
       const entry = this.prunedEntries.lookup(field, array, boundaries);
@@ -728,8 +733,10 @@ export class StoreReader {
 
       let changed = false;
       let pruned: any[] = [];
+      const streamLength =
+        streamInfo?.peekArray(path)?.current.length ?? Number.MAX_SAFE_INTEGER;
 
-      for (let i = 0; i < array.length; i++) {
+      for (let i = 0; i < Math.min(array.length, streamLength); i++) {
         const item = array[i];
 
         let prunedItem = item;
@@ -737,19 +744,31 @@ export class StoreReader {
 
         if (boundary?.has(field)) {
           changed = true;
-          pruned = [];
+          if (!streamInfo) pruned = [];
           break;
         }
 
         if (Array.isArray(item)) {
-          prunedItem = pruneArray(field, item, boundary);
+          prunedItem = pruneArray(
+            field,
+            item,
+            boundaries.getChild(i),
+            path.concat(i)
+          );
         } else if (field.selectionSet) {
-          prunedItem = prune(field.selectionSet, item, boundary);
+          prunedItem = prune(
+            field.selectionSet,
+            item,
+            boundaries.getChild(i),
+            path.concat(i)
+          );
         }
 
         pruned.push(prunedItem);
         changed ||= prunedItem !== item;
       }
+
+      changed ||= pruned.length !== array.length;
 
       return (entry.data = changed ? pruned : array);
     };
@@ -757,7 +776,8 @@ export class StoreReader {
     const prune = (
       selectionSet: SelectionSetNode,
       data: any,
-      boundaries: PartialBoundaries | undefined
+      boundaries: PartialBoundaries | undefined,
+      path: Array<string | number> = []
     ): any => {
       if (data == null || !boundaries) return data;
       const entry = this.prunedEntries.lookup(selectionSet, data, boundaries);
@@ -791,7 +811,8 @@ export class StoreReader {
             const pruned = pruneArray(
               selection,
               fieldValue,
-              boundaries.getChild(resultName)
+              boundaries.getChild(resultName),
+              path.concat(resultName)
             );
 
             changed ||= pruned !== fieldValue;
@@ -802,7 +823,8 @@ export class StoreReader {
             const pruned = prune(
               selection.selectionSet,
               fieldValue,
-              boundaries.getChild(resultName)
+              boundaries.getChild(resultName),
+              path.concat(resultName)
             );
 
             changed ||= pruned !== fieldValue;

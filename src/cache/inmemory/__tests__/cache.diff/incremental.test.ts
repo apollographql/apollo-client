@@ -1,3 +1,5 @@
+import { Trie } from "@wry/trie";
+
 import { gql } from "@apollo/client";
 import {
   createFragmentRegistry,
@@ -7,7 +9,10 @@ import {
 } from "@apollo/client/cache";
 import { markAsStreaming, spyOnConsole } from "@apollo/client/testing/internal";
 import { addTypenameToDocument } from "@apollo/client/utilities";
-import { handleIncrementalSymbol } from "@apollo/client/utilities/internal";
+import {
+  handleIncrementalSymbol,
+  type StreamInfoTrie,
+} from "@apollo/client/utilities/internal";
 
 test('returns dataState "complete" when the cache fully satisfies the query', () => {
   const cache = new InMemoryCache();
@@ -2629,6 +2634,225 @@ test('returns dataState "complete" with empty array with incomplete item with re
   ).toStrictEqualTyped({
     result: {
       friendList: [],
+    },
+    dataState: "complete",
+    complete: true,
+    missing: undefined,
+  });
+});
+
+test("returns only written stream items before a partial item when streamInfo is provided", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 1) {
+        id
+        name
+      }
+    }
+  `;
+  const streamInfo = new Trie() as StreamInfoTrie;
+  streamInfo.lookupArray(["friendList"]).current = {
+    isFirstChunk: true,
+    isLastChunk: false,
+    length: 1,
+  };
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        friendList: [
+          { __typename: "Friend", id: "1", name: "Luke" },
+          { __typename: "Friend", id: "2", name: "Han" },
+          { __typename: "Friend", id: "3" },
+          { __typename: "Friend", id: "4", name: "Chewbacca" },
+        ],
+      },
+    });
+  }
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: { streamInfo },
+    })
+  ).toStrictEqualTyped({
+    result: {
+      friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+    },
+    dataState: "complete",
+    complete: true,
+    missing: undefined,
+  });
+});
+
+test("does not truncate a partial stream array when returnPartialData is true", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 1) {
+        id
+        name
+      }
+    }
+  `;
+  const streamInfo = new Trie() as StreamInfoTrie;
+  streamInfo.lookupArray(["friendList"]).current = {
+    isFirstChunk: true,
+    isLastChunk: false,
+    length: 1,
+  };
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        friendList: [
+          { __typename: "Friend", id: "1", name: "Luke" },
+          { __typename: "Friend", id: "2", name: "Han" },
+          { __typename: "Friend", id: "3" },
+          { __typename: "Friend", id: "4", name: "Chewbacca" },
+        ],
+      },
+    });
+  }
+
+  const missingRef = { __ref: "Friend:3" };
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: true,
+      [handleIncrementalSymbol]: { streamInfo },
+    })
+  ).toStrictEqualTyped({
+    result: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+        { __typename: "Friend", id: "3" },
+        { __typename: "Friend", id: "4", name: "Chewbacca" },
+      ],
+    },
+    dataState: "partial",
+    complete: false,
+    missing: new MissingFieldError(
+      getMissingMessage("name", missingRef),
+      {
+        friendList: {
+          2: {
+            name: getMissingMessage("name", missingRef),
+          },
+        },
+      },
+      query,
+      {}
+    ),
+  });
+});
+
+test("returns only the complete prefix when streamInfo includes a partial stream item", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 1) {
+        id
+        name
+      }
+    }
+  `;
+  const streamInfo = new Trie() as StreamInfoTrie;
+  streamInfo.lookupArray(["friendList"]).current = {
+    isFirstChunk: false,
+    isLastChunk: false,
+    length: 4,
+  };
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        friendList: [
+          { __typename: "Friend", id: "1", name: "Luke" },
+          { __typename: "Friend", id: "2", name: "Han" },
+          { __typename: "Friend", id: "3" },
+          { __typename: "Friend", id: "4", name: "Chewbacca" },
+        ],
+      },
+    });
+  }
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: { streamInfo },
+    })
+  ).toStrictEqualTyped({
+    result: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+      ],
+    },
+    dataState: "complete",
+    complete: true,
+    missing: undefined,
+  });
+});
+
+test("returns the full stream array when every item is complete", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 1) {
+        id
+        name
+      }
+    }
+  `;
+  const streamInfo = new Trie() as StreamInfoTrie;
+  streamInfo.lookupArray(["friendList"]).current = {
+    isFirstChunk: true,
+    isLastChunk: false,
+    length: 1,
+  };
+
+  cache.writeQuery({
+    query,
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+        { __typename: "Friend", id: "3", name: "Leia" },
+        { __typename: "Friend", id: "4", name: "Chewbacca" },
+      ],
+    },
+  });
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: { streamInfo },
+    })
+  ).toStrictEqualTyped({
+    result: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+        { __typename: "Friend", id: "3", name: "Leia" },
+        { __typename: "Friend", id: "4", name: "Chewbacca" },
+      ],
     },
     dataState: "complete",
     complete: true,

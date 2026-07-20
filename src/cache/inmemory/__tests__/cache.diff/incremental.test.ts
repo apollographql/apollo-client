@@ -2593,7 +2593,7 @@ test('returns dataState "complete" for pure @stream when all selected fields on 
   });
 });
 
-test("keeps complete stream list items and drops incomplete ones when returnPartialData is false", () => {
+test('returns dataState "complete" with complete stream items until first incomplete item with returnPartialData: false', () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -2613,6 +2613,7 @@ test("keeps complete stream list items and drops incomplete ones when returnPart
           { __typename: "Friend", id: "1", name: "Luke" },
           { __typename: "Friend", id: "2", name: "Han" },
           { __typename: "Friend", id: "3" },
+          { __typename: "Friend", id: "4", name: "Chewbacca" },
         ],
       },
     });
@@ -2736,7 +2737,7 @@ test('keeps incomplete stream list items when returnPartialData is true and repo
   });
 });
 
-test("drops incomplete stream items and strips deferred holes under a combined @stream and @defer selection", () => {
+test('returns dataState "streaming" with complete stream items until the first incomplete item under a combined @stream and @defer selection with returnPartialData: false', () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -2779,13 +2780,7 @@ test("drops incomplete stream items and strips deferred holes under a combined @
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
-      friendList: [
-        {
-          __typename: "Friend",
-          id: "1",
-          name: "Luke",
-        },
-      ],
+      friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
     }),
     dataState: "streaming",
     complete: false,
@@ -2908,7 +2903,7 @@ test('returns dataState "complete" for sibling @stream and a complete @defer wit
   });
 });
 
-test("drops incomplete sibling stream list items while a complete @defer keeps dataState complete with returnPartialData: false", () => {
+test('returns dataState "complete" with complete stream items until the first incomplete item alongside a complete @defer with returnPartialData: false', () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {

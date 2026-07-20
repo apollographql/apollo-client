@@ -726,7 +726,10 @@ export class StoreReader {
 
       let changed = false;
 
-      const pruned = array.reduce<any[]>((memo, item, i) => {
+      const pruned: any[] = [];
+      for (let i = 0; i < array.length; i++) {
+        const item = array[i];
+
         let prunedItem = item;
         const boundary = boundaries.getChild(i);
 
@@ -736,14 +739,14 @@ export class StoreReader {
           prunedItem = prune(field.selectionSet, item, boundary);
         }
 
-        if (!boundary?.has(field)) {
-          memo.push(prunedItem);
+        if (boundary?.has(field)) {
+          changed = true;
+          break;
         }
 
-        changed ||= boundary?.has(field) || prunedItem !== item;
-
-        return memo;
-      }, []);
+        pruned.push(prunedItem);
+        changed ||= prunedItem !== item;
+      }
 
       return (entry.data = changed ? pruned : array);
     };

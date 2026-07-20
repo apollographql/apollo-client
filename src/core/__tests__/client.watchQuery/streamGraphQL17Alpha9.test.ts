@@ -2648,7 +2648,7 @@ test("does not surface incomplete cached stream list items with returnPartialDat
   await expect(stream).not.toEmitAnything();
 });
 
-test("keeps complete cached stream items and drops incomplete ones with returnPartialData: false", async () => {
+test("keeps complete cached stream items up until an incomplete item with returnPartialData: false", async () => {
   const { subject, stream: iterableStream } = asyncIterableSubject();
 
   const query = gql`
@@ -2681,6 +2681,11 @@ test("keeps complete cached stream items and drops incomplete ones with returnPa
           {
             __typename: "Friend",
             id: "3",
+          },
+          {
+            __typename: "Friend",
+            id: "4",
+            name: "Cached Chewbacca",
           },
         ],
       },

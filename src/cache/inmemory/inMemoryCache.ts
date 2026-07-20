@@ -26,6 +26,7 @@ import type {
   handleIncrementalSymbol,
   IsLooselyEqual,
   NoInfer,
+  StreamInfoTrie,
 } from "@apollo/client/utilities/internal";
 import {
   getInMemoryCacheMemoryInternals,
@@ -456,7 +457,7 @@ export class InMemoryCache extends ApolloCache {
     TVariables extends OperationVariables = OperationVariables,
   >(
     query: Cache.DiffOptions<TData, TVariables> & {
-      [handleIncrementalSymbol]: true;
+      [handleIncrementalSymbol]: true | { streamInfo: StreamInfoTrie };
     }
   ): Cache.InternalDiffResultWithDataState<TData>;
 

@@ -751,8 +751,6 @@ export class StoreReader {
         const boundary = boundaries.getChild(i);
 
         if (boundary?.has(field)) {
-          changed = true;
-
           // The presence of streamInfo determines how we truncate partial
           // stream arrays. Stream info is only given to cache.diff during
           // in-flight requests so we want keep items in the array equal to the

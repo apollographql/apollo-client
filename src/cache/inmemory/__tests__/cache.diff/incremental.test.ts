@@ -4944,6 +4944,325 @@ test('returns dataState "complete" when both sibling defer boundaries are fully 
   });
 });
 
+test("does not reuse a deferred result when the @defer if variable changes", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query ($shouldDefer: Boolean!) {
+      greeting {
+        recipient @skip(if: $shouldDefer) {
+          name
+        }
+        ... on Greeting @defer(if: $shouldDefer) @include(if: $shouldDefer) {
+          recipient {
+            name
+            email
+          }
+        }
+        ... on Greeting @defer {
+          author {
+            name
+            email
+          }
+        }
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      variables: { shouldDefer: false },
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          recipient: {
+            __typename: "Person",
+            name: "Alice",
+          },
+          author: {
+            __typename: "Person",
+            name: "Jerel",
+          },
+        },
+      },
+    });
+  }
+
+  expect(
+    cache.diff({
+      query,
+      variables: { shouldDefer: true },
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+
+  expect(
+    cache.diff({
+      query,
+      variables: { shouldDefer: false },
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+        },
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
+test("does not reuse a streamed result when the @stream if variable changes", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query ($shouldStream: Boolean!) {
+      friendList @skip(if: $shouldStream) {
+        id
+      }
+      friendList
+        @stream(initialCount: 1, if: $shouldStream)
+        @include(if: $shouldStream) {
+        id
+        name
+      }
+      otherFriendList @stream(initialCount: 1) {
+        id
+        name
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      variables: { shouldStream: true },
+      data: {
+        friendList: [
+          { __typename: "Friend", id: "1", name: "Luke" },
+          { __typename: "Friend", id: "2" },
+        ],
+        otherFriendList: [
+          { __typename: "Friend", id: "3", name: "Leia" },
+          { __typename: "Friend", id: "4" },
+        ],
+      },
+    });
+  }
+
+  expect(
+    cache.diff({
+      query,
+      variables: { shouldStream: true },
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: { friendList: [], otherFriendList: [] },
+    dataState: "complete",
+    complete: true,
+    missing: undefined,
+  });
+
+  expect(
+    cache.diff({
+      query,
+      variables: { shouldStream: false },
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: {
+      friendList: [
+        { __typename: "Friend", id: "1" },
+        { __typename: "Friend", id: "2" },
+      ],
+      otherFriendList: [],
+    },
+    dataState: "complete",
+    complete: true,
+    missing: undefined,
+  });
+});
+
+test("does not reuse an @include result when its if variable changes", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query ($includeRecipient: Boolean!) {
+      greeting {
+        recipient @include(if: $includeRecipient) {
+          name
+        }
+        ... on Greeting @defer {
+          recipient {
+            name
+            email
+          }
+        }
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      variables: { includeRecipient: true },
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          recipient: {
+            __typename: "Person",
+            name: "Alice",
+          },
+        },
+      },
+    });
+  }
+
+  expect(
+    cache.diff({
+      query,
+      variables: { includeRecipient: true },
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+        },
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+
+  expect(
+    cache.diff({
+      query,
+      variables: { includeRecipient: false },
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
+test("does not reuse an @skip result when its if variable changes", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query ($skipRecipient: Boolean!) {
+      greeting {
+        recipient @skip(if: $skipRecipient) {
+          name
+        }
+        ... on Greeting @defer {
+          recipient {
+            name
+            email
+          }
+        }
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      variables: { skipRecipient: false },
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          recipient: {
+            __typename: "Person",
+            name: "Alice",
+          },
+        },
+      },
+    });
+  }
+
+  expect(
+    cache.diff({
+      query,
+      variables: { skipRecipient: false },
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+        },
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+
+  expect(
+    cache.diff({
+      query,
+      variables: { skipRecipient: true },
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
 test('returns dataState "empty" when a deferred fragment is excluded via @skip and a non-deferred field is missing', () => {
   const cache = new InMemoryCache();
   const query = gql`

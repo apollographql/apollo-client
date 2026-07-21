@@ -707,6 +707,7 @@ export class StoreReader {
     let missing: MissingTree | undefined;
     let missingMerger = new DeepMerger();
     const partialBoundaries = new PartialBoundaries();
+    const isStreamed = isStreamField(field, context.variables);
 
     function handleMissing<T>(childResult: ExecResult<T>, i: number): T {
       if (childResult.missing) {
@@ -747,7 +748,6 @@ export class StoreReader {
       }
 
       if (execResult) {
-        const isStreamed = isStreamField(field, context.variables);
         const { dataState: nextDataState } = execResult;
 
         partialBoundaries.set(

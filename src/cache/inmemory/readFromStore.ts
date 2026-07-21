@@ -733,8 +733,9 @@ export class StoreReader {
 
       let changed = false;
       let pruned: any[] = [];
+      const streamEntry = streamInfo?.peekArray(path)?.cache;
       const streamLength =
-        streamInfo?.peekArray(path)?.current.length ?? Number.MAX_SAFE_INTEGER;
+        streamEntry?.streamPosition ?? Number.MAX_SAFE_INTEGER;
 
       for (let i = 0; i < Math.min(array.length, streamLength); i++) {
         const item = array[i];

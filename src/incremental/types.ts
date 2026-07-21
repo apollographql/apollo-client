@@ -39,6 +39,5 @@ export declare namespace Incremental {
   export interface StreamFieldInfo {
     isFirstChunk: boolean;
     isLastChunk: boolean;
-    length: number;
   }
 }

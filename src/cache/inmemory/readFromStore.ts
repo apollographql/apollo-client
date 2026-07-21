@@ -248,19 +248,34 @@ export class StoreReader {
       {
         makeCacheKey: ({ boundaries, context, selectionSet }) => {
           if (supportsResultCaching(context.store)) {
-            return this.keyMaker.lookup(selectionSet, boundaries);
+            return this.keyMaker.lookup(
+              selectionSet,
+              boundaries,
+              context.streamInfo
+            );
           }
         },
       }
     );
 
-    this.pruneArray = wrap((options) => this.pruneArrayImpl(options), {
-      makeCacheKey: ({ field, context, boundaries }) => {
-        if (supportsResultCaching(context.store)) {
-          return this.keyMaker.lookup(field, boundaries);
+    this.pruneArray = wrap(
+      (options) => {
+        const { field, context, path } = options;
+
+        if (isStreamField(field, context.variables)) {
+          context.streamInfo?.lookupArray(path).state.depend();
         }
+
+        return this.pruneArrayImpl(options);
       },
-    });
+      {
+        makeCacheKey: ({ field, context, boundaries }) => {
+          if (supportsResultCaching(context.store)) {
+            return this.keyMaker.lookup(field, boundaries, context.streamInfo);
+          }
+        },
+      }
+    );
   }
 
   /**

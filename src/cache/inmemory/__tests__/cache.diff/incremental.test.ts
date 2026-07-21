@@ -1224,11 +1224,15 @@ test("returns a referentially stable result across reads, rebuilding only the pa
     });
   }
 
+  const streamInfo = makeStreamInfoTrie();
+  streamInfo.lookupArray(["greeting", "streamedFriends"]).state.streamPosition =
+    1;
+
   const options = {
     query,
     optimistic: true,
     returnPartialData: false,
-    [handleIncrementalSymbol]: true,
+    [handleIncrementalSymbol]: { streamInfo },
   } as const;
 
   const diff1 = cache.diff(options);

@@ -246,18 +246,18 @@ export class StoreReader {
     this.pruneSelectionSet = wrap(
       (options) => this.pruneSelectionSetImpl(options),
       {
-        makeCacheKey: ({ data, boundaries, context, selectionSet }) => {
+        makeCacheKey: ({ boundaries, context, selectionSet }) => {
           if (supportsResultCaching(context.store)) {
-            return this.keyMaker.lookup(selectionSet, data, boundaries);
+            return this.keyMaker.lookup(selectionSet, boundaries);
           }
         },
       }
     );
 
     this.pruneArray = wrap((options) => this.pruneArrayImpl(options), {
-      makeCacheKey: ({ field, array, context, boundaries }) => {
+      makeCacheKey: ({ field, context, boundaries }) => {
         if (supportsResultCaching(context.store)) {
-          return this.keyMaker.lookup(field, array, boundaries);
+          return this.keyMaker.lookup(field, boundaries);
         }
       },
     });

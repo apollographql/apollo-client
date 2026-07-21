@@ -2844,6 +2844,51 @@ test("returns the full stream array when every item is complete", () => {
   });
 });
 
+test("returns the truncated stream array with complete items when truncation is set", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 1) {
+        id
+        name
+      }
+    }
+  `;
+  const streamInfo = new Trie() as StreamInfoTrie;
+  streamInfo.lookupArray(["friendList"]).cache = {
+    truncate: true,
+    streamPosition: 1,
+  };
+
+  cache.writeQuery({
+    query,
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+        { __typename: "Friend", id: "3", name: "Leia" },
+        { __typename: "Friend", id: "4", name: "Chewbacca" },
+      ],
+    },
+  });
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: { streamInfo },
+    })
+  ).toStrictEqualTyped({
+    result: {
+      friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+    },
+    dataState: "complete",
+    complete: true,
+    missing: undefined,
+  });
+});
+
 test('returns dataState "complete" with an empty list when every stream list item is incomplete with returnPartialData: false', () => {
   const cache = new InMemoryCache();
   const query = gql`

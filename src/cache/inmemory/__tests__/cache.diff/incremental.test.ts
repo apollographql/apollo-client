@@ -1,5 +1,3 @@
-import { Trie } from "@wry/trie";
-
 import { gql } from "@apollo/client";
 import {
   createFragmentRegistry,
@@ -11,7 +9,7 @@ import { markAsStreaming, spyOnConsole } from "@apollo/client/testing/internal";
 import { addTypenameToDocument } from "@apollo/client/utilities";
 import {
   handleIncrementalSymbol,
-  type StreamInfoTrie,
+  makeStreamInfoTrie,
 } from "@apollo/client/utilities/internal";
 
 test('returns dataState "complete" when the cache fully satisfies the query', () => {
@@ -2691,8 +2689,8 @@ test("returns truncated list before a partial item when streamInfo is provided b
       }
     }
   `;
-  const streamInfo = new Trie() as StreamInfoTrie;
-  streamInfo.lookupArray(["friendList"]).cache = { streamPosition: 1 };
+  const streamInfo = makeStreamInfoTrie();
+  streamInfo.lookupArray(["friendList"]).state.streamPosition = 1;
 
   {
     using _ = spyOnConsole("error");
@@ -2736,8 +2734,8 @@ test("does not reuse a streamInfo-truncated result when streamInfo is later omit
       }
     }
   `;
-  const streamInfo = new Trie() as StreamInfoTrie;
-  streamInfo.lookupArray(["friendList"]).cache = { streamPosition: 1 };
+  const streamInfo = makeStreamInfoTrie();
+  streamInfo.lookupArray(["friendList"]).state.streamPosition = 1;
 
   {
     using _ = spyOnConsole("error");
@@ -2796,8 +2794,8 @@ test("does not truncate a partial stream array when returnPartialData is true", 
       }
     }
   `;
-  const streamInfo = new Trie() as StreamInfoTrie;
-  streamInfo.lookupArray(["friendList"]).cache = { streamPosition: 1 };
+  const streamInfo = makeStreamInfoTrie();
+  streamInfo.lookupArray(["friendList"]).state.streamPosition = 1;
 
   {
     using _ = spyOnConsole("error");
@@ -2859,8 +2857,8 @@ test("returns only the complete prefix when streamInfo includes a partial stream
       }
     }
   `;
-  const streamInfo = new Trie() as StreamInfoTrie;
-  streamInfo.lookupArray(["friendList"]).cache = { streamPosition: 4 };
+  const streamInfo = makeStreamInfoTrie();
+  streamInfo.lookupArray(["friendList"]).state.streamPosition = 4;
 
   {
     using _ = spyOnConsole("error");
@@ -2907,8 +2905,8 @@ test("returns the full stream array when every item is complete", () => {
       }
     }
   `;
-  const streamInfo = new Trie() as StreamInfoTrie;
-  streamInfo.lookupArray(["friendList"]).cache = { streamPosition: 1 };
+  const streamInfo = makeStreamInfoTrie();
+  streamInfo.lookupArray(["friendList"]).state.streamPosition = 1;
 
   cache.writeQuery({
     query,
@@ -2954,11 +2952,9 @@ test("returns the truncated stream array with complete items when truncation is 
       }
     }
   `;
-  const streamInfo = new Trie() as StreamInfoTrie;
-  streamInfo.lookupArray(["friendList"]).cache = {
-    truncate: true,
-    streamPosition: 1,
-  };
+  const streamInfo = makeStreamInfoTrie();
+  streamInfo.lookupArray(["friendList"]).state.truncate = true;
+  streamInfo.lookupArray(["friendList"]).state.streamPosition = 1;
 
   cache.writeQuery({
     query,
@@ -2999,9 +2995,9 @@ test("invalidates a pruned stream array when truncation state changes", () => {
       }
     }
   `;
-  const streamInfo = new Trie() as StreamInfoTrie;
+  const streamInfo = makeStreamInfoTrie();
   const streamEntry = streamInfo.lookupArray(["friendList"]);
-  streamEntry.cache = { streamPosition: 1 };
+  streamEntry.state.streamPosition = 1;
 
   cache.writeQuery({
     query,
@@ -3030,13 +3026,13 @@ test("invalidates a pruned stream array when truncation state changes", () => {
     ],
   });
 
-  streamEntry.cache.truncate = true;
+  streamEntry.state.truncate = true;
 
   expect(diff().result).toStrictEqualTyped({
     friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
   });
 
-  streamEntry.cache.streamPosition = 2;
+  streamEntry.state.streamPosition = 2;
 
   expect(diff().result).toStrictEqualTyped({
     friendList: [

@@ -3306,7 +3306,7 @@ test("applies field read functions to streamed list items on intermediate and fi
   await expect(stream).not.toEmitAnything();
 });
 
-test("applies field read functions while keeping complete cached stream items up until an incomplete item with returnPartialData: false", async () => {
+test("applies field read functions to streamed items while truncating length with an incomplete stream item with returnPartialData: false", async () => {
   const { subject, stream: iterableStream } = asyncIterableSubject();
 
   const query = gql`

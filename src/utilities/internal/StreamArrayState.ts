@@ -3,9 +3,9 @@ import { dep } from "optimism";
 import type { Incremental } from "@apollo/client/incremental";
 
 export class StreamArrayState {
-  private _streamPosition = 0;
-  private _truncate = false;
+  truncate = false;
 
+  private _streamPosition = 0;
   private path: Incremental.Path;
   private dep = dep<Incremental.Path>();
 
@@ -24,17 +24,6 @@ export class StreamArrayState {
   set streamPosition(value) {
     if (value !== this._streamPosition) {
       this._streamPosition = value;
-      this.dirty();
-    }
-  }
-
-  get truncate() {
-    return this._truncate;
-  }
-
-  set truncate(value) {
-    if (value !== this._truncate) {
-      this._truncate = value;
       this.dirty();
     }
   }

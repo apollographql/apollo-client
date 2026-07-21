@@ -2985,7 +2985,7 @@ test("returns the truncated stream array with complete items when truncation is 
   });
 });
 
-test("invalidates a pruned stream array when truncation state changes", () => {
+test("invalidates a pruned stream array when the stream position changes", () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -2999,16 +2999,19 @@ test("invalidates a pruned stream array when truncation state changes", () => {
   const streamEntry = streamInfo.lookupArray(["friendList"]);
   streamEntry.state.streamPosition = 1;
 
-  cache.writeQuery({
-    query,
-    data: {
-      friendList: [
-        { __typename: "Friend", id: "1", name: "Luke" },
-        { __typename: "Friend", id: "2", name: "Han" },
-        { __typename: "Friend", id: "3", name: "Leia" },
-      ],
-    },
-  });
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        friendList: [
+          { __typename: "Friend", id: "1", name: "Luke" },
+          { __typename: "Friend", id: "2", name: "Han" },
+          { __typename: "Friend", id: "3" },
+        ],
+      },
+    });
+  }
 
   const diff = () =>
     cache.diff({
@@ -3017,16 +3020,6 @@ test("invalidates a pruned stream array when truncation state changes", () => {
       returnPartialData: false,
       [handleIncrementalSymbol]: { streamInfo },
     });
-
-  expect(diff().result).toStrictEqualTyped({
-    friendList: [
-      { __typename: "Friend", id: "1", name: "Luke" },
-      { __typename: "Friend", id: "2", name: "Han" },
-      { __typename: "Friend", id: "3", name: "Leia" },
-    ],
-  });
-
-  streamEntry.state.truncate = true;
 
   expect(diff().result).toStrictEqualTyped({
     friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],

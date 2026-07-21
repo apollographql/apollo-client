@@ -338,6 +338,10 @@ export class StoreReader {
       handleIncremental &&
       (execResult.dataState === "deferPartial" ||
         execResult.dataState === "streamPartial" ||
+        // If the last cache write repaired a partial @stream array to a
+        // complete array, the stream array might contain stale entries after
+        // the last written value. We only want to deliver the results up to
+        // the index the network wrote so we need to prune it too.
         context.streamInfo)
     ) {
       const { dataState } = execResult;

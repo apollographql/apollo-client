@@ -161,8 +161,11 @@ export class StoreReader {
     [ExecSubSelectedArrayOptions]
   >;
 
-  private pruneArray: OptimisticWrapperFunction<[PruneArrayOptions], any[]>;
-  private pruneSelectionSet: OptimisticWrapperFunction<
+  private prunePartialStreamArray: OptimisticWrapperFunction<
+    [PruneArrayOptions],
+    any[]
+  >;
+  private prunePartialBoundaries: OptimisticWrapperFunction<
     [PruneSelectionSetOptions],
     Record<string, any>
   >;
@@ -243,8 +246,8 @@ export class StoreReader {
       }
     );
 
-    this.pruneSelectionSet = wrap(
-      (options) => this.pruneSelectionSetImpl(options),
+    this.prunePartialBoundaries = wrap(
+      (options) => this.prunePartialBoundariesImpl(options),
       {
         makeCacheKey: ({ boundaries, context, selectionSet }) => {
           if (supportsResultCaching(context.store)) {
@@ -258,7 +261,7 @@ export class StoreReader {
       }
     );
 
-    this.pruneArray = wrap(
+    this.prunePartialStreamArray = wrap(
       (options) => {
         const { field, context, path } = options;
 
@@ -266,7 +269,7 @@ export class StoreReader {
           context.streamInfo?.lookupArray(path).state.depend();
         }
 
-        return this.pruneArrayImpl(options);
+        return this.prunePartialStreamArrayImpl(options);
       },
       {
         makeCacheKey: ({ field, context, boundaries }) => {
@@ -344,7 +347,7 @@ export class StoreReader {
         // the index the network wrote so we need to prune it too.
         context.streamInfo)
     ) {
-      const pruned = this.pruneSelectionSet({
+      const pruned = this.prunePartialBoundaries({
         selectionSet: getMainDefinition(query).selectionSet,
         data: execResult.result,
         boundaries: execResult.partialBoundaries,
@@ -792,7 +795,7 @@ export class StoreReader {
     };
   }
 
-  private pruneSelectionSetImpl({
+  private prunePartialBoundariesImpl({
     boundaries,
     context,
     data,
@@ -829,7 +832,7 @@ export class StoreReader {
         const fieldValue = data[resultName];
 
         if (Array.isArray(fieldValue)) {
-          const pruned = this.pruneArray({
+          const pruned = this.prunePartialStreamArray({
             field: selection,
             array: fieldValue,
             boundaries: boundaries.getChild(resultName),
@@ -842,7 +845,7 @@ export class StoreReader {
         } else if (!selection.selectionSet) {
           result[resultName] = fieldValue;
         } else {
-          const pruned = this.pruneSelectionSet({
+          const pruned = this.prunePartialBoundaries({
             data: fieldValue,
             selectionSet: selection.selectionSet,
             boundaries: boundaries.getChild(resultName),
@@ -895,7 +898,7 @@ export class StoreReader {
     return changed ? result : data;
   }
 
-  private pruneArrayImpl({
+  private prunePartialStreamArrayImpl({
     field,
     array,
     boundaries,
@@ -941,7 +944,7 @@ export class StoreReader {
       }
 
       if (Array.isArray(item)) {
-        prunedItem = this.pruneArray({
+        prunedItem = this.prunePartialStreamArray({
           field,
           array: item,
           boundaries: boundaries.getChild(i),
@@ -949,7 +952,7 @@ export class StoreReader {
           path: path.concat(i),
         });
       } else if (field.selectionSet) {
-        prunedItem = this.pruneSelectionSet({
+        prunedItem = this.prunePartialBoundaries({
           data: item,
           selectionSet: field.selectionSet,
           boundaries: boundaries.getChild(i),

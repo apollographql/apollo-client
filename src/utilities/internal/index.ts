@@ -58,6 +58,7 @@ export { isNonNullObject } from "./isNonNullObject.js";
 export { isPlainObject } from "./isPlainObject.js";
 export { isStreamField } from "./isStreamField.js";
 export { isTypenameField } from "./isTypenameField.js";
+export { makeStreamInfoTrie } from "./makeStreamInfoTrie.js";
 export { makeReference } from "./makeReference.js";
 export { makeUniqueId } from "./makeUniqueId.js";
 export { maybeDeepFreeze } from "./maybeDeepFreeze.js";

@@ -1,4 +1,3 @@
-import { Trie } from "@wry/trie";
 import type {
   DocumentNode,
   FormattedExecutionResult,
@@ -7,13 +6,10 @@ import type {
 
 import type { ApolloLink } from "@apollo/client/link";
 import type { DeepPartial, HKT } from "@apollo/client/utilities";
-import type {
-  ExtensionsWithStreamInfo,
-  StreamInfoTrie,
-} from "@apollo/client/utilities/internal";
+import type { ExtensionsWithStreamInfo } from "@apollo/client/utilities/internal";
 import {
   DeepMerger,
-  StreamArrayState,
+  makeStreamInfoTrie,
   streamInfoSymbol,
 } from "@apollo/client/utilities/internal";
 import {
@@ -95,10 +91,7 @@ class IncrementalRequest<TData>
   private errors: GraphQLFormattedError[] = [];
   private extensions: Record<string, any> = {};
   private pending = new Map<string, GraphQL17Alpha9Handler.PendingResult>();
-  private streamInfo: StreamInfoTrie = new Trie(false, (path) => ({
-    state: new StreamArrayState(path),
-    current: { isFirstChunk: true, isLastChunk: false },
-  }));
+  private streamInfo = makeStreamInfoTrie();
   // `streamPositions` maps `pending.id` to the index that should be set by the
   // next `incremental` stream chunk to ensure the streamed array item is placed
   // at the correct point in the data array. `this.data` contains cached

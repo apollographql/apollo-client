@@ -310,17 +310,16 @@ export class StoreReader {
     };
 
     const rootRef = makeReference(rootId);
-    const streamInfo =
-      typeof handleIncremental === "object" && !returnPartialData ?
-        handleIncremental.streamInfo
-      : undefined;
     const context: ReadContext = {
       store,
       query,
       policies,
       variables,
       varString: canonicalStringify(variables),
-      streamInfo,
+      streamInfo:
+        typeof handleIncremental === "object" && !returnPartialData ?
+          handleIncremental.streamInfo
+        : undefined,
       ...extractFragmentContext(query, this.config.fragments),
     };
     let execResult = this.executeSelectionSet({
@@ -339,7 +338,7 @@ export class StoreReader {
       handleIncremental &&
       (execResult.dataState === "deferPartial" ||
         execResult.dataState === "streamPartial" ||
-        streamInfo)
+        context.streamInfo)
     ) {
       const { dataState } = execResult;
       // Omit `missing` property since pruning puts it in a state that doesn't

@@ -344,23 +344,13 @@ export class StoreReader {
         // the index the network wrote so we need to prune it too.
         context.streamInfo)
     ) {
-      const { dataState } = execResult;
-      // Omit `missing` property since pruning puts it in a state that doesn't
-      // report missing fields.
-      const pruned: ExecResult<any> = {
-        partialBoundaries: execResult.partialBoundaries,
-        dataState:
-          dataState === "deferPartial" ? "streaming"
-          : dataState === "streamPartial" ? "complete"
-          : dataState,
-        result: this.pruneSelectionSet({
-          selectionSet: getMainDefinition(query).selectionSet,
-          data: execResult.result,
-          boundaries: execResult.partialBoundaries,
-          context,
-          path: [],
-        }),
-      };
+      const pruned = this.pruneSelectionSet({
+        selectionSet: getMainDefinition(query).selectionSet,
+        data: execResult.result,
+        boundaries: execResult.partialBoundaries,
+        context,
+        path: [],
+      });
 
       // It's possible that pruning didn't actually change the result which can
       // happen if a defer boundary is misclassified as "deferPartial" instead
@@ -370,8 +360,19 @@ export class StoreReader {
       // partial. If we tolerate partial results and pruning changed the result
       // by dropping fields, then we want to keep the original execResult which
       // contains the partial data
-      if (execResult.result === pruned.result || !returnPartialData) {
-        execResult = pruned;
+      if (execResult.result === pruned || !returnPartialData) {
+        const { dataState } = execResult;
+
+        // Omit `missing` property since pruning puts it in a state that doesn't
+        // report missing fields.
+        execResult = {
+          result: pruned,
+          partialBoundaries: execResult.partialBoundaries,
+          dataState:
+            dataState === "deferPartial" ? "streaming"
+            : dataState === "streamPartial" ? "complete"
+            : dataState,
+        };
       }
     }
 

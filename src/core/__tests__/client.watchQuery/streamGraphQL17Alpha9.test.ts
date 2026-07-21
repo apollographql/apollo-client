@@ -2801,10 +2801,7 @@ test("hides a partial cached stream array until the network supplies stream item
 
   await expect(stream).toEmitTypedValue({
     data: {
-      friendList: [
-        { __typename: "Friend", id: "1", name: "Luke" },
-        { __typename: "Friend", id: "2", name: "Cached Han" },
-      ],
+      friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
     },
     dataState: "complete",
     loading: true,

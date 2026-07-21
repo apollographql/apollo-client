@@ -2686,6 +2686,66 @@ test("returns truncated list before a partial item when streamInfo is provided b
   });
 });
 
+test("does not reuse a streamInfo-truncated result when streamInfo is later omitted", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 1) {
+        id
+        name
+      }
+    }
+  `;
+  const streamInfo = new Trie() as StreamInfoTrie;
+  streamInfo.lookupArray(["friendList"]).cache = { streamPosition: 1 };
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        friendList: [
+          { __typename: "Friend", id: "1", name: "Luke" },
+          { __typename: "Friend", id: "2", name: "Han" },
+          { __typename: "Friend", id: "3" },
+        ],
+      },
+    });
+  }
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: { streamInfo },
+    })
+  ).toStrictEqualTyped({
+    result: {
+      friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+    },
+    dataState: "complete",
+    complete: true,
+    missing: undefined,
+  });
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: {
+      friendList: [],
+    },
+    dataState: "complete",
+    complete: true,
+    missing: undefined,
+  });
+});
+
 test("does not truncate a partial stream array when returnPartialData is true", () => {
   const cache = new InMemoryCache();
   const query = gql`
@@ -2886,6 +2946,63 @@ test("returns the truncated stream array with complete items when truncation is 
     dataState: "complete",
     complete: true,
     missing: undefined,
+  });
+});
+
+test("invalidates a pruned stream array when truncation state changes", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 1) {
+        id
+        name
+      }
+    }
+  `;
+  const streamInfo = new Trie() as StreamInfoTrie;
+  const streamEntry = streamInfo.lookupArray(["friendList"]);
+  streamEntry.cache = { streamPosition: 1 };
+
+  cache.writeQuery({
+    query,
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+        { __typename: "Friend", id: "3", name: "Leia" },
+      ],
+    },
+  });
+
+  const diff = () =>
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: { streamInfo },
+    });
+
+  expect(diff().result).toStrictEqualTyped({
+    friendList: [
+      { __typename: "Friend", id: "1", name: "Luke" },
+      { __typename: "Friend", id: "2", name: "Han" },
+      { __typename: "Friend", id: "3", name: "Leia" },
+    ],
+  });
+
+  streamEntry.cache.truncate = true;
+
+  expect(diff().result).toStrictEqualTyped({
+    friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+  });
+
+  streamEntry.cache.streamPosition = 2;
+
+  expect(diff().result).toStrictEqualTyped({
+    friendList: [
+      { __typename: "Friend", id: "1", name: "Luke" },
+      { __typename: "Friend", id: "2", name: "Han" },
+    ],
   });
 });
 

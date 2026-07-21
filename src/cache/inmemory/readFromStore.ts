@@ -743,7 +743,7 @@ export class StoreReader {
       let changed = false;
       let pruned: any[] = [];
 
-      const streamEntry = streamInfo?.peekArray(path)?.cache;
+      const streamEntry = streamInfo?.peekArray(path)?.state;
       const length = Math.min(
         array.length,
         streamEntry?.truncate ?

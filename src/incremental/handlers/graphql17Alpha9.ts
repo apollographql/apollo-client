@@ -13,6 +13,7 @@ import type {
 } from "@apollo/client/utilities/internal";
 import {
   DeepMerger,
+  StreamArrayState,
   streamInfoSymbol,
 } from "@apollo/client/utilities/internal";
 import {
@@ -94,8 +95,8 @@ class IncrementalRequest<TData>
   private errors: GraphQLFormattedError[] = [];
   private extensions: Record<string, any> = {};
   private pending = new Map<string, GraphQL17Alpha9Handler.PendingResult>();
-  private streamInfo: StreamInfoTrie = new Trie(false, () => ({
-    cache: { streamPosition: 0 },
+  private streamInfo: StreamInfoTrie = new Trie(false, (path) => ({
+    state: new StreamArrayState(path),
     current: { isFirstChunk: true, isLastChunk: false },
   }));
   // `streamPositions` maps `pending.id` to the index that should be set by the
@@ -131,7 +132,7 @@ class IncrementalRequest<TData>
               isFirstChunk: true,
               isLastChunk: false,
             };
-            entry.cache.streamPosition = dataAtPath.length;
+            entry.state.streamPosition = dataAtPath.length;
           }
         }
       }
@@ -166,7 +167,7 @@ class IncrementalRequest<TData>
             isFirstChunk: false,
             isLastChunk: false,
           };
-          entry.cache.streamPosition = this.streamPositions[pending.id];
+          entry.state.streamPosition = this.streamPositions[pending.id];
 
           data = parent;
         } else {
@@ -232,7 +233,7 @@ class IncrementalRequest<TData>
             isFirstChunk: false,
             isLastChunk: true,
           };
-          details.cache.streamPosition = streamPosition;
+          details.state.streamPosition = streamPosition;
         }
         this.pending.delete(completed.id);
 

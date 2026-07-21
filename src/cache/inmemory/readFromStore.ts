@@ -161,12 +161,20 @@ export class StoreReader {
     [ExecSubSelectedArrayOptions]
   >;
 
+  private pruneArray: OptimisticWrapperFunction<[PruneArrayOptions], any[]>;
+  private pruneSelectionSet: OptimisticWrapperFunction<
+    [PruneSelectionSetOptions],
+    Record<string, any>
+  >;
+
   private config: {
     cache: InMemoryCache;
     fragments?: InMemoryCacheConfig["fragments"];
   };
 
   private knownResults = new WeakMap<Record<string, any>, SelectionSetNode>();
+
+  private keyMaker = new Trie();
 
   constructor(config: StoreReaderConfig) {
     this.config = config;
@@ -234,6 +242,25 @@ export class StoreReader {
         },
       }
     );
+
+    this.pruneSelectionSet = wrap(
+      (options) => this.pruneSelectionSetImpl(options),
+      {
+        makeCacheKey: ({ data, boundaries, context, selectionSet }) => {
+          if (supportsResultCaching(context.store)) {
+            return this.keyMaker.lookup(selectionSet, data, boundaries);
+          }
+        },
+      }
+    );
+
+    this.pruneArray = wrap((options) => this.pruneArrayImpl(options), {
+      makeCacheKey: ({ field, array, context, boundaries }) => {
+        if (supportsResultCaching(context.store)) {
+          return this.keyMaker.lookup(field, array, boundaries);
+        }
+      },
+    });
   }
 
   /**
@@ -743,27 +770,18 @@ export class StoreReader {
     };
   }
 
-  private prunedEntries = new Trie<{ data: any }>();
-  private pruneSelectionSet({
+  private pruneSelectionSetImpl({
     boundaries,
     context,
     data,
     path,
     selectionSet,
   }: PruneSelectionSetOptions): any {
-    const { streamInfo, variables, lookupFragment, policies } = context;
+    const { variables, lookupFragment, policies } = context;
 
     if (data == null || !boundaries) return data;
 
     const merger = new DeepMerger();
-    const entry = this.prunedEntries.lookup(
-      selectionSet,
-      data,
-      boundaries,
-      streamInfo
-    );
-
-    if (entry.data) return entry.data;
 
     let changed = false;
     const result: Record<string, any> = {};
@@ -852,10 +870,10 @@ export class StoreReader {
       changed = !equal(result, data);
     }
 
-    return (entry.data = changed ? result : data);
+    return changed ? result : data;
   }
 
-  private pruneArray({
+  private pruneArrayImpl({
     field,
     array,
     boundaries,
@@ -865,15 +883,6 @@ export class StoreReader {
     const { streamInfo } = context;
 
     if (!boundaries) return array;
-
-    const entry = this.prunedEntries.lookup(
-      field,
-      array,
-      boundaries,
-      streamInfo
-    );
-
-    if (entry.data) return entry.data;
 
     let changed = false;
     let pruned: any[] = [];
@@ -933,7 +942,7 @@ export class StoreReader {
 
     changed ||= pruned.length !== array.length;
 
-    return (entry.data = changed ? pruned : array);
+    return changed ? pruned : array;
   }
 }
 

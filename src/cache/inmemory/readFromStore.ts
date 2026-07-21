@@ -283,7 +283,19 @@ export class StoreReader {
         execResult.dataState === "streamPartial" ||
         streamInfo)
     ) {
-      const pruned = this.prunePartialBoundaries(query, execResult, context);
+      // Omit `missing` property since pruning puts it in a state that doesn't
+      // report missing fields.
+      const pruned: ExecResult<any> = {
+        partialBoundaries: execResult.partialBoundaries,
+        dataState:
+          execResult.dataState === "deferPartial" ? "streaming" : "complete",
+        result: this.pruneSelectionSet(
+          getMainDefinition(query).selectionSet,
+          execResult.result,
+          execResult.partialBoundaries,
+          context
+        ),
+      };
 
       // It's possible that pruning didn't actually change the result which can
       // happen if a defer boundary is misclassified as "deferPartial" instead
@@ -715,206 +727,196 @@ export class StoreReader {
   }
 
   private prunedEntries = new Trie<{ data: any }>();
-  private prunePartialBoundaries<T>(
-    document: DocumentNode,
-    execResult: ExecResult<T>,
-    context: ReadContext
-  ): ExecResult<T> {
-    const { policies, lookupFragment, variables, streamInfo } = context;
+  private pruneSelectionSet(
+    selectionSet: SelectionSetNode,
+    data: any,
+    boundaries: PartialBoundaries | undefined,
+    context: ReadContext,
+    path: Array<string | number> = []
+  ): any {
+    const { streamInfo, variables, lookupFragment, policies } = context;
+
+    if (data == null || !boundaries) return data;
+
     const merger = new DeepMerger();
+    const entry = this.prunedEntries.lookup(
+      selectionSet,
+      data,
+      boundaries,
+      streamInfo
+    );
 
-    const pruneArray = (
-      field: FieldNode,
-      array: any[],
-      boundaries: PartialBoundaries | undefined,
-      path: Array<string | number>
-    ): any[] => {
-      if (!boundaries) return array;
+    if (entry.data) return entry.data;
 
-      const entry = this.prunedEntries.lookup(
-        field,
-        array,
-        boundaries,
-        streamInfo
-      );
+    let changed = false;
+    const result: Record<string, any> = {};
 
-      if (entry.data) return entry.data;
+    // __typename might not be part of the selection set, so preserve it when
+    // available, otherwise it gets removed since it's never visited when
+    // iterating the selection set.
+    if (Object.hasOwn(data, "__typename")) {
+      result.__typename = data.__typename;
+    }
 
-      let changed = false;
-      let pruned: any[] = [];
+    const workSet = new Set(selectionSet.selections);
+    workSet.forEach((selection) => {
+      if (!shouldInclude(selection, variables)) return;
 
-      const streamEntry = streamInfo?.peekArray(path)?.state;
-      const length = Math.min(
-        array.length,
-        streamEntry?.truncate ?
-          streamEntry.streamPosition
-        : Number.MAX_SAFE_INTEGER
-      );
+      if (isField(selection)) {
+        const resultName = resultKeyNameFromField(selection);
 
-      for (let i = 0; i < length; i++) {
-        const item = array[i];
-
-        let prunedItem = item;
-        const boundary = boundaries.getChild(i);
-
-        if (boundary?.has(field)) {
-          // The presence of streamInfo determines how we truncate partial
-          // stream arrays. Stream info is only given to cache.diff during
-          // in-flight requests so we want keep items in the array equal to the
-          // total that have streamed in (this is represented by streamPosition
-          // above). For all other cache reads, partial stream boundaries are
-          // pruned back to an empty array.
-          if (streamEntry) {
-            streamEntry.truncate = true;
-            pruned = pruned.slice(0, streamEntry.streamPosition);
-          } else {
-            pruned = [];
-          }
-
-          break;
-        }
-
-        if (Array.isArray(item)) {
-          prunedItem = pruneArray(
-            field,
-            item,
-            boundaries.getChild(i),
-            path.concat(i)
-          );
-        } else if (field.selectionSet) {
-          prunedItem = prune(
-            field.selectionSet,
-            item,
-            boundaries.getChild(i),
-            path.concat(i)
-          );
-        }
-
-        pruned.push(prunedItem);
-        changed ||= prunedItem !== item;
-      }
-
-      changed ||= pruned.length !== array.length;
-
-      return (entry.data = changed ? pruned : array);
-    };
-
-    const prune = (
-      selectionSet: SelectionSetNode,
-      data: any,
-      boundaries: PartialBoundaries | undefined,
-      path: Array<string | number> = []
-    ): any => {
-      if (data == null || !boundaries) return data;
-      const entry = this.prunedEntries.lookup(
-        selectionSet,
-        data,
-        boundaries,
-        streamInfo
-      );
-
-      if (entry.data) return entry.data;
-
-      let changed = false;
-      const result: Record<string, any> = {};
-
-      // __typename might not be part of the selection set, so preserve it when
-      // available, otherwise it gets removed since it's never visited when
-      // iterating the selection set.
-      if (Object.hasOwn(data, "__typename")) {
-        result.__typename = data.__typename;
-      }
-
-      const workSet = new Set(selectionSet.selections);
-      workSet.forEach((selection) => {
-        if (!shouldInclude(selection, variables)) return;
-
-        if (isField(selection)) {
-          const resultName = resultKeyNameFromField(selection);
-
-          if (!Object.hasOwn(data, resultName)) {
-            return;
-          }
-
-          const fieldValue = data[resultName];
-
-          if (Array.isArray(fieldValue)) {
-            const pruned = pruneArray(
-              selection,
-              fieldValue,
-              boundaries.getChild(resultName),
-              path.concat(resultName)
-            );
-
-            changed ||= pruned !== fieldValue;
-            result[resultName] = pruned;
-          } else if (!selection.selectionSet) {
-            result[resultName] = fieldValue;
-          } else {
-            const pruned = prune(
-              selection.selectionSet,
-              fieldValue,
-              boundaries.getChild(resultName),
-              path.concat(resultName)
-            );
-
-            changed ||= pruned !== fieldValue;
-
-            // A response key can be selected by more than one selection (e.g. a
-            // field and an overlapping fragment), so merge their kept fields.
-            result[resultName] =
-              Object.hasOwn(result, resultName) ?
-                merger.merge(result[resultName], pruned)
-              : pruned;
-          }
-
+        if (!Object.hasOwn(data, resultName)) {
           return;
         }
 
-        // Note: we do NOT set `changed` to true anywhere in this branch of the
-        // conditional, despite the fact that we might have encountered a
-        // partial @defer boundary. Dropping a fragment does not guarantee keys
-        // are actually dropped which can happen when overlapping sibling
-        // selections contribute to the construction of the object. The final
-        // Object.keys(result).length check actually detects whether keys were
-        // dropped or not.
+        const fieldValue = data[resultName];
 
-        const fragment = getFragmentFromSelection(selection, lookupFragment);
+        if (Array.isArray(fieldValue)) {
+          const pruned = this.pruneArray(
+            selection,
+            fieldValue,
+            boundaries.getChild(resultName),
+            context,
+            path.concat(resultName)
+          );
 
-        if (
-          fragment &&
-          policies.fragmentMatches(fragment, data.__typename) &&
-          !boundaries.has(selection)
-        ) {
-          fragment.selectionSet.selections.forEach(workSet.add, workSet);
+          changed ||= pruned !== fieldValue;
+          result[resultName] = pruned;
+        } else if (!selection.selectionSet) {
+          result[resultName] = fieldValue;
+        } else {
+          const pruned = this.pruneSelectionSet(
+            selection.selectionSet,
+            fieldValue,
+            boundaries.getChild(resultName),
+            context,
+            path.concat(resultName)
+          );
+
+          changed ||= pruned !== fieldValue;
+
+          // A response key can be selected by more than one selection (e.g. a
+          // field and an overlapping fragment), so merge their kept fields.
+          result[resultName] =
+            Object.hasOwn(result, resultName) ?
+              merger.merge(result[resultName], pruned)
+            : pruned;
         }
-      });
 
-      if (Object.keys(result).length !== Object.keys(data).length) {
-        changed = true;
-      } else if (changed && boundaries.hasSelections()) {
-        // Overlapping siblings may rebuild the same fields under a new object
-        // identity (e.g. changed === true) after a partial @defer is skipped.
-        // We perform a deep equality check to verify whether anything was
-        // actually dropped by the partial @defer fragment.
-        changed = !equal(result, data);
+        return;
       }
 
-      return (entry.data = changed ? result : data);
-    };
+      // Note: we do NOT set `changed` to true anywhere in this branch of the
+      // conditional, despite the fact that we might have encountered a
+      // partial @defer boundary. Dropping a fragment does not guarantee keys
+      // are actually dropped which can happen when overlapping sibling
+      // selections contribute to the construction of the object. The final
+      // Object.keys(result).length check actually detects whether keys were
+      // dropped or not.
 
-    // Omit `missing` property since pruning puts it in a state that doesn't
-    // report missing fields.
-    return {
-      partialBoundaries: execResult.partialBoundaries,
-      dataState:
-        execResult.dataState === "deferPartial" ? "streaming" : "complete",
-      result: prune(
-        getMainDefinition(document).selectionSet,
-        execResult.result,
-        execResult.partialBoundaries
-      ),
-    };
+      const fragment = getFragmentFromSelection(selection, lookupFragment);
+
+      if (
+        fragment &&
+        policies.fragmentMatches(fragment, data.__typename) &&
+        !boundaries.has(selection)
+      ) {
+        fragment.selectionSet.selections.forEach(workSet.add, workSet);
+      }
+    });
+
+    if (Object.keys(result).length !== Object.keys(data).length) {
+      changed = true;
+    } else if (changed && boundaries.hasSelections()) {
+      // Overlapping siblings may rebuild the same fields under a new object
+      // identity (e.g. changed === true) after a partial @defer is skipped.
+      // We perform a deep equality check to verify whether anything was
+      // actually dropped by the partial @defer fragment.
+      changed = !equal(result, data);
+    }
+
+    return (entry.data = changed ? result : data);
+  }
+
+  private pruneArray(
+    field: FieldNode,
+    array: any[],
+    boundaries: PartialBoundaries | undefined,
+    context: ReadContext,
+    path: Array<string | number>
+  ) {
+    const { streamInfo } = context;
+
+    if (!boundaries) return array;
+
+    const entry = this.prunedEntries.lookup(
+      field,
+      array,
+      boundaries,
+      streamInfo
+    );
+
+    if (entry.data) return entry.data;
+
+    let changed = false;
+    let pruned: any[] = [];
+
+    const streamEntry = streamInfo?.peekArray(path)?.state;
+    const length = Math.min(
+      array.length,
+      streamEntry?.truncate ?
+        streamEntry.streamPosition
+      : Number.MAX_SAFE_INTEGER
+    );
+
+    for (let i = 0; i < length; i++) {
+      const item = array[i];
+
+      let prunedItem = item;
+      const boundary = boundaries.getChild(i);
+
+      if (boundary?.has(field)) {
+        // The presence of streamInfo determines how we truncate partial
+        // stream arrays. Stream info is only given to cache.diff during
+        // in-flight requests so we want keep items in the array equal to the
+        // total that have streamed in (this is represented by streamPosition
+        // above). For all other cache reads, partial stream boundaries are
+        // pruned back to an empty array.
+        if (streamEntry) {
+          streamEntry.truncate = true;
+          pruned = pruned.slice(0, streamEntry.streamPosition);
+        } else {
+          pruned = [];
+        }
+
+        break;
+      }
+
+      if (Array.isArray(item)) {
+        prunedItem = this.pruneArray(
+          field,
+          item,
+          boundaries.getChild(i),
+          context,
+          path.concat(i)
+        );
+      } else if (field.selectionSet) {
+        prunedItem = this.pruneSelectionSet(
+          field.selectionSet,
+          item,
+          boundaries.getChild(i),
+          context,
+          path.concat(i)
+        );
+      }
+
+      pruned.push(prunedItem);
+      changed ||= prunedItem !== item;
+    }
+
+    changed ||= pruned.length !== array.length;
+
+    return (entry.data = changed ? pruned : array);
   }
 }
 

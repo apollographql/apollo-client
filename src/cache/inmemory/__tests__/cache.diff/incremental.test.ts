@@ -3153,7 +3153,7 @@ test('returns dataState "complete" for sibling @stream and a complete @defer wit
   });
 });
 
-test('returns dataState "complete" with complete stream items until the first incomplete item alongside a complete @defer with returnPartialData: false', () => {
+test('returns dataState "complete" with an empty stream array when an item is incomplete alongside a complete @defer with returnPartialData: false', () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {

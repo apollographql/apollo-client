@@ -112,6 +112,22 @@ type ExecSubSelectedArrayOptions = {
   context: ReadContext;
 };
 
+type PruneSelectionSetOptions = {
+  selectionSet: SelectionSetNode;
+  context: ReadContext;
+  path: Array<string | number>;
+  data: any;
+  boundaries: PartialBoundaries | undefined;
+};
+
+type PruneArrayOptions = {
+  field: FieldNode;
+  context: ReadContext;
+  path: Array<string | number>;
+  array: any[];
+  boundaries: PartialBoundaries | undefined;
+};
+
 interface StoreReaderConfig {
   cache: InMemoryCache;
   fragments?: InMemoryCacheConfig["fragments"];
@@ -289,12 +305,13 @@ export class StoreReader {
         partialBoundaries: execResult.partialBoundaries,
         dataState:
           execResult.dataState === "deferPartial" ? "streaming" : "complete",
-        result: this.pruneSelectionSet(
-          getMainDefinition(query).selectionSet,
-          execResult.result,
-          execResult.partialBoundaries,
-          context
-        ),
+        result: this.pruneSelectionSet({
+          selectionSet: getMainDefinition(query).selectionSet,
+          data: execResult.result,
+          boundaries: execResult.partialBoundaries,
+          context,
+          path: [],
+        }),
       };
 
       // It's possible that pruning didn't actually change the result which can
@@ -727,13 +744,13 @@ export class StoreReader {
   }
 
   private prunedEntries = new Trie<{ data: any }>();
-  private pruneSelectionSet(
-    selectionSet: SelectionSetNode,
-    data: any,
-    boundaries: PartialBoundaries | undefined,
-    context: ReadContext,
-    path: Array<string | number> = []
-  ): any {
+  private pruneSelectionSet({
+    boundaries,
+    context,
+    data,
+    path,
+    selectionSet,
+  }: PruneSelectionSetOptions): any {
     const { streamInfo, variables, lookupFragment, policies } = context;
 
     if (data == null || !boundaries) return data;
@@ -772,26 +789,26 @@ export class StoreReader {
         const fieldValue = data[resultName];
 
         if (Array.isArray(fieldValue)) {
-          const pruned = this.pruneArray(
-            selection,
-            fieldValue,
-            boundaries.getChild(resultName),
+          const pruned = this.pruneArray({
+            field: selection,
+            array: fieldValue,
+            boundaries: boundaries.getChild(resultName),
             context,
-            path.concat(resultName)
-          );
+            path: path.concat(resultName),
+          });
 
           changed ||= pruned !== fieldValue;
           result[resultName] = pruned;
         } else if (!selection.selectionSet) {
           result[resultName] = fieldValue;
         } else {
-          const pruned = this.pruneSelectionSet(
-            selection.selectionSet,
-            fieldValue,
-            boundaries.getChild(resultName),
+          const pruned = this.pruneSelectionSet({
+            data: fieldValue,
+            selectionSet: selection.selectionSet,
+            boundaries: boundaries.getChild(resultName),
             context,
-            path.concat(resultName)
-          );
+            path: path.concat(resultName),
+          });
 
           changed ||= pruned !== fieldValue;
 
@@ -838,13 +855,13 @@ export class StoreReader {
     return (entry.data = changed ? result : data);
   }
 
-  private pruneArray(
-    field: FieldNode,
-    array: any[],
-    boundaries: PartialBoundaries | undefined,
-    context: ReadContext,
-    path: Array<string | number>
-  ) {
+  private pruneArray({
+    field,
+    array,
+    boundaries,
+    context,
+    path,
+  }: PruneArrayOptions) {
     const { streamInfo } = context;
 
     if (!boundaries) return array;
@@ -893,21 +910,21 @@ export class StoreReader {
       }
 
       if (Array.isArray(item)) {
-        prunedItem = this.pruneArray(
+        prunedItem = this.pruneArray({
           field,
-          item,
-          boundaries.getChild(i),
+          array: item,
+          boundaries: boundaries.getChild(i),
           context,
-          path.concat(i)
-        );
+          path: path.concat(i),
+        });
       } else if (field.selectionSet) {
-        prunedItem = this.pruneSelectionSet(
-          field.selectionSet,
-          item,
-          boundaries.getChild(i),
+        prunedItem = this.pruneSelectionSet({
+          data: item,
+          selectionSet: field.selectionSet,
+          boundaries: boundaries.getChild(i),
           context,
-          path.concat(i)
-        );
+          path: path.concat(i),
+        });
       }
 
       pruned.push(prunedItem);

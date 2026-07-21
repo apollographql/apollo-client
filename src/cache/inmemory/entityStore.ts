@@ -619,8 +619,7 @@ export abstract class EntityStore implements NormalizedCache {
   public makeCacheKey(
     selectionSet: SelectionSetNode,
     parent: string /* = ( Reference.__ref ) */ | StoreObject,
-    varString: string | undefined,
-    returnPartialData: boolean | undefined
+    varString: string | undefined
   ): object;
   /** overload for `StoreReader.executeSubSelectedArray` */
   public makeCacheKey(

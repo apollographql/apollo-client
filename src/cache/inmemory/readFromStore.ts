@@ -745,6 +745,12 @@ export class StoreReader {
 
         if (boundary?.has(field)) {
           changed = true;
+          // The presence of streamInfo determines how we truncate partial
+          // stream arrays. Stream info is only given to cache.diff during
+          // in-flight requests so we want keep items in the array equal to the
+          // total that have streamed in (this is represented by streamPosition
+          // above). For all other cache reads, partial stream boundaries are
+          // pruned back to an empty array.
           if (!streamInfo) pruned = [];
           break;
         }

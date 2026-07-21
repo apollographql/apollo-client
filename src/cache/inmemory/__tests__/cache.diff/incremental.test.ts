@@ -2652,11 +2652,7 @@ test("returns only written stream items before a partial item when streamInfo is
     }
   `;
   const streamInfo = new Trie() as StreamInfoTrie;
-  streamInfo.lookupArray(["friendList"]).current = {
-    isFirstChunk: true,
-    isLastChunk: false,
-    length: 1,
-  };
+  streamInfo.lookupArray(["friendList"]).cache = { streamPosition: 1 };
 
   {
     using _ = spyOnConsole("error");
@@ -2701,11 +2697,7 @@ test("does not truncate a partial stream array when returnPartialData is true", 
     }
   `;
   const streamInfo = new Trie() as StreamInfoTrie;
-  streamInfo.lookupArray(["friendList"]).current = {
-    isFirstChunk: true,
-    isLastChunk: false,
-    length: 1,
-  };
+  streamInfo.lookupArray(["friendList"]).cache = { streamPosition: 1 };
 
   {
     using _ = spyOnConsole("error");
@@ -2768,11 +2760,7 @@ test("returns only the complete prefix when streamInfo includes a partial stream
     }
   `;
   const streamInfo = new Trie() as StreamInfoTrie;
-  streamInfo.lookupArray(["friendList"]).current = {
-    isFirstChunk: false,
-    isLastChunk: false,
-    length: 4,
-  };
+  streamInfo.lookupArray(["friendList"]).cache = { streamPosition: 4 };
 
   {
     using _ = spyOnConsole("error");
@@ -2820,11 +2808,7 @@ test("returns the full stream array when every item is complete", () => {
     }
   `;
   const streamInfo = new Trie() as StreamInfoTrie;
-  streamInfo.lookupArray(["friendList"]).current = {
-    isFirstChunk: true,
-    isLastChunk: false,
-    length: 1,
-  };
+  streamInfo.lookupArray(["friendList"]).cache = { streamPosition: 1 };
 
   cache.writeQuery({
     query,

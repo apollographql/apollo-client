@@ -373,9 +373,7 @@ export class QueryInfo<
             (returnPartialData && dataState === "partial" && shouldWrite) ||
             (this.hasNext && dataState === "streaming")
           ) {
-            console.log("reassign", diffResult);
             result = { ...result, data: diffResult, dataState };
-            console.dir(result, { depth: null });
           }
         },
       });

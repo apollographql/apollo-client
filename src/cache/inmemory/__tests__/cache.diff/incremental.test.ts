@@ -1085,6 +1085,10 @@ test("returns a referentially stable result across reads, rebuilding only the pa
           id
           name
         }
+        streamedFriends @stream(initialCount: 1) {
+          id
+          name
+        }
         colleagues {
           id
           name
@@ -1144,6 +1148,12 @@ test("returns a referentially stable result across reads, rebuilding only the pa
           friends: [
             { __typename: "Person", id: "1", name: "Leia" },
             { __typename: "Person", id: "2", name: "Han" },
+          ],
+          // A partial stream with a visible complete prefix. The prefix must
+          // be rebuilt when its data changes while the stream stays partial.
+          streamedFriends: [
+            { __typename: "Person", id: "30", name: "Luke" },
+            { __typename: "Person", id: "31" },
           ],
           // List with a nested @defer with mixed partial + complete items.
           // complete items remain unchanged,but partial items lose partial
@@ -1239,6 +1249,7 @@ test("returns a referentially stable result across reads, rebuilding only the pa
           { __typename: "Person", id: "1", name: "Leia" },
           { __typename: "Person", id: "2", name: "Han" },
         ],
+        streamedFriends: [{ __typename: "Person", id: "30", name: "Luke" }],
         colleagues: [
           {
             __typename: "Person",
@@ -1307,6 +1318,7 @@ test("returns a referentially stable result across reads, rebuilding only the pa
 
   expect(greeting3.friends).toBe(greeting1.friends);
   expect(greeting3.friends[0]).toBe(greeting1.friends[0]);
+  expect(greeting3.streamedFriends).toBe(greeting1.streamedFriends);
   expect(greeting3.colleagues).toBe(greeting1.colleagues);
   expect(greeting3.colleagues[0]).toBe(greeting1.colleagues[0]);
   expect(greeting3.colleagues[2]).toBe(greeting1.colleagues[2]);
@@ -1338,6 +1350,7 @@ test("returns a referentially stable result across reads, rebuilding only the pa
 
   expect(greeting4.friends[0].name).toBe("Leia Organa");
   expect(greeting4.friends[1]).toBe(greeting3.friends[1]);
+  expect(greeting4.streamedFriends).toBe(greeting3.streamedFriends);
   expect(greeting4.author).toBe(greeting3.author);
   expect(greeting4.colleagues[0]).toBe(greeting3.colleagues[0]);
   expect(greeting4.colleagues[2]).toBe(greeting3.colleagues[2]);
@@ -1372,6 +1385,7 @@ test("returns a referentially stable result across reads, rebuilding only the pa
   expect(greeting5.friendGroups).toBe(greeting4.friendGroups);
   expect(greeting5.manager).toBe(greeting4.manager);
   expect(greeting5.friends).toBe(greeting4.friends);
+  expect(greeting5.streamedFriends).toBe(greeting4.streamedFriends);
   expect(greeting5.author).toBe(greeting4.author);
   expect(greeting5.sender).toBe(greeting4.sender);
 
@@ -1402,6 +1416,28 @@ test("returns a referentially stable result across reads, rebuilding only the pa
   expect(greeting6.friendGroups[0][1]).toBe(greeting5.friendGroups[0][1]);
   expect(greeting6.friendGroups[1]).toBe(greeting5.friendGroups[1]);
   expect(greeting6.friendGroups[1][0]).toBe(greeting5.friendGroups[1][0]);
+
+  // Updating a visible item in a still-partial stream must invalidate the
+  // pruned array even though its partial boundary has not changed.
+  cache.writeFragment({
+    id: cache.identify({ __typename: "Person", id: "30" })!,
+    fragment: gql`
+      fragment UpdatedStreamedFriend on Person {
+        name
+      }
+    `,
+    data: { __typename: "Person", name: "Luke Skywalker" },
+  });
+
+  const diff7 = cache.diff(options);
+  const greeting7 = (diff7.result as any).greeting;
+
+  expect(greeting7.streamedFriends).not.toBe(greeting6.streamedFriends);
+  expect(greeting7.streamedFriends).toStrictEqual([
+    { __typename: "Person", id: "30", name: "Luke Skywalker" },
+  ]);
+  expect(greeting7.friends).toBe(greeting6.friends);
+  expect(greeting7.friendGroups).toBe(greeting6.friendGroups);
 });
 
 test("preserves shared object identity for repeated list entities after stripping partial @defer fields with returnPartialData: false", () => {

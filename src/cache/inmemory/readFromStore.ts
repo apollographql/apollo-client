@@ -252,16 +252,17 @@ export class StoreReader {
     };
 
     const rootRef = makeReference(rootId);
+    const streamInfo =
+      typeof handleIncremental === "object" && !returnPartialData ?
+        handleIncremental.streamInfo
+      : undefined;
     const context: ReadContext = {
       store,
       query,
       policies,
       variables,
       varString: canonicalStringify(variables),
-      streamInfo:
-        typeof handleIncremental === "object" && !returnPartialData ?
-          handleIncremental.streamInfo
-        : undefined,
+      streamInfo,
       ...extractFragmentContext(query, this.config.fragments),
     };
     let execResult = this.executeSelectionSet({
@@ -279,7 +280,8 @@ export class StoreReader {
     if (
       handleIncremental &&
       (execResult.dataState === "deferPartial" ||
-        execResult.dataState === "streamPartial")
+        execResult.dataState === "streamPartial" ||
+        streamInfo)
     ) {
       const pruned = this.prunePartialBoundaries(query, execResult, context);
 
@@ -734,10 +736,15 @@ export class StoreReader {
       let changed = false;
       let pruned: any[] = [];
       const streamEntry = streamInfo?.peekArray(path)?.cache;
-      const streamLength =
-        streamEntry?.streamPosition ?? Number.MAX_SAFE_INTEGER;
 
-      for (let i = 0; i < Math.min(array.length, streamLength); i++) {
+      const length = Math.min(
+        array.length,
+        streamEntry?.truncate ?
+          streamEntry.streamPosition
+        : Number.MAX_SAFE_INTEGER
+      );
+
+      for (let i = 0; i < length; i++) {
         const item = array[i];
 
         let prunedItem = item;
@@ -745,13 +752,20 @@ export class StoreReader {
 
         if (boundary?.has(field)) {
           changed = true;
+
           // The presence of streamInfo determines how we truncate partial
           // stream arrays. Stream info is only given to cache.diff during
           // in-flight requests so we want keep items in the array equal to the
           // total that have streamed in (this is represented by streamPosition
           // above). For all other cache reads, partial stream boundaries are
           // pruned back to an empty array.
-          if (!streamInfo) pruned = [];
+          if (streamEntry) {
+            streamEntry.truncate = true;
+            pruned = pruned.slice(0, streamEntry.streamPosition);
+          } else {
+            pruned = [];
+          }
+
           break;
         }
 
@@ -884,7 +898,7 @@ export class StoreReader {
     return {
       partialBoundaries: execResult.partialBoundaries,
       dataState:
-        execResult.dataState === "streamPartial" ? "complete" : "streaming",
+        execResult.dataState === "deferPartial" ? "streaming" : "complete",
       result: prune(
         getMainDefinition(document).selectionSet,
         execResult.result,

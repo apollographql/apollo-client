@@ -2641,7 +2641,7 @@ test('returns dataState "complete" with empty array with incomplete item with re
   });
 });
 
-test("returns only written stream items before a partial item when streamInfo is provided", () => {
+test("returns truncated list before a partial item when streamInfo is provided before truncation is set", () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {

@@ -7,7 +7,10 @@ import type { Incremental } from "@apollo/client/incremental";
 import type { ApolloLink } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
 import type { DeepPartial } from "@apollo/client/utilities";
-import type { ExtensionsWithStreamInfo } from "@apollo/client/utilities/internal";
+import type {
+  ExtensionsWithStreamInfo,
+  StreamInfoTrie,
+} from "@apollo/client/utilities/internal";
 import {
   getOperationName,
   graphQLResultHasError,
@@ -360,17 +363,19 @@ export class QueryInfo<
             // re-reading the latest data with cache.diff, below.
           }
 
-          const { dataState, result: diffResult } = this.getDiff({
-            ...diffOptions,
-            returnPartialData,
-          });
+          const { dataState, result: diffResult } = this.getDiff(
+            { ...diffOptions, returnPartialData },
+            result.extensions?.[streamInfoSymbol]?.deref()
+          );
 
           if (
             dataState === "complete" ||
             (returnPartialData && dataState === "partial" && shouldWrite) ||
             (this.hasNext && dataState === "streaming")
           ) {
+            console.log("reassign", diffResult);
             result = { ...result, data: diffResult, dataState };
+            console.dir(result, { depth: null });
           }
         },
       });
@@ -382,12 +387,13 @@ export class QueryInfo<
   }
 
   private getDiff(
-    options: Cache.DiffOptions<TData>
+    options: Cache.DiffOptions<TData>,
+    streamInfo?: StreamInfoTrie
   ): Cache.InternalDiffResultWithDataState<TData> {
     if (this.cache.supportsIncrementalResults) {
       return this.cache.diff({
         ...options,
-        [handleIncrementalSymbol]: true,
+        [handleIncrementalSymbol]: streamInfo ? { streamInfo } : true,
       } as Cache.DiffOptions<TData>) as Cache.InternalDiffResultWithDataState<TData>;
     }
 

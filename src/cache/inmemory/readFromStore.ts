@@ -730,7 +730,14 @@ export class StoreReader {
       path: Array<string | number>
     ): any[] => {
       if (!boundaries) return array;
-      const entry = this.prunedEntries.lookup(field, array, boundaries);
+
+      const entry = this.prunedEntries.lookup(
+        field,
+        array,
+        boundaries,
+        streamInfo
+      );
+
       if (entry.data) return entry.data;
 
       let changed = false;
@@ -799,7 +806,12 @@ export class StoreReader {
       path: Array<string | number> = []
     ): any => {
       if (data == null || !boundaries) return data;
-      const entry = this.prunedEntries.lookup(selectionSet, data, boundaries);
+      const entry = this.prunedEntries.lookup(
+        selectionSet,
+        data,
+        boundaries,
+        streamInfo
+      );
 
       if (entry.data) return entry.data;
 

@@ -341,12 +341,15 @@ export class StoreReader {
         execResult.dataState === "streamPartial" ||
         streamInfo)
     ) {
+      const { dataState } = execResult;
       // Omit `missing` property since pruning puts it in a state that doesn't
       // report missing fields.
       const pruned: ExecResult<any> = {
         partialBoundaries: execResult.partialBoundaries,
         dataState:
-          execResult.dataState === "deferPartial" ? "streaming" : "complete",
+          dataState === "deferPartial" ? "streaming"
+          : dataState === "streamPartial" ? "complete"
+          : dataState,
         result: this.pruneSelectionSet({
           selectionSet: getMainDefinition(query).selectionSet,
           data: execResult.result,

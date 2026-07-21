@@ -71,6 +71,7 @@ export { removeMaskedFragmentSpreads } from "./removeFragmentSpreads.js";
 export { resultKeyNameFromField } from "./resultKeyNameFromField.js";
 export { shouldInclude } from "./shouldInclude.js";
 export { storeKeyNameFromField } from "./storeKeyNameFromField.js";
+export { StreamArrayState } from "./StreamArrayState.js";
 export { stringifyForDisplay } from "./stringifyForDisplay.js";
 export { toQueryResult } from "./toQueryResult.js";
 export { filterMap } from "./filterMap.js";

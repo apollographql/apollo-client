@@ -3080,7 +3080,7 @@ test("returns stream items with complete stream array for cache-only fetch polic
   await expect(stream).not.toEmitAnything();
 });
 
-test("only returns streamed items with field read functions and a network-only fetch policy", async () => {
+test("returns only streamed items with applied field read functions using a network-only fetch policy", async () => {
   const { subject, stream: iterableStream } = asyncIterableSubject<Friend>();
 
   const query = gql`

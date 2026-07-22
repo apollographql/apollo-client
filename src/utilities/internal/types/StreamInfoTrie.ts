@@ -1,6 +1,7 @@
 import type { Trie } from "@wry/trie";
 
 import type { Incremental } from "@apollo/client/incremental";
+
 import type { StreamArrayState } from "../StreamArrayState.js";
 
 /** @internal */

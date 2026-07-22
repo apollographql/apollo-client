@@ -21,6 +21,7 @@ import {
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import type { ApolloClient } from "./ApolloClient.js";
+import { NetworkStatus } from "./networkStatus.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import type { QueryManager } from "./QueryManager.js";
 import type {
@@ -34,7 +35,10 @@ import type {
   OperationVariables,
   TypedDocumentNode,
 } from "./types.js";
-import type { ErrorPolicy } from "./watchQueryOptions.js";
+import type {
+  ErrorPolicy,
+  WatchQueryFetchPolicy,
+} from "./watchQueryOptions.js";
 
 type UpdateQueries<TData> = ApolloClient.MutateOptions<
   TData,
@@ -226,9 +230,11 @@ export class QueryInfo<
       errorPolicy,
       cacheWriteBehavior,
       returnPartialData,
-      defaultTruncateStreamArray,
+      fetchPolicy,
+      networkStatus,
     }: OperationInfo<TData, TVariables> & {
-      defaultTruncateStreamArray: boolean;
+      fetchPolicy: WatchQueryFetchPolicy;
+      networkStatus: NetworkStatus;
     }
   ): MarkQueryResult<
     DataValue.Complete<TData> | DataValue.Streaming<TData>,
@@ -260,7 +266,9 @@ export class QueryInfo<
       lastDiff?.result,
       incoming,
       query,
-      defaultTruncateStreamArray
+      fetchPolicy === "network-only" &&
+        // Maintain existing cache items on refetches
+        networkStatus !== NetworkStatus.refetch
     );
 
     let result: MarkQueryResult<any, ExtensionsWithStreamInfo> = {

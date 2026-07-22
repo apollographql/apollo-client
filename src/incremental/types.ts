@@ -19,9 +19,15 @@ export declare namespace Incremental {
     extractErrors: (
       result: ApolloLink.Result<any>
     ) => readonly GraphQLFormattedError[] | undefined | void;
-    startRequest: <TData extends Record<string, unknown>>(request: {
-      query: DocumentNode;
-    }) => IncrementalRequest<Chunk, TData>;
+    startRequest: <TData extends Record<string, unknown>>(
+      request: Incremental.StartRequestOptions
+    ) => IncrementalRequest<Chunk, TData>;
+  }
+
+  /** @internal */
+  export interface StartRequestOptions {
+    query: DocumentNode;
+    defaultTruncateCacheStreamArray?: boolean;
   }
 
   export interface IncrementalRequest<

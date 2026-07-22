@@ -214,9 +214,9 @@ export class Defer20220824Handler
 
     return request;
   }
-  startRequest<TData extends Record<string, unknown>>(_: {
-    query: DocumentNode;
-  }) {
+  startRequest<TData extends Record<string, unknown>>(
+    _: Incremental.StartRequestOptions
+  ) {
     return new DeferRequest<TData>();
   }
 }

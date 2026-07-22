@@ -1,12 +1,11 @@
-import type {
-  DocumentNode,
-  FormattedExecutionResult,
-  GraphQLFormattedError,
-} from "graphql";
+import type { FormattedExecutionResult, GraphQLFormattedError } from "graphql";
 
 import type { ApolloLink } from "@apollo/client/link";
 import type { DeepPartial, HKT } from "@apollo/client/utilities";
-import type { ExtensionsWithStreamInfo } from "@apollo/client/utilities/internal";
+import type {
+  ExtensionsWithStreamInfo,
+  StreamInfoTrie,
+} from "@apollo/client/utilities/internal";
 import {
   DeepMerger,
   makeStreamInfoTrie,
@@ -91,7 +90,7 @@ class IncrementalRequest<TData>
   private errors: GraphQLFormattedError[] = [];
   private extensions: Record<string, any> = {};
   private pending = new Map<string, GraphQL17Alpha9Handler.PendingResult>();
-  private streamInfo = makeStreamInfoTrie();
+  private streamInfo: StreamInfoTrie;
   // `streamPositions` maps `pending.id` to the index that should be set by the
   // next `incremental` stream chunk to ensure the streamed array item is placed
   // at the correct point in the data array. `this.data` contains cached
@@ -100,6 +99,12 @@ class IncrementalRequest<TData>
   // updated by the cache between a streamed chunk aren't overwritten by merges
   // of future stream items from already merged stream items.
   private streamPositions: Record<string, number> = {};
+
+  constructor({
+    defaultTruncateCacheStreamArray: defaultTruncate,
+  }: Incremental.StartRequestOptions) {
+    this.streamInfo = makeStreamInfoTrie({ defaultTruncate });
+  }
 
   handle(
     cacheData: TData | DeepPartial<TData> | null | undefined = this.data,
@@ -347,8 +352,8 @@ export class GraphQL17Alpha9Handler
   }
 
   /** @internal */
-  startRequest<TData>(_: { query: DocumentNode }) {
-    return new IncrementalRequest<TData>();
+  startRequest<TData>(options: Incremental.StartRequestOptions) {
+    return new IncrementalRequest<TData>(options);
   }
 }
 

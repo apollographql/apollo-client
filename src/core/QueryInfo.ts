@@ -194,7 +194,8 @@ export class QueryInfo<
   private maybeHandleIncrementalResult(
     cacheData: TData | DeepPartial<TData> | undefined | null,
     incoming: ApolloLink.Result<TData>,
-    query: DocumentNode
+    query: DocumentNode,
+    defaultTruncateStreamArray?: boolean | undefined
   ): FormattedExecutionResult<
     DataValue.Complete<TData> | DataValue.Streaming<TData>,
     ExtensionsWithStreamInfo
@@ -206,6 +207,7 @@ export class QueryInfo<
         TData & Record<string, unknown>
       >({
         query,
+        defaultTruncateCacheStreamArray: defaultTruncateStreamArray,
       }) as Incremental.IncrementalRequest<
         Record<string, unknown>,
         DataValue.Complete<TData> | DataValue.Streaming<TData>
@@ -224,7 +226,10 @@ export class QueryInfo<
       errorPolicy,
       cacheWriteBehavior,
       returnPartialData,
-    }: OperationInfo<TData, TVariables>
+      defaultTruncateStreamArray,
+    }: OperationInfo<TData, TVariables> & {
+      defaultTruncateStreamArray: boolean;
+    }
   ): MarkQueryResult<
     DataValue.Complete<TData> | DataValue.Streaming<TData>,
     ExtensionsWithStreamInfo
@@ -254,7 +259,8 @@ export class QueryInfo<
     const incrementalResult = this.maybeHandleIncrementalResult(
       lastDiff?.result,
       incoming,
-      query
+      query,
+      defaultTruncateStreamArray
     );
 
     let result: MarkQueryResult<any, ExtensionsWithStreamInfo> = {

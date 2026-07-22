@@ -1042,11 +1042,13 @@ export class QueryManager {
       queryInfo,
       cacheWriteBehavior,
       observableQuery,
+      defaultTruncateStreamArray,
       exposeExtensions,
     }: {
       queryInfo: QueryInfo<TData, TVariables>;
       cacheWriteBehavior: CacheWriteBehavior;
       observableQuery: ObservableQuery<TData, TVariables> | undefined;
+      defaultTruncateStreamArray: boolean;
       exposeExtensions?: boolean;
     }
   ): Observable<ObservableQuery.Result<TData>> {
@@ -1072,6 +1074,7 @@ export class QueryManager {
           document: linkDocument,
           cacheWriteBehavior,
           returnPartialData: options.returnPartialData,
+          defaultTruncateStreamArray,
         });
         const hasErrors = graphQLResultHasError(result);
 
@@ -1230,6 +1233,10 @@ export class QueryManager {
           onCacheHit,
           observableQuery,
           exposeExtensions,
+          defaultTruncateStreamArray:
+            fetchPolicy === "network-only" &&
+            // Maintain existing cache items on refetches
+            networkStatus !== NetworkStatus.refetch,
         }
       );
       observableWithInfo.observable =
@@ -1559,12 +1566,14 @@ export class QueryManager {
       onCacheHit,
       queryInfo,
       observableQuery,
+      defaultTruncateStreamArray,
       exposeExtensions,
     }: {
       cacheWriteBehavior: CacheWriteBehavior;
       onCacheHit: () => void;
       queryInfo: QueryInfo<TData, TVariables>;
       observableQuery: ObservableQuery<TData, TVariables> | undefined;
+      defaultTruncateStreamArray: boolean;
       exposeExtensions?: boolean;
     }
   ): ObservableAndInfo<TData> {
@@ -1686,6 +1695,7 @@ export class QueryManager {
           queryInfo,
           observableQuery,
           exposeExtensions,
+          defaultTruncateStreamArray,
         }
       ).pipe(
         validateDidEmitValue(),

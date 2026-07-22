@@ -1,8 +1,4 @@
-import type {
-  DocumentNode,
-  FormattedExecutionResult,
-  GraphQLFormattedError,
-} from "graphql";
+import type { FormattedExecutionResult, GraphQLFormattedError } from "graphql";
 
 import type { ApolloLink } from "@apollo/client/link";
 import type { DeepPartial, HKT } from "@apollo/client/utilities";

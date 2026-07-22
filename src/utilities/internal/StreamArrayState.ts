@@ -2,6 +2,12 @@ import { dep } from "optimism";
 
 import type { Incremental } from "@apollo/client/incremental";
 
+export declare namespace StreamArrayState {
+  export interface Options {
+    defaultTruncate?: boolean;
+  }
+}
+
 export class StreamArrayState {
   truncate = false;
 
@@ -9,8 +15,12 @@ export class StreamArrayState {
   private path: Incremental.Path;
   private dep = dep<Incremental.Path>();
 
-  constructor(path: Incremental.Path) {
+  constructor(
+    path: Incremental.Path,
+    { defaultTruncate = false }: StreamArrayState.Options = {}
+  ) {
     this.path = path;
+    this.truncate = defaultTruncate;
   }
 
   depend() {

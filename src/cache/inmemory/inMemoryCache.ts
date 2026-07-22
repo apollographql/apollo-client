@@ -23,7 +23,6 @@ import {
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
-  handleIncrementalSymbol,
   IsLooselyEqual,
   NoInfer,
   StreamInfoTrie,
@@ -32,6 +31,7 @@ import {
   getInMemoryCacheMemoryInternals,
   getOperationDefinition,
   getUnwrappedType,
+  handleIncrementalSymbol,
   isPlainObject,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
@@ -111,7 +111,7 @@ export class InMemoryCache extends ApolloCache {
 
   // Override the default value since InMemoryCache can handle reading and
   // writing incremental results.
-  public readonly supportsIncrementalResults = true;
+  public readonly [handleIncrementalSymbol] = true;
 
   // Dynamically imported code can augment existing typePolicies or
   // possibleTypes by calling cache.policies.addTypePolicies or

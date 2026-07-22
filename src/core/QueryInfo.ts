@@ -394,7 +394,7 @@ export class QueryInfo<
     options: Cache.DiffOptions<TData>,
     streamInfo?: StreamInfoTrie
   ): Cache.InternalDiffResultWithDataState<TData> {
-    if (this.cache.supportsIncrementalResults) {
+    if ((this.cache as any)[handleIncrementalSymbol]) {
       return this.cache.diff({
         ...options,
         [handleIncrementalSymbol]: streamInfo ? { streamInfo } : true,

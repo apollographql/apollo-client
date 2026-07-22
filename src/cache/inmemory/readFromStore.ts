@@ -249,6 +249,9 @@ export class StoreReader {
     this.prunePartialBoundaries = wrap(
       (options) => this.prunePartialBoundariesImpl(options),
       {
+        max:
+          cacheSizes["inMemoryCache.prunePartialBoundaries"] ||
+          defaultCacheSizes["inMemoryCache.prunePartialBoundaries"],
         makeCacheKey: ({ boundaries, context, selectionSet }) => {
           if (supportsResultCaching(context.store)) {
             return this.keyMaker.lookup(
@@ -272,6 +275,9 @@ export class StoreReader {
         return this.prunePartialStreamArrayImpl(options);
       },
       {
+        max:
+          cacheSizes["inMemoryCache.prunePartialStreamArray"] ||
+          defaultCacheSizes["inMemoryCache.prunePartialStreamArray"],
         makeCacheKey: ({ field, context, boundaries }) => {
           if (supportsResultCaching(context.store)) {
             return this.keyMaker.lookup(field, boundaries, context.streamInfo);

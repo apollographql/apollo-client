@@ -199,7 +199,13 @@ export class QueryInfo<
     cacheData: TData | DeepPartial<TData> | undefined | null,
     incoming: ApolloLink.Result<TData>,
     query: DocumentNode,
-    defaultTruncateStreamArray?: boolean | undefined
+    {
+      fetchPolicy,
+      networkStatus,
+    }: {
+      fetchPolicy?: WatchQueryFetchPolicy;
+      networkStatus?: NetworkStatus;
+    } = {}
   ): FormattedExecutionResult<
     DataValue.Complete<TData> | DataValue.Streaming<TData>,
     ExtensionsWithStreamInfo
@@ -211,7 +217,10 @@ export class QueryInfo<
         TData & Record<string, unknown>
       >({
         query,
-        defaultTruncateCacheStreamArray: defaultTruncateStreamArray,
+        defaultTruncateCacheStreamArray:
+          fetchPolicy === "network-only" &&
+          // Maintain existing cache items on refetches
+          networkStatus !== NetworkStatus.refetch,
       }) as Incremental.IncrementalRequest<
         Record<string, unknown>,
         DataValue.Complete<TData> | DataValue.Streaming<TData>
@@ -266,9 +275,7 @@ export class QueryInfo<
       lastDiff?.result,
       incoming,
       query,
-      fetchPolicy === "network-only" &&
-        // Maintain existing cache items on refetches
-        networkStatus !== NetworkStatus.refetch
+      { fetchPolicy, networkStatus }
     );
 
     let result: MarkQueryResult<any, ExtensionsWithStreamInfo> = {

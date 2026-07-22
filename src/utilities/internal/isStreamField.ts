@@ -8,6 +8,7 @@ import { cacheSizes, defaultCacheSizes } from "../caching/sizes.js";
 import { canonicalStringify } from "./canonicalStringify.js";
 import { memoize } from "./memoize.js";
 
+/** @internal */
 export const isStreamField = memoize(
   function isStreamField(
     field: FieldNode,

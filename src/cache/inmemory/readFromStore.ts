@@ -19,6 +19,7 @@ import {
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
+  DeferInfo,
   FragmentMap,
   FragmentMapFunction,
   StreamInfoTrie,
@@ -89,6 +90,10 @@ interface ReadContext extends ReadMergeModifyContext {
   fragmentMap: FragmentMap;
   lookupFragment: FragmentMapFunction;
   streamInfo?: StreamInfoTrie;
+  // Response paths (serialized) whose @defer boundaries the network hasn't
+  // delivered yet. Only set for reads that must not surface undelivered cached
+  // @defer data (e.g. `network-only`).
+  deferInfo?: DeferInfo;
 }
 
 type ExecResult<R = any> = {
@@ -144,6 +149,13 @@ function execSelectionSetKeyArgs(
   options: ExecSelectionSetOptions
 ): ExecSelectionSetKeyArgs {
   return [options.selectionSet, options.objectOrReference, options.context];
+}
+
+export declare namespace StoreReader {
+  export interface IncrementalInfo {
+    stream?: StreamInfoTrie;
+    pending?: Trie<{ complete: boolean }>;
+  }
 }
 
 export class StoreReader {
@@ -257,7 +269,8 @@ export class StoreReader {
             return this.keyMaker.lookup(
               selectionSet,
               boundaries,
-              context.streamInfo
+              context.streamInfo,
+              context.deferInfo
             );
           }
         },
@@ -280,7 +293,12 @@ export class StoreReader {
           defaultCacheSizes["inMemoryCache.prunePartialStreamArray"],
         makeCacheKey: ({ field, context, boundaries }) => {
           if (supportsResultCaching(context.store)) {
-            return this.keyMaker.lookup(field, boundaries, context.streamInfo);
+            return this.keyMaker.lookup(
+              field,
+              boundaries,
+              context.streamInfo,
+              context.deferInfo
+            );
           }
         },
       }
@@ -293,7 +311,9 @@ export class StoreReader {
    */
   public diffQueryAgainstStore<T>(
     options: DiffQueryAgainstStoreOptions & {
-      [handleIncrementalSymbol]: true | { streamInfo: StreamInfoTrie };
+      [handleIncrementalSymbol]:
+        | true
+        | { streamInfo?: StreamInfoTrie; deferInfo?: DeferInfo };
     }
   ): Cache.InternalDiffResultWithDataState<T>;
 
@@ -329,6 +349,10 @@ export class StoreReader {
         typeof handleIncremental === "object" && !returnPartialData ?
           handleIncremental.streamInfo
         : undefined,
+      deferInfo:
+        typeof handleIncremental === "object" && !returnPartialData ?
+          handleIncremental.deferInfo
+        : undefined,
       ...extractFragmentContext(query, this.config.fragments),
     };
     let execResult = this.executeSelectionSet({
@@ -351,7 +375,10 @@ export class StoreReader {
         // complete array, the stream array might contain stale entries after
         // the last written value. We only want to deliver the results up to
         // the index the network wrote so we need to prune it too.
-        context.streamInfo)
+        context.streamInfo ||
+        // The network hasn't delivered these @defer boundaries yet, so prune
+        // the (possibly complete) cached data sitting at them.
+        context.deferInfo)
     ) {
       const pruned = this.prunePartialBoundaries({
         selectionSet: getMainDefinition(query).selectionSet,
@@ -360,7 +387,7 @@ export class StoreReader {
         context,
         path: [],
       });
-
+      const changed = execResult.result !== pruned;
       // It's possible that pruning didn't actually change the result which can
       // happen if a defer boundary is misclassified as "deferPartial" instead
       // of "streaming" (which can happen when a sibling defer boundary has an
@@ -369,7 +396,7 @@ export class StoreReader {
       // partial. If we tolerate partial results and pruning changed the result
       // by dropping fields, then we want to keep the original execResult which
       // contains the partial data
-      if (execResult.result === pruned || !returnPartialData) {
+      if (!changed || !returnPartialData) {
         const { dataState } = execResult;
 
         // Omit `missing` property since pruning puts it in a state that doesn't
@@ -380,6 +407,10 @@ export class StoreReader {
           dataState:
             dataState === "deferPartial" ? "streaming"
             : dataState === "streamPartial" ? "complete"
+              // A cached @defer boundary the network hasn't delivered was
+              // pruned from an otherwise complete result, so we're still
+              // streaming.
+            : context.deferInfo && changed ? "streaming"
             : dataState,
         };
       }
@@ -885,7 +916,8 @@ export class StoreReader {
       if (
         fragment &&
         policies.fragmentMatches(fragment, data.__typename) &&
-        !boundaries.has(selection)
+        !boundaries.has(selection) &&
+        !context.deferInfo?.peekArray(path)
       ) {
         fragment.selectionSet.selections.forEach(workSet.add, workSet);
       }

@@ -8,6 +8,7 @@ import type { ApolloLink } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
 import type { DeepPartial } from "@apollo/client/utilities";
 import type {
+  DeferInfo,
   ExtensionsWithStreamInfo,
   StreamInfoTrie,
 } from "@apollo/client/utilities/internal";
@@ -16,6 +17,7 @@ import {
   graphQLResultHasError,
   handleIncrementalSymbol,
   hasDirectives,
+  deferInfoSymbol,
   streamInfoSymbol,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
@@ -386,7 +388,8 @@ export class QueryInfo<
 
           const { dataState, result: diffResult } = this.getDiff(
             { ...diffOptions, returnPartialData },
-            result.extensions?.[streamInfoSymbol]?.deref()
+            result.extensions?.[streamInfoSymbol]?.deref(),
+            result.extensions?.[deferInfoSymbol]?.deref()
           );
 
           if (
@@ -407,12 +410,14 @@ export class QueryInfo<
 
   private getDiff(
     options: Cache.DiffOptions<TData>,
-    streamInfo?: StreamInfoTrie
+    streamInfo?: StreamInfoTrie,
+    deferInfo?: DeferInfo
   ): Cache.InternalDiffResultWithDataState<TData> {
     if ((this.cache as any)[handleIncrementalSymbol]) {
       return this.cache.diff({
         ...options,
-        [handleIncrementalSymbol]: streamInfo ? { streamInfo } : true,
+        [handleIncrementalSymbol]:
+          streamInfo || deferInfo ? { streamInfo, deferInfo } : true,
       } as Cache.DiffOptions<TData>) as Cache.InternalDiffResultWithDataState<TData>;
     }
 

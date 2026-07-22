@@ -1,13 +1,16 @@
+import { Trie } from "@wry/trie";
 import type { FormattedExecutionResult, GraphQLFormattedError } from "graphql";
 
 import type { ApolloLink } from "@apollo/client/link";
 import type { DeepPartial, HKT } from "@apollo/client/utilities";
 import type {
+  DeferInfo,
   ExtensionsWithStreamInfo,
   StreamInfoTrie,
 } from "@apollo/client/utilities/internal";
 import {
   DeepMerger,
+  deferInfoSymbol,
   makeStreamInfoTrie,
   streamInfoSymbol,
 } from "@apollo/client/utilities/internal";
@@ -99,11 +102,17 @@ class IncrementalRequest<TData>
   // updated by the cache between a streamed chunk aren't overwritten by merges
   // of future stream items from already merged stream items.
   private streamPositions: Record<string, number> = {};
+  // When `true` (e.g. a `network-only` request), the read should not surface
+  // cached data the network hasn't delivered yet. This truncates stale cached
+  // @stream array items and prunes cached @defer boundaries that are still
+  // pending (see `incrementalInfoSymbol` below).
+  private truncateCacheData: boolean;
 
   constructor({
-    defaultTruncateCacheStreamArray: defaultTruncate,
+    defaultTruncateCacheStreamArray: defaultTruncate = false,
   }: Incremental.StartRequestOptions) {
     this.streamInfo = makeStreamInfoTrie({ defaultTruncate });
+    this.truncateCacheData = defaultTruncate;
   }
 
   handle(
@@ -261,6 +270,26 @@ class IncrementalRequest<TData>
         // itself.
         [streamInfoSymbol]: new WeakRef(this.streamInfo),
       } satisfies ExtensionsWithStreamInfo;
+    }
+
+    if (this.truncateCacheData) {
+      // Report the paths of @defer boundaries the network hasn't delivered yet
+      // so a `network-only` read can prune the complete cached data sitting at
+      // those boundaries. Stream boundaries are tracked separately via
+      // `streamInfo`, so they are excluded here.
+      const deferInfo: DeferInfo = new Trie<true>(true, () => true);
+      this.pending.forEach((pending) => {
+        if (!(pending.id in this.streamPositions)) {
+          deferInfo.lookupArray(pending.path as any[]);
+        }
+      });
+
+      if (deferInfo["strong"]) {
+        result.extensions = {
+          ...result.extensions,
+          [deferInfoSymbol]: new WeakRef<DeferInfo>(deferInfo),
+        } satisfies ExtensionsWithStreamInfo;
+      }
     }
 
     return result;

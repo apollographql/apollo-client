@@ -23,6 +23,7 @@ import {
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
+  DeferInfo,
   IsLooselyEqual,
   NoInfer,
   StreamInfoTrie,
@@ -457,7 +458,9 @@ export class InMemoryCache extends ApolloCache {
     TVariables extends OperationVariables = OperationVariables,
   >(
     query: Cache.DiffOptions<TData, TVariables> & {
-      [handleIncrementalSymbol]: true | { streamInfo: StreamInfoTrie };
+      [handleIncrementalSymbol]:
+        | true
+        | { streamInfo?: StreamInfoTrie; deferInfo?: DeferInfo };
     }
   ): Cache.InternalDiffResultWithDataState<TData>;
 

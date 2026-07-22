@@ -1,3 +1,5 @@
+import { Trie } from "@wry/trie";
+
 import { gql } from "@apollo/client";
 import {
   createFragmentRegistry,
@@ -7,6 +9,7 @@ import {
 } from "@apollo/client/cache";
 import { markAsStreaming, spyOnConsole } from "@apollo/client/testing/internal";
 import { addTypenameToDocument } from "@apollo/client/utilities";
+import type { DeferInfo } from "@apollo/client/utilities/internal";
 import {
   handleIncrementalSymbol,
   makeStreamInfoTrie,
@@ -9088,6 +9091,555 @@ test("without handleIncrementalSymbol, a fully satisfied deferred query is compl
       },
     },
     complete: true,
+    missing: undefined,
+  });
+});
+
+test("prunes a complete cached @defer boundary when deferInfo marks it as pending", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+          }
+        }
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Alice" },
+      },
+    },
+  });
+
+  const deferInfo: DeferInfo = new Trie();
+  deferInfo.lookup("greeting");
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: { deferInfo },
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
+test("keeps a cached @defer boundary that deferInfo does not mark as pending while pruning a sibling boundary that it does", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+          }
+        }
+      }
+      hero {
+        id
+        ... @defer {
+          name
+        }
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Alice" },
+      },
+      hero: { __typename: "Hero", id: "1", name: "Luke" },
+    },
+  });
+
+  const deferInfo: DeferInfo = new Trie();
+  deferInfo.lookup("greeting");
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: { deferInfo },
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+      },
+      hero: { __typename: "Hero", id: "1", name: "Luke" },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
+test("does not apply deferInfo pruning when returnPartialData is true", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+          }
+        }
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Alice" },
+      },
+    },
+  });
+
+  const deferInfo: DeferInfo = new Trie();
+  deferInfo.lookup("greeting");
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: true,
+      [handleIncrementalSymbol]: { deferInfo },
+    })
+  ).toStrictEqualTyped({
+    result: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Alice" },
+      },
+    },
+    dataState: "complete",
+    complete: true,
+    missing: undefined,
+  });
+});
+
+test("prunes cached @defer boundaries for list items marked pending in deferInfo", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      person {
+        id
+        friends {
+          id
+          ... @defer {
+            name
+          }
+        }
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      person: {
+        __typename: "Person",
+        id: "1",
+        friends: [
+          { __typename: "Person", id: "2", name: "Leia" },
+          { __typename: "Person", id: "3", name: "Han" },
+        ],
+      },
+    },
+  });
+
+  const deferInfo: DeferInfo = new Trie();
+  deferInfo.lookup("person", "friends", 0);
+  deferInfo.lookup("person", "friends", 1);
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: { deferInfo },
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      person: {
+        __typename: "Person",
+        id: "1",
+        friends: [
+          { __typename: "Person", id: "2" },
+          { __typename: "Person", id: "3" },
+        ],
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
+test("keeps a delivered list item's @defer boundary while pruning a still-pending sibling", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      person {
+        id
+        friends {
+          id
+          ... @defer {
+            name
+          }
+        }
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      person: {
+        __typename: "Person",
+        id: "1",
+        friends: [
+          { __typename: "Person", id: "2", name: "Leia" },
+          { __typename: "Person", id: "3", name: "Han" },
+        ],
+      },
+    },
+  });
+
+  const deferInfo: DeferInfo = new Trie();
+  deferInfo.lookup("person", "friends", 1);
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: { deferInfo },
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      person: {
+        __typename: "Person",
+        id: "1",
+        friends: [
+          { __typename: "Person", id: "2", name: "Leia" },
+          { __typename: "Person", id: "3" },
+        ],
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
+test("does not reuse a deferInfo-pruned result when deferInfo is later omitted", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+          }
+        }
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Alice" },
+      },
+    },
+  });
+
+  const deferInfo: DeferInfo = new Trie();
+  deferInfo.lookup("greeting");
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: { deferInfo },
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: true,
+    })
+  ).toStrictEqualTyped({
+    result: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Alice" },
+      },
+    },
+    dataState: "complete",
+    complete: true,
+    missing: undefined,
+  });
+});
+
+test("does not reuse a deferInfo-pruned result when a sibling boundary is delivered on a later read", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+          }
+        }
+      }
+      hero {
+        id
+        ... @defer {
+          name
+        }
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Alice" },
+      },
+      hero: { __typename: "Hero", id: "1", name: "Luke" },
+    },
+  });
+
+  {
+    const deferInfo: DeferInfo = new Trie();
+    deferInfo.lookup("greeting");
+    deferInfo.lookup("hero");
+
+    expect(
+      cache.diff({
+        query,
+        optimistic: true,
+        returnPartialData: false,
+        [handleIncrementalSymbol]: { deferInfo },
+      })
+    ).toStrictEqualTyped({
+      result: markAsStreaming({
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+        },
+        hero: { __typename: "Hero", id: "1" },
+      }),
+      dataState: "streaming",
+      complete: false,
+      missing: undefined,
+    });
+  }
+
+  {
+    const deferInfo: DeferInfo = new Trie();
+    deferInfo.lookup("hero");
+
+    expect(
+      cache.diff({
+        query,
+        optimistic: true,
+        returnPartialData: false,
+        [handleIncrementalSymbol]: { deferInfo },
+      })
+    ).toStrictEqualTyped({
+      result: markAsStreaming({
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+          recipient: { __typename: "Person", name: "Alice" },
+        },
+        hero: { __typename: "Hero", id: "1" },
+      }),
+      dataState: "streaming",
+      complete: false,
+      missing: undefined,
+    });
+  }
+});
+
+test("strips a partial pending @defer boundary while keeping a complete delivered sibling boundary", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+            email
+          }
+        }
+      }
+      hero {
+        id
+        ... @defer {
+          name
+        }
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+          recipient: { __typename: "Person", name: "Alice" },
+        },
+        hero: { __typename: "Hero", id: "1", name: "Luke" },
+      },
+    });
+  }
+
+  const deferInfo: DeferInfo = new Trie();
+  deferInfo.lookup("greeting");
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: { deferInfo },
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+      },
+      hero: { __typename: "Hero", id: "1", name: "Luke" },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
+test("strips both a partial pending @defer boundary and a complete pending sibling boundary", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+            email
+          }
+        }
+      }
+      hero {
+        id
+        ... @defer {
+          name
+        }
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+          recipient: { __typename: "Person", name: "Alice" },
+        },
+        hero: { __typename: "Hero", id: "1", name: "Luke" },
+      },
+    });
+  }
+
+  const deferInfo: DeferInfo = new Trie();
+  deferInfo.lookup("greeting");
+  deferInfo.lookup("hero");
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: { deferInfo },
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+      },
+      hero: { __typename: "Hero", id: "1" },
+    }),
+    dataState: "streaming",
+    complete: false,
     missing: undefined,
   });
 });

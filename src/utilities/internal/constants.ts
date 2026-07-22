@@ -12,12 +12,11 @@ export const extensionsSymbol = Symbol.for("apollo.result.extensions");
 export const streamInfoSymbol = Symbol.for("apollo.result.streamInfo");
 
 /**
- * For use in Cache implementations only.
+ * @internal
+ * For use with InMemoryCache only.
  * This should not be used in userland code.
  */
-export const incrementalInfoSymbol = Symbol.for(
-  "apollo.result.incrementalInfo"
-);
+export const deferInfoSymbol = Symbol.for("apollo.result.deferInfo");
 
 /**
  * @internal

@@ -1,5 +1,6 @@
-import type { streamInfoSymbol } from "../constants.js";
+import type { deferInfoSymbol, streamInfoSymbol } from "../constants.js";
 
+import type { DeferInfo } from "./DeferInfo.js";
 import type { StreamInfoTrie } from "./StreamInfoTrie.js";
 
 /**
@@ -9,5 +10,8 @@ import type { StreamInfoTrie } from "./StreamInfoTrie.js";
 export interface ExtensionsWithStreamInfo extends Record<string, unknown> {
   [streamInfoSymbol]?: {
     deref(): StreamInfoTrie | undefined;
+  };
+  [deferInfoSymbol]?: {
+    deref(): DeferInfo | undefined;
   };
 }

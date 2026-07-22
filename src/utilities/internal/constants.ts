@@ -12,6 +12,14 @@ export const extensionsSymbol = Symbol.for("apollo.result.extensions");
 export const streamInfoSymbol = Symbol.for("apollo.result.streamInfo");
 
 /**
+ * For use in Cache implementations only.
+ * This should not be used in userland code.
+ */
+export const incrementalInfoSymbol = Symbol.for(
+  "apollo.result.incrementalInfo"
+);
+
+/**
  * @internal
  * Used as key for `ApolloClient.WatchQueryOptions`.
  *

@@ -82,6 +82,7 @@ export { mapObservableFragmentMemoized } from "./mapObservableFragment.js";
 export {
   extensionsSymbol,
   handleIncrementalSymbol,
+  incrementalInfoSymbol,
   streamInfoSymbol,
   variablesUnknownSymbol,
 } from "./constants.js";

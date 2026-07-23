@@ -149,13 +149,6 @@ function execSelectionSetKeyArgs(
   return [options.selectionSet, options.objectOrReference, options.context];
 }
 
-export declare namespace StoreReader {
-  export interface IncrementalInfo {
-    stream?: StreamInfoTrie;
-    pending?: Trie<{ complete: boolean }>;
-  }
-}
-
 export class StoreReader {
   // cached version of executeSelectionSet
   private executeSelectionSet: OptimisticWrapperFunction<

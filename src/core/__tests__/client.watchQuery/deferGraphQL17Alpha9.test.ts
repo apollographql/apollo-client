@@ -6439,6 +6439,136 @@ test('prunes a list item\'s cached defer boundary while a sibling item has alrea
   await expect(stream).not.toEmitAnything();
 });
 
+test('does not leak complete or partial cached defer boundaries while streaming with a "network-only" fetch policy and returnPartialData: true', async () => {
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+          }
+        }
+      }
+      hero {
+        id
+        ... @defer {
+          name
+          email
+        }
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+  const cache = new InMemoryCache();
+
+  {
+    using _consoleSpy = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          message: "Cached hello",
+          recipient: { __typename: "Person", name: "Cached Alice" },
+        },
+        hero: { __typename: "Hero", id: "1", name: "Cached Luke" },
+      },
+    });
+  }
+
+  const client = new ApolloClient({
+    cache,
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({
+      query,
+      fetchPolicy: "network-only",
+      returnPartialData: true,
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: {
+      greeting: { __typename: "Greeting", message: "Hello world" },
+      hero: { __typename: "Hero", id: "1" },
+    },
+    pending: [
+      { id: "0", path: ["greeting"] },
+      { id: "1", path: ["hero"] },
+    ],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      greeting: { __typename: "Greeting", message: "Hello world" },
+      hero: { __typename: "Hero", id: "1" },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          __typename: "Greeting",
+          recipient: { __typename: "Person", name: "Alice" },
+        },
+        id: "0",
+      },
+      {
+        data: {
+          __typename: "Hero",
+          name: "Luke",
+          email: "luke@example.com",
+        },
+        id: "1",
+      },
+    ],
+    completed: [{ id: "0" }, { id: "1" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Alice" },
+      },
+      hero: {
+        __typename: "Hero",
+        id: "1",
+        name: "Luke",
+        email: "luke@example.com",
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
 test('keeps residual deferred cache data as "complete" while streaming after a refetch', async () => {
   const query = gql`
     query {

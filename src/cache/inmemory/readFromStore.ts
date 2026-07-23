@@ -342,9 +342,9 @@ export class StoreReader {
       variables,
       varString: canonicalStringify(variables),
       ...extractFragmentContext(query, this.config.fragments),
-      ...(typeof handleIncremental === "object" && !returnPartialData ?
-        handleIncremental
-      : undefined),
+      ...(typeof handleIncremental === "object" ? handleIncremental : (
+        undefined
+      )),
     };
     let execResult = this.executeSelectionSet({
       selectionSet: getMainDefinition(query).selectionSet,

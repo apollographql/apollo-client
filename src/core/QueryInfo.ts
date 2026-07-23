@@ -375,9 +375,17 @@ export class QueryInfo<
             // re-reading the latest data with cache.diff, below.
           }
 
+          const isNetworkOnly =
+            fetchPolicy === "network-only" &&
+            networkStatus !== NetworkStatus.refetch;
+
           const { dataState, result: diffResult } = this.getDiff(
-            { ...diffOptions, returnPartialData },
-            this.getIncrementalInfo(result, { fetchPolicy, networkStatus })
+            {
+              ...diffOptions,
+              // Never deliver partial data for network-only requests
+              returnPartialData: returnPartialData && !isNetworkOnly,
+            },
+            this.getIncrementalInfo(result, { isNetworkOnly })
           );
 
           if (
@@ -398,10 +406,7 @@ export class QueryInfo<
 
   private getIncrementalInfo(
     result: MarkQueryResult<any, ExtensionsWithStreamInfo>,
-    {
-      fetchPolicy,
-      networkStatus,
-    }: { fetchPolicy: WatchQueryFetchPolicy; networkStatus: NetworkStatus }
+    { isNetworkOnly }: { isNetworkOnly: boolean }
   ) {
     const pending = this.incremental?.pending ?? [];
     const streamInfo = result.extensions?.[streamInfoSymbol]?.deref();
@@ -411,10 +416,7 @@ export class QueryInfo<
     // for a network-only request if they haven't yet streamed from the
     // network. We record all the still-pending paths so that cache.diff
     // can prune complete defer/stream boundaries at those paths.
-    if (
-      fetchPolicy === "network-only" &&
-      networkStatus !== NetworkStatus.refetch
-    ) {
+    if (isNetworkOnly) {
       for (const item of pending) {
         const type = this.incremental?.getPendingType?.(item.id);
 

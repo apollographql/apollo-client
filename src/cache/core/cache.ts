@@ -23,12 +23,14 @@ import type {
   GetDataState,
   OperationVariables,
   TypedDocumentNode,
+  TypeOverrides,
 } from "@apollo/client";
 import type { FragmentType, Unmasked } from "@apollo/client/masking";
-import type { Reference, StoreObject } from "@apollo/client/utilities";
+import type { HKT, Reference, StoreObject } from "@apollo/client/utilities";
 import { cacheSizes, canonicalStringify } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
+  ApplyHKTImplementationWithDefault,
   IsAny,
   NoInfer,
   Prettify,
@@ -51,15 +53,75 @@ import type { MissingTree } from "./types/common.js";
 
 export type Transaction = (c: ApolloCache) => void;
 
+declare namespace CacheIdentifierTypes {
+  export interface Defaults {
+    CacheIdentifier: CacheIdentifier;
+  }
+
+  interface CacheIdentifier extends HKT {
+    arg1: unknown; // TData
+    return:
+      | StoreObject
+      | Reference
+      | FragmentType<NoInfer<this["arg1"]>>
+      | string;
+  }
+}
+
 export declare namespace ApolloCache {
   /**
-   * Acceptable values provided to the `from` option.
+   * Acceptable values provided to the `from` option of `useFragment`,
+   * `useSuspenseFragment`, `readFragment`, `writeFragment` and related APIs.
+   *
+   * @defaultValue
+   * `StoreObject | Reference | FragmentType<TData> | string`
+   *
+   * @remarks
+   * This type is overridable via the `CacheIdentifier` key of the
+   * `TypeOverrides` interface. Overriding it only affects the `from` input of
+   * the fragment APIs - `StoreObject` and cache-mutation APIs such as
+   * `cache.identify`, `cache.modify` and optimistic writes are left untouched.
+   *
+   * @example
+   * You can globally tighten the identifier-object variant of `from` so that
+   * `__typename` is required and identifier values may not be `null` or
+   * `undefined`:
+   *
+   * ```ts
+   * // apollo.d.ts
+   * import "@apollo/client";
+   * import type { HKT, StoreValue } from "@apollo/client/utilities";
+   *
+   * type StrictFrom =
+   *   | {
+   *       __typename: string;
+   *       // The `& {}` forces identifier values to be "defined" so that an
+   *       // explicit `undefined` (as well as `null`) is rejected - an index
+   *       // signature alone does not reject explicitly-`undefined` values.
+   *       [key: string]: Exclude<StoreValue, null | undefined> & {};
+   *     }
+   *   | { __ref: string }
+   *   | string
+   *   | null;
+   *
+   * interface StrictFromHKT extends HKT {
+   *   arg1: unknown; // TData (unused)
+   *   return: StrictFrom;
+   * }
+   *
+   * declare module "@apollo/client" {
+   *   export interface TypeOverrides {
+   *     CacheIdentifier: StrictFromHKT;
+   *   }
+   * }
+   * ```
    */
-  export type FromOptionValue<TData> =
-    | StoreObject
-    | Reference
-    | FragmentType<NoInfer<TData>>
-    | string;
+  export type FromOptionValue<TData> = ApplyHKTImplementationWithDefault<
+    TypeOverrides,
+    "CacheIdentifier",
+    CacheIdentifierTypes.Defaults,
+    TData
+  >;
 
   /**
    * Watched fragment options.

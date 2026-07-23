@@ -420,8 +420,7 @@ export class QueryInfo<
 
           const { dataState, result: diffResult } = this.getDiff(
             { ...diffOptions, returnPartialData },
-            streamInfo,
-            deferInfo
+            streamInfo || deferInfo ? { streamInfo, deferInfo } : undefined
           );
 
           if (
@@ -442,14 +441,12 @@ export class QueryInfo<
 
   private getDiff(
     options: Cache.DiffOptions<TData>,
-    streamInfo?: StreamInfoTrie,
-    deferInfo?: DeferInfo
+    incrementalInfo?: { streamInfo?: StreamInfoTrie; deferInfo?: DeferInfo }
   ): Cache.InternalDiffResultWithDataState<TData> {
     if ((this.cache as any)[handleIncrementalSymbol]) {
       return this.cache.diff({
         ...options,
-        [handleIncrementalSymbol]:
-          streamInfo || deferInfo ? { streamInfo, deferInfo } : true,
+        [handleIncrementalSymbol]: incrementalInfo || true,
       } as Cache.DiffOptions<TData>) as Cache.InternalDiffResultWithDataState<TData>;
     }
 

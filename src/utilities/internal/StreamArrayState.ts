@@ -24,11 +24,7 @@ export class StreamArrayState {
   set streamPosition(value) {
     if (value !== this._streamPosition) {
       this._streamPosition = value;
-      this.dirty();
+      this.dep.dirty(this.path);
     }
-  }
-
-  private dirty() {
-    this.dep.dirty(this.path);
   }
 }

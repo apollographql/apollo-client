@@ -453,7 +453,6 @@ Array [
   "createRejectedPromise",
   "dealias",
   "decoratePromise",
-  "deferInfoSymbol",
   "equalByQuery",
   "extensionsSymbol",
   "filterMap",

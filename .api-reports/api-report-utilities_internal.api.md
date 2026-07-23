@@ -168,9 +168,6 @@ type DeepOmitArray<T extends any[], K> = {
 type DeepOmitPrimitive = Primitive | Function;
 
 // @internal @deprecated
-export const deferInfoSymbol: unique symbol;
-
-// @internal @deprecated
 export type DeferInfoTrie = Trie<true>;
 
 // @public (undocumented)

@@ -81,7 +81,6 @@ export { equalByQuery } from "./equalByQuery.js";
 export { canonicalStringify } from "./canonicalStringify.js";
 export { mapObservableFragmentMemoized } from "./mapObservableFragment.js";
 export {
-  deferInfoSymbol,
   extensionsSymbol,
   handleIncrementalSymbol,
   streamInfoSymbol,

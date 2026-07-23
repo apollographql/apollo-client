@@ -13,13 +13,6 @@ export const streamInfoSymbol = Symbol.for("apollo.result.streamInfo");
 
 /**
  * @internal
- * For use with InMemoryCache only.
- * This should not be used in userland code.
- */
-export const deferInfoSymbol = Symbol.for("apollo.result.deferInfo");
-
-/**
- * @internal
  * Used as key for `ApolloClient.WatchQueryOptions`.
  *
  * Meant for framework integrators only!

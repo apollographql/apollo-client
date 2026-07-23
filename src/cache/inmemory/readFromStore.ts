@@ -939,12 +939,10 @@ export class StoreReader {
     let changed = false;
     let pruned: any[] = [];
 
-    const streamEntry = context.streamInfo?.peekArray(path)?.state;
+    const state = context.streamInfo?.peekArray(path)?.state;
     const length = Math.min(
       array.length,
-      streamEntry?.truncate ?
-        streamEntry.streamPosition
-      : Number.MAX_SAFE_INTEGER
+      state?.truncate ? state.streamPosition : Number.MAX_SAFE_INTEGER
     );
 
     for (let i = 0; i < length; i++) {
@@ -960,9 +958,9 @@ export class StoreReader {
         // total that have streamed in (this is represented by streamPosition
         // above). For all other cache reads, partial stream boundaries are
         // pruned back to an empty array.
-        if (streamEntry) {
-          streamEntry.truncate = true;
-          pruned = pruned.slice(0, streamEntry.streamPosition);
+        if (state) {
+          state.truncate = true;
+          pruned = pruned.slice(0, state.streamPosition);
         } else {
           pruned = [];
         }

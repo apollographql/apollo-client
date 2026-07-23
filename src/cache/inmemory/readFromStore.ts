@@ -374,12 +374,12 @@ export class StoreReader {
       const changed = execResult.result !== pruned;
       // It's possible that pruning didn't actually change the result which can
       // happen if a defer boundary is misclassified as "deferPartial" instead
-      // of "streaming" (which can happen when a sibling defer boundary has an
-      // overlapping selection set which itself is complete). In this case,
-      // pruning corrects the dataState to streaming instead of leaving it as
-      // partial. If we tolerate partial results and pruning changed the result
-      // by dropping fields, then we want to keep the original execResult which
-      // contains the partial data
+      // of "streaming" (sibling defer boundaries with overlapping selection
+      // sets, one of which is complete). In this case, pruning corrects the
+      // dataState to streaming instead of leaving it as partial. If we tolerate
+      // partial results and pruning changed the result by dropping fields, then
+      // we want to keep the original execResult which contains the partial
+      // data.
       if (!changed || !returnPartialData) {
         const { dataState } = execResult;
 

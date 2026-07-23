@@ -57,7 +57,7 @@ export class MockedProvider extends React.Component<
           defaultOptions: mockLinkDefaultOptions,
         }),
       localState,
-      devtools,
+      devtools: devtools ?? { enabled: false },
     });
 
     this.state = {

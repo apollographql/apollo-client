@@ -90,6 +90,31 @@ describe("General use", () => {
     errorThrown = false;
   });
 
+  it("should not connect to Apollo Client DevTools by default", () => {
+    delete (window as any).__APOLLO_CLIENT__;
+
+    const provider = new MockedProvider({});
+
+    expect((provider as any).state.client.devtoolsConfig.enabled).toBe(false);
+    expect((window as any).__APOLLO_CLIENT__).toBeUndefined();
+
+    provider.componentWillUnmount();
+  });
+
+  it("should allow Apollo Client DevTools to be enabled", () => {
+    jest.useFakeTimers();
+    delete (window as any).__APOLLO_CLIENT__;
+
+    const provider = new MockedProvider({ devtools: { enabled: true } });
+
+    expect((provider as any).state.client.devtoolsConfig.enabled).toBe(true);
+    expect((window as any).__APOLLO_CLIENT__).toBeDefined();
+
+    delete (window as any).__APOLLO_CLIENT__;
+    provider.componentWillUnmount();
+    jest.useRealTimers();
+  });
+
   it("should mock the data", async () => {
     using _disabledAct = disableActEnvironment();
     const { takeSnapshot } = await renderHookToSnapshotStream(

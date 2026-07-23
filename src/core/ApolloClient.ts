@@ -1169,8 +1169,9 @@ export class ApolloClient {
      */
     if (!hasSuggestedDevtools && __DEV__) {
       hasSuggestedDevtools = true;
+      const win = window;
 
-      const ua = window.navigator.userAgent;
+      const ua = win.navigator.userAgent;
       let url: string | undefined;
 
       if (typeof ua === "string") {
@@ -1185,13 +1186,13 @@ export class ApolloClient {
       }
 
       if (
-        window.document &&
-        window.top === window.self &&
-        /^(https?|file):$/.test(window.location.protocol) &&
+        win.document &&
+        win.top === win.self &&
+        /^(https?|file):$/.test(win.location.protocol) &&
         url
       ) {
         setTimeout(() => {
-          if (!(window as any).__APOLLO_DEVTOOLS_GLOBAL_HOOK__) {
+          if (!(win as any).__APOLLO_DEVTOOLS_GLOBAL_HOOK__) {
             invariant.log(
               "Download the Apollo DevTools for a better development " +
                 "experience: %s",

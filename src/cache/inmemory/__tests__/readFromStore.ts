@@ -805,19 +805,27 @@ describe("reading from the store", () => {
 
     expect(missing).toEqual(
       new MissingFieldError(
-        `Can't find field 'missing' on object {
-  "present": "here"
-}`,
+        `Can't find field 'missing' on object ${JSON.stringify(
+          {
+            present: "here",
+          },
+          null,
+          2
+        )}`,
         {
           normal: {
-            missing: `Can't find field 'missing' on object {
-  "present": "here"
-}`,
+            missing: `Can't find field 'missing' on object ${JSON.stringify(
+              { present: "here" },
+              null,
+              2
+            )}`,
           },
           clientOnly: {
-            missing: `Can't find field 'missing' on object {
-  "present": "also here"
-}`,
+            missing: `Can't find field 'missing' on object ${JSON.stringify(
+              { present: "also here" },
+              null,
+              2
+            )}`,
           },
         },
         query,

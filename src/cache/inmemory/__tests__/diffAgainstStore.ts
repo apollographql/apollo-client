@@ -392,7 +392,7 @@ describe("diffing queries against the store", () => {
     });
 
     const missingFieldErrorMessage = `Can't find field 'address' on object ${JSON.stringify(
-      { __typename: "Author", firstName: "John", lastName: "Smith" },
+      firstResult.person,
       null,
       2
     )}`;

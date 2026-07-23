@@ -3337,7 +3337,10 @@ describe("type policies", function () {
       });
 
       const missingFieldErrorMessage = `Can't find field 'secret' on object ${JSON.stringify(
-        { __typename: "Person", name: "Ben Newman" },
+        {
+          __typename: "Person",
+          name: "Ben Newman",
+        },
         null,
         2
       )}`;

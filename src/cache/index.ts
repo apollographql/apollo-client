@@ -49,6 +49,7 @@ export { createFragmentRegistry } from "./inmemory/fragmentRegistry.js";
 
 export type {
   ApolloReducerConfig,
+  DiffIncrementalInfo,
   DiffQueryAgainstStoreOptions,
   IdGetter,
   IdGetterObj,

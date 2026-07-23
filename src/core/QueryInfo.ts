@@ -2,17 +2,18 @@ import { equal } from "@wry/equality";
 import { Trie } from "@wry/trie";
 import type { DocumentNode, FormattedExecutionResult } from "graphql";
 
-import type { ApolloCache, Cache } from "@apollo/client/cache";
-import type { IgnoreModifier } from "@apollo/client/cache";
+import type {
+  ApolloCache,
+  Cache,
+  DiffIncrementalInfo,
+  IgnoreModifier,
+  InMemoryCache,
+} from "@apollo/client/cache";
 import type { Incremental } from "@apollo/client/incremental";
 import type { ApolloLink } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
 import type { DeepPartial } from "@apollo/client/utilities";
-import type {
-  DeferInfo,
-  ExtensionsWithStreamInfo,
-  StreamInfoTrie,
-} from "@apollo/client/utilities/internal";
+import type { ExtensionsWithStreamInfo } from "@apollo/client/utilities/internal";
 import {
   getOperationName,
   graphQLResultHasError,
@@ -195,14 +196,6 @@ export class QueryInfo<
 
   get hasNext() {
     return this.incremental ? this.incremental.hasNext : false;
-  }
-
-  get pending() {
-    return this.incremental?.pending ?? [];
-  }
-
-  getPendingType(id: string) {
-    return this.incremental?.getPendingType?.(id);
   }
 
   private maybeHandleIncrementalResult(
@@ -394,33 +387,9 @@ export class QueryInfo<
             // re-reading the latest data with cache.diff, below.
           }
 
-          let deferInfo: DeferInfo | undefined;
-          const streamInfo = result.extensions?.[streamInfoSymbol]?.deref();
-
-          // We don't want to deliver stream items or complete defer boundaries
-          // for a network-only request if they haven't yet streamed from the
-          // network. We record all the still-pending paths so that cache.diff
-          // can prune complete defer/stream boundaries at those paths.
-          if (
-            fetchPolicy === "network-only" &&
-            networkStatus !== NetworkStatus.refetch
-          ) {
-            for (const pending of this.pending) {
-              const type = this.getPendingType(pending.id);
-
-              if (type === "defer") {
-                deferInfo ||= new Trie(true, () => true);
-                deferInfo.lookupArray(pending.path as any[]);
-              } else if (streamInfo && type === "stream") {
-                streamInfo.lookupArray(pending.path as any[]).state.truncate =
-                  true;
-              }
-            }
-          }
-
           const { dataState, result: diffResult } = this.getDiff(
             { ...diffOptions, returnPartialData },
-            streamInfo || deferInfo ? { streamInfo, deferInfo } : undefined
+            this.getIncrementalInfo(result, { fetchPolicy, networkStatus })
           );
 
           if (
@@ -439,15 +408,49 @@ export class QueryInfo<
     return result;
   }
 
+  private getIncrementalInfo(
+    result: MarkQueryResult<any, ExtensionsWithStreamInfo>,
+    {
+      fetchPolicy,
+      networkStatus,
+    }: { fetchPolicy: WatchQueryFetchPolicy; networkStatus: NetworkStatus }
+  ) {
+    const pending = this.incremental?.pending ?? [];
+    const streamInfo = result.extensions?.[streamInfoSymbol]?.deref();
+    const incrementalInfo: DiffIncrementalInfo = { streamInfo: streamInfo };
+
+    // We don't want to deliver stream items or complete defer boundaries
+    // for a network-only request if they haven't yet streamed from the
+    // network. We record all the still-pending paths so that cache.diff
+    // can prune complete defer/stream boundaries at those paths.
+    if (
+      fetchPolicy === "network-only" &&
+      networkStatus !== NetworkStatus.refetch
+    ) {
+      for (const item of pending) {
+        const type = this.incremental?.getPendingType?.(item.id);
+
+        if (type === "defer") {
+          incrementalInfo.deferInfo ||= new Trie(true, () => true);
+          incrementalInfo.deferInfo.lookupArray(item.path as any[]);
+        } else if (streamInfo && type === "stream") {
+          streamInfo.lookupArray(item.path as any[]).state.truncate = true;
+        }
+      }
+    }
+
+    return incrementalInfo;
+  }
+
   private getDiff(
     options: Cache.DiffOptions<TData>,
-    incrementalInfo?: { streamInfo?: StreamInfoTrie; deferInfo?: DeferInfo }
+    incrementalInfo?: DiffIncrementalInfo
   ): Cache.InternalDiffResultWithDataState<TData> {
     if ((this.cache as any)[handleIncrementalSymbol]) {
-      return this.cache.diff({
+      return (this.cache as unknown as InMemoryCache).diff({
         ...options,
         [handleIncrementalSymbol]: incrementalInfo || true,
-      } as Cache.DiffOptions<TData>) as Cache.InternalDiffResultWithDataState<TData>;
+      });
     }
 
     // returnPartialData is overridden for backwards compatibility with caches

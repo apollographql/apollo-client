@@ -13,7 +13,7 @@ export type { Primitive } from "./types/Primitive.js";
 export type { RejectedPromise } from "./types/RejectedPromise.js";
 export type { RemoveIndexSignature } from "./types/RemoveIndexSignature.js";
 export type { StreamInfoTrie } from "./types/StreamInfoTrie.js";
-export type { DeferInfo } from "./types/DeferInfo.js";
+export type { DeferInfoTrie } from "./types/DeferInfo.js";
 export type { VariablesOption } from "./types/VariablesOption.js";
 export type { DocumentationTypes } from "./types/DocumentationTypes.js";
 export type { LazyType } from "./LazyType.js";

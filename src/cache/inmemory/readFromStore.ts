@@ -19,7 +19,7 @@ import {
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
-  DeferInfo,
+  DeferInfoTrie,
   FragmentMap,
   FragmentMapFunction,
   StreamInfoTrie,
@@ -63,6 +63,7 @@ import {
 import type { InMemoryCache } from "./inMemoryCache.js";
 import type { Policies } from "./policies.js";
 import type {
+  DiffIncrementalInfo,
   DiffQueryAgainstStoreOptions,
   InMemoryCacheConfig,
   NormalizedCache,
@@ -90,10 +91,7 @@ interface ReadContext extends ReadMergeModifyContext {
   fragmentMap: FragmentMap;
   lookupFragment: FragmentMapFunction;
   streamInfo?: StreamInfoTrie;
-  // Response paths (serialized) whose @defer boundaries the network hasn't
-  // delivered yet. Only set for reads that must not surface undelivered cached
-  // @defer data (e.g. `network-only`).
-  deferInfo?: DeferInfo;
+  deferInfo?: DeferInfoTrie;
 }
 
 type ExecResult<R = any> = {
@@ -311,9 +309,7 @@ export class StoreReader {
    */
   public diffQueryAgainstStore<T>(
     options: DiffQueryAgainstStoreOptions & {
-      [handleIncrementalSymbol]:
-        | true
-        | { streamInfo?: StreamInfoTrie; deferInfo?: DeferInfo };
+      [handleIncrementalSymbol]: true | DiffIncrementalInfo;
     }
   ): Cache.InternalDiffResultWithDataState<T>;
 
@@ -345,15 +341,10 @@ export class StoreReader {
       policies,
       variables,
       varString: canonicalStringify(variables),
-      streamInfo:
-        typeof handleIncremental === "object" && !returnPartialData ?
-          handleIncremental.streamInfo
-        : undefined,
-      deferInfo:
-        typeof handleIncremental === "object" && !returnPartialData ?
-          handleIncremental.deferInfo
-        : undefined,
       ...extractFragmentContext(query, this.config.fragments),
+      ...(typeof handleIncremental === "object" && !returnPartialData ?
+        handleIncremental
+      : undefined),
     };
     let execResult = this.executeSelectionSet({
       selectionSet: getMainDefinition(query).selectionSet,
@@ -943,14 +934,12 @@ export class StoreReader {
     context,
     path,
   }: PruneArrayOptions) {
-    const { streamInfo } = context;
-
     if (!boundaries) return array;
 
     let changed = false;
     let pruned: any[] = [];
 
-    const streamEntry = streamInfo?.peekArray(path)?.state;
+    const streamEntry = context.streamInfo?.peekArray(path)?.state;
     const length = Math.min(
       array.length,
       streamEntry?.truncate ?

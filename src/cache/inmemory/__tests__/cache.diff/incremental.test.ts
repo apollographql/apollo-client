@@ -9,7 +9,7 @@ import {
 } from "@apollo/client/cache";
 import { markAsStreaming, spyOnConsole } from "@apollo/client/testing/internal";
 import { addTypenameToDocument } from "@apollo/client/utilities";
-import type { DeferInfo } from "@apollo/client/utilities/internal";
+import type { DeferInfoTrie } from "@apollo/client/utilities/internal";
 import {
   handleIncrementalSymbol,
   makeStreamInfoTrie,
@@ -9122,7 +9122,7 @@ test("prunes a complete cached @defer boundary when deferInfo marks it as pendin
     },
   });
 
-  const deferInfo: DeferInfo = new Trie();
+  const deferInfo: DeferInfoTrie = new Trie();
   deferInfo.lookup("greeting");
 
   expect(
@@ -9178,7 +9178,7 @@ test("keeps a cached @defer boundary that deferInfo does not mark as pending whi
     },
   });
 
-  const deferInfo: DeferInfo = new Trie();
+  const deferInfo: DeferInfoTrie = new Trie();
   deferInfo.lookup("greeting");
 
   expect(
@@ -9228,7 +9228,7 @@ test("does not apply deferInfo pruning when returnPartialData is true", () => {
     },
   });
 
-  const deferInfo: DeferInfo = new Trie();
+  const deferInfo: DeferInfoTrie = new Trie();
   deferInfo.lookup("greeting");
 
   expect(
@@ -9282,7 +9282,7 @@ test("prunes cached @defer boundaries for list items marked pending in deferInfo
     },
   });
 
-  const deferInfo: DeferInfo = new Trie();
+  const deferInfo: DeferInfoTrie = new Trie();
   deferInfo.lookup("person", "friends", 0);
   deferInfo.lookup("person", "friends", 1);
 
@@ -9340,7 +9340,7 @@ test("keeps a delivered list item's @defer boundary while pruning a still-pendin
     },
   });
 
-  const deferInfo: DeferInfo = new Trie();
+  const deferInfo: DeferInfoTrie = new Trie();
   deferInfo.lookup("person", "friends", 1);
 
   expect(
@@ -9393,7 +9393,7 @@ test("does not reuse a deferInfo-pruned result when deferInfo is later omitted",
     },
   });
 
-  const deferInfo: DeferInfo = new Trie();
+  const deferInfo: DeferInfoTrie = new Trie();
   deferInfo.lookup("greeting");
 
   expect(
@@ -9470,7 +9470,7 @@ test("does not reuse a deferInfo-pruned result when a sibling boundary is delive
   });
 
   {
-    const deferInfo: DeferInfo = new Trie();
+    const deferInfo: DeferInfoTrie = new Trie();
     deferInfo.lookup("greeting");
     deferInfo.lookup("hero");
 
@@ -9496,7 +9496,7 @@ test("does not reuse a deferInfo-pruned result when a sibling boundary is delive
   }
 
   {
-    const deferInfo: DeferInfo = new Trie();
+    const deferInfo: DeferInfoTrie = new Trie();
     deferInfo.lookup("hero");
 
     expect(
@@ -9559,7 +9559,7 @@ test("strips a partial pending @defer boundary while keeping a complete delivere
     });
   }
 
-  const deferInfo: DeferInfo = new Trie();
+  const deferInfo: DeferInfoTrie = new Trie();
   deferInfo.lookup("greeting");
 
   expect(
@@ -9620,7 +9620,7 @@ test("strips both a partial pending @defer boundary and a complete pending sibli
     });
   }
 
-  const deferInfo: DeferInfo = new Trie();
+  const deferInfo: DeferInfoTrie = new Trie();
   deferInfo.lookup("greeting");
   deferInfo.lookup("hero");
 

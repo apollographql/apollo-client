@@ -410,7 +410,7 @@ export class QueryInfo<
   ) {
     const pending = this.incremental?.pending ?? [];
     const streamInfo = result.extensions?.[streamInfoSymbol]?.deref();
-    const incrementalInfo: DiffIncrementalInfo = { streamInfo: streamInfo };
+    const incrementalInfo: DiffIncrementalInfo = { streamInfo };
 
     // We don't want to deliver stream items or complete defer boundaries
     // for a network-only request if they haven't yet streamed from the

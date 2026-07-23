@@ -340,21 +340,16 @@ export class StoreReader {
 
         if (fieldValue === void 0) {
           if (!addTypenameToDocument.added(selection)) {
+            const id =
+              isReference(objectOrReference) ? objectOrReference.__ref
+              : objectOrReference ? policies.identify(objectOrReference)[0]
+              : undefined;
+
             missing = missingMerger.merge(missing, {
               [resultName]: `Can't find field '${selection.name.value}' on ${
-                isReference(objectOrReference) ?
-                  objectOrReference.__ref + " object"
-                : objectOrReference ?
-                  (() => {
-                    const [id] = policies.identify(objectOrReference);
-                    if (id) {
-                      return `object ${id}`;
-                    }
-                    return (
-                      "object " + JSON.stringify(objectOrReference, null, 2)
-                    );
-                  })()
-                : "object {}"
+                id ?
+                  `${id} object`
+                : `object ${JSON.stringify(objectOrReference || {}, null, 2)}`
               }`,
             });
           }

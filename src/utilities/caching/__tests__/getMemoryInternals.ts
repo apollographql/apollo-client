@@ -46,6 +46,10 @@ const defaultCacheSizesAsObject = {
     defaultCacheSizes["inMemoryCache.executeSelectionSet"],
   "inMemoryCache.executeSubSelectedArray":
     defaultCacheSizes["inMemoryCache.executeSubSelectedArray"],
+  "inMemoryCache.prunePartialBoundaries":
+    defaultCacheSizes["inMemoryCache.prunePartialBoundaries"],
+  "inMemoryCache.prunePartialStreamArray":
+    defaultCacheSizes["inMemoryCache.prunePartialStreamArray"],
 };
 
 it("returns information about cache usage (empty caches)", () => {
@@ -66,7 +70,7 @@ it("returns information about cache usage (empty caches)", () => {
       .concat(new RemoveTypenameFromVariablesLink())
       .concat(ApolloLink.empty()),
   });
-  expect(client.getMemoryInternals?.()).toEqual({
+  expect(client.getMemoryInternals?.()).toStrictEqualTyped({
     limits: defaultCacheSizesAsObject,
     sizes: {
       canonicalStringify: 0,
@@ -99,6 +103,8 @@ it("returns information about cache usage (empty caches)", () => {
         executeSelectionSet: 0,
         executeSubSelectedArray: 0,
         maybeBroadcastWatch: 0,
+        prunePartialBoundaries: 0,
+        prunePartialStreamArray: 0,
       },
       links: [
         {
@@ -144,7 +150,7 @@ it("returns information about cache usage (some query triggered)", () => {
       `,
     })
     .catch(() => {});
-  expect(client.getMemoryInternals?.()).toStrictEqual({
+  expect(client.getMemoryInternals?.()).toStrictEqualTyped({
     limits: defaultCacheSizesAsObject,
     sizes: {
       canonicalStringify: 0,
@@ -177,6 +183,8 @@ it("returns information about cache usage (some query triggered)", () => {
         executeSelectionSet: 1,
         executeSubSelectedArray: 0,
         maybeBroadcastWatch: 0,
+        prunePartialBoundaries: 0,
+        prunePartialStreamArray: 0,
       },
       links: [
         {

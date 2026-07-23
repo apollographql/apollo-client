@@ -811,13 +811,13 @@ namespace Cache_2 {
         dataState: "complete";
         fromOptimisticTransaction?: boolean;
     } | {
-        result: DataValue.Streaming<TData> | null;
+        result: DataValue.Streaming<TData>;
         complete: false;
         missing?: never;
         dataState: "streaming";
         fromOptimisticTransaction?: boolean;
     } | {
-        result: DataValue.Partial<TData> | null;
+        result: DataValue.Partial<TData>;
         complete: false;
         missing?: MissingFieldError;
         dataState: "partial";

@@ -2945,7 +2945,7 @@ test("returns the full stream array when every item is complete", () => {
   });
 });
 
-test("truncates a complete stream array to the stream position when default truncation is enabled", () => {
+test("truncates a complete stream array to the stream position when truncation is enabled", () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -2955,7 +2955,8 @@ test("truncates a complete stream array to the stream position when default trun
       }
     }
   `;
-  const streamInfo = makeStreamInfoTrie({ defaultTruncate: true });
+  const streamInfo = makeStreamInfoTrie();
+  streamInfo.lookupArray(["friendList"]).state.truncate = true;
   streamInfo.lookupArray(["friendList"]).state.streamPosition = 1;
 
   cache.writeQuery({

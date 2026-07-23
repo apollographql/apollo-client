@@ -10,6 +10,12 @@ import type { DeepPartial } from "@apollo/client/utilities";
 export declare namespace Incremental {
   export type Path = ReadonlyArray<string | number>;
 
+  export interface PendingResult {
+    id: string;
+    path: Incremental.Path;
+    label?: string;
+  }
+
   /** @internal */
   export interface Handler<
     Chunk extends Record<string, unknown> = Record<string, unknown>,
@@ -35,6 +41,8 @@ export declare namespace Incremental {
     TData,
   > {
     hasNext: boolean;
+    pending?: Array<Incremental.PendingResult>;
+    getPendingType?: (id: string) => "defer" | "stream";
     handle: (
       cacheData: TData | DeepPartial<TData> | undefined | null,
       chunk: Chunk

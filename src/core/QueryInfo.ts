@@ -1,4 +1,5 @@
 import { equal } from "@wry/equality";
+import { Trie } from "@wry/trie";
 import type { DocumentNode, FormattedExecutionResult } from "graphql";
 
 import type { ApolloCache, Cache } from "@apollo/client/cache";
@@ -17,7 +18,6 @@ import {
   graphQLResultHasError,
   handleIncrementalSymbol,
   hasDirectives,
-  deferInfoSymbol,
   streamInfoSymbol,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
@@ -195,6 +195,14 @@ export class QueryInfo<
 
   get hasNext() {
     return this.incremental ? this.incremental.hasNext : false;
+  }
+
+  get pending() {
+    return this.incremental?.pending ?? [];
+  }
+
+  getPendingType(id: string) {
+    return this.incremental?.getPendingType?.(id);
   }
 
   private maybeHandleIncrementalResult(
@@ -386,10 +394,34 @@ export class QueryInfo<
             // re-reading the latest data with cache.diff, below.
           }
 
+          let deferInfo: DeferInfo | undefined;
+          const streamInfo = result.extensions?.[streamInfoSymbol]?.deref();
+
+          // We don't want to deliver stream items or complete defer boundaries
+          // for a network-only request if they haven't yet streamed from the
+          // network. We record all the still-pending paths so that cache.diff
+          // can prune complete defer/stream boundaries at those paths.
+          if (
+            fetchPolicy === "network-only" &&
+            networkStatus !== NetworkStatus.refetch
+          ) {
+            for (const pending of this.pending) {
+              const type = this.getPendingType(pending.id);
+
+              if (type === "defer") {
+                deferInfo ||= new Trie(true, () => true);
+                deferInfo.lookupArray(pending.path as any[]);
+              } else if (streamInfo && type === "stream") {
+                streamInfo.lookupArray(pending.path as any[]).state.truncate =
+                  true;
+              }
+            }
+          }
+
           const { dataState, result: diffResult } = this.getDiff(
             { ...diffOptions, returnPartialData },
-            result.extensions?.[streamInfoSymbol]?.deref(),
-            result.extensions?.[deferInfoSymbol]?.deref()
+            streamInfo,
+            deferInfo
           );
 
           if (

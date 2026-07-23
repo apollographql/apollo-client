@@ -2265,7 +2265,7 @@ describe("lazy MissingFieldError diagnostics", () => {
       data: {
         profile: {
           __typename: "Profile",
-          bio: "a".repeat(1000),
+          bio: "a".repeat(10),
         },
       },
     });
@@ -2276,12 +2276,27 @@ describe("lazy MissingFieldError diagnostics", () => {
       optimistic: true,
     });
 
-    expect(diff.complete).toBe(false);
+    const message = `Can't find field 'largeField' on object ${JSON.stringify(
+      { __typename: "Profile", bio: "a".repeat(10) },
+      null,
+      2
+    )}`;
 
-    // Non-normalized embedded parents use JSON.stringify for debuggability
-    const message = diff.missing!.message;
-    expect(message).toContain("Can't find field 'largeField'");
-    expect(message).toContain('"__typename": "Profile"');
-    expect(message).toContain("a".repeat(1000));
+    expect(diff).toStrictEqualTyped({
+      result: {
+        profile: { __typename: "Profile", bio: "a".repeat(10) },
+      },
+      complete: false,
+      missing: new MissingFieldError(
+        message,
+        {
+          profile: {
+            largeField: message,
+          },
+        },
+        query,
+        {}
+      ),
+    });
   });
 });

@@ -896,6 +896,100 @@ test("handles @defer inside @stream", async () => {
   await expect(observableStream).not.toEmitAnything();
 });
 
+test('reports "complete" once a sibling @defer boundary resolves while a @stream is still streaming with a "no-cache" fetch policy', async () => {
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+  const client = new ApolloClient({
+    link: httpLink,
+    cache: new InMemoryCache(),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 1) {
+        id
+        name
+      }
+      ... @defer {
+        someScalar
+      }
+    }
+  `;
+
+  const observableStream = new ObservableStream(
+    client.watchQuery({ query, fetchPolicy: "no-cache" })
+  );
+
+  await expect(observableStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: { friendList: [{ __typename: "Friend", id: "1", name: "Luke" }] },
+    pending: [
+      { id: "0", path: [] },
+      { id: "1", path: ["friendList"] },
+    ],
+    hasNext: true,
+  } as any);
+
+  await expect(observableStream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [{ id: "0", data: { someScalar: "resolved" } }],
+    completed: [{ id: "0" }],
+    hasNext: true,
+  } as any);
+
+  await expect(observableStream).toEmitTypedValue({
+    data: {
+      friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+      someScalar: "resolved",
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      { id: "1", items: [{ __typename: "Friend", id: "2", name: "Han" }] },
+    ],
+    completed: [{ id: "1" }],
+    hasNext: false,
+  } as any);
+
+  await expect(observableStream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+      ],
+      someScalar: "resolved",
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(observableStream).not.toEmitAnything();
+});
+
 test("can use custom merge function to combine cached and streamed lists", async () => {
   const cache = new InMemoryCache({
     typePolicies: {

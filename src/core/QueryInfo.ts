@@ -271,27 +271,35 @@ export class QueryInfo<
 
     let result: MarkQueryResult<any, ExtensionsWithStreamInfo> = {
       ...incrementalResult,
-      dataState:
-        incrementalResult.data == null ? "empty"
-          // TODO: This is too naive. For stream arrays, this might be complete
-        : this.hasNext ? "streaming"
-        : "complete",
+      dataState: incrementalResult.data == null ? "empty" : "complete",
     };
 
     if (skipCache) {
-      return {
-        ...result,
-        dataState:
-          result.data == null ? "empty"
-            // Ww can simplify the checks for no-cache queries because the
-            // result is purely server driven which means we can assume a
-            // well-formed GraphQL response. In this case, `streaming` only
-            // makes sense if we are using the `@defer` directive and there are
-            // more chunks still streaming (i.e. this.hasNext is true). Purely
-            // `@stream` queries should always be complete.
-          : this.hasNext && hasDirectives(["defer"], query) ? "streaming"
-          : "complete",
-      };
+      const hasPendingDefer = this.incremental?.pending?.some(
+        (pending) => this.incremental?.getPendingType?.(pending.id) === "defer"
+      );
+
+      if (
+        hasPendingDefer ||
+        // The Defer20220824Handler cannot track pending/completed incremental
+        // chunks due to its data format so we naively set dataState to
+        // streaming if we are still processing chunks. The only case where
+        // streaming is incorrect and should actually be complete is when
+        // both a @defer and @stream boundary is present and the @defer chunk
+        // has completed before the `@stream` array.
+        //
+        // Assigning the naive "streaming" value avoids a much more expensive
+        // pass over `result.data` that would otherwise need to traverse the
+        // selection sets and evaluate the data object at each defer boundary
+        // to see if it fulfills the selection set. For such a narrow case where
+        // its incorrect on a format that is now outdated is not worth the
+        // fix so we are ok with reporting a `streaming` here.
+        (!this.incremental?.pending && this.hasNext)
+      ) {
+        result.dataState = "streaming";
+      }
+
+      return result;
     }
 
     if (shouldWriteResult(result, errorPolicy)) {

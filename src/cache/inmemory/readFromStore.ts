@@ -437,18 +437,13 @@ export class StoreReader {
     }
 
     const complete = dataState === "complete";
-
-    result =
-      (
-        complete ||
-        dataState === "streaming" ||
-        (returnPartialData && Object.keys(result).length)
-      ) ?
-        result
-      : null;
+    const keepResult =
+      complete ||
+      dataState === "streaming" ||
+      (returnPartialData && Object.keys(result).length);
 
     const diffResult = {
-      result,
+      result: keepResult ? result : null,
       complete,
       missing,
     } as Cache.DiffResult<T>;

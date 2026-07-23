@@ -1021,11 +1021,11 @@ function assertSelectionSetForIdValue(
 // for this option, so including it would prevent a reliable cache hit.
 //
 // When `returnPartialData` is false, `diffQueryAgainstStore` prunes data from
-// partial @defer boundaries after reading the cached result. `DeferBoundaries`
+// partial @defer boundaries after reading the cached result. `PartialBoundaries`
 // records the selection paths needed for that pass, including empty nodes along
-// a path: overlapping non-deferred selections must still be rebuilt so fields
-// contributed only by a partial deferred sibling are removed. The pruner can
-// then skip unrelated result branches.
+// a path. Overlapping non-deferred selections must still be rebuilt so fields
+// contributed only by a partial deferred sibling are removed. The prune pass
+// can then skip unrelated result branches.
 class PartialBoundaries {
   private selections = new Set<SelectionNode>();
   private children = new Map<string | number, PartialBoundaries>();

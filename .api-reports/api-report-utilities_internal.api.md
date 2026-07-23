@@ -421,9 +421,7 @@ export type LazyType<T> = T & {
 // @internal @deprecated (undocumented)
 export function makeReference(id: string): Reference;
 
-// Warning: (ae-incompatible-release-tags) The symbol "makeStreamInfoTrie" is marked as @public, but its signature references "StreamInfoTrie" which is marked as @internal
-//
-// @public (undocumented)
+// @internal @deprecated (undocumented)
 export function makeStreamInfoTrie(): StreamInfoTrie;
 
 // @internal @deprecated

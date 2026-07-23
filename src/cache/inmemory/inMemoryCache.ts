@@ -109,8 +109,11 @@ export class InMemoryCache extends ApolloCache {
   // in development and expected to remain logically immutable in production.
   public readonly assumeImmutableResults = true;
 
-  // Override the default value since InMemoryCache can handle reading and
-  // writing incremental results.
+  // NOTE: Only InMemoryCache should set this value to true. The update is too
+  // complex to opt-in for 3rd party caches. Once we get to v5, we should
+  // enforce that caches handle incremental queries correctly which should allow
+  // us to provide more robust guidance on what to return. Having to maintain
+  // backwards-compatibility with this flag is too difficult an ask for now.
   public readonly [handleIncrementalSymbol] = true;
 
   // Dynamically imported code can augment existing typePolicies or

@@ -33,7 +33,6 @@ export declare namespace Incremental {
   /** @internal */
   export interface StartRequestOptions {
     query: DocumentNode;
-    defaultTruncateCacheStreamArray?: boolean;
   }
 
   export interface IncrementalRequest<

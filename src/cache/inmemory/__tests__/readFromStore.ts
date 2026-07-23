@@ -2180,7 +2180,7 @@ describe("reading from the store", () => {
 });
 
 describe("lazy MissingFieldError diagnostics", () => {
-  it("does not construct MissingFieldError when only diff.complete is checked", () => {
+  it("only constructs MissingFieldError when diff.missing is accessed", () => {
     const cache = new InMemoryCache();
 
     const fullQuery = gql`
@@ -2220,6 +2220,10 @@ describe("lazy MissingFieldError diagnostics", () => {
       optimistic: true,
     });
 
+    // @ts-ignore
+    const missingSpy = jest.spyOn(diff, "missing", "get");
+    expect(missingSpy).not.toHaveBeenCalled();
+
     // diff.missing should be lazily constructed only when accessed
     expect(diff.missing).toEqual(
       new MissingFieldError(
@@ -2230,10 +2234,12 @@ describe("lazy MissingFieldError diagnostics", () => {
             address: "Can't find field 'address' on Customer:c1 object",
           },
         },
-        expect.anything(),
-        expect.anything()
+        fullQuery,
+        {}
       )
     );
+
+    expect(missingSpy).toHaveBeenCalledTimes(1);
   });
 
   it("missing message uses JSON.stringify for non-normalized embedded parents", () => {

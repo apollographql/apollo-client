@@ -93,13 +93,9 @@ We regularly update our [public roadmap](https://github.com/apollographql/apollo
 
 Join these live events to meet other GraphQL users and learn more:
 
-🎪 [**GraphQL Summit 2025**](https://summit.graphql.com?utm_source=github&utm_medium=apollographql_apollo-client&utm_campaign=readme)
-Oct 6-8, 2025 • San Francisco
-_1000+ engineers, talks, workshops, and office hours_
-
-🌟 [**GraphQLConf 2025**](https://graphql.org/conf/2025)
-Sep 8-10, 2025 • Amsterdam
-_Celebrating 10 Years of GraphQL_
+🎪 [**Apollo Summit 2026**](https://apollosummit.dev/)
+Oct 6-8, 2026 • San Francisco  
+ _1000+ engineers, talks, workshops, and office hours_
 
 [**View All Events →**](https://www.apollographql.com/events?utm_source=github&utm_medium=apollographql_apollo-client&utm_campaign=readme)
 

@@ -400,7 +400,7 @@ export class StoreReader {
       }
     }
 
-    let { result, dataState } = execResult;
+    let { result, dataState, missing: rawMissing } = execResult;
 
     let missing: MissingFieldError | undefined;
     if (
@@ -424,6 +424,8 @@ export class StoreReader {
       dataState = "empty";
     }
 
+    let missingError: MissingFieldError | undefined;
+
     if (
       dataState === "deferPartial" ||
       dataState === "streamPartial" ||
@@ -445,7 +447,17 @@ export class StoreReader {
     const diffResult = {
       result: keepResult ? result : null,
       complete,
-      missing,
+      get missing() {
+        if (missingError === void 0 && rawMissing) {
+          missingError = new MissingFieldError(
+            firstMissing(rawMissing)!,
+            rawMissing,
+            query,
+            variables
+          );
+        }
+        return missingError;
+      },
     } as Cache.DiffResult<T>;
 
     if (handleIncremental) {
@@ -548,11 +560,16 @@ export class StoreReader {
 
         if (fieldValue === void 0) {
           if (!addTypenameToDocument.added(selection)) {
+            const id =
+              isReference(objectOrReference) ? objectOrReference.__ref
+              : objectOrReference ? policies.identify(objectOrReference)[0]
+              : undefined;
+
             missing = missingMerger.merge(missing, {
               [resultName]: `Can't find field '${selection.name.value}' on ${
-                isReference(objectOrReference) ?
-                  objectOrReference.__ref + " object"
-                : "object " + JSON.stringify(objectOrReference, null, 2)
+                id ?
+                  `${id} object`
+                : `object ${JSON.stringify(objectOrReference || {}, null, 2)}`
               }`,
             });
 

@@ -1,4 +1,4 @@
-import type { FragmentSpreadNode, InlineFragmentNode } from "graphql";
+import type { FieldNode } from "graphql";
 import { Kind } from "graphql";
 
 import type { OperationVariables } from "@apollo/client";
@@ -9,13 +9,13 @@ import { canonicalStringify } from "./canonicalStringify.js";
 import { memoize } from "./memoize.js";
 
 /** @internal */
-export const isDeferredFragment = memoize(
-  function isDeferredFragment(
-    fragmentSelection: InlineFragmentNode | FragmentSpreadNode,
+export const isStreamField = memoize(
+  function isStreamField(
+    field: FieldNode,
     variables: OperationVariables | undefined
   ) {
-    return !!fragmentSelection.directives?.some((directive) => {
-      if (directive.name.value !== "defer") {
+    return !!field.directives?.some((directive) => {
+      if (directive.name.value !== "stream") {
         return false;
       }
 
@@ -34,9 +34,7 @@ export const isDeferredFragment = memoize(
     });
   },
   {
-    max:
-      cacheSizes["isDeferredFragment"] ||
-      defaultCacheSizes["isDeferredFragment"],
+    max: cacheSizes["isStreamField"] || defaultCacheSizes["isStreamField"],
     makeCacheKey: ([selection, variables]) => [
       selection,
       canonicalStringify(variables),

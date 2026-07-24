@@ -376,6 +376,36 @@ export declare namespace Cache {
         fromOptimisticTransaction?: boolean;
       };
 
+  export type InternalDiffResultWithDataState<TData> =
+    | {
+        result: DataValue.Complete<TData>;
+        complete: true;
+        missing?: never;
+        dataState: "complete";
+        fromOptimisticTransaction?: boolean;
+      }
+    | {
+        result: DataValue.Streaming<TData>;
+        complete: false;
+        missing?: never;
+        dataState: "streaming";
+        fromOptimisticTransaction?: boolean;
+      }
+    | {
+        result: DataValue.Partial<TData>;
+        complete: false;
+        missing?: MissingFieldError;
+        dataState: "partial";
+        fromOptimisticTransaction?: boolean;
+      }
+    | {
+        result: null;
+        complete: false;
+        missing?: MissingFieldError;
+        dataState: "empty";
+        fromOptimisticTransaction?: boolean;
+      };
+
   export type CacheIdentifierOption<TData> =
     | {
         /**

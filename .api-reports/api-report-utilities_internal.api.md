@@ -86,21 +86,6 @@ export type ClassicSignature = SignatureStyle extends "classic" ? unknown : neve
 // @internal @deprecated
 export function cloneDeep<T>(value: T): T;
 
-// @public (undocumented)
-interface CollectionContext {
-    // (undocumented)
-    exclude: SelectionNode;
-    // Warning: (ae-incompatible-release-tags) The symbol "fragmentMap" is marked as @public, but its signature references "FragmentMap" which is marked as @internal
-    //
-    // (undocumented)
-    fragmentMap: FragmentMap;
-}
-
-// Warning: (ae-forgotten-export) The symbol "CollectionContext" needs to be exported by the entry point index.d.ts
-//
-// @internal @deprecated
-export function collectSiblingFields(selectionSet: SelectionSetNode, context: CollectionContext, visitedFragments?: Map<string, FieldMap>): FieldMap;
-
 // @public
 export function combineLatestBatched<T>(observables: Array<Observable<T> & {
     dirty?: boolean;
@@ -182,6 +167,9 @@ type DeepOmitArray<T extends any[], K> = {
 // @public (undocumented)
 type DeepOmitPrimitive = Primitive | Function;
 
+// @internal @deprecated
+export type DeferInfoTrie = Trie<true>;
+
 // @public (undocumented)
 type Directives = {
     [directiveName: string]: {
@@ -238,11 +226,6 @@ export interface ExtensionsWithStreamInfo extends Record<string, unknown> {
 }
 
 // @public (undocumented)
-export type FieldMap = {
-    [fieldName: string]: FieldMap | true;
-};
-
-// @public (undocumented)
 export function filterMap<T, R>(fn: (value: T, context: undefined) => R | undefined): OperatorFunction<T, R>;
 
 // @public (undocumented)
@@ -288,6 +271,8 @@ export const getApolloClientMemoryInternals: (() => {
             executeSelectionSet: number | undefined;
             executeSubSelectedArray: number | undefined;
             maybeBroadcastWatch: number | undefined;
+            prunePartialBoundaries: number | undefined;
+            prunePartialStreamArray: number | undefined;
         } | undefined;
         fragmentRegistry?: {
             findFragmentSpreads: number | undefined;
@@ -335,6 +320,8 @@ export const getInMemoryCacheMemoryInternals: (() => {
         executeSelectionSet: number | undefined;
         executeSubSelectedArray: number | undefined;
         maybeBroadcastWatch: number | undefined;
+        prunePartialBoundaries: number | undefined;
+        prunePartialStreamArray: number | undefined;
     };
     fragmentRegistry: {
         findFragmentSpreads: number | undefined;
@@ -377,6 +364,9 @@ const globalCaches: {
 // @internal @deprecated (undocumented)
 export function graphQLResultHasError(result: FormattedExecutionResult<any>): boolean;
 
+// @internal @deprecated
+export const handleIncrementalSymbol: unique symbol;
+
 // @internal @deprecated (undocumented)
 export function hasDirectives(names: string[], root: ASTNode, all?: boolean): boolean;
 
@@ -389,8 +379,8 @@ export type IsAny<T> = 0 extends 1 & T ? true : false;
 // @internal @deprecated
 export const isArray: (a: any) => a is any[] | readonly any[];
 
-// @public (undocumented)
-export function isDeferredFragment(fragmentSelection: InlineFragmentNode | FragmentSpreadNode, variables: OperationVariables): boolean;
+// @internal @deprecated (undocumented)
+export const isDeferredFragment: (fragmentSelection: FragmentSpreadNode | InlineFragmentNode, variables: OperationVariables | undefined) => boolean;
 
 // @internal @deprecated (undocumented)
 export function isDocumentNode(value: unknown): value is DocumentNode;
@@ -414,6 +404,9 @@ export function isNonNullObject(obj: unknown): obj is Record<string | number, an
 // @internal @deprecated (undocumented)
 export function isPlainObject(obj: unknown): obj is Record<string | number, any>;
 
+// @internal @deprecated (undocumented)
+export const isStreamField: (field: FieldNode, variables: OperationVariables | undefined) => boolean;
+
 // @public (undocumented)
 export function isTypenameField(field: FieldNode): boolean;
 
@@ -424,6 +417,9 @@ export type LazyType<T> = T & {
 
 // @internal @deprecated (undocumented)
 export function makeReference(id: string): Reference;
+
+// @internal @deprecated (undocumented)
+export function makeStreamInfoTrie(): StreamInfoTrie;
 
 // @internal @deprecated
 export function makeUniqueId(prefix: string): string;
@@ -538,12 +534,25 @@ export function storeKeyNameFromField(field: FieldNode, variables?: Object): str
 // @public (undocumented)
 let storeKeyNameStringify: (value: any) => string;
 
+// @public (undocumented)
+export class StreamArrayState {
+    constructor(path: Incremental.Path);
+    // (undocumented)
+    depend(): void;
+    // (undocumented)
+    get streamPosition(): number;
+    set streamPosition(value: number);
+    // (undocumented)
+    truncate: boolean;
+}
+
 // @public
 export const streamInfoSymbol: unique symbol;
 
 // @internal @deprecated (undocumented)
 export type StreamInfoTrie = Trie<{
     current: Incremental.StreamFieldInfo;
+    state: StreamArrayState;
     previous?: {
         incoming: unknown;
         streamFieldInfo: Incremental.StreamFieldInfo;

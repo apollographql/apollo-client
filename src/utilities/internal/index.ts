@@ -1,7 +1,6 @@
 export type { DecoratedPromise } from "./types/DecoratedPromise.js";
 export type { DeepOmit } from "./types/DeepOmit.js";
 export type { ExtensionsWithStreamInfo } from "./types/ExtensionsWithStreamDetails.js";
-export type { FieldMap } from "./collectSiblingFields.js";
 export type { FragmentMap } from "./types/FragmentMap.js";
 export type { FragmentMapFunction } from "./types/FragmentMapFunction.js";
 export type { FulfilledPromise } from "./types/FulfilledPromise.js";
@@ -14,6 +13,7 @@ export type { Primitive } from "./types/Primitive.js";
 export type { RejectedPromise } from "./types/RejectedPromise.js";
 export type { RemoveIndexSignature } from "./types/RemoveIndexSignature.js";
 export type { StreamInfoTrie } from "./types/StreamInfoTrie.js";
+export type { DeferInfoTrie } from "./types/DeferInfo.js";
 export type { VariablesOption } from "./types/VariablesOption.js";
 export type { DocumentationTypes } from "./types/DocumentationTypes.js";
 export type { LazyType } from "./LazyType.js";
@@ -32,7 +32,6 @@ export { compact } from "./compact.js";
 export { createFragmentMap } from "./createFragmentMap.js";
 export { createFulfilledPromise } from "./createFulfilledPromise.js";
 export { createRejectedPromise } from "./createRejectedPromise.js";
-export { collectSiblingFields } from "./collectSiblingFields.js";
 export { dealias } from "./dealias.js";
 export { decoratePromise } from "./decoratePromise.js";
 export { DeepMerger } from "./DeepMerger.js";
@@ -58,7 +57,9 @@ export { isField } from "./isField.js";
 export { isNonEmptyArray } from "./isNonEmptyArray.js";
 export { isNonNullObject } from "./isNonNullObject.js";
 export { isPlainObject } from "./isPlainObject.js";
+export { isStreamField } from "./isStreamField.js";
 export { isTypenameField } from "./isTypenameField.js";
+export { makeStreamInfoTrie } from "./makeStreamInfoTrie.js";
 export { makeReference } from "./makeReference.js";
 export { makeUniqueId } from "./makeUniqueId.js";
 export { maybeDeepFreeze } from "./maybeDeepFreeze.js";
@@ -72,6 +73,7 @@ export { removeMaskedFragmentSpreads } from "./removeFragmentSpreads.js";
 export { resultKeyNameFromField } from "./resultKeyNameFromField.js";
 export { shouldInclude } from "./shouldInclude.js";
 export { storeKeyNameFromField } from "./storeKeyNameFromField.js";
+export { StreamArrayState } from "./StreamArrayState.js";
 export { stringifyForDisplay } from "./stringifyForDisplay.js";
 export { toQueryResult } from "./toQueryResult.js";
 export { filterMap } from "./filterMap.js";
@@ -80,6 +82,7 @@ export { canonicalStringify } from "./canonicalStringify.js";
 export { mapObservableFragmentMemoized } from "./mapObservableFragment.js";
 export {
   extensionsSymbol,
+  handleIncrementalSymbol,
   streamInfoSymbol,
   variablesUnknownSymbol,
 } from "./constants.js";

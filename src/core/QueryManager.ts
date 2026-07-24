@@ -1036,6 +1036,7 @@ export class QueryManager {
       context: DefaultContext | undefined;
       fetchPolicy: WatchQueryFetchPolicy;
       errorPolicy: ErrorPolicy;
+      networkStatus: NetworkStatus;
       returnPartialData: boolean | undefined;
     },
     {
@@ -1200,6 +1201,7 @@ export class QueryManager {
       fetchPolicy,
       errorPolicy,
       returnPartialData,
+      networkStatus,
       notifyOnNetworkStatusChange,
       context,
     });
@@ -1546,11 +1548,13 @@ export class QueryManager {
       errorPolicy,
       returnPartialData,
       context,
+      networkStatus,
     }: {
       query: DocumentNode | TypedDocumentNode<TData, TVariables>;
       variables: TVariables;
       fetchPolicy: WatchQueryFetchPolicy;
       errorPolicy: ErrorPolicy;
+      networkStatus: NetworkStatus;
       returnPartialData?: boolean;
       context?: DefaultContext;
     },
@@ -1680,6 +1684,7 @@ export class QueryManager {
           fetchPolicy,
           errorPolicy,
           returnPartialData,
+          networkStatus,
         },
         {
           cacheWriteBehavior,

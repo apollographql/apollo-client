@@ -9,6 +9,7 @@ import type { AsStoreObject } from '@apollo/client/utilities';
 import { canonicalStringify } from '@apollo/client/utilities';
 import type { DataValue } from '@apollo/client';
 import type { DeepPartial } from '@apollo/client/utilities';
+import type { DeferInfoTrie } from '@apollo/client/utilities/internal';
 import type { DocumentNode } from 'graphql';
 import type { DocumentNode as DocumentNode_2 } from '@apollo/client';
 import type { ExtensionsWithStreamInfo } from '@apollo/client/utilities/internal';
@@ -21,6 +22,7 @@ import { getApolloCacheMemoryInternals } from '@apollo/client/utilities/internal
 import type { GetDataState } from '@apollo/client';
 import { getInMemoryCacheMemoryInternals } from '@apollo/client/utilities/internal';
 import type { GraphQLScalarType } from 'graphql';
+import { handleIncrementalSymbol } from '@apollo/client/utilities/internal';
 import type { Incremental } from '@apollo/client/incremental';
 import type { InlineFragmentNode } from 'graphql';
 import type { IsAny } from '@apollo/client/utilities/internal';
@@ -35,6 +37,7 @@ import type { RemoveIndexSignature } from '@apollo/client/utilities/internal';
 import type { SelectionSetNode } from 'graphql';
 import type { StoreObject } from '@apollo/client/utilities';
 import type { StoreValue } from '@apollo/client/utilities';
+import type { StreamInfoTrie } from '@apollo/client/utilities/internal';
 import { Trie } from '@wry/trie';
 import type { TypedDocumentNode } from '@apollo/client';
 import type { TypeOverrides } from '@apollo/client';
@@ -226,6 +229,32 @@ namespace Cache_2 {
         cache: infer TCache;
     } ? TCache extends ApolloCache ? TCache : "The cache type declared in TypeOverrides does not extend `ApolloCache` and cannot be used with Apollo Client. See https://www.apollographql.com/docs/react/data/typescript#declaring-the-cache-type." : ApolloCache;
     // (undocumented)
+    type InternalDiffResultWithDataState<TData> = {
+        result: DataValue.Complete<TData>;
+        complete: true;
+        missing?: never;
+        dataState: "complete";
+        fromOptimisticTransaction?: boolean;
+    } | {
+        result: DataValue.Streaming<TData>;
+        complete: false;
+        missing?: never;
+        dataState: "streaming";
+        fromOptimisticTransaction?: boolean;
+    } | {
+        result: DataValue.Partial<TData>;
+        complete: false;
+        missing?: MissingFieldError;
+        dataState: "partial";
+        fromOptimisticTransaction?: boolean;
+    } | {
+        result: null;
+        complete: false;
+        missing?: MissingFieldError;
+        dataState: "empty";
+        fromOptimisticTransaction?: boolean;
+    };
+    // (undocumented)
     interface ModifyOptions<Entity extends Record<string, any> = Record<string, any>> {
         // (undocumented)
         broadcast?: boolean;
@@ -370,9 +399,18 @@ interface DeleteModifier {
 // @public (undocumented)
 const _deleteModifier: unique symbol;
 
+// @internal @deprecated (undocumented)
+export interface DiffIncrementalInfo {
+    // (undocumented)
+    deferInfo?: DeferInfoTrie;
+    // (undocumented)
+    streamInfo?: StreamInfoTrie;
+}
+
 // @public (undocumented)
 export type DiffQueryAgainstStoreOptions = ReadQueryOptions & {
     returnPartialData?: boolean;
+    [handleIncrementalSymbol]?: true | DiffIncrementalInfo;
 };
 
 // @public (undocumented)
@@ -592,6 +630,8 @@ export namespace InMemoryCache {
 
 // @public (undocumented)
 export class InMemoryCache extends ApolloCache {
+    // (undocumented)
+    readonly [handleIncrementalSymbol] = true;
     constructor(...args: {} extends InMemoryCache.ScalarsOption ? [
     config?: InMemoryCacheConfig
     ] : [config: InMemoryCacheConfig]);
@@ -605,7 +645,11 @@ export class InMemoryCache extends ApolloCache {
     // (undocumented)
     protected config: InMemoryCacheConfig;
     // (undocumented)
-    diff<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: Cache_2.DiffOptions<TData, TVariables>): Cache_2.DiffResult<TData>;
+    diff<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: Cache_2.DiffOptions<TData, TVariables> & {
+        [handleIncrementalSymbol]: true | DiffIncrementalInfo;
+    }): Cache_2.InternalDiffResultWithDataState<TData>;
+    // (undocumented)
+    diff<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: Cache_2.DiffOptions<TData, TVariables>): Cache_2.DiffResult<TData>;
     // (undocumented)
     evict(options: Cache_2.EvictOptions): boolean;
     // (undocumented)
@@ -1109,9 +1153,11 @@ interface WriteContext extends ReadMergeModifyContext {
 
 // Warnings were encountered during analysis:
 //
+// src/cache/inmemory/inMemoryCache.ts:461:7 - (ae-incompatible-release-tags) The symbol "[handleIncrementalSymbol]" is marked as @public, but its signature references "DiffIncrementalInfo" which is marked as @internal
 // src/cache/inmemory/policies.ts:176:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:179:3 - (ae-forgotten-export) The symbol "ScalarNames" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/types.ts:139:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/types.ts:145:3 - (ae-incompatible-release-tags) The symbol "[handleIncrementalSymbol]" is marked as @public, but its signature references "DiffIncrementalInfo" which is marked as @internal
+// src/cache/inmemory/types.ts:149:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

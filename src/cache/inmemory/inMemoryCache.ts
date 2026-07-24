@@ -30,6 +30,7 @@ import {
   getInMemoryCacheMemoryInternals,
   getOperationDefinition,
   getUnwrappedType,
+  handleIncrementalSymbol,
   isPlainObject,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
@@ -45,6 +46,7 @@ import { Policies } from "./policies.js";
 import { forgetCache, makeVar, recallCache } from "./reactiveVars.js";
 import { StoreReader } from "./readFromStore.js";
 import type {
+  DiffIncrementalInfo,
   InMemoryCacheConfig,
   KnownScalars,
   NormalizedCacheObject,
@@ -106,6 +108,11 @@ export class InMemoryCache extends ApolloCache {
   // Override the default value, since InMemoryCache result objects are frozen
   // in development and expected to remain logically immutable in production.
   public readonly assumeImmutableResults = true;
+
+  // InMemoryCache can handle incremental results in cache.diff. 3rd party
+  // caches that want to handle incremental results should talk to the Apollo
+  // Client team on how to handle this in Apollo Client 4.x.
+  public readonly [handleIncrementalSymbol] = true;
 
   // Dynamically imported code can augment existing typePolicies or
   // possibleTypes by calling cache.policies.addTypePolicies or
@@ -445,6 +452,20 @@ export class InMemoryCache extends ApolloCache {
       }
     }
   }
+
+  public diff<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    query: Cache.DiffOptions<TData, TVariables> & {
+      [handleIncrementalSymbol]: true | DiffIncrementalInfo;
+    }
+  ): Cache.InternalDiffResultWithDataState<TData>;
+
+  public diff<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(query: Cache.DiffOptions<TData, TVariables>): Cache.DiffResult<TData>;
 
   public diff<
     TData = unknown,

@@ -400,23 +400,15 @@ export class StoreReader {
       }
     }
 
-    let { result, dataState, missing: rawMissing } = execResult;
-
-    let missing: MissingFieldError | undefined;
-    if (
-      execResult.missing &&
+    let { result, dataState, missing } = execResult;
+    // Evaluate this condition before we start mucking with dataState for the
+    // publicly returned value
+    const includeMissing =
+      !!missing &&
       // We don't need to report missing fields inside defer boundaries since
       // the "streaming" dataState tells us that the only missing fields in
       // the object is inside a defer boundary.
-      (dataState !== "streaming" || !handleIncremental)
-    ) {
-      missing = new MissingFieldError(
-        firstMissing(execResult.missing)!,
-        execResult.missing,
-        query,
-        variables
-      );
-    }
+      (dataState !== "streaming" || !handleIncremental);
 
     // If we get all root @defer boundaries with an empty result, report it as
     // empty instead of streaming.
@@ -448,10 +440,10 @@ export class StoreReader {
       result: keepResult ? result : null,
       complete,
       get missing() {
-        if (missingError === void 0 && rawMissing) {
-          missingError = new MissingFieldError(
-            firstMissing(rawMissing)!,
-            rawMissing,
+        if (includeMissing) {
+          missingError ||= new MissingFieldError(
+            firstMissing(missing)!,
+            missing,
             query,
             variables
           );

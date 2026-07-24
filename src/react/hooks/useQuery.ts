@@ -201,10 +201,6 @@ export declare namespace useQuery {
   export type ResultForOptions<
     TData,
     TVariables extends OperationVariables,
-    TOptions extends
-      | Record<string, never> // no options
-      | Options<TData, TVariables>
-      | SkipToken,
     TReturnPartialData extends boolean | undefined = undefined,
   > = LazyType<
     Result<
@@ -213,16 +209,13 @@ export declare namespace useQuery {
       | "complete"
       | "streaming"
       | "empty"
-      | (TOptions extends any ?
-          TOptions extends SkipToken ? never
-          : OptionWithFallback<
-            { returnPartialData: TReturnPartialData },
-            DefaultOptions,
-            "returnPartialData"
-          > extends false ?
-            never
-          : "partial"
-        : never)
+      | (OptionWithFallback<
+          { returnPartialData: TReturnPartialData },
+          DefaultOptions,
+          "returnPartialData"
+        > extends false ?
+          never
+        : "partial")
     >
   >;
 
@@ -532,22 +525,16 @@ export declare namespace useQuery {
           DocumentNode | TypedDocumentNode<TData, TVariables>
         : // this overload should only be accessible if all `TVariables` are optional
           never
-      ): useQuery.ResultForOptions<TData, TVariables, Record<string, never>>;
+      ): useQuery.ResultForOptions<TData, TVariables>;
 
       /** {@inheritDoc @apollo/client/react!useQuery.DocumentationTypes.useQuery:call(1)} */
       <
         TData,
         TVariables extends OperationVariables,
         // this overload should never be manually defined, it should always be inferred
-        TOptions extends useQuery.Options<TData, NoInfer<TVariables>> &
-          VariablesOption<
-            TVariables & {
-              [K in Exclude<
-                keyof TOptions["variables"],
-                keyof TVariables
-              >]?: never;
-            }
-          >,
+        TProvidedVariables extends TVariables & {
+          [K in Exclude<keyof TProvidedVariables, keyof TVariables>]?: never;
+        } = TVariables,
         TReturnPartialData extends boolean | undefined = undefined,
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
@@ -556,15 +543,20 @@ export declare namespace useQuery {
         [TVariables] extends [never] ? [options: never]
         : // variables optional
         {} extends TVariables ?
-          [options?: TOptions & { returnPartialData?: TReturnPartialData }]
+          [
+            options?: useQuery.Base.Options<TData, NoInfer<TVariables>> & {
+              variables?: TProvidedVariables;
+              returnPartialData?: TReturnPartialData;
+            },
+          ]
         : // variables required
-          [options: TOptions & { returnPartialData?: TReturnPartialData }]
-      ): useQuery.ResultForOptions<
-        TData,
-        TVariables,
-        TOptions,
-        TReturnPartialData
-      >;
+          [
+            options: useQuery.Base.Options<TData, NoInfer<TVariables>> & {
+              variables: TProvidedVariables;
+              returnPartialData?: TReturnPartialData;
+            },
+          ]
+      ): useQuery.ResultForOptions<TData, TVariables, TReturnPartialData>;
 
       /** {@inheritDoc @apollo/client/react!useQuery.DocumentationTypes.useQuery:call(1)} */
       <
@@ -582,15 +574,9 @@ export declare namespace useQuery {
         TData,
         TVariables extends OperationVariables,
         // this overload should never be manually defined, it should always be inferred
-        TOptions extends useQuery.Options<TData, NoInfer<TVariables>> &
-          VariablesOption<
-            TVariables & {
-              [K in Exclude<
-                keyof TOptions["variables"],
-                keyof TVariables
-              >]?: never;
-            }
-          >,
+        TProvidedVariables extends TVariables & {
+          [K in Exclude<keyof TProvidedVariables, keyof TVariables>]?: never;
+        } = TVariables,
         TReturnPartialData extends boolean | undefined = undefined,
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
@@ -601,21 +587,22 @@ export declare namespace useQuery {
         {} extends TVariables ?
           [
             options?:
-              | (TOptions & { returnPartialData?: TReturnPartialData })
+              | (useQuery.Base.Options<TData, NoInfer<TVariables>> & {
+                  variables?: TProvidedVariables;
+                  returnPartialData?: TReturnPartialData;
+                })
               | SkipToken,
           ]
         : // variables required
           [
             options:
-              | (TOptions & { returnPartialData?: TReturnPartialData })
+              | (useQuery.Base.Options<TData, NoInfer<TVariables>> & {
+                  variables: TProvidedVariables;
+                  returnPartialData?: TReturnPartialData;
+                })
               | SkipToken,
           ]
-      ): useQuery.ResultForOptions<
-        TData,
-        TVariables,
-        TOptions | SkipToken,
-        TReturnPartialData
-      >;
+      ): useQuery.ResultForOptions<TData, TVariables, TReturnPartialData>;
 
       ssrDisabledResult: ObservableQuery.Result<any>;
     }

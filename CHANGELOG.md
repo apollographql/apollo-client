@@ -1,5 +1,19 @@
 # @apollo/client
 
+## 4.3.0-alpha.4
+
+### Patch Changes
+
+- [#13347](https://github.com/apollographql/apollo-client/pull/13347) [`7d543d6`](https://github.com/apollographql/apollo-client/commit/7d543d6416688ed113295a69e73b706c097a0d31) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where `network-only` incremental queries could cause cache data to leak into the emitted result when a `@defer` or `@stream` boundary already had complete data in the cache. Cache data inside pending `@defer` objects and `@stream` arrays are now pruned so that only completed `@defer` or `@stream` boundaries are returned.
+
+  NOTE: This change only applies to `InMemoryCache` when using `GraphQL17Alpha9Handler`.
+
+- [#13329](https://github.com/apollographql/apollo-client/pull/13329) [`1d581d2`](https://github.com/apollographql/apollo-client/commit/1d581d282fe223e4bf39ea5e7a3cbc44fdbf32b5) Thanks [@AmariahAK](https://github.com/AmariahAK)! - Cache diffs for incomplete queries no longer pay the cost of building a full `MissingFieldError` when the `missing` property is not accessed. The error object is now only constructed when the `missing` property is accessed the first time. This improves performance by avoiding a V8 stack capture when `missing` is ignored entirely.
+
+  As an additional small performance improvement, `JSON.stringify` is no longer used in the error message on objects whose cache ID is known. `JSON.stringify` is only used for non-normalized objects.
+
+- [#13347](https://github.com/apollographql/apollo-client/pull/13347) [`7d543d6`](https://github.com/apollographql/apollo-client/commit/7d543d6416688ed113295a69e73b706c097a0d31) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where partial cache data could leak into intermediate incremental results. This could cause runtime crashes if you relied on the presence of values to determine whether the `@defer` data had streamed in or not.
+
 ## 4.3.0-alpha.3
 
 ### Minor Changes

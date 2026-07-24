@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 4.2.8
+
+### Patch Changes
+
+- [#13349](https://github.com/apollographql/apollo-client/pull/13349) [`501a33b`](https://github.com/apollographql/apollo-client/commit/501a33bba831828da0398c994662582054272743) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Prevent the `setTimeout` in `connectToDevtools` that shows the devtools suggestion from firing when the user agent does not match Chrome or Firefox. This check was previously done inside the `setTimeout` which meant the timer was scheduled for environments where we'd never show the message anyways. For test environments, this could cause flaky tests when that `setTimeout` outlived the tests and ran after any virtual DOM was torn down and removed.
+
 ## 4.2.7
 
 ### Patch Changes

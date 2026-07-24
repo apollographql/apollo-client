@@ -205,6 +205,7 @@ export declare namespace useQuery {
       | Record<string, never> // no options
       | Options<TData, TVariables>
       | SkipToken,
+    TReturnPartialData extends boolean | undefined = undefined,
   > = LazyType<
     Result<
       TData,
@@ -215,7 +216,7 @@ export declare namespace useQuery {
       | (TOptions extends any ?
           TOptions extends SkipToken ? never
           : OptionWithFallback<
-            TOptions,
+            { returnPartialData: TReturnPartialData },
             DefaultOptions,
             "returnPartialData"
           > extends false ?
@@ -547,16 +548,23 @@ export declare namespace useQuery {
               >]?: never;
             }
           >,
+        TReturnPartialData extends boolean | undefined = undefined,
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         ...[options]: // we generally do not allow for a `TVariables` of `never`
         // TODO: check if we need a similar check in other hooks
         [TVariables] extends [never] ? [options: never]
         : // variables optional
-        {} extends TVariables ? [options?: TOptions]
+        {} extends TVariables ?
+          [options?: TOptions & { returnPartialData?: TReturnPartialData }]
         : // variables required
-          [options: TOptions]
-      ): useQuery.ResultForOptions<TData, TVariables, TOptions>;
+          [options: TOptions & { returnPartialData?: TReturnPartialData }]
+      ): useQuery.ResultForOptions<
+        TData,
+        TVariables,
+        TOptions,
+        TReturnPartialData
+      >;
 
       /** {@inheritDoc @apollo/client/react!useQuery.DocumentationTypes.useQuery:call(1)} */
       <
@@ -583,16 +591,31 @@ export declare namespace useQuery {
               >]?: never;
             }
           >,
+        TReturnPartialData extends boolean | undefined = undefined,
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         ...[options]: // we generally do not allow for a `TVariables` of `never`
         // TODO: check if we need a similar check in other hooks
         [TVariables] extends [never] ? [options: never]
         : // variables optional
-        {} extends TVariables ? [options?: TOptions | SkipToken]
+        {} extends TVariables ?
+          [
+            options?:
+              | (TOptions & { returnPartialData?: TReturnPartialData })
+              | SkipToken,
+          ]
         : // variables required
-          [options: TOptions | SkipToken]
-      ): useQuery.ResultForOptions<TData, TVariables, TOptions | SkipToken>;
+          [
+            options:
+              | (TOptions & { returnPartialData?: TReturnPartialData })
+              | SkipToken,
+          ]
+      ): useQuery.ResultForOptions<
+        TData,
+        TVariables,
+        TOptions | SkipToken,
+        TReturnPartialData
+      >;
 
       ssrDisabledResult: ObservableQuery.Result<any>;
     }

@@ -24,17 +24,16 @@ export const variablesUnknownSymbol = Symbol.for(
 /**
  * @internal
  * Used to tell `ApolloCache.diff` whether to handle incremental results. This
- * changes the behavior of `returnPartialData: false` when handling a `@defer`
- * query where the result should contain a result if the only hole in the data
- * is at a `@defer` boundary. `dataState` should also be returned to signal what
- * state the data is in.
+ * changes the behavior of `returnPartialData: false` when handling incremental
+ * queries with partial or empty data at a `@defer` or `@stream` boundary. This
+ * also signals to the cache that it should return a data state.
  *
  * When `handleIncrementalSymbol` is not provided, the cache should behave as it
  * does today.
  *
- * Caches that can handle incremental results need to opt-in by setting
- * `supportsIncrementalResults` to `true` as a property of the cache. This tells
- * the client whether to inject the symbol or not.
+ * 3rd party caches that want to implement this behavior should talk to the
+ * Apollo Client team. Open a GitHub issue so we can chat with you on what is
+ * required for this to work in Apollo Client version 4.x.
  *
  * Meant for cache implementers only. This should not be used in userland code.
  */

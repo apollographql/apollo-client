@@ -1200,6 +1200,7 @@ export class QueryManager {
       request.variables = variables;
 
       const observableWithInfo = this.fetchQueryByPolicy(
+        request,
         {
           query: request.query,
           context: request.context,
@@ -1524,6 +1525,7 @@ export class QueryManager {
   }
 
   private fetchQueryByPolicy<TData, TVariables extends OperationVariables>(
+    request: QueryRequest<TData, TVariables>,
     {
       query,
       variables,

@@ -1058,16 +1058,7 @@ export class QueryManager {
         // ones used to obtain it from the link.
         const { dataState, ...result } = queryInfo.markQueryResult(
           incoming,
-          request,
-          {
-            errorPolicy: request.errorPolicy,
-            fetchPolicy: request.fetchPolicy,
-            document: request.query,
-            cacheWriteBehavior: request.cacheWriteBehavior,
-            networkStatus: request.networkStatus,
-            returnPartialData: request.returnPartialData,
-            variables: request.variables,
-          }
+          request
         );
         const hasErrors = graphQLResultHasError(result);
 

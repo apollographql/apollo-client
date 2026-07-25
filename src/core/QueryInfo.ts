@@ -39,10 +39,7 @@ import type {
   OperationVariables,
   TypedDocumentNode,
 } from "./types.js";
-import type {
-  ErrorPolicy,
-  WatchQueryFetchPolicy,
-} from "./watchQueryOptions.js";
+import type { ErrorPolicy } from "./watchQueryOptions.js";
 
 type UpdateQueries<TData> = ApolloClient.MutateOptions<
   TData,
@@ -226,23 +223,20 @@ export class QueryInfo<
 
   public markQueryResult(
     incoming: ApolloLink.Result<TData>,
-    request: QueryRequest<TData, TVariables>,
-    {
-      document: query,
-      variables,
-      errorPolicy,
-      cacheWriteBehavior,
-      returnPartialData,
-      fetchPolicy,
-      networkStatus,
-    }: OperationInfo<TData, TVariables> & {
-      fetchPolicy: WatchQueryFetchPolicy;
-      networkStatus: NetworkStatus;
-    }
+    request: QueryRequest<TData, TVariables>
   ): MarkQueryResult<
     DataValue.Complete<TData> | DataValue.Streaming<TData>,
     ExtensionsWithStreamInfo
   > {
+    const {
+      cacheWriteBehavior,
+      errorPolicy,
+      fetchPolicy,
+      query,
+      networkStatus,
+      variables,
+      returnPartialData,
+    } = request;
     const diffOptions = {
       query,
       variables,

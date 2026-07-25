@@ -1033,12 +1033,10 @@ export class QueryManager {
     request: QueryRequest<TData, TVariables>,
     {
       queryInfo,
-      cacheWriteBehavior,
       observableQuery,
       exposeExtensions,
     }: {
       queryInfo: QueryInfo<TData, TVariables>;
-      cacheWriteBehavior: CacheWriteBehavior;
       observableQuery: ObservableQuery<TData, TVariables> | undefined;
       exposeExtensions?: boolean;
     }
@@ -1062,7 +1060,7 @@ export class QueryManager {
           errorPolicy: request.errorPolicy,
           fetchPolicy: request.fetchPolicy,
           document: linkDocument,
-          cacheWriteBehavior,
+          cacheWriteBehavior: request.cacheWriteBehavior,
           networkStatus: request.networkStatus,
           returnPartialData: request.returnPartialData,
           variables: request.variables,
@@ -1622,7 +1620,6 @@ export class QueryManager {
 
     const resultsFromLink = () =>
       this.getResultsFromLink<TData, TVariables>(request, {
-        cacheWriteBehavior: request.cacheWriteBehavior,
         queryInfo,
         observableQuery,
         exposeExtensions,

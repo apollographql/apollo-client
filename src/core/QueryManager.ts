@@ -1193,7 +1193,6 @@ export class QueryManager {
 
       const observableWithInfo = this.fetchQueryByPolicy(request, {
         queryInfo,
-        cacheWriteBehavior: request.cacheWriteBehavior,
         onCacheHit,
         observableQuery,
         exposeExtensions,
@@ -1507,13 +1506,11 @@ export class QueryManager {
   private fetchQueryByPolicy<TData, TVariables extends OperationVariables>(
     request: QueryRequest<TData, TVariables>,
     {
-      cacheWriteBehavior,
       onCacheHit,
       queryInfo,
       observableQuery,
       exposeExtensions,
     }: {
-      cacheWriteBehavior: CacheWriteBehavior;
       onCacheHit: () => void;
       queryInfo: QueryInfo<TData, TVariables>;
       observableQuery: ObservableQuery<TData, TVariables> | undefined;
@@ -1625,7 +1622,7 @@ export class QueryManager {
 
     const resultsFromLink = () =>
       this.getResultsFromLink<TData, TVariables>(request, {
-        cacheWriteBehavior,
+        cacheWriteBehavior: request.cacheWriteBehavior,
         queryInfo,
         observableQuery,
         exposeExtensions,

@@ -1208,17 +1208,17 @@ export class QueryManager {
     });
 
     const queryInfo = new QueryInfo<TData, TVariables>(this, observableQuery);
-    const request = new QueryRequest(
-      {
-        ...options,
+    const request = new QueryRequest<TData, TVariables>(
+      Object.assign({}, options, {
         query,
         variables,
         fetchPolicy,
         errorPolicy,
         returnPartialData,
+        networkStatus,
         notifyOnNetworkStatusChange,
         context,
-      },
+      }),
       networkStatus
     );
 
@@ -1227,11 +1227,18 @@ export class QueryManager {
       // modify its properties here, rather than creating yet another new
       // WatchQueryOptions object.
       normalized.variables = variables;
-      request.options.variables = variables;
+      request.variables = variables;
 
       const observableWithInfo = this.fetchQueryByPolicy(
-        // @ts-ignore TODO: Come back to this
-        { ...request.options, networkStatus },
+        {
+          query: request.query,
+          context: request.context,
+          errorPolicy: request.errorPolicy,
+          fetchPolicy: request.fetchPolicy,
+          returnPartialData: request.returnPartialData,
+          networkStatus: request.networkStatus,
+          variables: request.variables,
+        },
         {
           queryInfo,
           cacheWriteBehavior: request.cacheWriteBehavior,

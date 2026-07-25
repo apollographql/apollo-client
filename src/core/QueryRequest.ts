@@ -1,26 +1,51 @@
 import type { ApolloClient } from "./ApolloClient.js";
 import { NetworkStatus } from "./networkStatus.js";
 import { CacheWriteBehavior } from "./QueryInfo.js";
-import type { OperationVariables } from "./types.js";
+import type {
+  DefaultContext,
+  OperationVariables,
+  TypedDocumentNode,
+} from "./types.js";
+import type {
+  ErrorPolicy,
+  WatchQueryFetchPolicy,
+} from "./watchQueryOptions.js";
 
 export class QueryRequest<TData, TVariables extends OperationVariables> {
+  readonly context: DefaultContext;
+  readonly errorPolicy: ErrorPolicy;
+  readonly fetchPolicy: WatchQueryFetchPolicy;
+  readonly query: TypedDocumentNode<TData, TVariables>;
+  readonly returnPartialData: boolean;
   readonly options: ApolloClient.WatchQueryOptions<TData, TVariables>;
   readonly networkStatus: NetworkStatus;
 
+  variables: TVariables;
+
   constructor(
-    options: ApolloClient.WatchQueryOptions<TData, TVariables>,
+    options: Omit<
+      ApolloClient.WatchQueryOptions<TData, TVariables>,
+      "variables"
+    > & { variables: TVariables },
     networkStatus: NetworkStatus
   ) {
+    const {
+      query,
+      context = {},
+      errorPolicy = "none",
+      fetchPolicy = "cache-first",
+      returnPartialData = false,
+      variables,
+    } = options;
+
     this.options = options;
     this.networkStatus = networkStatus;
-  }
-
-  get query() {
-    return this.options.query;
-  }
-
-  get fetchPolicy() {
-    return this.options.fetchPolicy;
+    this.context = context;
+    this.errorPolicy = errorPolicy;
+    this.fetchPolicy = fetchPolicy;
+    this.query = query;
+    this.returnPartialData = returnPartialData;
+    this.variables = variables;
   }
 
   get cacheWriteBehavior() {

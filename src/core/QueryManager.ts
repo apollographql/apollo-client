@@ -1246,7 +1246,7 @@ export class QueryManager {
       if (
         // If we're in standby, postpone advancing options.fetchPolicy using
         // applyNextFetchPolicy.
-        normalized.fetchPolicy !== "standby"
+        request.fetchPolicy !== "standby"
       ) {
         observableQuery?.["applyNextFetchPolicy"](
           "after-fetch",

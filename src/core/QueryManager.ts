@@ -1184,7 +1184,6 @@ export class QueryManager {
       Object.assign({}, options, {
         query,
         variables: this.getVariables(query, options.variables),
-        networkStatus,
         fetchPolicy:
           (
             this.prioritizeCacheValues &&

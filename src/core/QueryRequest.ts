@@ -15,9 +15,13 @@ export class QueryRequest<TData, TVariables extends OperationVariables> {
     this.networkStatus = networkStatus;
   }
 
+  get fetchPolicy() {
+    return this.options.fetchPolicy;
+  }
+
   get cacheWriteBehavior() {
     return (
-      this.options.fetchPolicy === "no-cache" ? CacheWriteBehavior.FORBID
+      this.fetchPolicy === "no-cache" ? CacheWriteBehavior.FORBID
         // Watched queries must opt into overwriting existing data on refetch,
         // by passing refetchWritePolicy: "overwrite" in their WatchQueryOptions.
       : (

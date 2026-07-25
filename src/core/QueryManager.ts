@@ -1179,8 +1179,6 @@ export class QueryManager {
       exposeExtensions?: boolean;
     }
   ): ObservableAndInfo<TData> {
-    const variables = this.getVariables(query, options.variables) as TVariables;
-
     let { fetchPolicy = "cache-first" } = options;
 
     if (
@@ -1194,7 +1192,7 @@ export class QueryManager {
     const request = new QueryRequest<TData, TVariables>(
       Object.assign({}, options, {
         query,
-        variables,
+        variables: this.getVariables(query, options.variables),
         fetchPolicy,
         networkStatus,
       }),

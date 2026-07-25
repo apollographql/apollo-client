@@ -27,6 +27,7 @@ import type { ApolloClient } from "./ApolloClient.js";
 import { NetworkStatus } from "./networkStatus.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import type { QueryManager } from "./QueryManager.js";
+import type { QueryRequest } from "./QueryRequest.js";
 import type {
   DataValue,
   DefaultContext,
@@ -225,6 +226,7 @@ export class QueryInfo<
 
   public markQueryResult(
     incoming: ApolloLink.Result<TData>,
+    request: QueryRequest<TData, TVariables>,
     {
       document: query,
       variables,

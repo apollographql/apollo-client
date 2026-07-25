@@ -1056,15 +1056,19 @@ export class QueryManager {
         // Use linkDocument rather than queryInfo.document so the
         // operation/fragments used to write the result are the same as the
         // ones used to obtain it from the link.
-        const { dataState, ...result } = queryInfo.markQueryResult(incoming, {
-          errorPolicy: request.errorPolicy,
-          fetchPolicy: request.fetchPolicy,
-          document: request.query,
-          cacheWriteBehavior: request.cacheWriteBehavior,
-          networkStatus: request.networkStatus,
-          returnPartialData: request.returnPartialData,
-          variables: request.variables,
-        });
+        const { dataState, ...result } = queryInfo.markQueryResult(
+          incoming,
+          request,
+          {
+            errorPolicy: request.errorPolicy,
+            fetchPolicy: request.fetchPolicy,
+            document: request.query,
+            cacheWriteBehavior: request.cacheWriteBehavior,
+            networkStatus: request.networkStatus,
+            returnPartialData: request.returnPartialData,
+            variables: request.variables,
+          }
+        );
         const hasErrors = graphQLResultHasError(result);
 
         if (hasErrors && request.errorPolicy === "none") {

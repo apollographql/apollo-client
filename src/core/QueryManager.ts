@@ -1030,6 +1030,7 @@ export class QueryManager {
   }
 
   private getResultsFromLink<TData, TVariables extends OperationVariables>(
+    request: QueryRequest<TData, TVariables>,
     options: {
       query: DocumentNode;
       variables: TVariables;
@@ -1632,6 +1633,7 @@ export class QueryManager {
 
     const resultsFromLink = () =>
       this.getResultsFromLink<TData, TVariables>(
+        request,
         {
           query: request.query,
           variables: request.variables,

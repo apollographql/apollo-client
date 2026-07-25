@@ -1196,17 +1196,6 @@ export class QueryManager {
       fetchPolicy = "cache-first";
     }
 
-    const normalized = Object.assign({}, options, {
-      query,
-      variables,
-      fetchPolicy,
-      errorPolicy,
-      returnPartialData,
-      networkStatus,
-      notifyOnNetworkStatusChange,
-      context,
-    });
-
     const queryInfo = new QueryInfo<TData, TVariables>(this, observableQuery);
     const request = new QueryRequest<TData, TVariables>(
       Object.assign({}, options, {
@@ -1223,10 +1212,6 @@ export class QueryManager {
     );
 
     const fromVariables = (variables: TVariables) => {
-      // Since normalized is always a fresh copy of options, it's safe to
-      // modify its properties here, rather than creating yet another new
-      // WatchQueryOptions object.
-      normalized.variables = variables;
       request.variables = variables;
 
       const observableWithInfo = this.fetchQueryByPolicy(
@@ -1301,8 +1286,8 @@ export class QueryManager {
         this.localState!.getExportedVariables({
           client: this.client,
           document: request.query,
-          variables: normalized.variables,
-          context: normalized.context,
+          variables: request.variables,
+          context: request.context,
         })
       ).pipe(mergeMap((variables) => fromVariables(variables).observable));
 
@@ -1313,7 +1298,7 @@ export class QueryManager {
       // directives.
       containsDataFromLink = true;
     } else {
-      const sourcesWithInfo = fromVariables(normalized.variables);
+      const sourcesWithInfo = fromVariables(request.variables);
       containsDataFromLink = sourcesWithInfo.fromLink;
       observable = sourcesWithInfo.observable;
     }

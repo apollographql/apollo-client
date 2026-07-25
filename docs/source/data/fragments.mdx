@@ -43,7 +43,7 @@ Changes to the `NameParts` fragment automatically update the fields included in 
 
 ## Unique fragment names {#unique-names}
 
-Fragment names must be unique across your entire application. If you reuse a fragment name, the `graphql-tag` component will warn about the conflict at runtime to prevent subtle bugs:
+Fragment names must be unique across your entire application. If you reuse a fragment name, the `graphql-tag` library warns about the conflict at runtime to help prevent bugs:
 
 ```text
 Warning: fragment with name SomeFragment already exists.
@@ -51,7 +51,7 @@ graphql-tag enforces all fragment names across your application to be unique; re
 this in the docs: http://dev.apollodata.com/core/fragments.html#unique-names
 ```
 
-Always use descriptive, component-scoped fragment names (like `ItemFragment` or `UserProfileFragment`) to avoid name collisions.
+As a best practice, use descriptive, component-scoped fragment names (like `ItemFragment` or `UserProfileFragment`) to avoid name collisions.
 
 ## Example usage
 

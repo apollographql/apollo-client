@@ -89,7 +89,6 @@ import type {
   OperationVariables,
   QueryNotification,
   SubscriptionObservable,
-  TypedDocumentNode,
 } from "./types.js";
 import type {
   ErrorPolicy,
@@ -1199,25 +1198,13 @@ export class QueryManager {
     const fromVariables = (variables: TVariables) => {
       request.variables = variables;
 
-      const observableWithInfo = this.fetchQueryByPolicy(
-        request,
-        {
-          query: request.query,
-          context: request.context,
-          errorPolicy: request.errorPolicy,
-          fetchPolicy: request.fetchPolicy,
-          returnPartialData: request.returnPartialData,
-          networkStatus: request.networkStatus,
-          variables: request.variables,
-        },
-        {
-          queryInfo,
-          cacheWriteBehavior: request.cacheWriteBehavior,
-          onCacheHit,
-          observableQuery,
-          exposeExtensions,
-        }
-      );
+      const observableWithInfo = this.fetchQueryByPolicy(request, {
+        queryInfo,
+        cacheWriteBehavior: request.cacheWriteBehavior,
+        onCacheHit,
+        observableQuery,
+        exposeExtensions,
+      });
       observableWithInfo.observable =
         observableWithInfo.observable.pipe(fetchQueryOperator);
 
@@ -1527,23 +1514,6 @@ export class QueryManager {
   private fetchQueryByPolicy<TData, TVariables extends OperationVariables>(
     request: QueryRequest<TData, TVariables>,
     {
-      query,
-      variables,
-      fetchPolicy,
-      errorPolicy,
-      returnPartialData,
-      context,
-      networkStatus,
-    }: {
-      query: DocumentNode | TypedDocumentNode<TData, TVariables>;
-      variables: TVariables;
-      fetchPolicy: WatchQueryFetchPolicy;
-      errorPolicy: ErrorPolicy;
-      networkStatus: NetworkStatus;
-      returnPartialData?: boolean;
-      context?: DefaultContext;
-    },
-    {
       cacheWriteBehavior,
       onCacheHit,
       queryInfo,
@@ -1559,8 +1529,8 @@ export class QueryManager {
   ): ObservableAndInfo<TData> {
     const readCache = () =>
       this.cache.diff<any>({
-        query,
-        variables,
+        query: request.query,
+        variables: request.variables,
         returnPartialData: true,
         optimistic: true,
       });
@@ -1571,7 +1541,7 @@ export class QueryManager {
     ): Observable<QueryNotification.FromCache<TData>> => {
       const data = diff.result;
 
-      if (__DEV__ && !returnPartialData && data !== null) {
+      if (__DEV__ && !request.returnPartialData && data !== null) {
         logMissingFieldErrors(diff.missing);
       }
 
@@ -1582,7 +1552,7 @@ export class QueryManager {
         // queryInfo.getDiff() directly. Since getDiff is updated to return null
         // on returnPartialData: false, we should take advantage of that instead
         // of having to patch it elsewhere.
-        if (!diff.complete && !returnPartialData) {
+        if (!diff.complete && !request.returnPartialData) {
           data = undefined;
         }
 
@@ -1613,14 +1583,14 @@ export class QueryManager {
         // Don't attempt to run forced resolvers if we have incomplete cache
         // data and partial isn't allowed since this result would get set to
         // `undefined` anyways in `toResult`.
-        (diff.complete || returnPartialData) &&
-        this.getDocumentInfo(query).hasForcedResolvers
+        (diff.complete || request.returnPartialData) &&
+        this.getDocumentInfo(request.query).hasForcedResolvers
       ) {
         if (__DEV__) {
           invariant(
             this.localState,
             "Query '%s' contains `@client` fields but local state has not been configured.",
-            getOperationName(query, "(anonymous)")
+            getOperationName(request.query, "(anonymous)")
           );
         }
         onCacheHit();
@@ -1628,13 +1598,13 @@ export class QueryManager {
         return from(
           this.localState!.execute<TData>({
             client: this.client,
-            document: query,
+            document: request.query,
             remoteResult: data ? { data } : undefined,
-            context,
-            variables,
+            context: request.context,
+            variables: request.variables,
             onlyRunForcedResolvers: true,
             returnPartialData: true,
-            fetchPolicy,
+            fetchPolicy: request.fetchPolicy,
           }).then(
             (resolved): QueryNotification.FromCache<TData> => ({
               kind: "N",
@@ -1650,7 +1620,7 @@ export class QueryManager {
       // data was incorrectly returned from the cache on refetch:
       // if diff.missing exists, we should not return cache data.
       if (
-        errorPolicy === "none" &&
+        request.errorPolicy === "none" &&
         networkStatus === NetworkStatus.refetch &&
         diff.missing
       ) {
@@ -1663,13 +1633,13 @@ export class QueryManager {
     const resultsFromLink = () =>
       this.getResultsFromLink<TData, TVariables>(
         {
-          query,
-          variables,
-          context,
-          fetchPolicy,
-          errorPolicy,
-          returnPartialData,
-          networkStatus,
+          query: request.query,
+          variables: request.variables,
+          context: request.context,
+          fetchPolicy: request.fetchPolicy,
+          errorPolicy: request.errorPolicy,
+          returnPartialData: request.returnPartialData,
+          networkStatus: request.networkStatus,
         },
         {
           cacheWriteBehavior,
@@ -1688,7 +1658,7 @@ export class QueryManager {
         )
       );
 
-    switch (fetchPolicy) {
+    switch (request.fetchPolicy) {
       default:
       case "cache-first": {
         const diff = readCache();
@@ -1700,7 +1670,7 @@ export class QueryManager {
           };
         }
 
-        if (returnPartialData) {
+        if (request.returnPartialData) {
           return {
             fromLink: true,
             observable: concat(
@@ -1716,7 +1686,7 @@ export class QueryManager {
       case "cache-and-network": {
         const diff = readCache();
 
-        if (diff.complete || returnPartialData) {
+        if (diff.complete || request.returnPartialData) {
           return {
             fromLink: true,
             observable: concat(

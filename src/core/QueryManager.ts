@@ -1281,19 +1281,19 @@ export class QueryManager {
     // since the timing of result delivery is (unfortunately) important
     // for backwards compatibility. TODO This code could be simpler if
     // we deprecated and removed LocalState.
-    if (this.getDocumentInfo(normalized.query).hasClientExports) {
+    if (this.getDocumentInfo(request.query).hasClientExports) {
       if (__DEV__) {
         invariant(
           this.localState,
           "Query '%s' contains `@client` fields with variables provided by `@export` but local state has not been configured.",
-          getOperationName(normalized.query, "(anonymous)")
+          getOperationName(request.query, "(anonymous)")
         );
       }
 
       observable = from(
         this.localState!.getExportedVariables({
           client: this.client,
-          document: normalized.query,
+          document: request.query,
           variables: normalized.variables,
           context: normalized.context,
         })

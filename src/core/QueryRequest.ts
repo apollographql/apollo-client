@@ -15,6 +15,10 @@ export class QueryRequest<TData, TVariables extends OperationVariables> {
     this.networkStatus = networkStatus;
   }
 
+  get query() {
+    return this.options.query;
+  }
+
   get fetchPolicy() {
     return this.options.fetchPolicy;
   }

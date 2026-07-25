@@ -1181,13 +1181,7 @@ export class QueryManager {
   ): ObservableAndInfo<TData> {
     const variables = this.getVariables(query, options.variables) as TVariables;
 
-    let {
-      fetchPolicy = "cache-first",
-      errorPolicy = "none",
-      returnPartialData = false,
-      notifyOnNetworkStatusChange = true,
-      context = {},
-    } = options;
+    let { fetchPolicy = "cache-first" } = options;
 
     if (
       this.prioritizeCacheValues &&
@@ -1202,11 +1196,7 @@ export class QueryManager {
         query,
         variables,
         fetchPolicy,
-        errorPolicy,
-        returnPartialData,
         networkStatus,
-        notifyOnNetworkStatusChange,
-        context,
       }),
       networkStatus
     );

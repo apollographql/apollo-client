@@ -19,6 +19,7 @@ export class QueryRequest<TData, TVariables extends OperationVariables> {
   readonly returnPartialData: boolean;
   readonly options: ApolloClient.WatchQueryOptions<TData, TVariables>;
   readonly networkStatus: NetworkStatus;
+  readonly notifyOnNetworkStatusChange: boolean;
 
   variables: TVariables;
 
@@ -35,6 +36,7 @@ export class QueryRequest<TData, TVariables extends OperationVariables> {
       errorPolicy = "none",
       fetchPolicy = "cache-first",
       returnPartialData = false,
+      notifyOnNetworkStatusChange = true,
       variables,
     } = options;
 
@@ -45,6 +47,7 @@ export class QueryRequest<TData, TVariables extends OperationVariables> {
     this.fetchPolicy = fetchPolicy;
     this.query = query;
     this.returnPartialData = returnPartialData;
+    this.notifyOnNetworkStatusChange = notifyOnNetworkStatusChange;
     this.variables = variables;
   }
 

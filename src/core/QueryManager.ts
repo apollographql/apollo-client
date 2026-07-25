@@ -78,6 +78,7 @@ import type { ApolloClient } from "./ApolloClient.js";
 import { NetworkStatus } from "./networkStatus.js";
 import { logMissingFieldErrors, ObservableQuery } from "./ObservableQuery.js";
 import { CacheWriteBehavior, QueryInfo } from "./QueryInfo.js";
+import { QueryRequest } from "./QueryRequest.js";
 import type {
   DataState,
   DefaultContext,
@@ -1207,28 +1208,33 @@ export class QueryManager {
     });
 
     const queryInfo = new QueryInfo<TData, TVariables>(this, observableQuery);
+    const request = new QueryRequest(
+      {
+        ...options,
+        query,
+        variables,
+        fetchPolicy,
+        errorPolicy,
+        returnPartialData,
+        notifyOnNetworkStatusChange,
+        context,
+      },
+      networkStatus
+    );
 
     const fromVariables = (variables: TVariables) => {
       // Since normalized is always a fresh copy of options, it's safe to
       // modify its properties here, rather than creating yet another new
       // WatchQueryOptions object.
       normalized.variables = variables;
+      request.options.variables = variables;
 
-      const cacheWriteBehavior =
-        fetchPolicy === "no-cache" ? CacheWriteBehavior.FORBID
-          // Watched queries must opt into overwriting existing data on refetch,
-          // by passing refetchWritePolicy: "overwrite" in their WatchQueryOptions.
-        : (
-          networkStatus === NetworkStatus.refetch &&
-          normalized.refetchWritePolicy !== "merge"
-        ) ?
-          CacheWriteBehavior.OVERWRITE
-        : CacheWriteBehavior.MERGE;
-      const observableWithInfo = this.fetchQueryByPolicy<TData, TVariables>(
-        normalized,
+      const observableWithInfo = this.fetchQueryByPolicy(
+        // @ts-ignore TODO: Come back to this
+        { ...request.options, networkStatus },
         {
           queryInfo,
-          cacheWriteBehavior,
+          cacheWriteBehavior: request.cacheWriteBehavior,
           onCacheHit,
           observableQuery,
           exposeExtensions,

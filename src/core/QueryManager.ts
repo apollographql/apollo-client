@@ -1179,14 +1179,14 @@ export class QueryManager {
       exposeExtensions?: boolean;
     }
   ): ObservableAndInfo<TData> {
-    let { fetchPolicy = "cache-first" } = options;
-
-    if (
-      this.prioritizeCacheValues &&
-      (fetchPolicy === "network-only" || fetchPolicy === "cache-and-network")
-    ) {
-      fetchPolicy = "cache-first";
-    }
+    const fetchPolicy =
+      (
+        this.prioritizeCacheValues &&
+        (options.fetchPolicy === "network-only" ||
+          options.fetchPolicy === "cache-and-network")
+      ) ?
+        "cache-first"
+      : options.fetchPolicy;
 
     const queryInfo = new QueryInfo<TData, TVariables>(this, observableQuery);
     const request = new QueryRequest<TData, TVariables>(

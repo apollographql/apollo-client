@@ -1044,10 +1044,10 @@ export class QueryManager {
     // Performing transformForLink here gives this.cache a chance to fill in
     // missing fragment definitions (for example) before sending this document
     // through the link chain.
-    const linkDocument = this.cache.transformForLink(request.query);
+    request.query = this.cache.transformForLink(request.query);
 
     return this.getObservableFromLink<TData>(
-      linkDocument,
+      request.query,
       request.context,
       request.variables,
       request.fetchPolicy
@@ -1059,7 +1059,7 @@ export class QueryManager {
         const { dataState, ...result } = queryInfo.markQueryResult(incoming, {
           errorPolicy: request.errorPolicy,
           fetchPolicy: request.fetchPolicy,
-          document: linkDocument,
+          document: request.query,
           cacheWriteBehavior: request.cacheWriteBehavior,
           networkStatus: request.networkStatus,
           returnPartialData: request.returnPartialData,

@@ -15,12 +15,12 @@ export class QueryRequest<TData, TVariables extends OperationVariables> {
   readonly context: DefaultContext;
   readonly errorPolicy: ErrorPolicy;
   readonly fetchPolicy: WatchQueryFetchPolicy;
-  readonly query: TypedDocumentNode<TData, TVariables>;
   readonly returnPartialData: boolean;
   readonly options: ApolloClient.WatchQueryOptions<TData, TVariables>;
   readonly networkStatus: NetworkStatus;
   readonly notifyOnNetworkStatusChange: boolean;
 
+  query: TypedDocumentNode<TData, TVariables>;
   variables: TVariables;
 
   constructor(

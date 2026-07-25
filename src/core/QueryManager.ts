@@ -1031,15 +1031,6 @@ export class QueryManager {
 
   private getResultsFromLink<TData, TVariables extends OperationVariables>(
     request: QueryRequest<TData, TVariables>,
-    options: {
-      query: DocumentNode;
-      variables: TVariables;
-      context: DefaultContext | undefined;
-      fetchPolicy: WatchQueryFetchPolicy;
-      errorPolicy: ErrorPolicy;
-      networkStatus: NetworkStatus;
-      returnPartialData: boolean | undefined;
-    },
     {
       queryInfo,
       cacheWriteBehavior,
@@ -1052,32 +1043,33 @@ export class QueryManager {
       exposeExtensions?: boolean;
     }
   ): Observable<ObservableQuery.Result<TData>> {
-    const { errorPolicy } = options;
-
     // Performing transformForLink here gives this.cache a chance to fill in
     // missing fragment definitions (for example) before sending this document
     // through the link chain.
-    const linkDocument = this.cache.transformForLink(options.query);
+    const linkDocument = this.cache.transformForLink(request.query);
 
     return this.getObservableFromLink<TData>(
       linkDocument,
-      options.context,
-      options.variables,
-      options.fetchPolicy
+      request.context,
+      request.variables,
+      request.fetchPolicy
     ).observable.pipe(
       map((incoming) => {
         // Use linkDocument rather than queryInfo.document so the
         // operation/fragments used to write the result are the same as the
         // ones used to obtain it from the link.
         const { dataState, ...result } = queryInfo.markQueryResult(incoming, {
-          ...options,
+          errorPolicy: request.errorPolicy,
+          fetchPolicy: request.fetchPolicy,
           document: linkDocument,
           cacheWriteBehavior,
-          returnPartialData: options.returnPartialData,
+          networkStatus: request.networkStatus,
+          returnPartialData: request.returnPartialData,
+          variables: request.variables,
         });
         const hasErrors = graphQLResultHasError(result);
 
-        if (hasErrors && errorPolicy === "none") {
+        if (hasErrors && request.errorPolicy === "none") {
           queryInfo.resetLastWrite();
           observableQuery?.["resetNotifications"]();
           throw new CombinedGraphQLErrors(
@@ -1108,11 +1100,11 @@ export class QueryManager {
         }
 
         if (hasErrors) {
-          if (errorPolicy === "none") {
+          if (request.errorPolicy === "none") {
             aqr.data = void 0 as TData;
             aqr.dataState = "empty";
           }
-          if (errorPolicy !== "ignore") {
+          if (request.errorPolicy !== "ignore") {
             aqr.error = new CombinedGraphQLErrors(
               removeStreamDetailsFromExtensions(result)
             );
@@ -1125,7 +1117,7 @@ export class QueryManager {
         return aqr;
       }),
       catchError((error) => {
-        if (errorPolicy === "none") {
+        if (request.errorPolicy === "none") {
           queryInfo.resetLastWrite();
           observableQuery?.["resetNotifications"]();
           throw error;
@@ -1139,7 +1131,7 @@ export class QueryManager {
           partial: true,
         };
 
-        if (errorPolicy !== "ignore") {
+        if (request.errorPolicy !== "ignore") {
           aqr.error = error;
           aqr.networkStatus = NetworkStatus.error;
         }
@@ -1632,24 +1624,12 @@ export class QueryManager {
     };
 
     const resultsFromLink = () =>
-      this.getResultsFromLink<TData, TVariables>(
-        request,
-        {
-          query: request.query,
-          variables: request.variables,
-          context: request.context,
-          fetchPolicy: request.fetchPolicy,
-          errorPolicy: request.errorPolicy,
-          returnPartialData: request.returnPartialData,
-          networkStatus: request.networkStatus,
-        },
-        {
-          cacheWriteBehavior,
-          queryInfo,
-          observableQuery,
-          exposeExtensions,
-        }
-      ).pipe(
+      this.getResultsFromLink<TData, TVariables>(request, {
+        cacheWriteBehavior,
+        queryInfo,
+        observableQuery,
+        exposeExtensions,
+      }).pipe(
         validateDidEmitValue(),
         materialize(),
         map(

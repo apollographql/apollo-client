@@ -215,6 +215,39 @@ describe("RetryLink", () => {
     ]);
   });
 
+  it("does not schedule a retry after unsubscribe while awaiting retryIf", async () => {
+    let resolveRetryIf!: (value: boolean) => void;
+    const retryIfPromise = new Promise<boolean>((resolve) => {
+      resolveRetryIf = resolve;
+    });
+    const attemptStub = jest.fn(() => retryIfPromise);
+
+    const retry = new RetryLink({
+      delay: { initial: 1 },
+      attempts: attemptStub,
+    });
+    const linkStub = jest.fn(() => throwError(() => standardError)) as any;
+    const link = ApolloLink.from([retry, new ApolloLink(linkStub)]);
+
+    const subscription = execute(link, { query }).subscribe({
+      next: () => {},
+      error: () => {},
+    });
+
+    // Wait until onError has suspended on the async retryIf promise.
+    await Promise.resolve();
+    expect(attemptStub).toHaveBeenCalledTimes(1);
+    expect(linkStub).toHaveBeenCalledTimes(1);
+
+    subscription.unsubscribe();
+    resolveRetryIf(true);
+
+    // Allow the resumed onError (and any scheduled setTimeout) to run.
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(linkStub).toHaveBeenCalledTimes(1);
+  });
+
   it("handles protocol errors from multipart subscriptions", async () => {
     const subscription = gql`
       subscription MySubscription {

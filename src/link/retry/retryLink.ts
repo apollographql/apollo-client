@@ -146,6 +146,9 @@ class RetryableOperation {
   private retryCount: number = 0;
   private currentSubscription: Subscription | null = null;
   private timerId: ReturnType<typeof setTimeout> | undefined;
+  // Set by cancel() so an onError suspended at await retryIf() does not
+  // schedule another attempt after the consumer has unsubscribed.
+  private cancelled = false;
 
   constructor(
     private observer: Observer<ApolloLink.Result>,
@@ -161,6 +164,7 @@ class RetryableOperation {
    * Stop retrying for the operation, and cancel any in-progress requests.
    */
   public cancel() {
+    this.cancelled = true;
     if (this.currentSubscription) {
       this.currentSubscription.unsubscribe();
     }
@@ -200,6 +204,11 @@ class RetryableOperation {
       this.operation,
       errorLike
     );
+    // cancel() may have run while we awaited retryIf; do not schedule another
+    // attempt or notify a torn-down observer.
+    if (this.cancelled) {
+      return;
+    }
     if (shouldRetry) {
       this.scheduleRetry(
         this.delayFor(this.retryCount, this.operation, errorLike)

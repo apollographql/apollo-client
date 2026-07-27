@@ -423,10 +423,6 @@ export class QueryInfo<
 
     let result = incoming as FormattedExecutionResult<TData>;
 
-    if (request.errorPolicy === "ignore") {
-      result = { ...result, errors: [] };
-    }
-
     if (graphQLResultHasError(result) && request.errorPolicy === "none") {
       return Promise.resolve(result);
     }

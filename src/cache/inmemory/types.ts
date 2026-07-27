@@ -9,7 +9,6 @@ import type {
 import type {
   DeferInfoTrie,
   ExtensionsWithStreamInfo,
-  handleIncrementalSymbol,
   RemoveIndexSignature,
   StreamInfoTrie,
 } from "@apollo/client/utilities/internal";
@@ -142,7 +141,6 @@ export interface DiffIncrementalInfo {
 
 export type DiffQueryAgainstStoreOptions = ReadQueryOptions & {
   returnPartialData?: boolean;
-  [handleIncrementalSymbol]?: true | DiffIncrementalInfo;
 };
 
 export type ApolloReducerConfig = {

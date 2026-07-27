@@ -7,7 +7,6 @@ import type {
   Cache,
   DiffIncrementalInfo,
   IgnoreModifier,
-  InMemoryCache,
 } from "@apollo/client/cache";
 import type { Incremental } from "@apollo/client/incremental";
 import type { ApolloLink } from "@apollo/client/link";
@@ -446,18 +445,14 @@ export class QueryInfo<
     options: Cache.DiffOptions<TData>,
     incrementalInfo?: DiffIncrementalInfo
   ): Cache.InternalDiffResultWithDataState<TData> {
-    if ((this.cache as any)[handleIncrementalSymbol]) {
-      return (this.cache as unknown as InMemoryCache).diff({
-        ...options,
-        [handleIncrementalSymbol]: incrementalInfo || true,
-      });
-    }
+    const diff = this.cache.diff({
+      ...options,
+      [handleIncrementalSymbol]: incrementalInfo,
+    });
 
-    // returnPartialData is overridden for backwards compatibility with caches
-    // that don't handle incremental results. Without this, in-flight
-    // incremental cache data would come back null when returnPartialData is
-    // false due to the partial result.
-    const diff = this.cache.diff({ ...options, returnPartialData: true });
+    if ("dataState" in diff) {
+      return diff;
+    }
 
     return {
       ...diff,

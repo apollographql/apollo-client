@@ -51,7 +51,7 @@ test('returns dataState "complete" when the cache fully satisfies the query', ()
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -102,7 +102,7 @@ test('returns dataState "streaming" when only deferred fields are missing with r
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -148,7 +148,7 @@ test('returns dataState "streaming" when only deferred fields are missing with r
       query,
       optimistic: true,
       returnPartialData: true,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -194,7 +194,7 @@ test('returns dataState "streaming" for a typename-added document when only defe
       query,
       optimistic: true,
       returnPartialData: true,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -245,7 +245,7 @@ test('returns dataState "partial" when non-deferred fields are missing with retu
       query,
       optimistic: true,
       returnPartialData: true,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -306,7 +306,7 @@ test('returns dataState "empty" when non-deferred fields are missing with return
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: null,
@@ -364,7 +364,7 @@ test("strips incomplete fields inside a defer boundary when returnPartialData is
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -419,7 +419,7 @@ test('keeps incomplete fields inside a defer boundary when returnPartialData is 
       query,
       optimistic: true,
       returnPartialData: true,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -494,7 +494,7 @@ test('returns dataState "streaming" and strips a dangling referenced object insi
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -555,7 +555,7 @@ test('returns dataState "partial" for a dangling referenced object inside a defe
       query,
       optimistic: true,
       returnPartialData: true,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -628,7 +628,7 @@ test('returns dataState "partial" with a __typename-only deferred object when se
       query,
       optimistic: true,
       returnPartialData: true,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -700,7 +700,7 @@ test("strips a __typename-only deferred object when selected fields are missing 
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -764,7 +764,7 @@ test('returns dataState "partial" when all selected fields under a deferred obje
       query,
       optimistic: true,
       returnPartialData: true,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -846,7 +846,7 @@ test("strips a deferred object whose own nested object is present but incomplete
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -915,7 +915,7 @@ test('returns dataState "partial" for a deferred object whose own nested object 
       query,
       optimistic: true,
       returnPartialData: true,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -988,7 +988,7 @@ test("does not treat overlapping non-deferred fields as partial when only deferr
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -1050,7 +1050,7 @@ test("does not surface incomplete cached defer-only fields under an overlapping 
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -1482,7 +1482,7 @@ test("preserves shared object identity for repeated list entities after strippin
     query,
     optimistic: true,
     returnPartialData: true,
-    [handleIncrementalSymbol]: true,
+    [handleIncrementalSymbol]: undefined,
   });
 
   const missingPerson1 = { __ref: "Person:1" };
@@ -1525,7 +1525,7 @@ test("preserves shared object identity for repeated list entities after strippin
     query,
     optimistic: true,
     returnPartialData: false,
-    [handleIncrementalSymbol]: true,
+    [handleIncrementalSymbol]: undefined,
   });
 
   expect(strippedDiff).toStrictEqualTyped({
@@ -1616,7 +1616,7 @@ test("returns a referentially stable streaming result when a __typename-only def
     query,
     optimistic: true,
     returnPartialData: false,
-    [handleIncrementalSymbol]: true,
+    [handleIncrementalSymbol]: undefined,
   } as const;
 
   const diff1 = cache.diff(options);
@@ -1709,7 +1709,7 @@ test('returns dataState "partial" under an overlapping parent when a defer-only 
       query,
       optimistic: true,
       returnPartialData: true,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -1790,7 +1790,7 @@ test("does not surface incomplete cached deep defer-only fields under an overlap
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -1857,7 +1857,7 @@ test('returns dataState "streaming" when overlapping non-deferred fields are con
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -1919,7 +1919,7 @@ test('returns dataState "streaming" when overlapping non-deferred fields are con
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -1984,7 +1984,7 @@ test('returns dataState "streaming" when non-deferred fields for the same respon
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -2058,7 +2058,7 @@ test('returns dataState "streaming" when non-deferred named fragments contribute
       query,
       optimistic: true,
       returnPartialData: true,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -2121,7 +2121,7 @@ test('returns dataState "streaming" when overlapping non-deferred list fields ar
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -2193,7 +2193,7 @@ test("does not surface incomplete cached defer-only list item fields under an ov
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -2258,7 +2258,7 @@ test('returns dataState "empty" when an overlapping non-deferred field is missin
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: null,
@@ -2319,7 +2319,7 @@ test("strips incomplete fields inside a deferred named fragment with returnParti
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -2386,7 +2386,7 @@ test("strips incomplete fields inside a defer boundary contributed by a register
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -2464,7 +2464,7 @@ test("does not reuse a cached fragment-resolution error across queries when a re
       query: queryMissingFragment,
       optimistic: true,
       returnPartialData: true,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     });
   }).toThrow(/No fragment named DeferredRecipientFields/);
 
@@ -2476,7 +2476,7 @@ test("does not reuse a cached fragment-resolution error across queries when a re
       query: queryProvidingFragment,
       optimistic: true,
       returnPartialData: true,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -2537,7 +2537,7 @@ test("strips incomplete nested fields inside a nested defer boundary with return
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -2583,7 +2583,7 @@ test("returns incomplete deferred data written only inside the boundary without 
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -2624,7 +2624,7 @@ test('returns dataState "complete" for pure @stream when all selected fields on 
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -2670,7 +2670,7 @@ test('returns dataState "complete" with empty array with incomplete item with re
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -2775,7 +2775,7 @@ test("does not reuse a streamInfo-truncated result when streamInfo is later omit
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -3067,7 +3067,7 @@ test('returns dataState "complete" with an empty list when every stream list ite
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -3110,7 +3110,7 @@ test('keeps incomplete stream list items when returnPartialData is true and repo
       query,
       optimistic: true,
       returnPartialData: true,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -3175,7 +3175,7 @@ test('returns dataState "complete" with empty array with partial array item unde
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -3219,7 +3219,7 @@ test("returns streaming for complete non-deferred stream fields when only deferr
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -3279,7 +3279,7 @@ test('returns dataState "complete" for sibling @stream and a complete @defer wit
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -3348,7 +3348,7 @@ test('returns dataState "complete" with an empty stream array when an item is in
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -3399,7 +3399,7 @@ test("complete is only true when dataState is complete", () => {
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -3437,7 +3437,7 @@ test("complete is only true when dataState is complete", () => {
       query,
       optimistic: true,
       returnPartialData: true,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -3486,7 +3486,7 @@ test("complete is only true when dataState is complete", () => {
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -3546,7 +3546,7 @@ test('returns dataState "empty" for incomplete fields under @defer(if: false) wi
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: null,
@@ -3610,7 +3610,7 @@ test('returns dataState "empty" for incomplete fields under @defer(if: $shouldDe
       variables,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: null,
@@ -3672,7 +3672,7 @@ test('returns dataState "streaming" for incomplete fields under @defer(if: $shou
       variables,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -3718,7 +3718,7 @@ test('returns dataState "empty" when an incomplete list item appears before comp
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: null,
@@ -3768,7 +3768,7 @@ test('returns dataState "partial" when an incomplete list item appears before co
       query,
       optimistic: true,
       returnPartialData: true,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -3826,7 +3826,7 @@ test('returns dataState "streaming" when an earlier list item is still streaming
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -3880,7 +3880,7 @@ test('returns dataState "streaming" when an earlier list item is complete and a 
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -3930,7 +3930,7 @@ test('returns dataState "partial" when a complete scalar sibling precedes a part
       query,
       optimistic: true,
       returnPartialData: true,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -3982,7 +3982,7 @@ test('returns dataState "empty" when a complete scalar sibling precedes a partia
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: null,
@@ -4032,7 +4032,7 @@ test('returns dataState "partial" when an empty list is present and a sibling fi
       query,
       optimistic: true,
       returnPartialData: true,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -4080,7 +4080,7 @@ test('returns dataState "empty" when an empty list is present and a sibling fiel
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: null,
@@ -4123,7 +4123,7 @@ test('returns dataState "streaming" when a complete scalar sibling precedes a st
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -4165,7 +4165,7 @@ test('returns dataState "streaming" when a complete object field precedes a stre
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -4207,7 +4207,7 @@ test('returns dataState "streaming" when a streaming object field precedes a com
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -4240,7 +4240,7 @@ test('returns dataState "complete" for a fragment-only root selection set when t
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -4279,7 +4279,7 @@ test('returns dataState "complete" when an object selection set is only a deferr
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -4312,7 +4312,7 @@ test('returns dataState "empty" when a root defer boundary has nothing written w
       query,
       optimistic: true,
       returnPartialData: true,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: null,
@@ -4355,7 +4355,7 @@ test('returns dataState "partial" when a root defer boundary is only partially w
       query,
       optimistic: true,
       returnPartialData: true,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -4410,7 +4410,7 @@ test('returns dataState "empty" without missing when a root defer boundary is on
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: null,
@@ -4446,7 +4446,7 @@ test('returns dataState "streaming" when an object selection set is only a defer
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -4487,7 +4487,7 @@ test('returns dataState "streaming" when an object selection set is only a defer
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -4524,7 +4524,7 @@ test('returns dataState "complete" for an empty list', () => {
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -4565,7 +4565,7 @@ test('returns dataState "complete" when a nullable object field is explicitly nu
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -4612,7 +4612,7 @@ test("does not reuse a returnPartialData: false empty result when the same query
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: null,
@@ -4635,7 +4635,7 @@ test("does not reuse a returnPartialData: false empty result when the same query
       query,
       optimistic: true,
       returnPartialData: true,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -4690,7 +4690,7 @@ test("does not reuse a returnPartialData: true partial result when the same quer
       query,
       optimistic: true,
       returnPartialData: true,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -4718,7 +4718,7 @@ test("does not reuse a returnPartialData: true partial result when the same quer
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: null,
@@ -4777,7 +4777,7 @@ test("does not reuse a stripped deferred result when the same query is later rea
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -4796,7 +4796,7 @@ test("does not reuse a stripped deferred result when the same query is later rea
       query,
       optimistic: true,
       returnPartialData: true,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -4863,7 +4863,7 @@ test('returns dataState "streaming" when one of two sibling defer boundaries is 
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -4920,7 +4920,7 @@ test('returns dataState "complete" when both sibling defer boundaries are fully 
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -4991,7 +4991,7 @@ test("does not reuse a deferred result when the @defer if variable changes", () 
       variables: { shouldDefer: true },
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -5010,7 +5010,7 @@ test("does not reuse a deferred result when the @defer if variable changes", () 
       variables: { shouldDefer: false },
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -5072,7 +5072,7 @@ test("does not reuse a streamed result when the @stream if variable changes", ()
       variables: { shouldStream: true },
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: { friendList: [], otherFriendList: [] },
@@ -5087,7 +5087,7 @@ test("does not reuse a streamed result when the @stream if variable changes", ()
       variables: { shouldStream: false },
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -5144,7 +5144,7 @@ test("does not reuse an @include result when its if variable changes", () => {
       variables: { includeRecipient: true },
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -5167,7 +5167,7 @@ test("does not reuse an @include result when its if variable changes", () => {
       variables: { includeRecipient: false },
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -5222,7 +5222,7 @@ test("does not reuse an @skip result when its if variable changes", () => {
       variables: { skipRecipient: false },
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -5245,7 +5245,7 @@ test("does not reuse an @skip result when its if variable changes", () => {
       variables: { skipRecipient: true },
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -5298,7 +5298,7 @@ test('returns dataState "empty" when a deferred fragment is excluded via @skip a
       variables,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: null,
@@ -5350,7 +5350,7 @@ test('returns dataState "streaming" when a deferred fragment is included via @in
       variables,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -5398,7 +5398,7 @@ test('returns dataState "complete" when a deferred fragment is excluded via @inc
       variables,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -5518,7 +5518,7 @@ test.each([
         variables,
         optimistic: true,
         returnPartialData: false,
-        [handleIncrementalSymbol]: true,
+        [handleIncrementalSymbol]: undefined,
       })
     ).toStrictEqualTyped({
       result: markAsStreaming({
@@ -5570,7 +5570,7 @@ test('returns dataState "streaming" for nested @defer when the outer boundary is
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -5622,7 +5622,7 @@ test('returns dataState "streaming" for nested @defer when both defer boundaries
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -5675,7 +5675,7 @@ test('returns dataState "complete" for nested @defer when both defer boundaries 
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -5743,7 +5743,7 @@ test('returns dataState "partial" for nested @defer when the outer boundary is c
       query,
       optimistic: true,
       returnPartialData: true,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -5816,7 +5816,7 @@ test("strips an incomplete nested inner @defer while keeping a complete outer @d
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -5878,7 +5878,7 @@ test('returns dataState "partial" for nested @defer when the outer boundary has 
       query,
       optimistic: true,
       returnPartialData: true,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -5950,7 +5950,7 @@ test("strips an incomplete outer @defer boundary that contains a nested @defer w
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -6006,7 +6006,7 @@ test('returns dataState "streaming" for nested @defer when only the outer bounda
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -6063,7 +6063,7 @@ test("strips an incomplete outer @defer even when the nested inner @defer is com
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -6126,7 +6126,7 @@ test('returns dataState "partial" for nested @defer when the outer boundary is i
       query,
       optimistic: true,
       returnPartialData: true,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -6200,7 +6200,7 @@ test("strips an incomplete outer @defer when the nested inner @defer is also inc
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -6264,7 +6264,7 @@ test('returns dataState "partial" for nested @defer when both outer non-deferred
       query,
       optimistic: true,
       returnPartialData: true,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -6342,7 +6342,7 @@ test("strips only the incomplete nested inner @defer among sibling inners while 
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -6415,7 +6415,7 @@ test('returns dataState "partial" for nested sibling @defer inners when one is i
       query,
       optimistic: true,
       returnPartialData: true,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -6492,7 +6492,7 @@ test("strips an incomplete nested inner @defer while keeping a streaming sibling
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -6557,7 +6557,7 @@ test("strips only the incomplete branch in a 3-level nested @defer chain when re
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -6628,7 +6628,7 @@ test("strips nested partial data from one sibling outer @defer while keeping ano
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -6698,7 +6698,7 @@ test("strips nested partial data from one sibling outer @defer while ignoring an
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -6769,7 +6769,7 @@ test("strips nested partial data from one sibling outer @defer while stripping a
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -6845,7 +6845,7 @@ test("keeps overlapping recipient fields selected by a complete sibling @defer w
         query,
         optimistic: true,
         returnPartialData: false,
-        [handleIncrementalSymbol]: true,
+        [handleIncrementalSymbol]: undefined,
       })
     ).toStrictEqualTyped({
       result: markAsStreaming({
@@ -6918,7 +6918,7 @@ test('returns dataState "streaming" when two sibling @defer fragments overlap an
         query,
         optimistic: true,
         returnPartialData: true,
-        [handleIncrementalSymbol]: true,
+        [handleIncrementalSymbol]: undefined,
       })
     ).toStrictEqualTyped({
       result: markAsStreaming({
@@ -7005,7 +7005,7 @@ test("strips fields from a partial sibling @defer with disjoint selections from 
         query,
         optimistic: true,
         returnPartialData: false,
-        [handleIncrementalSymbol]: true,
+        [handleIncrementalSymbol]: undefined,
       })
     ).toStrictEqualTyped({
       result: markAsStreaming({
@@ -7062,7 +7062,7 @@ test("strips overlapping recipient fields when both sibling @defer boundaries se
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: null,
@@ -7155,7 +7155,7 @@ test("strips nested partial @defer fields contributed under the same response ke
         query,
         optimistic: true,
         returnPartialData: false,
-        [handleIncrementalSymbol]: true,
+        [handleIncrementalSymbol]: undefined,
       })
     ).toStrictEqualTyped({
       result: markAsStreaming({
@@ -7270,7 +7270,7 @@ test("strips nested partial @defer fields under the same list field contributed 
         query,
         optimistic: true,
         returnPartialData: false,
-        [handleIncrementalSymbol]: true,
+        [handleIncrementalSymbol]: undefined,
       })
     ).toStrictEqualTyped({
       result: markAsStreaming({
@@ -7348,7 +7348,7 @@ test("does not reintroduce nested stripped @defer fields when a later sibling ou
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -7408,7 +7408,7 @@ test("strips a partial @defer nested under an interface fragment that matches a 
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -7461,7 +7461,7 @@ test("strips a partial @defer on an interface type condition that matches a conc
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -7519,7 +7519,7 @@ test("strips a partial @defer nested under a named fragment on an interface that
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -7575,7 +7575,7 @@ test("does not reintroduce fields from a partial @defer via a non-matching sibli
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -7622,7 +7622,7 @@ test('returns dataState "complete" when a deferred object field is explicitly nu
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -7674,7 +7674,7 @@ test('returns dataState "complete" when a deferred scalar field is explicitly nu
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -7739,7 +7739,7 @@ test("preserves an explicitly null list item while stripping partial deferred fi
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -7805,7 +7805,7 @@ test("preserves a null list field under a parent that also has a partial sibling
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -7867,7 +7867,7 @@ test("preserves an explicitly null nested object while stripping a partial sibli
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -7933,7 +7933,7 @@ test("honors field aliases when stripping a partial @defer boundary with returnP
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -7975,7 +7975,7 @@ test('returns dataState "complete" for a fully populated 2d scalar array', () =>
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -8019,7 +8019,7 @@ test('returns dataState "complete" for a fully populated 2d object array', () =>
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -8071,7 +8071,7 @@ test('returns dataState "empty" for a 2d object array with an incomplete nested 
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: null,
@@ -8126,7 +8126,7 @@ test('returns dataState "partial" for a 2d object array with an incomplete neste
       query,
       optimistic: true,
       returnPartialData: true,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -8192,7 +8192,7 @@ test('returns dataState "streaming" for a 2d object array when only deferred fie
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -8269,7 +8269,7 @@ test("strips partial deferred fields from nested items in a 2d object array whil
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -8327,7 +8327,7 @@ test('returns dataState "partial" for a 2d object array when a nested item has i
       query,
       optimistic: true,
       returnPartialData: true,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -8404,7 +8404,7 @@ test('returns dataState "streaming" when a partial @defer inside every list item
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -8462,7 +8462,7 @@ test('returns dataState "partial" when a partial @defer inside a list item is pr
       query,
       optimistic: true,
       returnPartialData: true,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -8541,7 +8541,7 @@ test('returns dataState "streaming" keeping complete per-item @defer data while 
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -8576,7 +8576,7 @@ test('returns dataState "complete" with an empty object when all fields are skip
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {},
@@ -8635,7 +8635,7 @@ test("strips a __typename-only deferred object nested inside a list item with re
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -8698,7 +8698,7 @@ test('returns dataState "partial" for a __typename-only deferred object nested i
       query,
       optimistic: true,
       returnPartialData: true,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {
@@ -9420,7 +9420,7 @@ test("does not reuse a deferInfo-pruned result when deferInfo is later omitted",
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: true,
+      [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
     result: {

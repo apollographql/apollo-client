@@ -456,7 +456,9 @@ export class QueryInfo<
   public markMutationResult(
     request: MutationRequest<TData, TVariables, TCache>,
     incoming: ApolloLink.Result<TData>,
-    options: {
+    {
+      removeOptimistic,
+    }: {
       removeOptimistic?: string;
     } = {},
     cache = this.cache
@@ -563,7 +565,7 @@ export class QueryInfo<
       (refetchQueries || "").length > 0 ||
       request.update ||
       request.onQueryUpdated ||
-      options.removeOptimistic
+      removeOptimistic
     ) {
       const results: any[] = [];
 
@@ -635,7 +637,7 @@ export class QueryInfo<
 
           // Remove the corresponding optimistic layer at the same time as we
           // write the final non-optimistic result.
-          removeOptimistic: options.removeOptimistic,
+          removeOptimistic,
 
           // Let the caller of client.mutate optionally determine the refetching
           // behavior for watched queries after the mutation.update function runs.

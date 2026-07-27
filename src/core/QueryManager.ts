@@ -332,8 +332,8 @@ export class QueryManager {
         },
         request.variables,
         request.fetchPolicy,
-        {},
-        false
+        request.extensions,
+        request.deduplication
       )
         .observable.pipe(
           validateDidEmitValue(),

@@ -29,6 +29,9 @@ export class MutationRequest<
   readonly update: typeof this.options.update;
   readonly updateQueries: typeof this.options.updateQueries;
 
+  readonly deduplication = false;
+  readonly extensions = {};
+
   mutation: TypedDocumentNode<TData, TVariables>;
   variables: TVariables;
 

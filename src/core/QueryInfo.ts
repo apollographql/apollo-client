@@ -28,7 +28,7 @@ import type { QueryRequest } from "./QueryRequest.js";
 import type { QueryResponse } from "./QueryResponse.js";
 import type {
   DataValue,
-  NormalizedExecutionResult,
+  InternalRefetchQueriesInclude,
   OperationVariables,
 } from "./types.js";
 import type { ErrorPolicy } from "./watchQueryOptions.js";
@@ -406,9 +406,11 @@ export class QueryInfo<
     response: MutationResponse<TData, TVariables, TCache>,
     incoming: ApolloLink.Result<TData>,
     {
+      refetchQueries,
       cacheWrites,
       removeOptimistic,
     }: {
+      refetchQueries: InternalRefetchQueriesInclude | undefined;
       cacheWrites: Cache.WriteOptions[];
       removeOptimistic?: string;
     }
@@ -421,17 +423,6 @@ export class QueryInfo<
     const skipCache = request.cacheWriteBehavior === CacheWriteBehavior.FORBID;
 
     let result = incoming as FormattedExecutionResult<TData>;
-
-    const getResultWithDataState = () =>
-      ({
-        ...result,
-        dataState: response.hasNext ? "streaming" : "complete",
-      }) as NormalizedExecutionResult<Unmasked<TData>>;
-
-    let refetchQueries = request.refetchQueries;
-    if (typeof refetchQueries === "function") {
-      refetchQueries = refetchQueries(getResultWithDataState());
-    }
 
     if (
       cacheWrites.length > 0 ||

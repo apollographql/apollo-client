@@ -189,7 +189,13 @@ export class MutationResponse<
       }
     }
 
+    let refetchQueries = request.refetchQueries;
+    if (typeof refetchQueries === "function") {
+      refetchQueries = refetchQueries(getResultWithDataState());
+    }
+
     return this.queryInfo.markMutationResult(this.request, this, result, {
+      refetchQueries,
       cacheWrites,
       removeOptimistic,
     });

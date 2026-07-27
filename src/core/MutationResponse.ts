@@ -3,17 +3,25 @@ import type { FormattedExecutionResult } from "graphql";
 import type { ApolloCache, Cache } from "@apollo/client/cache";
 import type { Incremental } from "@apollo/client/incremental";
 import type { ApolloLink } from "@apollo/client/link";
+import type { Unmasked } from "@apollo/client/masking";
+import type { ExtensionsWithStreamInfo } from "@apollo/client/utilities/internal";
 import {
+  getOperationName,
   graphQLResultHasError,
-  type ExtensionsWithStreamInfo,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import type { MutationRequest } from "./MutationRequest.js";
 import { IGNORE } from "./MutationRequest.js";
 import type { QueryInfo } from "./QueryInfo.js";
+import { shouldWriteResult } from "./QueryInfo.js";
 import type { QueryManager } from "./QueryManager.js";
-import type { DataValue, OperationVariables } from "./types.js";
+import type {
+  DataValue,
+  MutationQueryReducer,
+  NormalizedExecutionResult,
+  OperationVariables,
+} from "./types.js";
 
 export declare namespace MutationResponse {
   export interface Options<
@@ -108,17 +116,81 @@ export class MutationResponse<
     incoming: ApolloLink.Result<TData>,
     { removeOptimistic }: { removeOptimistic?: string } = {}
   ) {
+    const { request } = this;
+    const cacheWrites: Cache.WriteOptions[] = [];
+    const skipCache = request.fetchPolicy === "no-cache";
+
     let result = this.merge(incoming);
 
-    if (this.request.errorPolicy === "ignore") {
+    if (request.errorPolicy === "ignore") {
       result = { ...result, errors: [] };
     }
 
-    if (graphQLResultHasError(result) && this.request.errorPolicy === "none") {
+    if (graphQLResultHasError(result) && request.errorPolicy === "none") {
       return Promise.resolve(result);
     }
 
+    const getResultWithDataState = () =>
+      ({
+        ...result,
+        dataState: this.hasNext ? "streaming" : "complete",
+      }) as NormalizedExecutionResult<Unmasked<TData>>;
+
+    if (!skipCache && shouldWriteResult(result, request.errorPolicy)) {
+      cacheWrites.push({
+        result: result.data,
+        dataId: "ROOT_MUTATION",
+        query: request.mutation,
+        variables: request.variables,
+        extensions: result.extensions,
+      });
+
+      const { updateQueries } = request;
+      if (updateQueries) {
+        this.queryManager
+          .getObservableQueries("all")
+          .forEach((observableQuery) => {
+            const queryName = observableQuery && observableQuery.queryName;
+            if (
+              !queryName ||
+              !Object.hasOwnProperty.call(updateQueries, queryName)
+            ) {
+              return;
+            }
+            const updater = updateQueries[queryName];
+            const { query: document, variables } = observableQuery;
+
+            // Read the current query result from the store.
+            const { result: currentQueryResult, complete } =
+              observableQuery.getCacheDiff({ optimistic: false });
+
+            if (complete && currentQueryResult) {
+              // Run our reducer using the current query result and the mutation result.
+              const nextQueryResult = (updater as MutationQueryReducer<any>)(
+                currentQueryResult,
+                {
+                  mutationResult: getResultWithDataState(),
+                  queryName: (document && getOperationName(document)) || void 0,
+                  queryVariables: variables!,
+                }
+              );
+
+              // Write the modified result back into the store if we got a new result.
+              if (nextQueryResult) {
+                cacheWrites.push({
+                  result: nextQueryResult,
+                  dataId: "ROOT_QUERY",
+                  query: document!,
+                  variables,
+                });
+              }
+            }
+          });
+      }
+    }
+
     return this.queryInfo.markMutationResult(this.request, this, result, {
+      cacheWrites,
       removeOptimistic,
     });
   }

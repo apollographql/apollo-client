@@ -75,7 +75,6 @@ import {
 import { defaultCacheSizes } from "../utilities/caching/sizes.js";
 
 import type { ApolloClient } from "./ApolloClient.js";
-import { GraphQLResponse } from "./GraphQLResponse.js";
 import { MutationRequest } from "./MutationRequest.js";
 import { NetworkStatus } from "./networkStatus.js";
 import { logMissingFieldErrors, ObservableQuery } from "./ObservableQuery.js";
@@ -103,6 +102,8 @@ import type {
   MutationFetchPolicy,
   WatchQueryFetchPolicy,
 } from "./watchQueryOptions.js";
+import { QueryResponse } from "./QueryResponse.js";
+import { MutationResponse } from "./MutationResponse.js";
 
 interface MutationStoreValue {
   mutation: DocumentNode;
@@ -323,7 +324,7 @@ export class QueryManager {
         error: null,
       } as MutationStoreValue);
 
-    const response = new GraphQLResponse<TData>({
+    const response = new MutationResponse<TData, TVariables, TCache>({
       request,
       incrementalHandler: this.incrementalHandler,
     });
@@ -1035,7 +1036,7 @@ export class QueryManager {
     // missing fragment definitions (for example) before sending this document
     // through the link chain.
     request.query = this.cache.transformForLink(request.query);
-    const response = new GraphQLResponse<TData>({
+    const response = new QueryResponse<TData, TVariables>({
       request,
       incrementalHandler: this.incrementalHandler,
     });

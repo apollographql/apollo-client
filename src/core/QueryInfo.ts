@@ -21,13 +21,14 @@ import {
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import type { ApolloClient } from "./ApolloClient.js";
-import type { GraphQLResponse } from "./GraphQLResponse.js";
 import type { MutationRequest } from "./MutationRequest.js";
 import { IGNORE } from "./MutationRequest.js";
+import type { MutationResponse } from "./MutationResponse.js";
 import { NetworkStatus } from "./networkStatus.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import type { QueryManager } from "./QueryManager.js";
 import type { QueryRequest } from "./QueryRequest.js";
+import type { QueryResponse } from "./QueryResponse.js";
 import type {
   DataValue,
   MutationQueryReducer,
@@ -166,7 +167,7 @@ export class QueryInfo<
   public markQueryResult(
     incoming: ApolloLink.Result<TData>,
     request: QueryRequest<TData, TVariables>,
-    response: GraphQLResponse<TData>
+    response: QueryResponse<TData, TVariables>
   ): MarkQueryResult<
     DataValue.Complete<TData> | DataValue.Streaming<TData>,
     ExtensionsWithStreamInfo
@@ -351,7 +352,7 @@ export class QueryInfo<
 
   private getIncrementalInfo(
     result: MarkQueryResult<any, ExtensionsWithStreamInfo>,
-    response: GraphQLResponse<TData>,
+    response: QueryResponse<TData, any>,
     { isNetworkOnly }: { isNetworkOnly: boolean }
   ) {
     const pending = response.pending ?? [];
@@ -406,7 +407,7 @@ export class QueryInfo<
 
   public markMutationResult(
     request: MutationRequest<TData, TVariables, TCache>,
-    response: GraphQLResponse<TData>,
+    response: MutationResponse<TData, TVariables, TCache>,
     incoming: ApolloLink.Result<TData>,
     {
       cache = this.cache,
@@ -612,7 +613,7 @@ export class QueryInfo<
 
   public markMutationOptimistic(
     request: MutationRequest<TData, TVariables, TCache>,
-    response: GraphQLResponse<TData>
+    response: MutationResponse<TData, TVariables, TCache>
   ) {
     const data = request.getOptimisticResponse();
 

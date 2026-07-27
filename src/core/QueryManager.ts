@@ -316,18 +316,16 @@ export class QueryManager {
         error: null,
       } as MutationStoreValue);
 
-    const isOptimistic =
-      request.optimisticResponse &&
-      queryInfo.markMutationOptimistic(request, {
-        document: request.mutation,
-        variables: request.variables,
-        cacheWriteBehavior: request.cacheWriteBehavior,
-        errorPolicy: request.errorPolicy,
-        context: request.context,
-        updateQueries: request.updateQueries,
-        update: request.update,
-        keepRootFields: request.keepRootFields,
-      });
+    const isOptimistic = queryInfo.markMutationOptimistic(request, {
+      document: request.mutation,
+      variables: request.variables,
+      cacheWriteBehavior: request.cacheWriteBehavior,
+      errorPolicy: request.errorPolicy,
+      context: request.context,
+      updateQueries: request.updateQueries,
+      update: request.update,
+      keepRootFields: request.keepRootFields,
+    });
 
     this.broadcastQueries();
 

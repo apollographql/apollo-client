@@ -349,9 +349,10 @@ export class QueryManager {
           validateDidEmitValue(),
           mergeMap((result) => {
             const storeResult: typeof result = { ...result };
+            const incoming = response.merge(storeResult);
 
             return from(
-              queryInfo.markMutationResult(request, response, storeResult, {
+              queryInfo.markMutationResult(request, response, incoming, {
                 removeOptimistic: isOptimistic ? queryInfo.id : void 0,
               })
             );

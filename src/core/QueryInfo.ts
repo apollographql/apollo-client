@@ -410,10 +410,8 @@ export class QueryInfo<
     response: MutationResponse<TData, TVariables, TCache>,
     incoming: ApolloLink.Result<TData>,
     {
-      cache = this.cache,
       removeOptimistic,
     }: {
-      cache?: TCache;
       removeOptimistic?: string;
     } = {}
   ): Promise<
@@ -607,14 +605,9 @@ export class QueryInfo<
       return false;
     }
 
-    this.cache.recordOptimisticTransaction((cache) => {
+    this.cache.recordOptimisticTransaction(() => {
       try {
-        this.markMutationResult(
-          request,
-          response,
-          { data },
-          { cache: cache as TCache }
-        );
+        this.markMutationResult(request, response, { data });
       } catch (error) {
         invariant.error(error);
       }

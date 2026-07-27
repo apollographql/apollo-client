@@ -730,10 +730,10 @@ export class QueryManager {
   public startGraphQLSubscription<TData = unknown>(
     options: ApolloClient.SubscribeOptions<TData>
   ): SubscriptionObservable<ApolloClient.SubscribeResult<TData>> {
+    checkDocument(options.query, OperationTypeNode.SUBSCRIPTION);
+
     const request = new SubscriptionRequest(options);
     const { context = {}, extensions = {} } = options;
-
-    checkDocument(request.query, OperationTypeNode.SUBSCRIPTION);
 
     request.query = this.transform(request.query);
     request.variables = this.getVariables(request.query, request.variables);

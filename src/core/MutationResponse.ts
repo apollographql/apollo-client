@@ -73,17 +73,7 @@ export class MutationResponse<
     const cacheData =
       this.request.fetchPolicy === "no-cache" ?
         undefined
-      : this.cache.diff<TData>({
-          id: "ROOT_MUTATION",
-          // The cache complains if passed a mutation where it expects a
-          // query, so we transform mutations and subscriptions to queries
-          // (only once, thanks to this.transformCache).
-          query: this.queryManager.getDocumentInfo(this.request.mutation)
-            .asQuery,
-          variables: this.request.variables,
-          optimistic: false,
-          returnPartialData: true,
-        }).result;
+      : this.getDiff().result;
 
     if (this.incrementalHandler.isIncrementalResult(incoming)) {
       this.incremental ||= this.incrementalHandler.startRequest({
@@ -165,17 +155,7 @@ export class MutationResponse<
             // Re-read from the cache after writing to it to update `result`
             // with any parsed scalar values that might have been written.
             if (!skipCache) {
-              const diff = cache.diff<TData>({
-                id: "ROOT_MUTATION",
-                // The cache complains if passed a mutation where it expects a
-                // query, so we transform mutations and subscriptions to queries
-                // (only once, thanks to this.transformCache).
-                query: this.queryManager.getDocumentInfo(request.mutation)
-                  .asQuery,
-                variables: request.variables,
-                optimistic: false,
-                returnPartialData: true,
-              });
+              const diff = this.getDiff();
 
               if (diff.complete) {
                 result = {
@@ -300,5 +280,18 @@ export class MutationResponse<
       ...result,
       dataState: this.hasNext ? "streaming" : "complete",
     } as NormalizedExecutionResult<Unmasked<TData>>;
+  }
+
+  private getDiff() {
+    return this.cache.diff<TData>({
+      id: "ROOT_MUTATION",
+      // The cache complains if passed a mutation where it expects a
+      // query, so we transform mutations and subscriptions to queries
+      // (only once, thanks to this.transformCache).
+      query: this.queryManager.getDocumentInfo(this.request.mutation).asQuery,
+      variables: this.request.variables,
+      optimistic: false,
+      returnPartialData: true,
+    });
   }
 }

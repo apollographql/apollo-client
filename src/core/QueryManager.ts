@@ -76,6 +76,7 @@ import { defaultCacheSizes } from "../utilities/caching/sizes.js";
 
 import type { ApolloClient } from "./ApolloClient.js";
 import { MutationRequest } from "./MutationRequest.js";
+import { MutationResponse } from "./MutationResponse.js";
 import { NetworkStatus } from "./networkStatus.js";
 import { logMissingFieldErrors, ObservableQuery } from "./ObservableQuery.js";
 import {
@@ -84,6 +85,7 @@ import {
   shouldWriteResult,
 } from "./QueryInfo.js";
 import { QueryRequest } from "./QueryRequest.js";
+import { QueryResponse } from "./QueryResponse.js";
 import { SubscriptionRequest } from "./SubscriptionRequest.js";
 import type {
   DataState,
@@ -102,8 +104,6 @@ import type {
   MutationFetchPolicy,
   WatchQueryFetchPolicy,
 } from "./watchQueryOptions.js";
-import { QueryResponse } from "./QueryResponse.js";
-import { MutationResponse } from "./MutationResponse.js";
 
 interface MutationStoreValue {
   mutation: DocumentNode;
@@ -112,7 +112,7 @@ interface MutationStoreValue {
   error: Error | null;
 }
 
-interface TransformCacheEntry {
+export interface TransformCacheEntry {
   hasClientExports: boolean;
   hasForcedResolvers: boolean;
   hasNonreactiveDirective: boolean;
@@ -327,6 +327,8 @@ export class QueryManager {
     const response = new MutationResponse<TData, TVariables, TCache>({
       request,
       incrementalHandler: this.incrementalHandler,
+      cache: this.cache,
+      getDocumentInfo: this.getDocumentInfo.bind(this),
     });
     const isOptimistic = queryInfo.markMutationOptimistic(request, response);
 

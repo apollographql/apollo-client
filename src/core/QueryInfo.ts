@@ -425,21 +425,7 @@ export class QueryInfo<
     const cacheWrites: Cache.WriteOptions[] = [];
     const skipCache = request.cacheWriteBehavior === CacheWriteBehavior.FORBID;
 
-    let result = response.merge(
-      skipCache ? undefined : (
-        cache.diff<TData>({
-          id: "ROOT_MUTATION",
-          // The cache complains if passed a mutation where it expects a
-          // query, so we transform mutations and subscriptions to queries
-          // (only once, thanks to this.transformCache).
-          query: this.queryManager.getDocumentInfo(request.mutation).asQuery,
-          variables: request.variables,
-          optimistic: false,
-          returnPartialData: true,
-        }).result
-      ),
-      incoming
-    );
+    let result = response.merge(incoming);
 
     if (request.errorPolicy === "ignore") {
       result = { ...result, errors: [] };

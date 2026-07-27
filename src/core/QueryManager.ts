@@ -733,7 +733,6 @@ export class QueryManager {
     checkDocument(options.query, OperationTypeNode.SUBSCRIPTION);
 
     const request = new SubscriptionRequest(options);
-    const { context = {}, extensions = {} } = options;
 
     request.query = this.transform(request.query);
     request.variables = this.getVariables(request.query, request.variables);
@@ -756,7 +755,7 @@ export class QueryManager {
             client: this.client,
             document: request.query,
             variables: request.variables,
-            context,
+            context: request.context,
           })
         )
       : of(request.variables)).pipe(
@@ -765,10 +764,10 @@ export class QueryManager {
 
         const { observable, restart: res } = this.getObservableFromLink<TData>(
           request.query,
-          context,
+          request.context,
           request.variables,
           request.fetchPolicy,
-          extensions
+          request.extensions
         );
 
         const queryInfo = new QueryInfo<TData>(this);

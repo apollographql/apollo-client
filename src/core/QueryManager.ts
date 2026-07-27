@@ -1059,7 +1059,7 @@ export class QueryManager {
         const partial = dataState !== "complete";
         const aqr: QueryManager.Result<TData> = {
           data: result.data as TData,
-          ...(queryInfo.hasNext ?
+          ...(response.hasNext ?
             {
               loading: true,
               networkStatus: NetworkStatus.streaming,

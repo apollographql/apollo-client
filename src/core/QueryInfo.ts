@@ -23,6 +23,7 @@ import {
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import type { ApolloClient } from "./ApolloClient.js";
+import type { GraphQLResponse } from "./GraphQLResponse.js";
 import type { MutationRequest } from "./MutationRequest.js";
 import { IGNORE } from "./MutationRequest.js";
 import { NetworkStatus } from "./networkStatus.js";
@@ -36,7 +37,6 @@ import type {
   OperationVariables,
 } from "./types.js";
 import type { ErrorPolicy } from "./watchQueryOptions.js";
-import { GraphQLResponse } from "./GraphQLResponse.js";
 
 export const enum CacheWriteBehavior {
   FORBID,
@@ -237,11 +237,7 @@ export class QueryInfo<
         })
       );
 
-    const incrementalResult = this.maybeHandleIncrementalResult(
-      lastDiff?.result,
-      incoming,
-      query
-    );
+    const incrementalResult = response.merge(lastDiff?.result, incoming);
 
     let result: MarkQueryResult<any, ExtensionsWithStreamInfo> = {
       ...incrementalResult,
@@ -249,8 +245,8 @@ export class QueryInfo<
     };
 
     if (skipCache) {
-      const hasPendingDefer = this.incremental?.pending?.some(
-        (pending) => this.incremental?.getPendingType?.(pending.id) === "defer"
+      const hasPendingDefer = response.pending?.some(
+        (pending) => response.getPendingType(pending.id) === "defer"
       );
 
       if (
@@ -268,8 +264,8 @@ export class QueryInfo<
         // to see if it fulfills the selection set. For such a narrow case where
         // its incorrect on a format that is now outdated is not worth the
         // fix so we are ok with reporting a `streaming` here.
-        (!this.incremental?.pending &&
-          this.hasNext &&
+        (!response.pending &&
+          response.hasNext &&
           hasDirectives(["defer"], query))
       ) {
         result.dataState = "streaming";
@@ -369,13 +365,13 @@ export class QueryInfo<
               // Never deliver partial data for network-only requests
               returnPartialData: returnPartialData && !isNetworkOnly,
             },
-            this.getIncrementalInfo(result, { isNetworkOnly })
+            this.getIncrementalInfo(result, response, { isNetworkOnly })
           );
 
           if (
             dataState === "complete" ||
             (returnPartialData && dataState === "partial" && shouldWrite) ||
-            (this.hasNext && dataState === "streaming")
+            (response.hasNext && dataState === "streaming")
           ) {
             result = { ...result, data: diffResult, dataState };
           }
@@ -390,9 +386,10 @@ export class QueryInfo<
 
   private getIncrementalInfo(
     result: MarkQueryResult<any, ExtensionsWithStreamInfo>,
+    response: GraphQLResponse<TData>,
     { isNetworkOnly }: { isNetworkOnly: boolean }
   ) {
-    const pending = this.incremental?.pending ?? [];
+    const pending = response.pending ?? [];
     const streamInfo = result.extensions?.[streamInfoSymbol]?.deref();
     const incrementalInfo: DiffIncrementalInfo = { streamInfo };
 
@@ -402,7 +399,7 @@ export class QueryInfo<
     // can prune complete defer/stream boundaries at those paths.
     if (isNetworkOnly) {
       for (const item of pending) {
-        const type = this.incremental?.getPendingType?.(item.id);
+        const type = response.getPendingType(item.id);
 
         if (type === "defer") {
           incrementalInfo.deferInfo ||= new Trie(true, () => true);

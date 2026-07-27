@@ -29,6 +29,18 @@ export class GraphQLResponse<TData> {
     this.request = request;
   }
 
+  get hasNext() {
+    return this.incremental?.hasNext ?? false;
+  }
+
+  get pending() {
+    return this.incremental?.pending;
+  }
+
+  getPendingType(id: string) {
+    return this.incremental?.getPendingType?.(id);
+  }
+
   merge(
     cacheData: TData | DeepPartial<TData> | undefined | null,
     incoming: ApolloLink.Result<TData>

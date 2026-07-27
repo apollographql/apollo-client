@@ -441,6 +441,7 @@ export class QueryInfo<
 
   public markMutationResult(
     request: MutationRequest<TData, TVariables, TCache>,
+    response: GraphQLResponse<TData>,
     incoming: ApolloLink.Result<TData>,
     {
       cache = this.cache,
@@ -646,7 +647,8 @@ export class QueryInfo<
   }
 
   public markMutationOptimistic(
-    request: MutationRequest<TData, TVariables, TCache>
+    request: MutationRequest<TData, TVariables, TCache>,
+    response: GraphQLResponse<TData>
   ) {
     const data = request.getOptimisticResponse();
 
@@ -656,7 +658,12 @@ export class QueryInfo<
 
     this.cache.recordOptimisticTransaction((cache) => {
       try {
-        this.markMutationResult(request, { data }, { cache: cache as TCache });
+        this.markMutationResult(
+          request,
+          response,
+          { data },
+          { cache: cache as TCache }
+        );
       } catch (error) {
         invariant.error(error);
       }

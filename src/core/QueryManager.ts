@@ -75,6 +75,7 @@ import {
 import { defaultCacheSizes } from "../utilities/caching/sizes.js";
 
 import type { ApolloClient } from "./ApolloClient.js";
+import { GraphQLResponse } from "./GraphQLResponse.js";
 import { MutationRequest } from "./MutationRequest.js";
 import { NetworkStatus } from "./networkStatus.js";
 import { logMissingFieldErrors, ObservableQuery } from "./ObservableQuery.js";
@@ -102,7 +103,6 @@ import type {
   MutationFetchPolicy,
   WatchQueryFetchPolicy,
 } from "./watchQueryOptions.js";
-import { GraphQLResponse } from "./GraphQLResponse.js";
 
 interface MutationStoreValue {
   mutation: DocumentNode;
@@ -323,7 +323,11 @@ export class QueryManager {
         error: null,
       } as MutationStoreValue);
 
-    const isOptimistic = queryInfo.markMutationOptimistic(request);
+    const response = new GraphQLResponse<TData>({
+      request,
+      incrementalHandler: this.incrementalHandler,
+    });
+    const isOptimistic = queryInfo.markMutationOptimistic(request, response);
 
     this.broadcastQueries();
 
@@ -344,7 +348,7 @@ export class QueryManager {
             const storeResult: typeof result = { ...result };
 
             return from(
-              queryInfo.markMutationResult(request, storeResult, {
+              queryInfo.markMutationResult(request, response, storeResult, {
                 removeOptimistic: isOptimistic ? queryInfo.id : void 0,
               })
             );

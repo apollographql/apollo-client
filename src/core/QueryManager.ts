@@ -349,12 +349,11 @@ export class QueryManager {
         .observable.pipe(
           validateDidEmitValue(),
           mergeMap((result) => {
-            const storeResult: typeof result = { ...result };
-
             return from(
-              response.markMutationResult(storeResult, {
-                removeOptimistic: isOptimistic ? queryInfo.id : void 0,
-              })
+              response.markMutationResult(
+                { ...result },
+                { removeOptimistic: isOptimistic ? queryInfo.id : void 0 }
+              )
             );
           })
         )

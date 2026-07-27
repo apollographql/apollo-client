@@ -731,46 +731,43 @@ export class QueryManager {
     options: ApolloClient.SubscribeOptions<TData>
   ): SubscriptionObservable<ApolloClient.SubscribeResult<TData>> {
     const request = new SubscriptionRequest(options);
-    let { query, variables } = options;
-    const {
-      fetchPolicy = "cache-first",
-      errorPolicy = "none",
-      context = {},
-      extensions = {},
-    } = options;
+    const { context = {}, extensions = {} } = options;
 
-    checkDocument(query, OperationTypeNode.SUBSCRIPTION);
+    checkDocument(request.query, OperationTypeNode.SUBSCRIPTION);
 
-    query = this.transform(query);
-    variables = this.getVariables(query, variables);
+    request.query = this.transform(request.query);
+    request.variables = this.getVariables(request.query, request.variables);
 
     let restart: (() => void) | undefined;
 
     if (__DEV__) {
       invariant(
-        !this.getDocumentInfo(query).hasClientExports || this.localState,
+        !this.getDocumentInfo(request.query).hasClientExports ||
+          this.localState,
         "Subscription '%s' contains `@client` fields with variables provided by `@export` but local state has not been configured.",
-        getOperationName(query, "(anonymous)")
+        getOperationName(request.query, "(anonymous)")
       );
     }
 
     const observable = (
-      this.getDocumentInfo(query).hasClientExports ?
+      this.getDocumentInfo(request.query).hasClientExports ?
         from(
           this.localState!.getExportedVariables({
             client: this.client,
-            document: query,
-            variables,
+            document: request.query,
+            variables: request.variables,
             context,
           })
         )
-      : of(variables)).pipe(
+      : of(request.variables)).pipe(
       mergeMap((variables) => {
+        request.variables = variables;
+
         const { observable, restart: res } = this.getObservableFromLink<TData>(
-          query,
+          request.query,
           context,
-          variables,
-          fetchPolicy,
+          request.variables,
+          request.fetchPolicy,
           extensions
         );
 
@@ -780,11 +777,11 @@ export class QueryManager {
         return (observable as Observable<FormattedExecutionResult<TData>>).pipe(
           map((rawResult): ApolloClient.SubscribeResult<TData> => {
             queryInfo.markSubscriptionResult(rawResult, {
-              document: query,
-              variables,
-              errorPolicy,
+              document: request.query,
+              variables: request.variables,
+              errorPolicy: request.errorPolicy,
               cacheWriteBehavior:
-                fetchPolicy === "no-cache" ?
+                request.fetchPolicy === "no-cache" ?
                   CacheWriteBehavior.FORBID
                 : CacheWriteBehavior.MERGE,
             });
@@ -808,18 +805,18 @@ export class QueryManager {
               result.extensions = rawResult.extensions;
             }
 
-            if (result.error && errorPolicy === "none") {
+            if (result.error && request.errorPolicy === "none") {
               result.data = undefined;
             }
 
-            if (errorPolicy === "ignore") {
+            if (request.errorPolicy === "ignore") {
               delete result.error;
             }
 
             return result;
           }),
           catchError((error) => {
-            if (errorPolicy === "ignore") {
+            if (request.errorPolicy === "ignore") {
               return of({
                 data: undefined,
               } as ApolloClient.SubscribeResult<TData>);

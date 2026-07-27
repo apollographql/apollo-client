@@ -331,7 +331,7 @@ export class QueryManager {
       queryInfo,
       queryManager: this,
     });
-    const isOptimistic = response.markMutationOptimistic();
+    const isOptimistic = response.writeOptimistic();
 
     this.broadcastQueries();
 
@@ -350,7 +350,7 @@ export class QueryManager {
           validateDidEmitValue(),
           mergeMap((result) => {
             return from(
-              response.markMutationResult(
+              response.write(
                 { ...result },
                 { removeOptimistic: isOptimistic ? queryInfo.id : void 0 }
               )

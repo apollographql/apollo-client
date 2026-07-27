@@ -85,7 +85,7 @@ export class MutationResponse<
     return incoming;
   }
 
-  markMutationOptimistic() {
+  writeOptimistic() {
     const data = this.request.getOptimisticResponse();
 
     if (data === IGNORE) {
@@ -94,7 +94,7 @@ export class MutationResponse<
 
     this.cache.recordOptimisticTransaction(() => {
       try {
-        this.markMutationResult({ data });
+        this.write({ data });
       } catch (error) {
         invariant.error(error);
       }
@@ -103,7 +103,7 @@ export class MutationResponse<
     return true;
   }
 
-  markMutationResult(
+  write(
     incoming: ApolloLink.Result<TData>,
     { removeOptimistic }: { removeOptimistic?: string } = {}
   ) {

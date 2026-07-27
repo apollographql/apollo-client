@@ -1,4 +1,4 @@
-import type { Cache } from "@apollo/client/cache";
+import type { Cache, IgnoreModifier } from "@apollo/client/cache";
 
 import type { ApolloClient } from "./ApolloClient.js";
 import { CacheWriteBehavior } from "./QueryInfo.js";
@@ -8,6 +8,8 @@ import type {
   TypedDocumentNode,
 } from "./types.js";
 import type { ErrorPolicy, MutationFetchPolicy } from "./watchQueryOptions.js";
+
+export const IGNORE = {} as IgnoreModifier;
 
 export class MutationRequest<
   TData,
@@ -65,5 +67,17 @@ export class MutationRequest<
     return this.fetchPolicy === "no-cache" ?
         CacheWriteBehavior.FORBID
       : CacheWriteBehavior.MERGE;
+  }
+
+  getOptimisticResponse() {
+    if (!this.optimisticResponse) {
+      return IGNORE;
+    }
+
+    if (typeof this.optimisticResponse === "function") {
+      return (this.optimisticResponse as any)(this.variables, { IGNORE });
+    }
+
+    return this.optimisticResponse;
   }
 }

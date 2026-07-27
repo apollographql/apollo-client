@@ -6,7 +6,6 @@ import type {
   ApolloCache,
   Cache,
   DiffIncrementalInfo,
-  IgnoreModifier,
   InMemoryCache,
 } from "@apollo/client/cache";
 import type { Incremental } from "@apollo/client/incremental";
@@ -25,6 +24,7 @@ import { invariant } from "@apollo/client/utilities/invariant";
 
 import type { ApolloClient } from "./ApolloClient.js";
 import type { MutationRequest } from "./MutationRequest.js";
+import { IGNORE } from "./MutationRequest.js";
 import { NetworkStatus } from "./networkStatus.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import type { QueryManager } from "./QueryManager.js";
@@ -47,8 +47,6 @@ type UpdateQueries<TData> = ApolloClient.MutateOptions<
   any,
   any
 >["updateQueries"];
-
-const IGNORE = {} as IgnoreModifier;
 
 export const enum CacheWriteBehavior {
   FORBID,
@@ -696,14 +694,7 @@ export class QueryInfo<
       keepRootFields?: boolean;
     }
   ) {
-    if (!request.optimisticResponse) {
-      return false;
-    }
-
-    const data =
-      typeof request.optimisticResponse === "function" ?
-        request.optimisticResponse(mutation.variables, { IGNORE })
-      : request.optimisticResponse;
+    const data = request.getOptimisticResponse();
 
     if (data === IGNORE) {
       return false;

@@ -1,6 +1,6 @@
 import { equal } from "@wry/equality";
 import { Trie } from "@wry/trie";
-import type { DocumentNode, FormattedExecutionResult } from "graphql";
+import type { FormattedExecutionResult } from "graphql";
 
 import type {
   ApolloCache,
@@ -8,10 +8,8 @@ import type {
   DiffIncrementalInfo,
   InMemoryCache,
 } from "@apollo/client/cache";
-import type { Incremental } from "@apollo/client/incremental";
 import type { ApolloLink } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
-import type { DeepPartial } from "@apollo/client/utilities";
 import type { ExtensionsWithStreamInfo } from "@apollo/client/utilities/internal";
 import {
   getOperationName,
@@ -102,10 +100,6 @@ export class QueryInfo<
   >;
   public readonly id: string;
   private readonly observableQuery?: ObservableQuery<any, any>;
-  private incremental?: Incremental.IncrementalRequest<
-    Record<string, unknown>,
-    DataValue.Complete<TData> | DataValue.Streaming<TData>
-  >;
 
   constructor(
     queryManager: QueryManager,
@@ -167,35 +161,6 @@ export class QueryInfo<
       result.extensions?.[streamInfoSymbol] ===
         lastWrite.result.extensions?.[streamInfoSymbol]
     );
-  }
-
-  get hasNext() {
-    return this.incremental ? this.incremental.hasNext : false;
-  }
-
-  private maybeHandleIncrementalResult(
-    cacheData: TData | DeepPartial<TData> | undefined | null,
-    incoming: ApolloLink.Result<TData>,
-    query: DocumentNode
-  ): FormattedExecutionResult<
-    DataValue.Complete<TData> | DataValue.Streaming<TData>,
-    ExtensionsWithStreamInfo
-  > {
-    const { incrementalHandler } = this.queryManager;
-
-    if (incrementalHandler.isIncrementalResult(incoming)) {
-      this.incremental ||= incrementalHandler.startRequest<
-        TData & Record<string, unknown>
-      >({
-        query,
-      }) as Incremental.IncrementalRequest<
-        Record<string, unknown>,
-        DataValue.Complete<TData> | DataValue.Streaming<TData>
-      >;
-
-      return this.incremental.handle(cacheData, incoming);
-    }
-    return incoming;
   }
 
   public markQueryResult(
@@ -459,7 +424,7 @@ export class QueryInfo<
     const cacheWrites: Cache.WriteOptions[] = [];
     const skipCache = request.cacheWriteBehavior === CacheWriteBehavior.FORBID;
 
-    let result = this.maybeHandleIncrementalResult(
+    let result = response.merge(
       skipCache ? undefined : (
         cache.diff<TData>({
           id: "ROOT_MUTATION",
@@ -472,8 +437,7 @@ export class QueryInfo<
           returnPartialData: true,
         }).result
       ),
-      incoming,
-      request.mutation
+      incoming
     );
 
     if (request.errorPolicy === "ignore") {
@@ -487,7 +451,7 @@ export class QueryInfo<
     const getResultWithDataState = () =>
       ({
         ...result,
-        dataState: this.hasNext ? "streaming" : "complete",
+        dataState: response.hasNext ? "streaming" : "complete",
       }) as NormalizedExecutionResult<Unmasked<TData>>;
 
     if (!skipCache && shouldWriteResult(result, request.errorPolicy)) {
@@ -595,7 +559,7 @@ export class QueryInfo<
             }
 
             // If we've received the whole response, call the update function.
-            if (update && !this.hasNext) {
+            if (update && !response.hasNext) {
               update(
                 cache as TCache,
                 result as FormattedExecutionResult<Unmasked<TData>>,
@@ -608,7 +572,7 @@ export class QueryInfo<
 
             // TODO Do this with cache.evict({ id: 'ROOT_MUTATION' }) but make it
             // shallow to allow rolling back optimistic evictions.
-            if (!skipCache && !request.keepRootFields && !this.hasNext) {
+            if (!skipCache && !request.keepRootFields && !response.hasNext) {
               cache.modify({
                 id: "ROOT_MUTATION",
                 fields(value, { fieldName, DELETE }) {

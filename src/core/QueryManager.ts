@@ -380,7 +380,7 @@ export class QueryManager {
             // we resolve with a SingleExecutionResult or after the final
             // ExecutionPatchResult has arrived and we have assembled the
             // multipart response into a single result.
-            if (!queryInfo.hasNext) {
+            if (!response.hasNext) {
               const result: ApolloClient.MutateResult<TData> = {
                 data: this.maskOperation({
                   document: request.mutation,

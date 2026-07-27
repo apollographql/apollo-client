@@ -238,15 +238,16 @@ export class MutationResponse<
       }
 
       // Read the current query result from the store.
-      const { result: currentQueryResult, complete } =
-        observableQuery.getCacheDiff({ optimistic: false });
+      const { result, complete } = observableQuery.getCacheDiff({
+        optimistic: false,
+      });
 
-      if (!complete || !currentQueryResult) {
+      if (!complete || !result) {
         return;
       }
 
       // Run our reducer using the current query result and the mutation result.
-      const nextQueryResult = updateQueries[queryName](currentQueryResult, {
+      const nextQueryResult = updateQueries[queryName](result, {
         mutationResult: this.getResultWithDataState(result),
         queryName,
         queryVariables: variables!,

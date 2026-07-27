@@ -78,7 +78,11 @@ import type { ApolloClient } from "./ApolloClient.js";
 import { MutationRequest } from "./MutationRequest.js";
 import { NetworkStatus } from "./networkStatus.js";
 import { logMissingFieldErrors, ObservableQuery } from "./ObservableQuery.js";
-import { QueryInfo } from "./QueryInfo.js";
+import {
+  CacheWriteBehavior,
+  QueryInfo,
+  shouldWriteResult,
+} from "./QueryInfo.js";
 import { QueryRequest } from "./QueryRequest.js";
 import { SubscriptionRequest } from "./SubscriptionRequest.js";
 import type {
@@ -763,12 +767,38 @@ export class QueryManager {
         const { observable, restart: res } =
           this.getObservableFromLink<TData>(request);
 
-        const queryInfo = new QueryInfo<TData>(this);
-
         restart = res;
         return (observable as Observable<FormattedExecutionResult<TData>>).pipe(
           map((rawResult): ApolloClient.SubscribeResult<TData> => {
-            queryInfo.markSubscriptionResult(request, rawResult);
+            if (request.cacheWriteBehavior !== CacheWriteBehavior.FORBID) {
+              if (shouldWriteResult(rawResult, request.errorPolicy)) {
+                this.cache.write({
+                  query: request.query,
+                  result: rawResult.data as any,
+                  dataId: "ROOT_SUBSCRIPTION",
+                  variables: request.variables,
+                  extensions: rawResult.extensions,
+                });
+
+                // Re-read from the cache to get parsed scalar values
+                const diff = this.cache.diff({
+                  // The cache complains if passed a mutation where it expects a
+                  // query, so we transform mutations and subscriptions to queries
+                  // (only once, thanks to this.transformCache).
+                  query: this.getDocumentInfo(request.query).asQuery,
+                  id: "ROOT_SUBSCRIPTION",
+                  variables: request.variables,
+                  optimistic: false,
+                  returnPartialData: true,
+                });
+
+                if (diff.complete) {
+                  rawResult.data = diff.result as any;
+                }
+              }
+
+              this.broadcastQueries();
+            }
 
             const result: ApolloClient.SubscribeResult<TData> = {
               data: rawResult.data ?? undefined,

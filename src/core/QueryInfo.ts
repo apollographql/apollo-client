@@ -29,7 +29,6 @@ import { NetworkStatus } from "./networkStatus.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import type { QueryManager } from "./QueryManager.js";
 import type { QueryRequest } from "./QueryRequest.js";
-import type { SubscriptionRequest } from "./SubscriptionRequest.js";
 import type {
   DataValue,
   MutationQueryReducer,
@@ -666,44 +665,9 @@ export class QueryInfo<
 
     return true;
   }
-
-  public markSubscriptionResult(
-    request: SubscriptionRequest<TData, TVariables>,
-    result: FormattedExecutionResult<TData>
-  ) {
-    if (request.cacheWriteBehavior !== CacheWriteBehavior.FORBID) {
-      if (shouldWriteResult(result, request.errorPolicy)) {
-        this.cache.write({
-          query: request.query,
-          result: result.data as any,
-          dataId: "ROOT_SUBSCRIPTION",
-          variables: request.variables,
-          extensions: result.extensions,
-        });
-
-        // Re-read from the cache to get parsed scalar values
-        const diff = this.cache.diff({
-          // The cache complains if passed a mutation where it expects a
-          // query, so we transform mutations and subscriptions to queries
-          // (only once, thanks to this.transformCache).
-          query: this.queryManager.getDocumentInfo(request.query).asQuery,
-          id: "ROOT_SUBSCRIPTION",
-          variables: request.variables,
-          optimistic: false,
-          returnPartialData: true,
-        });
-
-        if (diff.complete) {
-          result.data = diff.result as any;
-        }
-      }
-
-      this.queryManager.broadcastQueries();
-    }
-  }
 }
 
-function shouldWriteResult<T>(
+export function shouldWriteResult<T>(
   result: FormattedExecutionResult<T>,
   errorPolicy: ErrorPolicy = "none"
 ) {

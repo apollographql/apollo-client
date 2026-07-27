@@ -194,10 +194,101 @@ export class MutationResponse<
       refetchQueries = refetchQueries(getResultWithDataState());
     }
 
-    return this.queryInfo.markMutationResult(this.request, this, result, {
-      refetchQueries,
-      cacheWrites,
-      removeOptimistic,
-    });
+    if (
+      cacheWrites.length > 0 ||
+      (refetchQueries || "").length > 0 ||
+      request.update ||
+      request.onQueryUpdated ||
+      removeOptimistic
+    ) {
+      const results: any[] = [];
+
+      this.queryManager
+        .refetchQueries({
+          updateCache: (cache) => {
+            if (!skipCache) {
+              cacheWrites.forEach((write) => cache.write(write));
+            }
+
+            // If the mutation has some writes associated with it then we need to
+            // apply those writes to the store by running this reducer again with
+            // a write action.
+            const { update } = request;
+            // Determine whether result is a SingleExecutionResult,
+            // or the final ExecutionPatchResult.
+
+            // Re-read from the cache after writing to it to update `result`
+            // with any parsed scalar values that might have been written.
+            if (!skipCache) {
+              const diff = cache.diff<TData>({
+                id: "ROOT_MUTATION",
+                // The cache complains if passed a mutation where it expects a
+                // query, so we transform mutations and subscriptions to queries
+                // (only once, thanks to this.transformCache).
+                query: this.queryManager.getDocumentInfo(request.mutation)
+                  .asQuery,
+                variables: request.variables,
+                optimistic: false,
+                returnPartialData: true,
+              });
+
+              if (diff.complete) {
+                result = {
+                  ...result,
+                  data: diff.result,
+                };
+              }
+            }
+
+            // If we've received the whole response, call the update function.
+            if (update && !this.hasNext) {
+              update(
+                cache as TCache,
+                result as FormattedExecutionResult<Unmasked<TData>>,
+                {
+                  context: request.context,
+                  variables: request.variables,
+                }
+              );
+            }
+
+            // TODO Do this with cache.evict({ id: 'ROOT_MUTATION' }) but make it
+            // shallow to allow rolling back optimistic evictions.
+            if (!skipCache && !request.keepRootFields && !this.hasNext) {
+              cache.modify({
+                id: "ROOT_MUTATION",
+                fields(value, { fieldName, DELETE }) {
+                  return fieldName === "__typename" ? value : DELETE;
+                },
+              });
+            }
+          },
+
+          include: refetchQueries,
+
+          // Write the final mutation.result to the root layer of the cache.
+          optimistic: false,
+
+          // Remove the corresponding optimistic layer at the same time as we
+          // write the final non-optimistic result.
+          removeOptimistic,
+
+          // Let the caller of client.mutate optionally determine the refetching
+          // behavior for watched queries after the mutation.update function runs.
+          // If no onQueryUpdated function was provided for this mutation, pass
+          // null instead of undefined to disable the default refetching behavior.
+          onQueryUpdated: request.onQueryUpdated || null,
+        })
+        .forEach((result) => results.push(result));
+
+      if (request.awaitRefetchQueries || request.onQueryUpdated) {
+        // Returning a promise here makes the mutation await that promise, so we
+        // include results in that promise's work if awaitRefetchQueries or an
+        // onQueryUpdated function was specified.
+        return Promise.all(results).then(() => result);
+      }
+    }
+
+    return Promise.resolve(result);
   }
 }

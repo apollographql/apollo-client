@@ -3,7 +3,10 @@ import type { FormattedExecutionResult } from "graphql";
 import type { ApolloCache, Cache } from "@apollo/client/cache";
 import type { Incremental } from "@apollo/client/incremental";
 import type { ApolloLink } from "@apollo/client/link";
-import type { ExtensionsWithStreamInfo } from "@apollo/client/utilities/internal";
+import {
+  graphQLResultHasError,
+  type ExtensionsWithStreamInfo,
+} from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import type { MutationRequest } from "./MutationRequest.js";
@@ -109,6 +112,10 @@ export class MutationResponse<
 
     if (this.request.errorPolicy === "ignore") {
       result = { ...result, errors: [] };
+    }
+
+    if (graphQLResultHasError(result) && this.request.errorPolicy === "none") {
+      return Promise.resolve(result);
     }
 
     return this.queryInfo.markMutationResult(this.request, this, result, {

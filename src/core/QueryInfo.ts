@@ -423,10 +423,6 @@ export class QueryInfo<
 
     let result = incoming as FormattedExecutionResult<TData>;
 
-    if (graphQLResultHasError(result) && request.errorPolicy === "none") {
-      return Promise.resolve(result);
-    }
-
     const getResultWithDataState = () =>
       ({
         ...result,

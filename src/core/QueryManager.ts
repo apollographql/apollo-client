@@ -324,6 +324,11 @@ export class QueryManager {
 
     return new Promise((resolve, reject) => {
       const cause = {};
+      request.context = {
+        ...request.context,
+        optimisticResponse: isOptimistic ? request.optimisticResponse : void 0,
+      };
+
       return this.getObservableFromLink<TData>(
         request,
         request.mutation,

@@ -20,7 +20,6 @@ export class MutationRequest<
 {
   readonly options: ApolloClient.MutateOptions<TData, TVariables, TCache>;
   readonly awaitRefetchQueries: boolean;
-  readonly context: DefaultContext | undefined;
   readonly errorPolicy: ErrorPolicy;
   readonly fetchPolicy: MutationFetchPolicy;
   readonly keepRootFields: boolean | undefined;
@@ -32,6 +31,7 @@ export class MutationRequest<
   readonly deduplication = false;
   readonly extensions = {};
 
+  context: DefaultContext | undefined;
   mutation: TypedDocumentNode<TData, TVariables>;
   variables: TVariables;
 

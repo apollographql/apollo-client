@@ -75,6 +75,7 @@ import {
 import { defaultCacheSizes } from "../utilities/caching/sizes.js";
 
 import type { ApolloClient } from "./ApolloClient.js";
+import { MutationRequest } from "./MutationRequest.js";
 import { NetworkStatus } from "./networkStatus.js";
 import { logMissingFieldErrors, ObservableQuery } from "./ObservableQuery.js";
 import { CacheWriteBehavior, QueryInfo } from "./QueryInfo.js";
@@ -312,6 +313,8 @@ export class QueryManager {
         context,
       });
     }
+
+    const request = new MutationRequest({ ...options, mutation, variables });
 
     const mutationStoreValue =
       this.mutationStore &&

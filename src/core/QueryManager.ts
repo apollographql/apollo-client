@@ -279,7 +279,6 @@ export class QueryManager {
     const request = new MutationRequest(options);
 
     let {
-      optimisticResponse,
       updateQueries,
       refetchQueries = [],
       awaitRefetchQueries = false,
@@ -330,8 +329,8 @@ export class QueryManager {
       } as MutationStoreValue);
 
     const isOptimistic =
-      optimisticResponse &&
-      queryInfo.markMutationOptimistic(optimisticResponse, {
+      request.optimisticResponse &&
+      queryInfo.markMutationOptimistic(request.optimisticResponse, {
         document: request.mutation,
         variables: request.variables,
         cacheWriteBehavior:
@@ -353,7 +352,8 @@ export class QueryManager {
         request.mutation,
         {
           ...context,
-          optimisticResponse: isOptimistic ? optimisticResponse : void 0,
+          optimisticResponse:
+            isOptimistic ? request.optimisticResponse : void 0,
         },
         request.variables,
         fetchPolicy,

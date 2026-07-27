@@ -18,4 +18,8 @@ export class MutationRequest<
     this.mutation = options.mutation;
     this.variables = options.variables ?? ({} as TVariables);
   }
+
+  get optimisticResponse() {
+    return this.options.optimisticResponse;
+  }
 }

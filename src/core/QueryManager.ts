@@ -775,7 +775,7 @@ export class QueryManager {
         restart = res;
         return (observable as Observable<FormattedExecutionResult<TData>>).pipe(
           map((rawResult): ApolloClient.SubscribeResult<TData> => {
-            queryInfo.markSubscriptionResult(rawResult, {
+            queryInfo.markSubscriptionResult(request, rawResult, {
               document: request.query,
               variables: request.variables,
               errorPolicy: request.errorPolicy,

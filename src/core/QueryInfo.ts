@@ -29,6 +29,7 @@ import { NetworkStatus } from "./networkStatus.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import type { QueryManager } from "./QueryManager.js";
 import type { QueryRequest } from "./QueryRequest.js";
+import type { SubscriptionRequest } from "./SubscriptionRequest.js";
 import type {
   DataValue,
   MutationQueryReducer,
@@ -680,6 +681,7 @@ export class QueryInfo<
   }
 
   public markSubscriptionResult(
+    request: SubscriptionRequest<TData, TVariables>,
     result: FormattedExecutionResult<TData>,
     {
       document,

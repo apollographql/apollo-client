@@ -1,4 +1,5 @@
 import type { ApolloClient } from "./ApolloClient.js";
+import { CacheWriteBehavior } from "./QueryInfo.js";
 import type {
   DefaultContext,
   OperationVariables,
@@ -33,5 +34,11 @@ export class SubscriptionRequest<TData, TVariables extends OperationVariables> {
     this.options = options;
     this.query = query;
     this.variables = variables;
+  }
+
+  get cacheWriteBehavior() {
+    return this.fetchPolicy === "no-cache" ?
+        CacheWriteBehavior.FORBID
+      : CacheWriteBehavior.MERGE;
   }
 }

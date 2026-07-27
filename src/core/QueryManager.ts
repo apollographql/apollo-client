@@ -78,8 +78,9 @@ import type { ApolloClient } from "./ApolloClient.js";
 import { MutationRequest } from "./MutationRequest.js";
 import { NetworkStatus } from "./networkStatus.js";
 import { logMissingFieldErrors, ObservableQuery } from "./ObservableQuery.js";
-import { CacheWriteBehavior, QueryInfo } from "./QueryInfo.js";
+import { QueryInfo } from "./QueryInfo.js";
 import { QueryRequest } from "./QueryRequest.js";
+import { SubscriptionRequest } from "./SubscriptionRequest.js";
 import type {
   DataState,
   DefaultContext,
@@ -96,7 +97,6 @@ import type {
   MutationFetchPolicy,
   WatchQueryFetchPolicy,
 } from "./watchQueryOptions.js";
-import { SubscriptionRequest } from "./SubscriptionRequest.js";
 
 interface MutationStoreValue {
   mutation: DocumentNode;
@@ -779,10 +779,7 @@ export class QueryManager {
               document: request.query,
               variables: request.variables,
               errorPolicy: request.errorPolicy,
-              cacheWriteBehavior:
-                request.fetchPolicy === "no-cache" ?
-                  CacheWriteBehavior.FORBID
-                : CacheWriteBehavior.MERGE,
+              cacheWriteBehavior: request.cacheWriteBehavior,
             });
 
             const result: ApolloClient.SubscribeResult<TData> = {

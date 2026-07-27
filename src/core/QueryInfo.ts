@@ -24,6 +24,7 @@ import {
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import type { ApolloClient } from "./ApolloClient.js";
+import type { MutationRequest } from "./MutationRequest.js";
 import { NetworkStatus } from "./networkStatus.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import type { QueryManager } from "./QueryManager.js";
@@ -682,6 +683,7 @@ export class QueryInfo<
   }
 
   public markMutationOptimistic(
+    request: MutationRequest<TData, TVariables, TCache>,
     optimisticResponse: any,
     mutation: OperationInfo<
       TData,

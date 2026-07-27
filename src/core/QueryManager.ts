@@ -318,7 +318,7 @@ export class QueryManager {
 
     const isOptimistic =
       request.optimisticResponse &&
-      queryInfo.markMutationOptimistic(request.optimisticResponse, {
+      queryInfo.markMutationOptimistic(request, request.optimisticResponse, {
         document: request.mutation,
         variables: request.variables,
         cacheWriteBehavior: request.cacheWriteBehavior,

@@ -1162,7 +1162,6 @@ interface DiffIncrementalInfo {
 // @public (undocumented)
 export type DiffQueryAgainstStoreOptions = ReadQueryOptions & {
     returnPartialData?: boolean;
-    [handleIncrementalSymbol]?: DiffIncrementalInfo;
 };
 
 export { disableExperimentalFragmentVariables }
@@ -1664,8 +1663,6 @@ export namespace InMemoryCache {
 
 // @public (undocumented)
 export class InMemoryCache extends ApolloCache {
-    // (undocumented)
-    readonly [handleIncrementalSymbol] = true;
     constructor(...args: {} extends InMemoryCache.ScalarsOption ? [
     config?: InMemoryCacheConfig
     ] : [config: InMemoryCacheConfig]);
@@ -1680,7 +1677,7 @@ export class InMemoryCache extends ApolloCache {
     protected config: InMemoryCacheConfig;
     // (undocumented)
     diff<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: Cache_2.DiffOptions<TData, TVariables> & {
-        [handleIncrementalSymbol]: true | DiffIncrementalInfo;
+        [handleIncrementalSymbol]: DiffIncrementalInfo | undefined;
     }): Cache_2.InternalDiffResultWithDataState<TData>;
     // (undocumented)
     diff<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: Cache_2.DiffOptions<TData, TVariables>): Cache_2.DiffResult<TData>;
@@ -3260,8 +3257,8 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/policies.ts:176:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:176:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:179:3 - (ae-forgotten-export) The symbol "ScalarNames" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/types.ts:149:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/types.ts:164:3 - (ae-forgotten-export) The symbol "FragmentRegistryAPI" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/types.ts:147:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/types.ts:162:3 - (ae-forgotten-export) The symbol "FragmentRegistryAPI" needs to be exported by the entry point index.d.ts
 // src/core/ApolloClient.ts:201:5 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 // src/core/ApolloClient.ts:635:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:375:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts

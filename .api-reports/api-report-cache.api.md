@@ -22,7 +22,7 @@ import { getApolloCacheMemoryInternals } from '@apollo/client/utilities/internal
 import type { GetDataState } from '@apollo/client';
 import { getInMemoryCacheMemoryInternals } from '@apollo/client/utilities/internal';
 import type { GraphQLScalarType } from 'graphql';
-import { handleIncrementalSymbol } from '@apollo/client/utilities/internal';
+import type { handleIncrementalSymbol } from '@apollo/client/utilities/internal';
 import type { Incremental } from '@apollo/client/incremental';
 import type { InlineFragmentNode } from 'graphql';
 import type { IsAny } from '@apollo/client/utilities/internal';
@@ -414,7 +414,6 @@ export interface DiffIncrementalInfo {
 // @public (undocumented)
 export type DiffQueryAgainstStoreOptions = ReadQueryOptions & {
     returnPartialData?: boolean;
-    [handleIncrementalSymbol]?: DiffIncrementalInfo;
 };
 
 // @public (undocumented)
@@ -634,8 +633,6 @@ export namespace InMemoryCache {
 
 // @public (undocumented)
 export class InMemoryCache extends ApolloCache {
-    // (undocumented)
-    readonly [handleIncrementalSymbol] = true;
     constructor(...args: {} extends InMemoryCache.ScalarsOption ? [
     config?: InMemoryCacheConfig
     ] : [config: InMemoryCacheConfig]);
@@ -650,7 +647,7 @@ export class InMemoryCache extends ApolloCache {
     protected config: InMemoryCacheConfig;
     // (undocumented)
     diff<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: Cache_2.DiffOptions<TData, TVariables> & {
-        [handleIncrementalSymbol]: true | DiffIncrementalInfo;
+        [handleIncrementalSymbol]: DiffIncrementalInfo | undefined;
     }): Cache_2.InternalDiffResultWithDataState<TData>;
     // (undocumented)
     diff<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: Cache_2.DiffOptions<TData, TVariables>): Cache_2.DiffResult<TData>;
@@ -1158,11 +1155,10 @@ interface WriteContext extends ReadMergeModifyContext {
 // Warnings were encountered during analysis:
 //
 // src/cache/core/cache.ts:204:7 - (ae-incompatible-release-tags) The symbol "[handleIncrementalSymbol]" is marked as @public, but its signature references "DiffIncrementalInfo" which is marked as @internal
-// src/cache/inmemory/inMemoryCache.ts:461:7 - (ae-incompatible-release-tags) The symbol "[handleIncrementalSymbol]" is marked as @public, but its signature references "DiffIncrementalInfo" which is marked as @internal
+// src/cache/inmemory/inMemoryCache.ts:456:7 - (ae-incompatible-release-tags) The symbol "[handleIncrementalSymbol]" is marked as @public, but its signature references "DiffIncrementalInfo" which is marked as @internal
 // src/cache/inmemory/policies.ts:176:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:179:3 - (ae-forgotten-export) The symbol "ScalarNames" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/types.ts:145:3 - (ae-incompatible-release-tags) The symbol "[handleIncrementalSymbol]" is marked as @public, but its signature references "DiffIncrementalInfo" which is marked as @internal
-// src/cache/inmemory/types.ts:149:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/types.ts:147:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

@@ -31,20 +31,12 @@ import type { QueryManager } from "./QueryManager.js";
 import type { QueryRequest } from "./QueryRequest.js";
 import type {
   DataValue,
-  DefaultContext,
   MutationQueryReducer,
-  MutationUpdaterFunction,
   NormalizedExecutionResult,
   OperationVariables,
   TypedDocumentNode,
 } from "./types.js";
 import type { ErrorPolicy } from "./watchQueryOptions.js";
-
-type UpdateQueries<TData> = ApolloClient.MutateOptions<
-  TData,
-  any,
-  any
->["updateQueries"];
 
 export const enum CacheWriteBehavior {
   FORBID,
@@ -665,17 +657,7 @@ export class QueryInfo<
   }
 
   public markMutationOptimistic(
-    request: MutationRequest<TData, TVariables, TCache>,
-    mutation: OperationInfo<
-      TData,
-      TVariables,
-      CacheWriteBehavior.FORBID | CacheWriteBehavior.MERGE
-    > & {
-      context?: DefaultContext;
-      updateQueries: UpdateQueries<TData>;
-      update?: MutationUpdaterFunction<TData, TVariables, TCache>;
-      keepRootFields?: boolean;
-    }
+    request: MutationRequest<TData, TVariables, TCache>
   ) {
     const data = request.getOptimisticResponse();
 

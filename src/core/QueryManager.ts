@@ -269,23 +269,26 @@ export class QueryManager {
     TData,
     TVariables extends OperationVariables,
     TCache extends Cache.Implementation,
-  >({
-    mutation,
-    variables,
-    optimisticResponse,
-    updateQueries,
-    refetchQueries = [],
-    awaitRefetchQueries = false,
-    update: updateWithProxyFn,
-    onQueryUpdated,
-    fetchPolicy,
-    errorPolicy,
-    keepRootFields,
-    context,
-  }: ApolloClient.MutateOptions<TData, TVariables, TCache> & {
-    errorPolicy: ErrorPolicy;
-    fetchPolicy: MutationFetchPolicy;
-  }): Promise<ApolloClient.MutateResult<MaybeMasked<TData>>> {
+  >(
+    options: ApolloClient.MutateOptions<TData, TVariables, TCache> & {
+      errorPolicy: ErrorPolicy;
+      fetchPolicy: MutationFetchPolicy;
+    }
+  ): Promise<ApolloClient.MutateResult<MaybeMasked<TData>>> {
+    let {
+      mutation,
+      variables,
+      optimisticResponse,
+      updateQueries,
+      refetchQueries = [],
+      awaitRefetchQueries = false,
+      update: updateWithProxyFn,
+      onQueryUpdated,
+      fetchPolicy,
+      errorPolicy,
+      keepRootFields,
+      context,
+    } = options;
     const queryInfo = new QueryInfo<TData, TVariables, TCache>(this);
 
     mutation = this.cache.transformForLink(this.transform(mutation));

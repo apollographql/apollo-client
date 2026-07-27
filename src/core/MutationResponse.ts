@@ -53,7 +53,7 @@ export class MutationResponse<
     return this.incremental?.hasNext ?? false;
   }
 
-  merge(
+  private merge(
     incoming: ApolloLink.Result<TData>
   ): FormattedExecutionResult<
     DataValue.Complete<TData> | DataValue.Streaming<TData>,

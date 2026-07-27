@@ -117,7 +117,6 @@ export class MutationResponse<
     { removeOptimistic }: { removeOptimistic?: string } = {}
   ) {
     const { request } = this;
-    const cacheWrites: Cache.WriteOptions[] = [];
     const skipCache = request.fetchPolicy === "no-cache";
 
     let result = this.merge(incoming);
@@ -130,68 +129,14 @@ export class MutationResponse<
       return Promise.resolve(result);
     }
 
-    const getResultWithDataState = () =>
-      ({
-        ...result,
-        dataState: this.hasNext ? "streaming" : "complete",
-      }) as NormalizedExecutionResult<Unmasked<TData>>;
-
-    if (!skipCache && shouldWriteResult(result, request.errorPolicy)) {
-      cacheWrites.push({
-        result: result.data,
-        dataId: "ROOT_MUTATION",
-        query: request.mutation,
-        variables: request.variables,
-        extensions: result.extensions,
-      });
-
-      const { updateQueries } = request;
-      if (updateQueries) {
-        this.queryManager
-          .getObservableQueries("all")
-          .forEach((observableQuery) => {
-            const queryName = observableQuery && observableQuery.queryName;
-            if (
-              !queryName ||
-              !Object.hasOwnProperty.call(updateQueries, queryName)
-            ) {
-              return;
-            }
-            const updater = updateQueries[queryName];
-            const { query: document, variables } = observableQuery;
-
-            // Read the current query result from the store.
-            const { result: currentQueryResult, complete } =
-              observableQuery.getCacheDiff({ optimistic: false });
-
-            if (complete && currentQueryResult) {
-              // Run our reducer using the current query result and the mutation result.
-              const nextQueryResult = (updater as MutationQueryReducer<any>)(
-                currentQueryResult,
-                {
-                  mutationResult: getResultWithDataState(),
-                  queryName: (document && getOperationName(document)) || void 0,
-                  queryVariables: variables!,
-                }
-              );
-
-              // Write the modified result back into the store if we got a new result.
-              if (nextQueryResult) {
-                cacheWrites.push({
-                  result: nextQueryResult,
-                  dataId: "ROOT_QUERY",
-                  query: document!,
-                  variables,
-                });
-              }
-            }
-          });
-      }
-    }
+    const cacheWrites =
+      skipCache || !shouldWriteResult(result, request.errorPolicy) ?
+        []
+      : this.getCacheWrites(result);
 
     let refetchQueries = request.refetchQueries;
     if (typeof refetchQueries === "function") {
-      refetchQueries = refetchQueries(getResultWithDataState());
+      refetchQueries = refetchQueries(this.getResultWithDataState(result));
     }
 
     if (
@@ -290,5 +235,70 @@ export class MutationResponse<
     }
 
     return Promise.resolve(result);
+  }
+
+  private getCacheWrites(result: FormattedExecutionResult<TData>) {
+    const { request } = this;
+    const cacheWrites: Cache.WriteOptions[] = [];
+
+    cacheWrites.push({
+      result: result.data,
+      dataId: "ROOT_MUTATION",
+      query: request.mutation,
+      variables: request.variables,
+      extensions: result.extensions,
+    });
+
+    const { updateQueries } = request;
+    if (updateQueries) {
+      this.queryManager
+        .getObservableQueries("all")
+        .forEach((observableQuery) => {
+          const queryName = observableQuery && observableQuery.queryName;
+          if (
+            !queryName ||
+            !Object.hasOwnProperty.call(updateQueries, queryName)
+          ) {
+            return;
+          }
+          const updater = updateQueries[queryName];
+          const { query: document, variables } = observableQuery;
+
+          // Read the current query result from the store.
+          const { result: currentQueryResult, complete } =
+            observableQuery.getCacheDiff({ optimistic: false });
+
+          if (complete && currentQueryResult) {
+            // Run our reducer using the current query result and the mutation result.
+            const nextQueryResult = (updater as MutationQueryReducer<any>)(
+              currentQueryResult,
+              {
+                mutationResult: this.getResultWithDataState(result),
+                queryName: (document && getOperationName(document)) || void 0,
+                queryVariables: variables!,
+              }
+            );
+
+            // Write the modified result back into the store if we got a new result.
+            if (nextQueryResult) {
+              cacheWrites.push({
+                result: nextQueryResult,
+                dataId: "ROOT_QUERY",
+                query: document!,
+                variables,
+              });
+            }
+          }
+        });
+    }
+
+    return cacheWrites;
+  }
+
+  private getResultWithDataState(result: FormattedExecutionResult<TData>) {
+    return {
+      ...result,
+      dataState: this.hasNext ? "streaming" : "complete",
+    } as NormalizedExecutionResult<Unmasked<TData>>;
   }
 }

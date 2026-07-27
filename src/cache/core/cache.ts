@@ -29,6 +29,7 @@ import type { Reference, StoreObject } from "@apollo/client/utilities";
 import { cacheSizes, canonicalStringify } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
+  handleIncrementalSymbol,
   IsAny,
   NoInfer,
   Prettify,
@@ -45,6 +46,7 @@ import {
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
+import type { DiffIncrementalInfo } from "../inmemory/types.js";
 
 import type { Scalar } from "./Scalar.js";
 import type { Cache } from "./types/Cache.js";
@@ -194,6 +196,15 @@ export abstract class ApolloCache {
    * returned if it contains at least one field that can be fulfilled from the
    * cache.
    */
+  public abstract diff<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    query: Cache.DiffOptions<TData, TVariables> & {
+      [handleIncrementalSymbol]: true | DiffIncrementalInfo;
+    }
+  ): Cache.InternalDiffResultWithDataState<TData> | Cache.DiffResult<TData>;
+
   public abstract diff<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,

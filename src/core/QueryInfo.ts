@@ -421,7 +421,7 @@ export class QueryInfo<
     const cacheWrites: Cache.WriteOptions[] = [];
     const skipCache = request.cacheWriteBehavior === CacheWriteBehavior.FORBID;
 
-    let result = response.merge(incoming);
+    let result = incoming as FormattedExecutionResult<TData>;
 
     if (request.errorPolicy === "ignore") {
       result = { ...result, errors: [] };

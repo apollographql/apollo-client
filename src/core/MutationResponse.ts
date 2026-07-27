@@ -107,8 +107,11 @@ export class MutationResponse<
     incoming: ApolloLink.Result<TData>,
     { removeOptimistic }: { removeOptimistic?: string } = {}
   ) {
-    return this.queryInfo.markMutationResult(this.request, this, incoming, {
-      removeOptimistic,
-    });
+    return this.queryInfo.markMutationResult(
+      this.request,
+      this,
+      this.merge(incoming),
+      { removeOptimistic }
+    );
   }
 }

@@ -685,7 +685,6 @@ export class QueryInfo<
 
   public markMutationOptimistic(
     request: MutationRequest<TData, TVariables, TCache>,
-    optimisticResponse: any,
     mutation: OperationInfo<
       TData,
       TVariables,
@@ -697,10 +696,14 @@ export class QueryInfo<
       keepRootFields?: boolean;
     }
   ) {
+    if (!request.optimisticResponse) {
+      return false;
+    }
+
     const data =
-      typeof optimisticResponse === "function" ?
-        optimisticResponse(mutation.variables, { IGNORE })
-      : optimisticResponse;
+      typeof request.optimisticResponse === "function" ?
+        request.optimisticResponse(mutation.variables, { IGNORE })
+      : request.optimisticResponse;
 
     if (data === IGNORE) {
       return false;

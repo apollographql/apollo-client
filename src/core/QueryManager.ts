@@ -279,7 +279,6 @@ export class QueryManager {
     const request = new MutationRequest(options);
 
     let {
-      variables,
       optimisticResponse,
       updateQueries,
       refetchQueries = [],
@@ -298,7 +297,7 @@ export class QueryManager {
     );
     const { hasClientExports } = this.getDocumentInfo(request.mutation);
 
-    variables = this.getVariables(request.mutation, variables);
+    request.variables = this.getVariables(request.mutation, request.variables);
 
     if (hasClientExports) {
       if (__DEV__) {
@@ -309,19 +308,23 @@ export class QueryManager {
         );
       }
 
-      variables = await this.localState!.getExportedVariables<TVariables>({
-        client: this.client,
-        document: request.mutation,
-        variables,
-        context,
-      });
+      request.variables =
+        await this.localState!.getExportedVariables<TVariables>({
+          client: this.client,
+          document: request.mutation,
+          variables: request.variables,
+          context,
+        });
     }
 
     const mutationStoreValue =
       this.mutationStore &&
       (this.mutationStore[queryInfo.id] = {
         mutation: request.mutation,
-        variables: this.cache.serializeVariables(request.mutation, variables),
+        variables: this.cache.serializeVariables(
+          request.mutation,
+          request.variables
+        ),
         loading: true,
         error: null,
       } as MutationStoreValue);
@@ -330,7 +333,7 @@ export class QueryManager {
       optimisticResponse &&
       queryInfo.markMutationOptimistic(optimisticResponse, {
         document: request.mutation,
-        variables,
+        variables: request.variables,
         cacheWriteBehavior:
           fetchPolicy === "no-cache" ?
             CacheWriteBehavior.FORBID
@@ -352,7 +355,7 @@ export class QueryManager {
           ...context,
           optimisticResponse: isOptimistic ? optimisticResponse : void 0,
         },
-        variables,
+        request.variables,
         fetchPolicy,
         {},
         false
@@ -365,7 +368,7 @@ export class QueryManager {
             return from(
               queryInfo.markMutationResult(storeResult, {
                 document: request.mutation,
-                variables,
+                variables: request.variables,
                 cacheWriteBehavior:
                   fetchPolicy === "no-cache" ?
                     CacheWriteBehavior.FORBID

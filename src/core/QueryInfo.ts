@@ -36,6 +36,7 @@ import type {
   OperationVariables,
 } from "./types.js";
 import type { ErrorPolicy } from "./watchQueryOptions.js";
+import { GraphQLResponse } from "./GraphQLResponse.js";
 
 export const enum CacheWriteBehavior {
   FORBID,
@@ -199,7 +200,8 @@ export class QueryInfo<
 
   public markQueryResult(
     incoming: ApolloLink.Result<TData>,
-    request: QueryRequest<TData, TVariables>
+    request: QueryRequest<TData, TVariables>,
+    response: GraphQLResponse<TData>
   ): MarkQueryResult<
     DataValue.Complete<TData> | DataValue.Streaming<TData>,
     ExtensionsWithStreamInfo

@@ -16,18 +16,17 @@ export declare namespace GraphQLResponse {
 
 export class GraphQLResponse<TData> {
   private incrementalHandler: Incremental.Handler;
-  private incremental: Incremental.IncrementalRequest<
+  private incremental?: Incremental.IncrementalRequest<
     Record<string, unknown>,
     DataValue.Complete<any> | DataValue.Streaming<any>
   >;
+  private request: GraphQLRequest;
 
   constructor(options: GraphQLResponse.Options) {
     const { incrementalHandler, request } = options;
 
     this.incrementalHandler = incrementalHandler;
-    this.incremental = incrementalHandler.startRequest({
-      query: request.query,
-    });
+    this.request = request;
   }
 
   merge(
@@ -38,6 +37,10 @@ export class GraphQLResponse<TData> {
     ExtensionsWithStreamInfo
   > {
     if (this.incrementalHandler.isIncrementalResult(incoming)) {
+      this.incremental ||= this.incrementalHandler.startRequest({
+        query: this.request.query,
+      });
+
       return this.incremental.handle(cacheData, incoming);
     }
 

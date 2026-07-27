@@ -102,6 +102,7 @@ import type {
   MutationFetchPolicy,
   WatchQueryFetchPolicy,
 } from "./watchQueryOptions.js";
+import { GraphQLResponse } from "./GraphQLResponse.js";
 
 interface MutationStoreValue {
   mutation: DocumentNode;
@@ -1030,6 +1031,10 @@ export class QueryManager {
     // missing fragment definitions (for example) before sending this document
     // through the link chain.
     request.query = this.cache.transformForLink(request.query);
+    const response = new GraphQLResponse<TData>({
+      request,
+      incrementalHandler: this.incrementalHandler,
+    });
 
     return this.getObservableFromLink<TData>(request).observable.pipe(
       map((incoming) => {
@@ -1038,7 +1043,8 @@ export class QueryManager {
         // ones used to obtain it from the link.
         const { dataState, ...result } = queryInfo.markQueryResult(
           incoming,
-          request
+          request,
+          response
         );
         const hasErrors = graphQLResultHasError(result);
 

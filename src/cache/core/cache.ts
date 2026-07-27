@@ -201,7 +201,7 @@ export abstract class ApolloCache {
     TVariables extends OperationVariables = OperationVariables,
   >(
     query: Cache.DiffOptions<TData, TVariables> & {
-      [handleIncrementalSymbol]: true | DiffIncrementalInfo;
+      [handleIncrementalSymbol]: DiffIncrementalInfo;
     }
   ): Cache.InternalDiffResultWithDataState<TData> | Cache.DiffResult<TData>;
 

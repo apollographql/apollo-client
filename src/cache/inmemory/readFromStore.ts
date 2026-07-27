@@ -302,7 +302,7 @@ export class StoreReader {
    */
   public diffQueryAgainstStore<T>(
     options: DiffQueryAgainstStoreOptions & {
-      [handleIncrementalSymbol]: true | DiffIncrementalInfo;
+      [handleIncrementalSymbol]: DiffIncrementalInfo;
     }
   ): Cache.InternalDiffResultWithDataState<T>;
 
@@ -315,11 +315,13 @@ export class StoreReader {
     query,
     rootId = "ROOT_QUERY",
     variables,
-    returnPartialData = true,
     [handleIncrementalSymbol]: handleIncremental,
+    ...options
   }: DiffQueryAgainstStoreOptions): Cache.DiffResult<T> & {
     dataState?: "empty" | "partial" | "streaming" | "complete";
   } {
+    const returnPartialData =
+      handleIncremental?.returnPartialData ?? options.returnPartialData ?? true;
     const policies = this.config.cache.policies;
 
     variables = {

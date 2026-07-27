@@ -7,7 +7,6 @@ import type {
   Cache,
   DiffIncrementalInfo,
   IgnoreModifier,
-  InMemoryCache,
 } from "@apollo/client/cache";
 import type { Incremental } from "@apollo/client/incremental";
 import type { ApolloLink } from "@apollo/client/link";
@@ -390,12 +389,12 @@ export class QueryInfo<
             networkStatus !== NetworkStatus.refetch;
 
           const { dataState, result: diffResult } = this.getDiff(
-            {
-              ...diffOptions,
+            diffOptions,
+            this.getIncrementalInfo(result, {
               // Never deliver partial data for network-only requests
               returnPartialData: returnPartialData && !isNetworkOnly,
-            },
-            this.getIncrementalInfo(result, { isNetworkOnly })
+              isNetworkOnly,
+            })
           );
 
           if (
@@ -416,11 +415,17 @@ export class QueryInfo<
 
   private getIncrementalInfo(
     result: MarkQueryResult<any, ExtensionsWithStreamInfo>,
-    { isNetworkOnly }: { isNetworkOnly: boolean }
+    {
+      isNetworkOnly,
+      returnPartialData,
+    }: { isNetworkOnly: boolean; returnPartialData: boolean | undefined }
   ) {
     const pending = this.incremental?.pending ?? [];
     const streamInfo = result.extensions?.[streamInfoSymbol]?.deref();
-    const incrementalInfo: DiffIncrementalInfo = { streamInfo };
+    const incrementalInfo: DiffIncrementalInfo = {
+      streamInfo,
+      returnPartialData,
+    };
 
     // We don't want to deliver stream items or complete defer boundaries
     // for a network-only request if they haven't yet streamed from the
@@ -446,18 +451,21 @@ export class QueryInfo<
     options: Cache.DiffOptions<TData>,
     incrementalInfo?: DiffIncrementalInfo
   ): Cache.InternalDiffResultWithDataState<TData> {
-    if ((this.cache as any)[handleIncrementalSymbol]) {
-      return (this.cache as unknown as InMemoryCache).diff({
-        ...options,
-        [handleIncrementalSymbol]: incrementalInfo || true,
-      });
-    }
+    const diff = this.cache.diff({
+      ...options,
+      // returnPartialData is overridden for backwards compatibility with caches
+      // that don't handle incremental results. Without this, in-flight
+      // incremental cache data would come back null when returnPartialData is
+      // false due to the partial result.
+      returnPartialData: true,
+      [handleIncrementalSymbol]: incrementalInfo || {
+        returnPartialData: options.returnPartialData,
+      },
+    });
 
-    // returnPartialData is overridden for backwards compatibility with caches
-    // that don't handle incremental results. Without this, in-flight
-    // incremental cache data would come back null when returnPartialData is
-    // false due to the partial result.
-    const diff = this.cache.diff({ ...options, returnPartialData: true });
+    if ("dataState" in diff) {
+      return diff;
+    }
 
     return {
       ...diff,

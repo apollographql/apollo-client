@@ -136,13 +136,14 @@ export type ReadQueryOptions = {
 
 /** @internal */
 export interface DiffIncrementalInfo {
+  returnPartialData: boolean | undefined;
   streamInfo?: StreamInfoTrie;
   deferInfo?: DeferInfoTrie;
 }
 
 export type DiffQueryAgainstStoreOptions = ReadQueryOptions & {
   returnPartialData?: boolean;
-  [handleIncrementalSymbol]?: true | DiffIncrementalInfo;
+  [handleIncrementalSymbol]?: DiffIncrementalInfo;
 };
 
 export type ApolloReducerConfig = {

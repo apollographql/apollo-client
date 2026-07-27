@@ -112,7 +112,7 @@ export class MutationResponse<
     return true;
   }
 
-  write(
+  async write(
     incoming: ApolloLink.Result<TData>,
     { removeOptimistic }: { removeOptimistic?: string } = {}
   ) {

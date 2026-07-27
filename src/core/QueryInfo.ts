@@ -682,25 +682,15 @@ export class QueryInfo<
 
   public markSubscriptionResult(
     request: SubscriptionRequest<TData, TVariables>,
-    result: FormattedExecutionResult<TData>,
-    {
-      document,
-      variables,
-      errorPolicy,
-      cacheWriteBehavior,
-    }: OperationInfo<
-      TData,
-      TVariables,
-      CacheWriteBehavior.FORBID | CacheWriteBehavior.MERGE
-    >
+    result: FormattedExecutionResult<TData>
   ) {
-    if (cacheWriteBehavior !== CacheWriteBehavior.FORBID) {
-      if (shouldWriteResult(result, errorPolicy)) {
+    if (request.cacheWriteBehavior !== CacheWriteBehavior.FORBID) {
+      if (shouldWriteResult(result, request.errorPolicy)) {
         this.cache.write({
-          query: document,
+          query: request.query,
           result: result.data as any,
           dataId: "ROOT_SUBSCRIPTION",
-          variables: variables,
+          variables: request.variables,
           extensions: result.extensions,
         });
 
@@ -709,9 +699,9 @@ export class QueryInfo<
           // The cache complains if passed a mutation where it expects a
           // query, so we transform mutations and subscriptions to queries
           // (only once, thanks to this.transformCache).
-          query: this.queryManager.getDocumentInfo(document).asQuery,
+          query: this.queryManager.getDocumentInfo(request.query).asQuery,
           id: "ROOT_SUBSCRIPTION",
-          variables,
+          variables: request.variables,
           optimistic: false,
           returnPartialData: true,
         });

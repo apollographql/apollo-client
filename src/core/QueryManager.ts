@@ -351,7 +351,7 @@ export class QueryManager {
             const storeResult: typeof result = { ...result };
 
             return from(
-              queryInfo.markMutationResult(storeResult, {
+              queryInfo.markMutationResult(request, storeResult, {
                 document: request.mutation,
                 variables: request.variables,
                 cacheWriteBehavior: request.cacheWriteBehavior,

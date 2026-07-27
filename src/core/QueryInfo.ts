@@ -466,6 +466,7 @@ export class QueryInfo<
   }
 
   public markMutationResult(
+    request: MutationRequest<TData, TVariables, TCache>,
     incoming: ApolloLink.Result<TData>,
     mutation: OperationInfo<
       TData,
@@ -707,7 +708,7 @@ export class QueryInfo<
 
     this.cache.recordOptimisticTransaction((cache) => {
       try {
-        this.markMutationResult({ data }, mutation, cache as TCache);
+        this.markMutationResult(request, { data }, mutation, cache as TCache);
       } catch (error) {
         invariant.error(error);
       }

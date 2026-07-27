@@ -277,17 +277,6 @@ export class QueryManager {
     }
   ): Promise<ApolloClient.MutateResult<MaybeMasked<TData>>> {
     const request = new MutationRequest(options);
-
-    let {
-      updateQueries,
-      awaitRefetchQueries = false,
-      update: updateWithProxyFn,
-      onQueryUpdated,
-      fetchPolicy,
-      errorPolicy,
-      keepRootFields,
-      context,
-    } = options;
     const queryInfo = new QueryInfo<TData, TVariables, TCache>(this);
 
     request.mutation = this.cache.transformForLink(
@@ -311,7 +300,7 @@ export class QueryManager {
           client: this.client,
           document: request.mutation,
           variables: request.variables,
-          context,
+          context: request.context,
         });
     }
 
@@ -333,14 +322,14 @@ export class QueryManager {
         document: request.mutation,
         variables: request.variables,
         cacheWriteBehavior:
-          fetchPolicy === "no-cache" ?
+          request.fetchPolicy === "no-cache" ?
             CacheWriteBehavior.FORBID
           : CacheWriteBehavior.MERGE,
-        errorPolicy,
-        context,
-        updateQueries,
-        update: updateWithProxyFn,
-        keepRootFields,
+        errorPolicy: request.errorPolicy,
+        context: request.context,
+        updateQueries: request.updateQueries,
+        update: request.update,
+        keepRootFields: request.keepRootFields,
       });
 
     this.broadcastQueries();
@@ -350,12 +339,12 @@ export class QueryManager {
       return this.getObservableFromLink<TData>(
         request.mutation,
         {
-          ...context,
+          ...request.context,
           optimisticResponse:
             isOptimistic ? request.optimisticResponse : void 0,
         },
         request.variables,
-        fetchPolicy,
+        request.fetchPolicy,
         {},
         false
       )
@@ -369,18 +358,18 @@ export class QueryManager {
                 document: request.mutation,
                 variables: request.variables,
                 cacheWriteBehavior:
-                  fetchPolicy === "no-cache" ?
+                  request.fetchPolicy === "no-cache" ?
                     CacheWriteBehavior.FORBID
                   : CacheWriteBehavior.MERGE,
-                errorPolicy,
-                context,
-                update: updateWithProxyFn,
-                updateQueries,
-                awaitRefetchQueries,
+                errorPolicy: request.errorPolicy,
+                context: request.context,
+                update: request.update,
+                updateQueries: request.updateQueries,
+                awaitRefetchQueries: request.awaitRefetchQueries,
                 refetchQueries: request.refetchQueries,
                 removeOptimistic: isOptimistic ? queryInfo.id : void 0,
-                onQueryUpdated,
-                keepRootFields,
+                onQueryUpdated: request.onQueryUpdated,
+                keepRootFields: request.keepRootFields,
               })
             );
           })
@@ -388,7 +377,7 @@ export class QueryManager {
         .pipe(
           map((storeResult) => {
             const hasErrors = graphQLResultHasError(storeResult);
-            if (hasErrors && errorPolicy === "none") {
+            if (hasErrors && request.errorPolicy === "none") {
               throw new CombinedGraphQLErrors(
                 removeStreamDetailsFromExtensions(storeResult)
               );
@@ -416,7 +405,7 @@ export class QueryManager {
                 data: this.maskOperation({
                   document: request.mutation,
                   data: storeResult.data,
-                  fetchPolicy,
+                  fetchPolicy: request.fetchPolicy,
                   cause,
                 }) as any,
               };
@@ -445,11 +434,11 @@ export class QueryManager {
 
             this.broadcastQueries();
 
-            if (errorPolicy === "ignore") {
+            if (request.errorPolicy === "ignore") {
               return resolve({ data: undefined });
             }
 
-            if (errorPolicy === "all") {
+            if (request.errorPolicy === "all") {
               return resolve({ data: undefined, error });
             }
 

@@ -357,9 +357,7 @@ export class QueryManager {
                 { removeOptimistic: isOptimistic ? queryInfo.id : void 0 }
               )
             );
-          })
-        )
-        .pipe(
+          }),
           map((storeResult) => {
             const hasErrors = graphQLResultHasError(storeResult);
             if (hasErrors && request.errorPolicy === "none") {

@@ -84,6 +84,7 @@ import { SubscriptionRequest } from "./SubscriptionRequest.js";
 import type {
   DataState,
   DefaultContext,
+  GraphQLRequest,
   InternalRefetchQueriesInclude,
   InternalRefetchQueriesMap,
   InternalRefetchQueriesOptions,
@@ -324,6 +325,7 @@ export class QueryManager {
     return new Promise((resolve, reject) => {
       const cause = {};
       return this.getObservableFromLink<TData>(
+        request,
         request.mutation,
         {
           ...request.context,
@@ -763,6 +765,7 @@ export class QueryManager {
         request.variables = variables;
 
         const { observable, restart: res } = this.getObservableFromLink<TData>(
+          request,
           request.query,
           request.context,
           request.variables,
@@ -836,6 +839,7 @@ export class QueryManager {
   }>(false);
 
   private getObservableFromLink<TData = unknown>(
+    request: GraphQLRequest,
     query: DocumentNode,
     context: DefaultContext | undefined,
     variables: OperationVariables,
@@ -1007,6 +1011,7 @@ export class QueryManager {
     request.query = this.cache.transformForLink(request.query);
 
     return this.getObservableFromLink<TData>(
+      request,
       request.query,
       request.context,
       request.variables,

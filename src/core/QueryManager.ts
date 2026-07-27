@@ -331,7 +331,7 @@ export class QueryManager {
       queryInfo,
       queryManager: this,
     });
-    const isOptimistic = queryInfo.markMutationOptimistic(request, response);
+    const isOptimistic = response.markMutationOptimistic();
 
     this.broadcastQueries();
 

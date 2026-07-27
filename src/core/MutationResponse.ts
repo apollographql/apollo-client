@@ -82,4 +82,8 @@ export class MutationResponse<
 
     return incoming;
   }
+
+  markMutationOptimistic() {
+    return this.queryInfo.markMutationOptimistic(this.request, this);
+  }
 }

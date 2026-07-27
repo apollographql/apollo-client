@@ -4,8 +4,10 @@ import type { ApolloCache, Cache } from "@apollo/client/cache";
 import type { Incremental } from "@apollo/client/incremental";
 import type { ApolloLink } from "@apollo/client/link";
 import type { ExtensionsWithStreamInfo } from "@apollo/client/utilities/internal";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 import type { MutationRequest } from "./MutationRequest.js";
+import { IGNORE } from "./MutationRequest.js";
 import type { QueryInfo } from "./QueryInfo.js";
 import type { QueryManager } from "./QueryManager.js";
 import type { DataValue, OperationVariables } from "./types.js";
@@ -84,6 +86,20 @@ export class MutationResponse<
   }
 
   markMutationOptimistic() {
-    return this.queryInfo.markMutationOptimistic(this.request, this);
+    const data = this.request.getOptimisticResponse();
+
+    if (data === IGNORE) {
+      return false;
+    }
+
+    this.cache.recordOptimisticTransaction(() => {
+      try {
+        this.queryInfo.markMutationResult(this.request, this, { data });
+      } catch (error) {
+        invariant.error(error);
+      }
+    }, this.queryInfo.id);
+
+    return true;
   }
 }

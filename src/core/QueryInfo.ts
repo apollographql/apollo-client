@@ -18,11 +18,9 @@ import {
   hasDirectives,
   streamInfoSymbol,
 } from "@apollo/client/utilities/internal";
-import { invariant } from "@apollo/client/utilities/invariant";
 
 import type { ApolloClient } from "./ApolloClient.js";
 import type { MutationRequest } from "./MutationRequest.js";
-import { IGNORE } from "./MutationRequest.js";
 import type { MutationResponse } from "./MutationResponse.js";
 import { NetworkStatus } from "./networkStatus.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
@@ -593,27 +591,6 @@ export class QueryInfo<
     }
 
     return Promise.resolve(result);
-  }
-
-  public markMutationOptimistic(
-    request: MutationRequest<TData, TVariables, TCache>,
-    response: MutationResponse<TData, TVariables, TCache>
-  ) {
-    const data = request.getOptimisticResponse();
-
-    if (data === IGNORE) {
-      return false;
-    }
-
-    this.cache.recordOptimisticTransaction(() => {
-      try {
-        this.markMutationResult(request, response, { data });
-      } catch (error) {
-        invariant.error(error);
-      }
-    }, this.id);
-
-    return true;
   }
 }
 

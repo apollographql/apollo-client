@@ -35,7 +35,6 @@ import type {
   MutationQueryReducer,
   NormalizedExecutionResult,
   OperationVariables,
-  TypedDocumentNode,
 } from "./types.js";
 import type { ErrorPolicy } from "./watchQueryOptions.js";
 
@@ -52,18 +51,6 @@ interface LastWrite {
 }
 
 const destructiveMethodCounts = new WeakMap<ApolloCache, number>();
-
-interface OperationInfo<
-  TData,
-  TVariables extends OperationVariables,
-  AllowedCacheWriteBehavior = CacheWriteBehavior,
-> {
-  document: DocumentNode | TypedDocumentNode<TData, TVariables>;
-  variables: TVariables;
-  errorPolicy: ErrorPolicy;
-  cacheWriteBehavior: AllowedCacheWriteBehavior;
-  returnPartialData?: boolean | undefined;
-}
 
 interface MarkQueryResult<TData, TExtensions>
   extends FormattedExecutionResult<TData, TExtensions> {

@@ -9,7 +9,6 @@ import type {
 import type {
   DeferInfoTrie,
   ExtensionsWithStreamInfo,
-  handleIncrementalSymbol,
   RemoveIndexSignature,
   StreamInfoTrie,
 } from "@apollo/client/utilities/internal";

@@ -276,8 +276,9 @@ export class QueryManager {
       fetchPolicy: MutationFetchPolicy;
     }
   ): Promise<ApolloClient.MutateResult<MaybeMasked<TData>>> {
+    const request = new MutationRequest(options);
+
     let {
-      mutation,
       variables,
       optimisticResponse,
       updateQueries,
@@ -292,35 +293,35 @@ export class QueryManager {
     } = options;
     const queryInfo = new QueryInfo<TData, TVariables, TCache>(this);
 
-    mutation = this.cache.transformForLink(this.transform(mutation));
-    const { hasClientExports } = this.getDocumentInfo(mutation);
+    request.mutation = this.cache.transformForLink(
+      this.transform(request.mutation)
+    );
+    const { hasClientExports } = this.getDocumentInfo(request.mutation);
 
-    variables = this.getVariables(mutation, variables);
+    variables = this.getVariables(request.mutation, variables);
 
     if (hasClientExports) {
       if (__DEV__) {
         invariant(
           this.localState,
           "Mutation '%s' contains `@client` fields with variables provided by `@export` but local state has not been configured.",
-          getOperationName(mutation, "(anonymous)")
+          getOperationName(request.mutation, "(anonymous)")
         );
       }
 
       variables = await this.localState!.getExportedVariables<TVariables>({
         client: this.client,
-        document: mutation,
+        document: request.mutation,
         variables,
         context,
       });
     }
 
-    const request = new MutationRequest({ ...options, mutation, variables });
-
     const mutationStoreValue =
       this.mutationStore &&
       (this.mutationStore[queryInfo.id] = {
-        mutation,
-        variables: this.cache.serializeVariables(mutation, variables),
+        mutation: request.mutation,
+        variables: this.cache.serializeVariables(request.mutation, variables),
         loading: true,
         error: null,
       } as MutationStoreValue);
@@ -328,7 +329,7 @@ export class QueryManager {
     const isOptimistic =
       optimisticResponse &&
       queryInfo.markMutationOptimistic(optimisticResponse, {
-        document: mutation,
+        document: request.mutation,
         variables,
         cacheWriteBehavior:
           fetchPolicy === "no-cache" ?
@@ -346,7 +347,7 @@ export class QueryManager {
     return new Promise((resolve, reject) => {
       const cause = {};
       return this.getObservableFromLink<TData>(
-        mutation,
+        request.mutation,
         {
           ...context,
           optimisticResponse: isOptimistic ? optimisticResponse : void 0,
@@ -363,7 +364,7 @@ export class QueryManager {
 
             return from(
               queryInfo.markMutationResult(storeResult, {
-                document: mutation,
+                document: request.mutation,
                 variables,
                 cacheWriteBehavior:
                   fetchPolicy === "no-cache" ?
@@ -411,7 +412,7 @@ export class QueryManager {
             if (!queryInfo.hasNext) {
               const result: ApolloClient.MutateResult<TData> = {
                 data: this.maskOperation({
-                  document: mutation,
+                  document: request.mutation,
                   data: storeResult.data,
                   fetchPolicy,
                   cause,

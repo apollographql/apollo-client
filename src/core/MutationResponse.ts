@@ -15,7 +15,6 @@ import { shouldWriteResult } from "./QueryInfo.js";
 import type { QueryManager } from "./QueryManager.js";
 import type {
   DataValue,
-  MutationQueryReducer,
   NormalizedExecutionResult,
   OperationVariables,
 } from "./types.js";
@@ -246,18 +245,14 @@ export class MutationResponse<
         return;
       }
 
-      const updater = updateQueries[queryName];
       const { query: document, variables } = observableQuery;
 
       // Run our reducer using the current query result and the mutation result.
-      const nextQueryResult = (updater as MutationQueryReducer<any>)(
-        currentQueryResult,
-        {
-          mutationResult: this.getResultWithDataState(result),
-          queryName,
-          queryVariables: variables!,
-        }
-      );
+      const nextQueryResult = updateQueries[queryName](currentQueryResult, {
+        mutationResult: this.getResultWithDataState(result),
+        queryName,
+        queryVariables: variables!,
+      });
 
       // Write the modified result back into the store if we got a new result.
       if (nextQueryResult) {

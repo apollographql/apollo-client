@@ -2,12 +2,15 @@ import type { ApolloClient } from "./ApolloClient.js";
 import { CacheWriteBehavior } from "./QueryInfo.js";
 import type {
   DefaultContext,
+  GraphQLRequest,
   OperationVariables,
   TypedDocumentNode,
 } from "./types.js";
 import type { ErrorPolicy, FetchPolicy } from "./watchQueryOptions.js";
 
-export class SubscriptionRequest<TData, TVariables extends OperationVariables> {
+export class SubscriptionRequest<TData, TVariables extends OperationVariables>
+  implements GraphQLRequest
+{
   readonly extensions: Record<string, any>;
   readonly context: DefaultContext;
   readonly errorPolicy: ErrorPolicy;

@@ -3,6 +3,7 @@ import { NetworkStatus } from "./networkStatus.js";
 import { CacheWriteBehavior } from "./QueryInfo.js";
 import type {
   DefaultContext,
+  GraphQLRequest,
   OperationVariables,
   TypedDocumentNode,
 } from "./types.js";
@@ -11,7 +12,9 @@ import type {
   WatchQueryFetchPolicy,
 } from "./watchQueryOptions.js";
 
-export class QueryRequest<TData, TVariables extends OperationVariables> {
+export class QueryRequest<TData, TVariables extends OperationVariables>
+  implements GraphQLRequest
+{
   readonly context: DefaultContext;
   readonly errorPolicy: ErrorPolicy;
   readonly fetchPolicy: WatchQueryFetchPolicy;

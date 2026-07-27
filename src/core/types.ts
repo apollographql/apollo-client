@@ -16,6 +16,7 @@ import type {
 
 import type { ApolloClient } from "./ApolloClient.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
+import type { WatchQueryFetchPolicy } from "./watchQueryOptions.js";
 
 export type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
@@ -417,4 +418,13 @@ export interface SubscriptionObservable<T> extends Observable<T> {
    * ```
    */
   restart: () => void;
+}
+
+export interface GraphQLRequest {
+  query: DocumentNode;
+  context: DefaultContext | undefined;
+  variables: OperationVariables;
+  fetchPolicy: WatchQueryFetchPolicy;
+  extensions?: Record<string, any>;
+  deduplication?: boolean;
 }

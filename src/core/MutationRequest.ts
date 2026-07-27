@@ -4,6 +4,7 @@ import type { ApolloClient } from "./ApolloClient.js";
 import { CacheWriteBehavior } from "./QueryInfo.js";
 import type {
   DefaultContext,
+  GraphQLRequest,
   OperationVariables,
   TypedDocumentNode,
 } from "./types.js";
@@ -15,7 +16,8 @@ export class MutationRequest<
   TData,
   TVariables extends OperationVariables,
   TCache extends Cache.Implementation,
-> {
+> implements GraphQLRequest
+{
   readonly options: ApolloClient.MutateOptions<TData, TVariables, TCache>;
   readonly awaitRefetchQueries: boolean;
   readonly context: DefaultContext | undefined;
@@ -57,6 +59,10 @@ export class MutationRequest<
     this.updateQueries = updateQueries;
     this.update = update;
     this.refetchQueries = refetchQueries;
+  }
+
+  get query() {
+    return this.mutation;
   }
 
   get optimisticResponse() {

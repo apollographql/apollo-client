@@ -329,19 +329,7 @@ export class QueryManager {
         optimisticResponse: isOptimistic ? request.optimisticResponse : void 0,
       };
 
-      return this.getObservableFromLink<TData>(
-        request,
-        request.mutation,
-        {
-          ...request.context,
-          optimisticResponse:
-            isOptimistic ? request.optimisticResponse : void 0,
-        },
-        request.variables,
-        request.fetchPolicy,
-        request.extensions,
-        request.deduplication
-      )
+      return this.getObservableFromLink<TData>(request)
         .observable.pipe(
           validateDidEmitValue(),
           mergeMap((result) => {
@@ -769,14 +757,8 @@ export class QueryManager {
       mergeMap((variables) => {
         request.variables = variables;
 
-        const { observable, restart: res } = this.getObservableFromLink<TData>(
-          request,
-          request.query,
-          request.context,
-          request.variables,
-          request.fetchPolicy,
-          request.extensions
-        );
+        const { observable, restart: res } =
+          this.getObservableFromLink<TData>(request);
 
         const queryInfo = new QueryInfo<TData>(this);
 
@@ -844,19 +826,16 @@ export class QueryManager {
   }>(false);
 
   private getObservableFromLink<TData = unknown>(
-    request: GraphQLRequest,
-    query: DocumentNode,
-    context: DefaultContext | undefined,
-    variables: OperationVariables,
-    fetchPolicy: WatchQueryFetchPolicy,
-    extensions?: Record<string, any>,
-    // Prefer context.queryDeduplication if specified.
-    deduplication: boolean = context?.queryDeduplication ??
-      this.queryDeduplication
+    request: GraphQLRequest
   ): {
     restart: () => void;
     observable: Observable<ApolloLink.Result<TData>>;
   } {
+    const deduplication =
+      request.deduplication ??
+      request.context?.queryDeduplication ??
+      this.queryDeduplication;
+
     let entry: {
       observable?: Observable<ApolloLink.Result<TData>>;
       // The restart function has to be on a mutable object that way if multiple
@@ -866,14 +845,18 @@ export class QueryManager {
       restart?: () => void;
     } = {};
 
+    let context = request.context;
     const { serverQuery, clientQuery, operationType, hasIncrementalDirective } =
-      this.getDocumentInfo(query);
+      this.getDocumentInfo(request.query);
 
-    const operationName = getOperationName(query);
+    const operationName = getOperationName(request.query);
     const executeContext: ApolloLink.ExecuteContext = {
       client: this.client,
     };
-    variables = this.cache.serializeVariables(query, variables);
+    const variables = this.cache.serializeVariables(
+      request.query,
+      request.variables
+    );
 
     if (serverQuery) {
       const { inFlightLinkObservables, link } = this;
@@ -887,7 +870,7 @@ export class QueryManager {
             ...context,
             queryDeduplication: deduplication,
           },
-          extensions,
+          extensions: request.extensions,
         });
 
         context = operation.context;
@@ -917,7 +900,7 @@ export class QueryManager {
 
         if (deduplication) {
           const printedServerQuery = print(serverQuery);
-          const varJson = canonicalStringify(variables);
+          const varJson = canonicalStringify(request.variables);
 
           entry = inFlightLinkObservables.lookup(printedServerQuery, varJson);
 
@@ -953,7 +936,7 @@ export class QueryManager {
     }
 
     if (clientQuery) {
-      const { operation } = getOperationDefinition(query)!;
+      const { operation } = getOperationDefinition(request.query)!;
       if (__DEV__) {
         invariant(
           this.localState,
@@ -978,8 +961,8 @@ export class QueryManager {
               document: clientQuery,
               remoteResult: result as FormattedExecutionResult<TData>,
               context,
-              variables,
-              fetchPolicy,
+              variables: request.variables,
+              fetchPolicy: request.fetchPolicy,
             })
           );
         })
@@ -1015,13 +998,7 @@ export class QueryManager {
     // through the link chain.
     request.query = this.cache.transformForLink(request.query);
 
-    return this.getObservableFromLink<TData>(
-      request,
-      request.query,
-      request.context,
-      request.variables,
-      request.fetchPolicy
-    ).observable.pipe(
+    return this.getObservableFromLink<TData>(request).observable.pipe(
       map((incoming) => {
         // Use linkDocument rather than queryInfo.document so the
         // operation/fragments used to write the result are the same as the

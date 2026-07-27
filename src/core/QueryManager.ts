@@ -280,7 +280,6 @@ export class QueryManager {
 
     let {
       updateQueries,
-      refetchQueries = [],
       awaitRefetchQueries = false,
       update: updateWithProxyFn,
       onQueryUpdated,
@@ -378,7 +377,7 @@ export class QueryManager {
                 update: updateWithProxyFn,
                 updateQueries,
                 awaitRefetchQueries,
-                refetchQueries,
+                refetchQueries: request.refetchQueries,
                 removeOptimistic: isOptimistic ? queryInfo.id : void 0,
                 onQueryUpdated,
                 keepRootFields,

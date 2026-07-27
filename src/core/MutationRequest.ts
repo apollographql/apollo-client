@@ -9,14 +9,22 @@ export class MutationRequest<
   TCache extends Cache.Implementation,
 > {
   readonly options: ApolloClient.MutateOptions<TData, TVariables, TCache>;
+  readonly refetchQueries: typeof this.options.refetchQueries;
 
   mutation: TypedDocumentNode<TData, TVariables>;
   variables: TVariables;
 
   constructor(options: ApolloClient.MutateOptions<TData, TVariables, TCache>) {
+    const {
+      mutation,
+      refetchQueries = [],
+      variables = {} as TVariables,
+    } = options;
+
     this.options = options;
-    this.mutation = options.mutation;
-    this.variables = options.variables ?? ({} as TVariables);
+    this.mutation = mutation;
+    this.variables = variables;
+    this.refetchQueries = refetchQueries;
   }
 
   get optimisticResponse() {

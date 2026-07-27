@@ -321,10 +321,7 @@ export class QueryManager {
       queryInfo.markMutationOptimistic(request.optimisticResponse, {
         document: request.mutation,
         variables: request.variables,
-        cacheWriteBehavior:
-          request.fetchPolicy === "no-cache" ?
-            CacheWriteBehavior.FORBID
-          : CacheWriteBehavior.MERGE,
+        cacheWriteBehavior: request.cacheWriteBehavior,
         errorPolicy: request.errorPolicy,
         context: request.context,
         updateQueries: request.updateQueries,
@@ -357,10 +354,7 @@ export class QueryManager {
               queryInfo.markMutationResult(storeResult, {
                 document: request.mutation,
                 variables: request.variables,
-                cacheWriteBehavior:
-                  request.fetchPolicy === "no-cache" ?
-                    CacheWriteBehavior.FORBID
-                  : CacheWriteBehavior.MERGE,
+                cacheWriteBehavior: request.cacheWriteBehavior,
                 errorPolicy: request.errorPolicy,
                 context: request.context,
                 update: request.update,

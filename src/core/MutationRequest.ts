@@ -1,6 +1,7 @@
 import type { Cache } from "@apollo/client/cache";
 
 import type { ApolloClient } from "./ApolloClient.js";
+import { CacheWriteBehavior } from "./QueryInfo.js";
 import type {
   DefaultContext,
   OperationVariables,
@@ -58,5 +59,11 @@ export class MutationRequest<
 
   get optimisticResponse() {
     return this.options.optimisticResponse;
+  }
+
+  get cacheWriteBehavior() {
+    return this.fetchPolicy === "no-cache" ?
+        CacheWriteBehavior.FORBID
+      : CacheWriteBehavior.MERGE;
   }
 }

@@ -234,11 +234,8 @@ export class MutationResponse<
       this.queryManager
         .getObservableQueries("all")
         .forEach((observableQuery) => {
-          const queryName = observableQuery && observableQuery.queryName;
-          if (
-            !queryName ||
-            !Object.hasOwnProperty.call(updateQueries, queryName)
-          ) {
+          const queryName = observableQuery.queryName;
+          if (!queryName || !Object.hasOwn(updateQueries, queryName)) {
             return;
           }
           const updater = updateQueries[queryName];

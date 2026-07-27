@@ -331,7 +331,9 @@ export class QueryManager {
       queryInfo,
       queryManager: this,
     });
-    const isOptimistic = response.writeOptimistic();
+    const isOptimistic = response.writeOptimistic(
+      request.getOptimisticResponse()
+    );
 
     this.broadcastQueries();
 

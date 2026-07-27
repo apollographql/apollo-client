@@ -85,9 +85,7 @@ export class MutationResponse<
     return incoming;
   }
 
-  writeOptimistic() {
-    const data = this.request.getOptimisticResponse();
-
+  writeOptimistic(data: any) {
     if (data === IGNORE) {
       return false;
     }

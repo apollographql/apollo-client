@@ -136,7 +136,6 @@ export type ReadQueryOptions = {
 
 /** @internal */
 export interface DiffIncrementalInfo {
-  returnPartialData: boolean | undefined;
   streamInfo?: StreamInfoTrie;
   deferInfo?: DeferInfoTrie;
 }

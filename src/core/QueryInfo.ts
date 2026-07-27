@@ -389,12 +389,12 @@ export class QueryInfo<
             networkStatus !== NetworkStatus.refetch;
 
           const { dataState, result: diffResult } = this.getDiff(
-            diffOptions,
-            this.getIncrementalInfo(result, {
+            {
+              ...diffOptions,
               // Never deliver partial data for network-only requests
               returnPartialData: returnPartialData && !isNetworkOnly,
-              isNetworkOnly,
-            })
+            },
+            this.getIncrementalInfo(result, { isNetworkOnly })
           );
 
           if (
@@ -415,17 +415,11 @@ export class QueryInfo<
 
   private getIncrementalInfo(
     result: MarkQueryResult<any, ExtensionsWithStreamInfo>,
-    {
-      isNetworkOnly,
-      returnPartialData,
-    }: { isNetworkOnly: boolean; returnPartialData: boolean | undefined }
+    { isNetworkOnly }: { isNetworkOnly: boolean }
   ) {
     const pending = this.incremental?.pending ?? [];
     const streamInfo = result.extensions?.[streamInfoSymbol]?.deref();
-    const incrementalInfo: DiffIncrementalInfo = {
-      streamInfo,
-      returnPartialData,
-    };
+    const incrementalInfo: DiffIncrementalInfo = { streamInfo };
 
     // We don't want to deliver stream items or complete defer boundaries
     // for a network-only request if they haven't yet streamed from the
@@ -453,14 +447,7 @@ export class QueryInfo<
   ): Cache.InternalDiffResultWithDataState<TData> {
     const diff = this.cache.diff({
       ...options,
-      // returnPartialData is overridden for backwards compatibility with caches
-      // that don't handle incremental results. Without this, in-flight
-      // incremental cache data would come back null when returnPartialData is
-      // false due to the partial result.
-      returnPartialData: true,
-      [handleIncrementalSymbol]: incrementalInfo || {
-        returnPartialData: options.returnPartialData,
-      },
+      [handleIncrementalSymbol]: incrementalInfo,
     });
 
     if ("dataState" in diff) {

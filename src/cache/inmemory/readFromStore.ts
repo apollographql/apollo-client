@@ -316,10 +316,11 @@ export class StoreReader {
     rootId = "ROOT_QUERY",
     variables,
     returnPartialData = true,
-    [handleIncrementalSymbol]: handleIncremental,
+    ...options
   }: DiffQueryAgainstStoreOptions): Cache.DiffResult<T> & {
     dataState?: "empty" | "partial" | "streaming" | "complete";
   } {
+    const returnIncremental = Object.hasOwn(options, handleIncrementalSymbol);
     const policies = this.config.cache.policies;
 
     variables = {
@@ -335,9 +336,7 @@ export class StoreReader {
       variables,
       varString: canonicalStringify(variables),
       ...extractFragmentContext(query, this.config.fragments),
-      ...(typeof handleIncremental === "object" ? handleIncremental : (
-        undefined
-      )),
+      ...options[handleIncrementalSymbol],
     };
     let execResult = this.executeSelectionSet({
       selectionSet: getMainDefinition(query).selectionSet,
@@ -352,7 +351,7 @@ export class StoreReader {
     // only part of the result that contributed to its partiality is data inside
     // a defer boundary.
     if (
-      handleIncremental &&
+      returnIncremental &&
       (execResult.dataState === "deferPartial" ||
         execResult.dataState === "streamPartial" ||
         // If the last cache write repaired a partial @stream array to a
@@ -408,7 +407,7 @@ export class StoreReader {
       // We don't need to report missing fields inside defer boundaries since
       // the "streaming" dataState tells us that the only missing fields in
       // the object is inside a defer boundary.
-      (dataState !== "streaming" || !handleIncremental);
+      (dataState !== "streaming" || !returnIncremental);
 
     // If we get all root @defer boundaries with an empty result, report it as
     // empty instead of streaming.
@@ -421,7 +420,7 @@ export class StoreReader {
     if (
       dataState === "deferPartial" ||
       dataState === "streamPartial" ||
-      (dataState === "streaming" && !handleIncremental)
+      (dataState === "streaming" && !returnIncremental)
     ) {
       dataState = "partial";
     }
@@ -452,7 +451,7 @@ export class StoreReader {
       },
     } as Cache.DiffResult<T>;
 
-    if (handleIncremental) {
+    if (returnIncremental) {
       (diffResult as Cache.InternalDiffResultWithDataState<T>).dataState =
         dataState;
     }

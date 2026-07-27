@@ -112,7 +112,7 @@ interface MutationStoreValue {
   error: Error | null;
 }
 
-export interface TransformCacheEntry {
+interface TransformCacheEntry {
   hasClientExports: boolean;
   hasForcedResolvers: boolean;
   hasNonreactiveDirective: boolean;
@@ -328,7 +328,8 @@ export class QueryManager {
       request,
       incrementalHandler: this.incrementalHandler,
       cache: this.cache,
-      getDocumentInfo: this.getDocumentInfo.bind(this),
+      queryInfo,
+      queryManager: this,
     });
     const isOptimistic = queryInfo.markMutationOptimistic(request, response);
 

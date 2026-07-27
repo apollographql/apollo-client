@@ -1,5 +1,4 @@
 import type { FormattedExecutionResult } from "graphql";
-import type { DocumentNode } from "graphql";
 
 import type { ApolloCache, Cache } from "@apollo/client/cache";
 import type { Incremental } from "@apollo/client/incremental";
@@ -7,7 +6,8 @@ import type { ApolloLink } from "@apollo/client/link";
 import type { ExtensionsWithStreamInfo } from "@apollo/client/utilities/internal";
 
 import type { MutationRequest } from "./MutationRequest.js";
-import type { TransformCacheEntry } from "./QueryManager.js";
+import type { QueryInfo } from "./QueryInfo.js";
+import type { QueryManager } from "./QueryManager.js";
 import type { DataValue, OperationVariables } from "./types.js";
 
 export declare namespace MutationResponse {
@@ -19,7 +19,8 @@ export declare namespace MutationResponse {
     incrementalHandler: Incremental.Handler;
     request: MutationRequest<TData, TVariables, TCache>;
     cache: ApolloCache;
-    getDocumentInfo: (mutation: DocumentNode) => TransformCacheEntry;
+    queryInfo: QueryInfo<TData, TVariables, TCache>;
+    queryManager: QueryManager;
   }
 }
 
@@ -35,13 +36,15 @@ export class MutationResponse<
   >;
   private request: MutationRequest<TData, TVariables, TCache>;
   private cache: ApolloCache;
-  private getDocumentInfo: (mutation: DocumentNode) => TransformCacheEntry;
+  private queryInfo: QueryInfo<TData, TVariables, TCache>;
+  private queryManager: QueryManager;
 
   constructor(options: MutationResponse.Options<TData, TVariables, TCache>) {
     this.incrementalHandler = options.incrementalHandler;
     this.request = options.request;
     this.cache = options.cache;
-    this.getDocumentInfo = options.getDocumentInfo;
+    this.queryInfo = options.queryInfo;
+    this.queryManager = options.queryManager;
   }
 
   get hasNext() {
@@ -62,7 +65,8 @@ export class MutationResponse<
           // The cache complains if passed a mutation where it expects a
           // query, so we transform mutations and subscriptions to queries
           // (only once, thanks to this.transformCache).
-          query: this.getDocumentInfo(this.request.mutation).asQuery,
+          query: this.queryManager.getDocumentInfo(this.request.mutation)
+            .asQuery,
           variables: this.request.variables,
           optimistic: false,
           returnPartialData: true,

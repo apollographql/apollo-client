@@ -96,6 +96,7 @@ import type {
   MutationFetchPolicy,
   WatchQueryFetchPolicy,
 } from "./watchQueryOptions.js";
+import { SubscriptionRequest } from "./SubscriptionRequest.js";
 
 interface MutationStoreValue {
   mutation: DocumentNode;
@@ -729,6 +730,7 @@ export class QueryManager {
   public startGraphQLSubscription<TData = unknown>(
     options: ApolloClient.SubscribeOptions<TData>
   ): SubscriptionObservable<ApolloClient.SubscribeResult<TData>> {
+    const request = new SubscriptionRequest(options);
     let { query, variables } = options;
     const {
       fetchPolicy = "cache-first",

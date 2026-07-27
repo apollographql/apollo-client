@@ -5,10 +5,7 @@ import type { Incremental } from "@apollo/client/incremental";
 import type { ApolloLink } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
 import type { ExtensionsWithStreamInfo } from "@apollo/client/utilities/internal";
-import {
-  getOperationName,
-  graphQLResultHasError,
-} from "@apollo/client/utilities/internal";
+import { graphQLResultHasError } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import type { MutationRequest } from "./MutationRequest.js";
@@ -253,7 +250,7 @@ export class MutationResponse<
           currentQueryResult,
           {
             mutationResult: this.getResultWithDataState(result),
-            queryName: (document && getOperationName(document)) || void 0,
+            queryName,
             queryVariables: variables!,
           }
         );

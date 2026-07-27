@@ -32,11 +32,9 @@ import type { QueryRequest } from "./QueryRequest.js";
 import type {
   DataValue,
   DefaultContext,
-  InternalRefetchQueriesInclude,
   MutationQueryReducer,
   MutationUpdaterFunction,
   NormalizedExecutionResult,
-  OnQueryUpdated,
   OperationVariables,
   TypedDocumentNode,
 } from "./types.js";
@@ -466,24 +464,9 @@ export class QueryInfo<
   public markMutationResult(
     request: MutationRequest<TData, TVariables, TCache>,
     incoming: ApolloLink.Result<TData>,
-    mutation: OperationInfo<
-      TData,
-      TVariables,
-      CacheWriteBehavior.FORBID | CacheWriteBehavior.MERGE
-    > & {
-      context?: DefaultContext;
-      updateQueries: UpdateQueries<TData>;
-      update?: MutationUpdaterFunction<TData, TVariables, TCache>;
-      awaitRefetchQueries?: boolean;
-      refetchQueries?:
-        | ((
-            result: NormalizedExecutionResult<Unmasked<TData>>
-          ) => InternalRefetchQueriesInclude)
-        | InternalRefetchQueriesInclude;
+    options: {
       removeOptimistic?: string;
-      onQueryUpdated?: OnQueryUpdated<any>;
-      keepRootFields?: boolean;
-    },
+    } = {},
     cache = this.cache
   ): Promise<
     FormattedExecutionResult<
@@ -492,7 +475,7 @@ export class QueryInfo<
     >
   > {
     const cacheWrites: Cache.WriteOptions[] = [];
-    const skipCache = mutation.cacheWriteBehavior === CacheWriteBehavior.FORBID;
+    const skipCache = request.cacheWriteBehavior === CacheWriteBehavior.FORBID;
 
     let result = this.maybeHandleIncrementalResult(
       skipCache ? undefined : (
@@ -501,21 +484,21 @@ export class QueryInfo<
           // The cache complains if passed a mutation where it expects a
           // query, so we transform mutations and subscriptions to queries
           // (only once, thanks to this.transformCache).
-          query: this.queryManager.getDocumentInfo(mutation.document).asQuery,
-          variables: mutation.variables,
+          query: this.queryManager.getDocumentInfo(request.mutation).asQuery,
+          variables: request.variables,
           optimistic: false,
           returnPartialData: true,
         }).result
       ),
       incoming,
-      mutation.document
+      request.mutation
     );
 
-    if (mutation.errorPolicy === "ignore") {
+    if (request.errorPolicy === "ignore") {
       result = { ...result, errors: [] };
     }
 
-    if (graphQLResultHasError(result) && mutation.errorPolicy === "none") {
+    if (graphQLResultHasError(result) && request.errorPolicy === "none") {
       return Promise.resolve(result);
     }
 
@@ -525,16 +508,16 @@ export class QueryInfo<
         dataState: this.hasNext ? "streaming" : "complete",
       }) as NormalizedExecutionResult<Unmasked<TData>>;
 
-    if (!skipCache && shouldWriteResult(result, mutation.errorPolicy)) {
+    if (!skipCache && shouldWriteResult(result, request.errorPolicy)) {
       cacheWrites.push({
         result: result.data,
         dataId: "ROOT_MUTATION",
-        query: mutation.document,
-        variables: mutation.variables,
+        query: request.mutation,
+        variables: request.variables,
         extensions: result.extensions,
       });
 
-      const { updateQueries } = mutation;
+      const { updateQueries } = request;
       if (updateQueries) {
         this.queryManager
           .getObservableQueries("all")
@@ -578,7 +561,7 @@ export class QueryInfo<
       }
     }
 
-    let refetchQueries = mutation.refetchQueries;
+    let refetchQueries = request.refetchQueries;
     if (typeof refetchQueries === "function") {
       refetchQueries = refetchQueries(getResultWithDataState());
     }
@@ -586,9 +569,9 @@ export class QueryInfo<
     if (
       cacheWrites.length > 0 ||
       (refetchQueries || "").length > 0 ||
-      mutation.update ||
-      mutation.onQueryUpdated ||
-      mutation.removeOptimistic
+      request.update ||
+      request.onQueryUpdated ||
+      options.removeOptimistic
     ) {
       const results: any[] = [];
 
@@ -602,7 +585,7 @@ export class QueryInfo<
             // If the mutation has some writes associated with it then we need to
             // apply those writes to the store by running this reducer again with
             // a write action.
-            const { update } = mutation;
+            const { update } = request;
             // Determine whether result is a SingleExecutionResult,
             // or the final ExecutionPatchResult.
 
@@ -614,9 +597,9 @@ export class QueryInfo<
                 // The cache complains if passed a mutation where it expects a
                 // query, so we transform mutations and subscriptions to queries
                 // (only once, thanks to this.transformCache).
-                query: this.queryManager.getDocumentInfo(mutation.document)
+                query: this.queryManager.getDocumentInfo(request.mutation)
                   .asQuery,
-                variables: mutation.variables,
+                variables: request.variables,
                 optimistic: false,
                 returnPartialData: true,
               });
@@ -635,15 +618,15 @@ export class QueryInfo<
                 cache as TCache,
                 result as FormattedExecutionResult<Unmasked<TData>>,
                 {
-                  context: mutation.context,
-                  variables: mutation.variables,
+                  context: request.context,
+                  variables: request.variables,
                 }
               );
             }
 
             // TODO Do this with cache.evict({ id: 'ROOT_MUTATION' }) but make it
             // shallow to allow rolling back optimistic evictions.
-            if (!skipCache && !mutation.keepRootFields && !this.hasNext) {
+            if (!skipCache && !request.keepRootFields && !this.hasNext) {
               cache.modify({
                 id: "ROOT_MUTATION",
                 fields(value, { fieldName, DELETE }) {
@@ -660,17 +643,17 @@ export class QueryInfo<
 
           // Remove the corresponding optimistic layer at the same time as we
           // write the final non-optimistic result.
-          removeOptimistic: mutation.removeOptimistic,
+          removeOptimistic: options.removeOptimistic,
 
           // Let the caller of client.mutate optionally determine the refetching
           // behavior for watched queries after the mutation.update function runs.
           // If no onQueryUpdated function was provided for this mutation, pass
           // null instead of undefined to disable the default refetching behavior.
-          onQueryUpdated: mutation.onQueryUpdated || null,
+          onQueryUpdated: request.onQueryUpdated || null,
         })
         .forEach((result) => results.push(result));
 
-      if (mutation.awaitRefetchQueries || mutation.onQueryUpdated) {
+      if (request.awaitRefetchQueries || request.onQueryUpdated) {
         // Returning a promise here makes the mutation await that promise, so we
         // include results in that promise's work if awaitRefetchQueries or an
         // onQueryUpdated function was specified.
@@ -702,7 +685,7 @@ export class QueryInfo<
 
     this.cache.recordOptimisticTransaction((cache) => {
       try {
-        this.markMutationResult(request, { data }, mutation, cache as TCache);
+        this.markMutationResult(request, { data }, {}, cache as TCache);
       } catch (error) {
         invariant.error(error);
       }

@@ -350,18 +350,7 @@ export class QueryManager {
 
             return from(
               queryInfo.markMutationResult(request, storeResult, {
-                document: request.mutation,
-                variables: request.variables,
-                cacheWriteBehavior: request.cacheWriteBehavior,
-                errorPolicy: request.errorPolicy,
-                context: request.context,
-                update: request.update,
-                updateQueries: request.updateQueries,
-                awaitRefetchQueries: request.awaitRefetchQueries,
-                refetchQueries: request.refetchQueries,
                 removeOptimistic: isOptimistic ? queryInfo.id : void 0,
-                onQueryUpdated: request.onQueryUpdated,
-                keepRootFields: request.keepRootFields,
               })
             );
           })

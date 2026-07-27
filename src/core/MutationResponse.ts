@@ -7,7 +7,6 @@ import type { ApolloLink } from "@apollo/client/link";
 import type { ExtensionsWithStreamInfo } from "@apollo/client/utilities/internal";
 
 import type { MutationRequest } from "./MutationRequest.js";
-import { CacheWriteBehavior } from "./QueryInfo.js";
 import type { TransformCacheEntry } from "./QueryManager.js";
 import type { DataValue, OperationVariables } from "./types.js";
 
@@ -55,12 +54,10 @@ export class MutationResponse<
     DataValue.Complete<TData> | DataValue.Streaming<TData>,
     ExtensionsWithStreamInfo
   > {
-    const skipCache =
-      this.request.cacheWriteBehavior === CacheWriteBehavior.FORBID;
-
     const cacheData =
-      skipCache ? undefined : (
-        this.cache.diff<TData>({
+      this.request.fetchPolicy === "no-cache" ?
+        undefined
+      : this.cache.diff<TData>({
           id: "ROOT_MUTATION",
           // The cache complains if passed a mutation where it expects a
           // query, so we transform mutations and subscriptions to queries
@@ -69,8 +66,7 @@ export class MutationResponse<
           variables: this.request.variables,
           optimistic: false,
           returnPartialData: true,
-        }).result
-      );
+        }).result;
 
     if (this.incrementalHandler.isIncrementalResult(incoming)) {
       this.incremental ||= this.incrementalHandler.startRequest({

@@ -352,7 +352,7 @@ export class QueryManager {
             const storeResult: typeof result = { ...result };
 
             return from(
-              queryInfo.markMutationResult(request, response, storeResult, {
+              response.markMutationResult(storeResult, {
                 removeOptimistic: isOptimistic ? queryInfo.id : void 0,
               })
             );

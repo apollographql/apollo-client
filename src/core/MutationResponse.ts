@@ -94,12 +94,21 @@ export class MutationResponse<
 
     this.cache.recordOptimisticTransaction(() => {
       try {
-        this.queryInfo.markMutationResult(this.request, this, { data });
+        this.markMutationResult({ data });
       } catch (error) {
         invariant.error(error);
       }
     }, this.queryInfo.id);
 
     return true;
+  }
+
+  markMutationResult(
+    incoming: ApolloLink.Result<TData>,
+    { removeOptimistic }: { removeOptimistic?: string } = {}
+  ) {
+    return this.queryInfo.markMutationResult(this.request, this, incoming, {
+      removeOptimistic,
+    });
   }
 }

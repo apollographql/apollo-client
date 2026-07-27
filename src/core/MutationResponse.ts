@@ -230,44 +230,45 @@ export class MutationResponse<
     });
 
     const { updateQueries } = request;
-    if (updateQueries) {
-      this.queryManager
-        .getObservableQueries("all")
-        .forEach((observableQuery) => {
-          const queryName = observableQuery.queryName;
-          if (!queryName || !Object.hasOwn(updateQueries, queryName)) {
-            return;
-          }
-          const updater = updateQueries[queryName];
-          const { query: document, variables } = observableQuery;
 
-          // Read the current query result from the store.
-          const { result: currentQueryResult, complete } =
-            observableQuery.getCacheDiff({ optimistic: false });
-
-          if (complete && currentQueryResult) {
-            // Run our reducer using the current query result and the mutation result.
-            const nextQueryResult = (updater as MutationQueryReducer<any>)(
-              currentQueryResult,
-              {
-                mutationResult: this.getResultWithDataState(result),
-                queryName: (document && getOperationName(document)) || void 0,
-                queryVariables: variables!,
-              }
-            );
-
-            // Write the modified result back into the store if we got a new result.
-            if (nextQueryResult) {
-              cacheWrites.push({
-                result: nextQueryResult,
-                dataId: "ROOT_QUERY",
-                query: document!,
-                variables,
-              });
-            }
-          }
-        });
+    if (!updateQueries) {
+      return cacheWrites;
     }
+
+    this.queryManager.getObservableQueries("all").forEach((observableQuery) => {
+      const queryName = observableQuery.queryName;
+      if (!queryName || !Object.hasOwn(updateQueries, queryName)) {
+        return;
+      }
+      const updater = updateQueries[queryName];
+      const { query: document, variables } = observableQuery;
+
+      // Read the current query result from the store.
+      const { result: currentQueryResult, complete } =
+        observableQuery.getCacheDiff({ optimistic: false });
+
+      if (complete && currentQueryResult) {
+        // Run our reducer using the current query result and the mutation result.
+        const nextQueryResult = (updater as MutationQueryReducer<any>)(
+          currentQueryResult,
+          {
+            mutationResult: this.getResultWithDataState(result),
+            queryName: (document && getOperationName(document)) || void 0,
+            queryVariables: variables!,
+          }
+        );
+
+        // Write the modified result back into the store if we got a new result.
+        if (nextQueryResult) {
+          cacheWrites.push({
+            result: nextQueryResult,
+            dataId: "ROOT_QUERY",
+            query: document!,
+            variables,
+          });
+        }
+      }
+    });
 
     return cacheWrites;
   }

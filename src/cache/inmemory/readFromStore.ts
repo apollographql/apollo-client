@@ -302,7 +302,7 @@ export class StoreReader {
    */
   public diffQueryAgainstStore<T>(
     options: DiffQueryAgainstStoreOptions & {
-      [handleIncrementalSymbol]: DiffIncrementalInfo;
+      [handleIncrementalSymbol]: DiffIncrementalInfo | undefined;
     }
   ): Cache.InternalDiffResultWithDataState<T>;
 
@@ -317,7 +317,9 @@ export class StoreReader {
     variables,
     returnPartialData = true,
     ...options
-  }: DiffQueryAgainstStoreOptions): Cache.DiffResult<T> & {
+  }: DiffQueryAgainstStoreOptions & {
+    [handleIncrementalSymbol]?: DiffIncrementalInfo;
+  }): Cache.DiffResult<T> & {
     dataState?: "empty" | "partial" | "streaming" | "complete";
   } {
     const returnIncremental = Object.hasOwn(options, handleIncrementalSymbol);

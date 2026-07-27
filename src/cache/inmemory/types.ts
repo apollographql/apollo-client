@@ -142,7 +142,6 @@ export interface DiffIncrementalInfo {
 
 export type DiffQueryAgainstStoreOptions = ReadQueryOptions & {
   returnPartialData?: boolean;
-  [handleIncrementalSymbol]?: DiffIncrementalInfo;
 };
 
 export type ApolloReducerConfig = {

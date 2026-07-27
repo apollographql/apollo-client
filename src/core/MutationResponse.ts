@@ -232,7 +232,7 @@ export class MutationResponse<
     }
 
     this.queryManager.getObservableQueries("all").forEach((observableQuery) => {
-      const queryName = observableQuery.queryName;
+      const { queryName, variables } = observableQuery;
       if (!queryName || !Object.hasOwn(updateQueries, queryName)) {
         return;
       }
@@ -244,8 +244,6 @@ export class MutationResponse<
       if (!complete || !currentQueryResult) {
         return;
       }
-
-      const { query: document, variables } = observableQuery;
 
       // Run our reducer using the current query result and the mutation result.
       const nextQueryResult = updateQueries[queryName](currentQueryResult, {
@@ -259,7 +257,7 @@ export class MutationResponse<
         cacheWrites.push({
           result: nextQueryResult,
           dataId: "ROOT_QUERY",
-          query: document!,
+          query: observableQuery.query,
           variables,
         });
       }

@@ -978,7 +978,6 @@ describe("@client @export tests", () => {
       }
     `;
 
-    const userId = "1";
     let fetchCount = 0;
     const link = new ApolloLink((operation) => {
       fetchCount += 1;
@@ -1152,7 +1151,6 @@ describe("@client @export tests", () => {
 
   test("merges concurrent cache updates during a streamed response when variables come from @export", async () => {
     const multipart = mockDeferStreamGraphQL17Alpha9();
-    const userId = "1";
 
     const query = gql`
       query FriendListWithExport($userId: ID!) {
@@ -1177,7 +1175,7 @@ describe("@client @export tests", () => {
           userId
         }
       `,
-      data: { userId },
+      data: { userId: "1" },
     });
 
     const stream = new ObservableStream(client.watchQuery({ query }));
@@ -1200,7 +1198,7 @@ describe("@client @export tests", () => {
 
     await expect(stream).toEmitTypedValue({
       data: markAsStreaming({
-        userId,
+        userId: "1",
         friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
       }),
       dataState: "streaming",
@@ -1237,7 +1235,7 @@ describe("@client @export tests", () => {
 
     await expect(stream).toEmitTypedValue({
       data: {
-        userId,
+        userId: "1",
         friendList: [
           {
             __typename: "Friend",
@@ -1247,6 +1245,76 @@ describe("@client @export tests", () => {
           { __typename: "Friend", id: "2", name: "Han" },
           { __typename: "Friend", id: "3", name: "Leia" },
         ],
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    client.writeQuery({
+      query: gql`
+        {
+          userId
+        }
+      `,
+      data: { userId: "2" },
+    });
+
+    await expect(stream).toEmitSimilarValue({
+      expected: (previous) => ({
+        ...previous,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+      }),
+    });
+
+    multipart.enqueueInitialChunk({
+      data: {
+        friendList: [{ __typename: "Friend", id: "10", name: "Padme" }],
+      },
+      pending: [],
+      hasNext: false,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        userId: "2",
+        friendList: [{ __typename: "Friend", id: "10", name: "Padme" }],
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    client.cache.evict({
+      id: "ROOT_QUERY",
+      fieldName: "friendList",
+      args: { userId: "2" },
+    });
+    client.cache.gc();
+
+    await expect(stream).toEmitSimilarValue({
+      expected: (previous) => ({
+        ...previous,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+      }),
+    });
+
+    multipart.enqueueInitialChunk({
+      data: {
+        friendList: [{ __typename: "Friend", id: "10", name: "Amidala" }],
+      },
+      pending: [],
+      hasNext: false,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        userId: "2",
+        friendList: [{ __typename: "Friend", id: "10", name: "Amidala" }],
       },
       dataState: "complete",
       loading: false,

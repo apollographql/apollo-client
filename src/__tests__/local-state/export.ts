@@ -4,10 +4,13 @@ import { of } from "rxjs";
 
 import { ApolloClient, LocalStateError, NetworkStatus } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
+import { GraphQL17Alpha9Handler } from "@apollo/client/incremental";
 import { ApolloLink } from "@apollo/client/link";
 import { LocalState } from "@apollo/client/local-state";
 import { MockSubscriptionLink } from "@apollo/client/testing";
 import {
+  markAsStreaming,
+  mockDeferStreamGraphQL17Alpha9,
   ObservableStream,
   spyOnConsole,
   wait,
@@ -1076,6 +1079,111 @@ describe("@client @export tests", () => {
       partial: false,
     });
     expect(fetchCount).toBe(2);
+  });
+
+  test("merges concurrent cache updates during a streamed response when variables come from @export", async () => {
+    const multipart = mockDeferStreamGraphQL17Alpha9();
+    const userId = "1";
+
+    const query = gql`
+      query FriendListWithExport($userId: ID!) {
+        userId @client @export(as: "userId")
+        friendList(userId: $userId) @stream(initialCount: 1) {
+          id
+          name
+        }
+      }
+    `;
+
+    const client = new ApolloClient({
+      link: multipart.httpLink,
+      cache: new InMemoryCache(),
+      localState: new LocalState(),
+      incrementalHandler: new GraphQL17Alpha9Handler(),
+    });
+
+    client.writeQuery({
+      query: gql`
+        {
+          userId
+        }
+      `,
+      data: { userId },
+    });
+
+    const stream = new ObservableStream(client.watchQuery({ query }));
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    multipart.enqueueInitialChunk({
+      data: {
+        friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+      },
+      pending: [{ id: "0", path: ["friendList"] }],
+      hasNext: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: markAsStreaming({
+        userId,
+        friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+      }),
+      dataState: "streaming",
+      loading: true,
+      networkStatus: NetworkStatus.streaming,
+      partial: true,
+    });
+
+    client.writeFragment({
+      id: "Friend:1",
+      fragment: gql`
+        fragment FriendName on Friend {
+          name
+        }
+      `,
+      data: {
+        name: "Jedi",
+      },
+    });
+
+    multipart.enqueueSubsequentChunk({
+      incremental: [
+        {
+          items: [
+            { __typename: "Friend", id: "2", name: "Han" },
+            { __typename: "Friend", id: "3", name: "Leia" },
+          ] as any,
+          id: "0",
+        },
+      ],
+      completed: [{ id: "0" }],
+      hasNext: false,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        userId,
+        friendList: [
+          {
+            __typename: "Friend",
+            id: "1",
+            name: "Jedi", // updated from cache mid-stream
+          },
+          { __typename: "Friend", id: "2", name: "Han" },
+          { __typename: "Friend", id: "3", name: "Leia" },
+        ],
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
   });
 
   test("should update @client @export variables on each broadcast if they've changed", async () => {

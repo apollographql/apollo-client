@@ -204,9 +204,12 @@ export class StoreReader {
   }: DiffQueryAgainstStoreOptions): Cache.DiffResult<T> {
     const policies = this.config.cache.policies;
 
+    const rawVariables = variables ?? {};
     variables = {
       ...getDefaultValues(getQueryDefinition(query)),
-      ...variables!,
+      ...Object.fromEntries(
+        Object.entries(rawVariables).filter(([, v]) => v !== undefined)
+      ),
     };
 
     const rootRef = makeReference(rootId);

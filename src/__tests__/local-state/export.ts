@@ -960,6 +960,124 @@ describe("@client @export tests", () => {
     expect(fetchCount).toBe(1);
   });
 
+  // https://github.com/apollographql/apollo-client/issues/13335
+  test("should refetch when a remote field is missing from the cache and variables come from @export", async () => {
+    const query = gql`
+      query UserWithExport($userId: ID!) {
+        userId @client @export(as: "userId")
+        user(id: $userId) {
+          id
+          address {
+            id
+            random
+          }
+        }
+      }
+    `;
+
+    const userId = "1";
+    let fetchCount = 0;
+    const link = new ApolloLink((operation) => {
+      fetchCount += 1;
+      expect(operation.variables).toEqual({ userId });
+      return of({
+        data: {
+          user: {
+            __typename: "User",
+            id: userId,
+            address: {
+              __typename: "Address",
+              id: "addr-1",
+              // Change the field value per request so we can assert a refetch
+              // actually happened after the cache eviction.
+              random: fetchCount,
+            },
+          },
+        },
+      });
+    });
+
+    const cache = new InMemoryCache();
+    const client = new ApolloClient({
+      cache,
+      link,
+      localState: new LocalState(),
+    });
+
+    client.writeQuery({
+      query: gql`
+        {
+          userId
+        }
+      `,
+      data: { userId },
+    });
+
+    const stream = new ObservableStream(client.watchQuery({ query }));
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        userId,
+        user: {
+          __typename: "User",
+          id: userId,
+          address: {
+            __typename: "Address",
+            id: "addr-1",
+            random: 1,
+          },
+        },
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+    expect(fetchCount).toBe(1);
+
+    cache.evict({
+      id: cache.identify({ __typename: "User", id: userId }),
+      fieldName: "address",
+    });
+    cache.gc();
+
+    await expect(stream).toEmitSimilarValue({
+      expected: (previous) => ({
+        ...previous,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+      }),
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        userId,
+        user: {
+          __typename: "User",
+          id: userId,
+          address: {
+            __typename: "Address",
+            id: "addr-1",
+            random: 2,
+          },
+        },
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+    expect(fetchCount).toBe(2);
+  });
+
   test("should update @client @export variables on each broadcast if they've changed", async () => {
     const cache = new InMemoryCache();
 

@@ -421,11 +421,8 @@ test("rejects unknown options", () => {
   });
 
   let skip!: boolean;
-  useQuery(
-    noVariables,
-    // @ts-expect-error unknown option
-    skip ? skipToken : { returnPartialDta: false }
-  );
+  // @ts-expect-error unknown option
+  useQuery(noVariables, skip ? skipToken : { returnPartialDta: false });
   useQuery(
     literalVariables,
     // @ts-expect-error unknown option

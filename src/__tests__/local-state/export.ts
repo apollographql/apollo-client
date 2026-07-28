@@ -982,17 +982,15 @@ describe("@client @export tests", () => {
     let fetchCount = 0;
     const link = new ApolloLink((operation) => {
       fetchCount += 1;
-      expect(operation.variables).toEqual({ userId });
+      const id = operation.variables.userId as string;
       return of({
         data: {
           user: {
             __typename: "User",
-            id: userId,
+            id,
             address: {
               __typename: "Address",
-              id: "addr-1",
-              // Change the field value per request so we can assert a refetch
-              // actually happened after the cache eviction.
+              id: `addr-${id}`,
               random: fetchCount,
             },
           },
@@ -1013,7 +1011,7 @@ describe("@client @export tests", () => {
           userId
         }
       `,
-      data: { userId },
+      data: { userId: "1" },
     });
 
     const stream = new ObservableStream(client.watchQuery({ query }));
@@ -1028,10 +1026,10 @@ describe("@client @export tests", () => {
 
     await expect(stream).toEmitTypedValue({
       data: {
-        userId,
+        userId: "1",
         user: {
           __typename: "User",
-          id: userId,
+          id: "1",
           address: {
             __typename: "Address",
             id: "addr-1",
@@ -1047,7 +1045,7 @@ describe("@client @export tests", () => {
     expect(fetchCount).toBe(1);
 
     cache.evict({
-      id: cache.identify({ __typename: "User", id: userId }),
+      id: cache.identify({ __typename: "User", id: "1" }),
       fieldName: "address",
     });
     cache.gc();
@@ -1062,10 +1060,10 @@ describe("@client @export tests", () => {
 
     await expect(stream).toEmitTypedValue({
       data: {
-        userId,
+        userId: "1",
         user: {
           __typename: "User",
-          id: userId,
+          id: "1",
           address: {
             __typename: "Address",
             id: "addr-1",
@@ -1079,6 +1077,77 @@ describe("@client @export tests", () => {
       partial: false,
     });
     expect(fetchCount).toBe(2);
+
+    client.writeQuery({
+      query: gql`
+        {
+          userId
+        }
+      `,
+      data: { userId: "2" },
+    });
+
+    await expect(stream).toEmitSimilarValue({
+      expected: (previous) => ({
+        ...previous,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+      }),
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        userId: "2",
+        user: {
+          __typename: "User",
+          id: "2",
+          address: {
+            __typename: "Address",
+            id: "addr-2",
+            random: 3,
+          },
+        },
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+    expect(fetchCount).toBe(3);
+
+    cache.evict({
+      id: cache.identify({ __typename: "User", id: "2" }),
+      fieldName: "address",
+    });
+    cache.gc();
+
+    await expect(stream).toEmitSimilarValue({
+      expected: (previous) => ({
+        ...previous,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+      }),
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        userId: "2",
+        user: {
+          __typename: "User",
+          id: "2",
+          address: {
+            __typename: "Address",
+            id: "addr-2",
+            random: 4,
+          },
+        },
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+    expect(fetchCount).toBe(4);
   });
 
   test("merges concurrent cache updates during a streamed response when variables come from @export", async () => {

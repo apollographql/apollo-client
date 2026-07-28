@@ -41,6 +41,18 @@ query GetPerson {
 
 Changes to the `NameParts` fragment automatically update the fields included in any operations that use it. This reduces the effort required to keep fields consistent across a set of operations.
 
+## Unique fragment names {#unique-names}
+
+Fragment names must be unique across your entire application. If you reuse a fragment name, the `graphql-tag` library warns about the conflict at runtime to help prevent bugs:
+
+```text
+Warning: fragment with name SomeFragment already exists.
+graphql-tag enforces all fragment names across your application to be unique; read more about
+this in the docs: http://dev.apollodata.com/core/fragments.html#unique-names
+```
+
+As a best practice, use descriptive, component-scoped fragment names (like `ItemFragment` or `UserProfileFragment`) to avoid name collisions.
+
 ## Example usage
 
 Let's say we have a blog application that executes several GraphQL operations related to comments (submitting a comment, fetching a post's comments, etc.). Our application likely has a `Comment` component that is responsible for rendering comment data.

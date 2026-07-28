@@ -367,6 +367,167 @@ test("requires variables with mixed TVariables", () => {
   );
 });
 
+test("constant variable types do not widen returnPartialData", () => {
+  {
+    const query: TypedDocumentNode<{ character: string }, { type: "main" }> =
+      gql``;
+
+    const { data, dataState } = useQuery(query, {
+      variables: { type: "main" },
+    });
+
+    expectTypeOf(data).toEqualTypeOf<
+      | DataValue.Complete<{ character: string }>
+      | DataValue.Streaming<{ character: string }>
+      | undefined
+    >();
+    expectTypeOf(dataState).toEqualTypeOf<"empty" | "streaming" | "complete">();
+  }
+
+  {
+    const query: TypedDocumentNode<{ character: string }, { type: "main" }> =
+      gql``;
+
+    const { data, dataState } = useQuery(query, {
+      variables: { type: "main" },
+      returnPartialData: false,
+    });
+
+    expectTypeOf(data).toEqualTypeOf<
+      | DataValue.Complete<{ character: string }>
+      | DataValue.Streaming<{ character: string }>
+      | undefined
+    >();
+    expectTypeOf(dataState).toEqualTypeOf<"empty" | "streaming" | "complete">();
+  }
+
+  {
+    const query: TypedDocumentNode<{ character: string }, { type: "main" }> =
+      gql``;
+
+    const { data, dataState } = useQuery(query, {
+      variables: { type: "main" },
+      returnPartialData: true,
+    });
+
+    expectTypeOf(data).toEqualTypeOf<
+      | DataValue.Complete<{ character: string }>
+      | DataValue.Streaming<{ character: string }>
+      | DataValue.Partial<{ character: string }>
+      | undefined
+    >();
+    expectTypeOf(dataState).toEqualTypeOf<
+      "empty" | "partial" | "streaming" | "complete"
+    >();
+  }
+
+  {
+    const query: TypedDocumentNode<{ character: string }, { episode: 10 }> =
+      gql``;
+
+    const { data, dataState } = useQuery(query, {
+      variables: { episode: 10 },
+    });
+
+    expectTypeOf(data).toEqualTypeOf<
+      | DataValue.Complete<{ character: string }>
+      | DataValue.Streaming<{ character: string }>
+      | undefined
+    >();
+    expectTypeOf(dataState).toEqualTypeOf<"empty" | "streaming" | "complete">();
+  }
+
+  {
+    const query: TypedDocumentNode<{ character: string }, { episode: 10 }> =
+      gql``;
+
+    const { data, dataState } = useQuery(query, {
+      variables: { episode: 10 },
+      returnPartialData: false,
+    });
+
+    expectTypeOf(data).toEqualTypeOf<
+      | DataValue.Complete<{ character: string }>
+      | DataValue.Streaming<{ character: string }>
+      | undefined
+    >();
+    expectTypeOf(dataState).toEqualTypeOf<"empty" | "streaming" | "complete">();
+  }
+
+  {
+    const query: TypedDocumentNode<{ character: string }, { episode: 10 }> =
+      gql``;
+
+    const { data, dataState } = useQuery(query, {
+      variables: { episode: 10 },
+      returnPartialData: true,
+    });
+
+    expectTypeOf(data).toEqualTypeOf<
+      | DataValue.Complete<{ character: string }>
+      | DataValue.Streaming<{ character: string }>
+      | DataValue.Partial<{ character: string }>
+      | undefined
+    >();
+    expectTypeOf(dataState).toEqualTypeOf<
+      "empty" | "partial" | "streaming" | "complete"
+    >();
+  }
+
+  {
+    const query: TypedDocumentNode<{ character: string }, { main: true }> =
+      gql``;
+
+    const { data, dataState } = useQuery(query, {
+      variables: { main: true },
+    });
+
+    expectTypeOf(data).toEqualTypeOf<
+      | DataValue.Complete<{ character: string }>
+      | DataValue.Streaming<{ character: string }>
+      | undefined
+    >();
+    expectTypeOf(dataState).toEqualTypeOf<"empty" | "streaming" | "complete">();
+  }
+
+  {
+    const query: TypedDocumentNode<{ character: string }, { main: true }> =
+      gql``;
+
+    const { data, dataState } = useQuery(query, {
+      variables: { main: true },
+      returnPartialData: false,
+    });
+
+    expectTypeOf(data).toEqualTypeOf<
+      | DataValue.Complete<{ character: string }>
+      | DataValue.Streaming<{ character: string }>
+      | undefined
+    >();
+    expectTypeOf(dataState).toEqualTypeOf<"empty" | "streaming" | "complete">();
+  }
+
+  {
+    const query: TypedDocumentNode<{ character: string }, { main: true }> =
+      gql``;
+
+    const { data, dataState } = useQuery(query, {
+      variables: { main: true },
+      returnPartialData: true,
+    });
+
+    expectTypeOf(data).toEqualTypeOf<
+      | DataValue.Complete<{ character: string }>
+      | DataValue.Streaming<{ character: string }>
+      | DataValue.Partial<{ character: string }>
+      | undefined
+    >();
+    expectTypeOf(dataState).toEqualTypeOf<
+      "empty" | "partial" | "streaming" | "complete"
+    >();
+  }
+});
+
 test("always returns empty data/dataState with unconditional skipToken", () => {
   const query: TypedDocumentNode<
     { character: string },

@@ -1146,6 +1146,8 @@ describe("@client @export tests", () => {
       networkStatus: NetworkStatus.ready,
       partial: false,
     });
+
+    await expect(stream).not.toEmitAnything();
     expect(fetchCount).toBe(4);
   });
 
@@ -1289,6 +1291,8 @@ describe("@client @export tests", () => {
       networkStatus: NetworkStatus.ready,
       partial: false,
     });
+
+    await expect(stream).not.toEmitAnything();
     expect(fetchCount).toBe(1);
   });
 
@@ -1464,6 +1468,8 @@ describe("@client @export tests", () => {
       networkStatus: NetworkStatus.ready,
       partial: false,
     });
+
+    await expect(stream).not.toEmitAnything();
   });
 
   test("should update @client @export variables on each broadcast if they've changed", async () => {

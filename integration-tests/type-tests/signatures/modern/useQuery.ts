@@ -193,6 +193,12 @@ test("optional variables are optional", () => {
     },
   });
 
+  let validVariables!: { limit: number };
+  let excessVariables!: { limit: number; foo: string };
+  useQuery(query, { variables: validVariables });
+  // @ts-expect-error unknown variables
+  useQuery(query, { variables: excessVariables });
+
   let skip!: boolean;
   useQuery(query, skip ? skipToken : undefined);
   useQuery(query, skip ? skipToken : {});
@@ -365,6 +371,82 @@ test("requires variables with mixed TVariables", () => {
       }
     )
   );
+});
+
+test("rejects unknown options", () => {
+  const literalVariables: TypedDocumentNode<
+    { character: string },
+    { type: "main" }
+  > = gql``;
+  const widenedVariables: TypedDocumentNode<
+    { character: string },
+    { type: string }
+  > = gql``;
+  const noVariables: TypedDocumentNode<
+    { greeting: string },
+    Record<string, never>
+  > = gql``;
+
+  useQuery(literalVariables, {
+    variables: { type: "main" },
+    returnPartialData: true,
+    notifyOnNetworkStatusChange: true,
+    errorPolicy: "all",
+    context: { foo: 1 },
+    skipPollAttempt: () => false,
+  });
+
+  // @ts-expect-error unknown option
+  useQuery(literalVariables, {
+    variables: { type: "main" },
+    returnPartialDta: false,
+  });
+
+  // @ts-expect-error unknown option
+  useQuery(widenedVariables, {
+    variables: { type: "main" },
+    returnPartialDta: false,
+  });
+
+  // @ts-expect-error unknown option
+  useQuery(noVariables, {
+    returnPartialDta: false,
+  });
+
+  // @ts-expect-error unknown option
+  useQuery(literalVariables, {
+    variables: { type: "main" },
+    returnPartialData: true,
+    bogusOption: 1,
+  });
+
+  let skip!: boolean;
+  useQuery(
+    noVariables,
+    // @ts-expect-error unknown option
+    skip ? skipToken : { returnPartialDta: false }
+  );
+  useQuery(
+    literalVariables,
+    // @ts-expect-error unknown option
+    skip ? skipToken : { variables: { type: "main" }, returnPartialDta: false }
+  );
+});
+
+test("rejects a known option with an invalid value", () => {
+  const query: TypedDocumentNode<{ character: string }, { id: string }> = gql``;
+
+  useQuery(query, { variables: { id: "1" }, fetchPolicy: "cache-first" });
+  // @ts-expect-error invalid fetchPolicy
+  useQuery(query, {
+    variables: { id: "1" },
+    fetchPolicy: "bogus",
+  });
+  // @ts-expect-error invalid errorPolicy
+  useQuery(query, {
+    variables: { id: "1" },
+    errorPolicy: "bogus",
+  });
 });
 
 test("constant variable types do not widen returnPartialData", () => {

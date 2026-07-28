@@ -1149,6 +1149,149 @@ describe("@client @export tests", () => {
     expect(fetchCount).toBe(4);
   });
 
+  test("should refetch after a complete cache hit when a remote field is missing and variables come from @export", async () => {
+    const query = gql`
+      query UserWithExport($userId: ID!) {
+        userId @client @export(as: "userId")
+        user(id: $userId) {
+          id
+          address {
+            id
+            random
+          }
+        }
+      }
+    `;
+
+    let fetchCount = 0;
+    const link = new ApolloLink((operation) => {
+      fetchCount += 1;
+      const id = operation.variables.userId as string;
+      return of({
+        data: {
+          user: {
+            __typename: "User",
+            id,
+            address: {
+              __typename: "Address",
+              id: `addr-${id}`,
+              random: fetchCount,
+            },
+          },
+        },
+      });
+    });
+
+    const cache = new InMemoryCache();
+    const client = new ApolloClient({
+      cache,
+      link,
+      localState: new LocalState(),
+    });
+
+    client.writeQuery({
+      query: gql`
+        {
+          userId
+        }
+      `,
+      data: { userId: "1" },
+    });
+    client.writeQuery({
+      query,
+      variables: { userId: "1" },
+      data: {
+        userId: "1",
+        user: {
+          __typename: "User",
+          id: "1",
+          address: {
+            __typename: "Address",
+            id: "addr-1",
+            random: 0,
+          },
+        },
+      },
+    });
+
+    const stream = new ObservableStream(client.watchQuery({ query }));
+
+    // Export resolution is async, so we still get a loading emission
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        userId: "1",
+        user: {
+          __typename: "User",
+          id: "1",
+          address: {
+            __typename: "Address",
+            id: "addr-1",
+            random: 0,
+          },
+        },
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+    expect(fetchCount).toBe(0);
+
+    // Make sure writing the same variables don't refetch unnecessarily
+    client.writeQuery({
+      query: gql`
+        {
+          userId
+        }
+      `,
+      data: { userId: "1" },
+    });
+    await expect(stream).not.toEmitAnything({ timeout: 200 });
+    expect(fetchCount).toBe(0);
+
+    cache.evict({
+      id: cache.identify({ __typename: "User", id: "1" }),
+      fieldName: "address",
+    });
+    cache.gc();
+
+    await expect(stream).toEmitSimilarValue({
+      expected: (previous) => ({
+        ...previous,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+      }),
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        userId: "1",
+        user: {
+          __typename: "User",
+          id: "1",
+          address: {
+            __typename: "Address",
+            id: "addr-1",
+            random: 1,
+          },
+        },
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+    expect(fetchCount).toBe(1);
+  });
+
   test("merges concurrent cache updates during a streamed response when variables come from @export", async () => {
     const multipart = mockDeferStreamGraphQL17Alpha9();
 

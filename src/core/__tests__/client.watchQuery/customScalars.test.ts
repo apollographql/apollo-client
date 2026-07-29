@@ -872,70 +872,67 @@ test("parses network custom scalar fields with a network-only fetch policy", asy
   await expect(stream).not.toEmitAnything();
 });
 
-test.failing(
-  "parses custom scalar fields with a no-cache fetch policy",
-  async () => {
-    const query = gql`
-      query Event {
-        event {
-          id
-          startDate
-        }
+test("parses custom scalar fields with a no-cache fetch policy", async () => {
+  const query = gql`
+    query Event {
+      event {
+        id
+        startDate
       }
-    `;
-    const client = new ApolloClient({
-      cache: new InMemoryCache({
-        scalars: { Date: dateScalar },
-        typePolicies: {
-          Event: {
-            fields: {
-              startDate: { scalar: "Date" },
-            },
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
           },
-        },
-      }),
-      link: new ApolloLink(() =>
-        of({
-          data: {
-            event: {
-              __typename: "Event",
-              id: "1",
-              startDate: "2026-01-01",
-            },
-          },
-        }).pipe(delay(20))
-      ),
-    });
-
-    using stream = new ObservableStream(
-      client.watchQuery({
-        query,
-        fetchPolicy: "no-cache",
-      })
-    );
-
-    await expect(stream).toEmitTypedValue({
-      data: undefined,
-      dataState: "empty",
-      loading: true,
-      networkStatus: NetworkStatus.loading,
-      partial: true,
-    });
-    await expect(stream).toEmitTypedValue({
-      data: {
-        event: {
-          __typename: "Event",
-          id: "1",
-          startDate: new Date(2026, 0, 1),
         },
       },
-      dataState: "complete",
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
-    });
-  }
-);
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          event: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+          },
+        },
+      }).pipe(delay(20))
+    ),
+  });
+
+  using stream = new ObservableStream(
+    client.watchQuery({
+      query,
+      fetchPolicy: "no-cache",
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+  await expect(stream).toEmitTypedValue({
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+});
 
 test("preserves referential identity when refetching identical serialized scalar values", async () => {
   const query = gql`

@@ -264,8 +264,8 @@ export abstract class ApolloCache {
     return null;
   }
 
-  public getRootTypename(operation: OperationTypeNode) {
-    return operation[0].toUpperCase() + operation.slice(1);
+  public getRootTypename(operation: OperationTypeNode): string | undefined {
+    return;
   }
 
   // Custom scalars API

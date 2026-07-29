@@ -21,6 +21,8 @@ export function coerceScalarFieldsToParsed(
     typename: string | undefined,
     field: FieldNode
   ) {
+    if (fieldValue === null) return null;
+
     const scalar =
       typename && cache.getScalarForField(typename, field.name.value);
 
@@ -54,7 +56,7 @@ export function coerceScalarFieldsToParsed(
   }
 
   function coerceSelectionSet(selectionSet: SelectionSetNode, data: any): any {
-    if (data == null) return data;
+    if (data === null) return null;
 
     const result: Record<string, any> = {};
     let changed = false;

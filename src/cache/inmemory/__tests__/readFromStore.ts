@@ -287,7 +287,31 @@ describe("reading from the store", () => {
       variables,
     });
 
-    // $show defaults to false, so @include(if: false) excludes the field
+    expect(result).toEqual({
+      id: "abcd",
+    });
+  });
+
+  it("applies defaults when variables are omitted entirely", () => {
+    const query = gql`
+      query someQuery($show: Boolean = false) {
+        id
+        field @include(if: $show)
+      }
+    `;
+
+    const store = defaultNormalizedCacheFactory({
+      ROOT_QUERY: {
+        __typename: "Query",
+        id: "abcd",
+      } as StoreObject,
+    });
+
+    const result = readQueryFromStore(reader, {
+      store,
+      query,
+    });
+
     expect(result).toEqual({
       id: "abcd",
     });

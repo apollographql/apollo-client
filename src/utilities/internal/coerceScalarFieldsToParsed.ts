@@ -24,47 +24,38 @@ export function coerceScalarFieldsToParsed(
     "Document node must be a query, mutation, or subscription"
   );
 
-  function coerce(
+  function coerceField(
+    field: FieldNode,
     fieldValue: unknown,
-    typename: string | undefined,
-    field: FieldNode
-  ) {
+    typename: string | undefined
+  ): unknown {
+    let changed = false;
+
+    if (Array.isArray(fieldValue)) {
+      const items = fieldValue.map((item) => {
+        const coerced = coerceField(field, item, typename);
+
+        changed ||= coerced !== item;
+        return coerced;
+      });
+
+      return changed ? items : fieldValue;
+    }
+
+    if (field.selectionSet) {
+      return coerceSelectionSet(field.selectionSet, fieldValue);
+    }
+
     if (fieldValue === null || !typename) return fieldValue;
 
     const scalar = cache.getScalarForField(typename, field.name.value);
     return scalar ? scalar.coerceToParsed(fieldValue) : fieldValue;
   }
 
-  function coerceArray(
-    field: FieldNode,
-    array: any[],
-    typename: string | undefined
-  ) {
-    const result: any[] = [];
-    let changed = false;
-
-    for (const item of array) {
-      let coerced: unknown;
-
-      if (Array.isArray(item)) {
-        coerced = coerceArray(field, item, typename);
-      } else if (field.selectionSet) {
-        coerced = coerceSelectionSet(field.selectionSet, item, typename);
-      } else {
-        coerced = coerce(item, typename, field);
-      }
-
-      changed ||= coerced !== item;
-      result.push(coerced);
-    }
-
-    return changed ? result : array;
-  }
-
   function coerceSelectionSet(
     selectionSet: SelectionSetNode,
     data: any,
-    typename: string | undefined
+    typename?: string
   ): any {
     if (data === null || typeof data !== "object") return data;
 
@@ -83,19 +74,7 @@ export function coerceScalarFieldsToParsed(
           if (!Object.hasOwn(data, resultName)) continue;
 
           const fieldValue = data[resultName];
-
-          let coerced: unknown;
-          if (Array.isArray(fieldValue)) {
-            coerced = coerceArray(selection, fieldValue, data.__typename);
-          } else if (selection.selectionSet) {
-            coerced = coerceSelectionSet(
-              selection.selectionSet,
-              fieldValue,
-              data.__typename
-            );
-          } else {
-            coerced = coerce(fieldValue, typename, selection);
-          }
+          const coerced = coerceField(selection, fieldValue, typename);
 
           changed ||= coerced !== fieldValue;
           result[resultName] = coerced;

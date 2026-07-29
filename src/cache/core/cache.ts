@@ -5,6 +5,7 @@ import type {
   DocumentNode,
   FragmentDefinitionNode,
   InlineFragmentNode,
+  OperationTypeNode,
 } from "graphql";
 import { wrap } from "optimism";
 import {
@@ -261,6 +262,10 @@ export abstract class ApolloCache {
   // that register fragments ahead of time so they can be referenced by name.
   public lookupFragment(fragmentName: string): FragmentDefinitionNode | null {
     return null;
+  }
+
+  public getRootTypename(operation: OperationTypeNode) {
+    return operation[0].toUpperCase() + operation.slice(1);
   }
 
   // Custom scalars API

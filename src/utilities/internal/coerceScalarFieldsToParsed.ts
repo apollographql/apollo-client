@@ -96,7 +96,7 @@ export function coerceScalarFieldsToParsed(
         const fragment = getFragmentFromSelection(selection, fragmentMap);
         let coerced = data;
 
-        if (fragment && typename && cache.fragmentMatches(fragment, typename)) {
+        if (fragment && cache.fragmentMatches(fragment, typename)) {
           coerced = coerceSelectionSet(fragment.selectionSet, data);
           Object.assign(result, coerced);
         }

@@ -3,6 +3,7 @@ import type {
   DocumentNode,
   FragmentDefinitionNode,
   InlineFragmentNode,
+  OperationTypeNode,
 } from "graphql";
 import type { OptimisticWrapperFunction } from "optimism";
 import { wrap } from "optimism";
@@ -204,6 +205,10 @@ export class InMemoryCache extends ApolloCache {
     new Set([this.data.group, this.optimisticData.group]).forEach((group) =>
       group.resetCaching()
     );
+  }
+
+  public getRootTypename(operation: OperationTypeNode): string {
+    return this.policies.rootTypenamesById[`ROOT_${operation.toUpperCase()}`];
   }
 
   public getScalar<TKey extends keyof ApolloCache.Scalars>(

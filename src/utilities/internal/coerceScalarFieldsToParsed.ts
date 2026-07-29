@@ -72,7 +72,7 @@ export function coerceScalarFieldsToParsed(
     let changed = false;
 
     if (Object.hasOwn(data, "__typename")) {
-      typename = result.__typename = data.__typename;
+      typename = data.__typename;
     }
 
     function visit(selectionSet: SelectionSetNode) {

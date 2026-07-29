@@ -4,7 +4,8 @@
 
 ```ts
 
-import type { ApolloCache } from '@apollo/client';
+import type { ApolloCache } from '@apollo/client/cache';
+import type { ApolloCache as ApolloCache_2 } from '@apollo/client';
 import type { ApolloClient } from '@apollo/client';
 import type { ASTNode } from 'graphql';
 import type { Cache as Cache_2 } from '@apollo/client/cache';
@@ -90,6 +91,9 @@ export type ClassicSignature = SignatureStyle extends "classic" ? unknown : neve
 
 // @internal @deprecated
 export function cloneDeep<T>(value: T): T;
+
+// @public (undocumented)
+export function coerceScalarFieldsToParsed(result: Record<string, any>, query: DocumentNode, cache: ApolloCache): Record<string, any>;
 
 // @public
 export function combineLatestBatched<T>(observables: Array<Observable<T> & {
@@ -433,7 +437,7 @@ export function makeStreamInfoTrie(): StreamInfoTrie;
 export function makeUniqueId(prefix: string): string;
 
 // @public (undocumented)
-export const mapObservableFragmentMemoized: <From, To>(observable: ApolloCache.ObservableFragment<From>, _cacheKey: symbol, mapFn: (from: ApolloCache.WatchFragmentResult<From>) => ApolloCache.WatchFragmentResult<To>) => ApolloCache.ObservableFragment<To>;
+export const mapObservableFragmentMemoized: <From, To>(observable: ApolloCache_2.ObservableFragment<From>, _cacheKey: symbol, mapFn: (from: ApolloCache_2.WatchFragmentResult<From>) => ApolloCache_2.WatchFragmentResult<To>) => ApolloCache_2.ObservableFragment<To>;
 
 // @internal @deprecated (undocumented)
 export function maybeDeepFreeze<T>(obj: T): T;

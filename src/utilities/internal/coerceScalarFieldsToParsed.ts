@@ -25,6 +25,10 @@ export function coerceScalarFieldsToParsed(
     const result: Record<string, any> = {};
     let changed = false;
 
+    if (Object.hasOwn(data, "__typename")) {
+      result.__typename = data.__typename;
+    }
+
     for (const selection of selectionSet.selections) {
       if (isField(selection)) {
         const resultName = resultKeyNameFromField(selection);

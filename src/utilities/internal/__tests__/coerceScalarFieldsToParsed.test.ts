@@ -721,7 +721,7 @@ test("parses custom scalar fields selected by a fragment on an interface type", 
   });
 });
 
-test("parses custom scalar fields selected by a fragment on a supertype missing from possibleTypes", () => {
+test("does not drop fields selected by a fragment on a supertype missing from possibleTypes", () => {
   const cache = new InMemoryCache({
     scalars: { Date: dateScalar },
     typePolicies: {

@@ -31,11 +31,9 @@ export function coerceScalarFieldsToParsed(
     typename: string | undefined,
     field: FieldNode
   ) {
-    if (fieldValue === null) return null;
+    if (fieldValue === null || !typename) return fieldValue;
 
-    const scalar =
-      typename && cache.getScalarForField(typename, field.name.value);
-
+    const scalar = cache.getScalarForField(typename, field.name.value);
     return scalar ? scalar.coerceToParsed(fieldValue) : fieldValue;
   }
 
@@ -53,7 +51,7 @@ export function coerceScalarFieldsToParsed(
       if (Array.isArray(item)) {
         coerced = coerceArray(field, item, typename);
       } else if (field.selectionSet) {
-        coerced = coerceSelectionSet(field.selectionSet, item);
+        coerced = coerceSelectionSet(field.selectionSet, item, typename);
       } else {
         coerced = coerce(item, typename, field);
       }
@@ -65,48 +63,62 @@ export function coerceScalarFieldsToParsed(
     return changed ? result : array;
   }
 
-  function coerceSelectionSet(selectionSet: SelectionSetNode, data: any): any {
-    if (data === null) return null;
+  function coerceSelectionSet(
+    selectionSet: SelectionSetNode,
+    data: any,
+    typename: string | undefined
+  ): any {
+    if (data === null || typeof data !== "object") return data;
 
-    const result: Record<string, any> = {};
+    const result: Record<string, any> = { ...data };
     let changed = false;
-    let typename = rootTypename;
 
     if (Object.hasOwn(data, "__typename")) {
       typename = result.__typename = data.__typename;
     }
 
-    for (const selection of selectionSet.selections) {
-      if (isField(selection)) {
-        const resultName = resultKeyNameFromField(selection);
-        const fieldValue = data[resultName];
+    function visit(selectionSet: SelectionSetNode) {
+      for (const selection of selectionSet.selections) {
+        if (isField(selection)) {
+          const resultName = resultKeyNameFromField(selection);
 
-        let coerced: unknown;
-        if (Array.isArray(fieldValue)) {
-          coerced = coerceArray(selection, fieldValue, typename);
-        } else if (selection.selectionSet) {
-          coerced = coerceSelectionSet(selection.selectionSet, fieldValue);
+          if (!Object.hasOwn(data, resultName)) continue;
+
+          const fieldValue = data[resultName];
+
+          let coerced: unknown;
+          if (Array.isArray(fieldValue)) {
+            coerced = coerceArray(selection, fieldValue, data.__typename);
+          } else if (selection.selectionSet) {
+            coerced = coerceSelectionSet(
+              selection.selectionSet,
+              fieldValue,
+              data.__typename
+            );
+          } else {
+            coerced = coerce(fieldValue, typename, selection);
+          }
+
+          changed ||= coerced !== fieldValue;
+          result[resultName] = coerced;
         } else {
-          coerced = coerce(fieldValue, typename, selection);
+          const fragment = getFragmentFromSelection(selection, fragmentMap);
+
+          if (fragment) {
+            visit(fragment.selectionSet);
+          }
         }
-
-        changed ||= coerced !== fieldValue;
-        result[resultName] = coerced;
-      } else {
-        const fragment = getFragmentFromSelection(selection, fragmentMap);
-        let coerced = data;
-
-        if (fragment && cache.fragmentMatches(fragment, typename)) {
-          coerced = coerceSelectionSet(fragment.selectionSet, data);
-          Object.assign(result, coerced);
-        }
-
-        changed ||= coerced !== data;
       }
     }
+
+    visit(selectionSet);
 
     return changed ? result : data;
   }
 
-  return coerceSelectionSet(getMainDefinition(query).selectionSet, result);
+  return coerceSelectionSet(
+    getMainDefinition(query).selectionSet,
+    result,
+    rootTypename
+  );
 }

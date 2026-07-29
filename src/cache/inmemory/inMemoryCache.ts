@@ -220,6 +220,14 @@ export class InMemoryCache extends ApolloCache {
     return this.config.scalars?.[key as string] as any;
   }
 
+  /** Get a scalar instance for a field in a type */
+  public getScalarForField(
+    typename: string,
+    fieldName: string
+  ): Scalar<unknown, unknown> | undefined {
+    return this.policies.getScalarForField(typename, fieldName);
+  }
+
   /**
    * {@inheritDoc @apollo/client/cache!ApolloCache#serializeVariables:member(1)}
    */

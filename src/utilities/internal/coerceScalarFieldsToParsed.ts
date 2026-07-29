@@ -1,4 +1,4 @@
-import type { DocumentNode, SelectionSetNode } from "graphql";
+import type { DocumentNode, FieldNode, SelectionSetNode } from "graphql";
 
 import type { ApolloCache } from "@apollo/client/cache";
 
@@ -8,18 +8,48 @@ import { getFragmentFromSelection } from "./getFragmentFromSelection.js";
 import { getMainDefinition } from "./getMainDefinition.js";
 import { isField } from "./isField.js";
 import { resultKeyNameFromField } from "./resultKeyNameFromField.js";
-import type { FragmentMap } from "./types/FragmentMap.js";
 
 export function coerceScalarFieldsToParsed(
   result: Record<string, any>,
   query: DocumentNode,
   cache: ApolloCache
 ): Record<string, any> {
-  const coerce = (
-    selectionSet: SelectionSetNode,
-    data: any,
-    fragmentMap: FragmentMap
-  ): any => {
+  const fragmentMap = createFragmentMap(getFragmentDefinitions(query));
+
+  function parseValue(
+    fieldValue: unknown,
+    typename: string | undefined,
+    field: FieldNode
+  ) {
+    const scalar =
+      typename && cache.getScalarForField(typename, field.name.value);
+
+    return scalar ? scalar.coerceToParsed(fieldValue) : fieldValue;
+  }
+
+  function coerceArray(field: FieldNode, array: any[], typename: string) {
+    const result: any[] = [];
+    let changed = false;
+
+    for (const item of array) {
+      let coerced: unknown;
+
+      if (Array.isArray(item)) {
+        coerced = coerceArray(field, item, typename);
+      } else if (field.selectionSet) {
+        coerced = coerceSelectionSet(field.selectionSet, item);
+      } else {
+        coerced = parseValue(item, typename, field);
+      }
+
+      changed ||= coerced !== item;
+      result.push(coerced);
+    }
+
+    return changed ? result : array;
+  }
+
+  function coerceSelectionSet(selectionSet: SelectionSetNode, data: any): any {
     if (data == null) return data;
 
     const result: Record<string, any> = {};
@@ -35,21 +65,16 @@ export function coerceScalarFieldsToParsed(
         const fieldValue = data[resultName];
 
         if (Array.isArray(fieldValue)) {
-          const processed = fieldValue.map((item) => {
-            const processedItem = coerce(selectionSet, item, fragmentMap);
-            changed ||= item !== processedItem;
+          const coerced = coerceArray(selection, fieldValue, data.__typename);
 
-            return processedItem;
-          });
-
-          result[resultName] = processed;
+          changed ||= coerced !== fieldValue;
+          result[resultName] = coerced;
 
           continue;
         } else if (selection.selectionSet) {
-          const processed = coerce(
+          const processed = coerceSelectionSet(
             selection.selectionSet,
-            fieldValue,
-            fragmentMap
+            fieldValue
           );
 
           changed ||= processed !== fieldValue;
@@ -72,7 +97,7 @@ export function coerceScalarFieldsToParsed(
         const fragment = getFragmentFromSelection(selection, fragmentMap);
 
         const processed =
-          fragment ? coerce(fragment.selectionSet, data, fragmentMap) : data;
+          fragment ? coerceSelectionSet(fragment.selectionSet, data) : data;
         changed ||= processed !== data;
 
         Object.assign(result, processed);
@@ -80,11 +105,7 @@ export function coerceScalarFieldsToParsed(
     }
 
     return changed ? result : data;
-  };
+  }
 
-  return coerce(
-    getMainDefinition(query).selectionSet,
-    result,
-    createFragmentMap(getFragmentDefinitions(query))
-  );
+  return coerceSelectionSet(getMainDefinition(query).selectionSet, result);
 }

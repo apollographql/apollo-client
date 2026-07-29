@@ -1,11 +1,13 @@
 import type { DocumentNode, FieldNode, SelectionSetNode } from "graphql";
 
 import type { ApolloCache } from "@apollo/client/cache";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 import { createFragmentMap } from "./createFragmentMap.js";
 import { getFragmentDefinitions } from "./getFragmentDefinitions.js";
 import { getFragmentFromSelection } from "./getFragmentFromSelection.js";
 import { getMainDefinition } from "./getMainDefinition.js";
+import { getOperationDefinition } from "./getOperationDefinition.js";
 import { isField } from "./isField.js";
 import { resultKeyNameFromField } from "./resultKeyNameFromField.js";
 
@@ -14,7 +16,15 @@ export function coerceScalarFieldsToParsed(
   query: DocumentNode,
   cache: ApolloCache
 ): Record<string, any> {
+  const operationType = getOperationDefinition(query)?.operation;
   const fragmentMap = createFragmentMap(getFragmentDefinitions(query));
+
+  invariant(
+    operationType,
+    "Document node must be a query, mutation, or subscription"
+  );
+
+  const rootTypename = cache.getRootTypename(operationType);
 
   function coerce(
     fieldValue: unknown,
@@ -60,7 +70,7 @@ export function coerceScalarFieldsToParsed(
 
     const result: Record<string, any> = {};
     let changed = false;
-    let typename: string | undefined;
+    let typename = rootTypename;
 
     if (Object.hasOwn(data, "__typename")) {
       typename = result.__typename = data.__typename;

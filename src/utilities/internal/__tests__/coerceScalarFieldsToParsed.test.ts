@@ -501,6 +501,234 @@ test("parses custom scalar fields selected by an inline fragment", () => {
   });
 });
 
+test("parses custom scalar fields selected by an inline fragment without a type condition", () => {
+  const cache = new InMemoryCache({
+    scalars: { Date: dateScalar },
+    typePolicies: {
+      Event: {
+        fields: {
+          startDate: { scalar: "Date" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query Event {
+      event {
+        id
+        ... {
+          startDate
+        }
+      }
+    }
+  `;
+
+  const result = {
+    event: {
+      __typename: "Event",
+      id: "1",
+      startDate: "2026-01-01",
+    },
+  };
+
+  expect(coerceScalarFieldsToParsed(result, query, cache)).toStrictEqualTyped({
+    event: {
+      __typename: "Event",
+      id: "1",
+      startDate: new Date(2026, 0, 1),
+    },
+  });
+});
+
+test("parses custom scalar fields selected by a fragment spread at the root of the query", () => {
+  const cache = new InMemoryCache({
+    scalars: { Date: dateScalar },
+    typePolicies: {
+      Event: {
+        fields: {
+          startDate: { scalar: "Date" },
+        },
+      },
+      User: {
+        fields: {
+          lastSeenAt: { scalar: "Date" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query EventAndViewer {
+      event {
+        id
+        startDate
+      }
+      ...ViewerFields
+    }
+
+    fragment ViewerFields on Query {
+      viewer {
+        id
+        lastSeenAt
+      }
+    }
+  `;
+
+  const result = {
+    event: {
+      __typename: "Event",
+      id: "1",
+      startDate: "2026-01-01",
+    },
+    viewer: {
+      __typename: "User",
+      id: "2",
+      lastSeenAt: "2026-02-02",
+    },
+  };
+
+  expect(coerceScalarFieldsToParsed(result, query, cache)).toStrictEqualTyped({
+    event: {
+      __typename: "Event",
+      id: "1",
+      startDate: new Date(2026, 0, 1),
+    },
+    viewer: {
+      __typename: "User",
+      id: "2",
+      lastSeenAt: new Date(2026, 1, 2),
+    },
+  });
+});
+
+test("keeps parsed values when a fragment selects no custom scalar fields", () => {
+  const cache = new InMemoryCache({
+    scalars: { Date: dateScalar },
+    typePolicies: {
+      Event: {
+        fields: {
+          startDate: { scalar: "Date" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query Event {
+      event {
+        startDate
+        ...EventName
+      }
+    }
+
+    fragment EventName on Event {
+      name
+    }
+  `;
+
+  const result = {
+    event: {
+      __typename: "Event",
+      name: "GraphQL Summit",
+      startDate: "2026-01-01",
+    },
+  };
+
+  expect(coerceScalarFieldsToParsed(result, query, cache)).toStrictEqualTyped({
+    event: {
+      __typename: "Event",
+      name: "GraphQL Summit",
+      startDate: new Date(2026, 0, 1),
+    },
+  });
+});
+
+test("parses custom scalar fields selected by a fragment on an interface type", () => {
+  const cache = new InMemoryCache({
+    possibleTypes: { Node: ["Event"] },
+    scalars: { Date: dateScalar },
+    typePolicies: {
+      Event: {
+        fields: {
+          createdAt: { scalar: "Date" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query Event {
+      event {
+        id
+        ... on Node {
+          createdAt
+        }
+      }
+    }
+  `;
+
+  const result = {
+    event: {
+      __typename: "Event",
+      id: "1",
+      createdAt: "2026-01-01",
+    },
+  };
+
+  expect(coerceScalarFieldsToParsed(result, query, cache)).toStrictEqualTyped({
+    event: {
+      __typename: "Event",
+      id: "1",
+      createdAt: new Date(2026, 0, 1),
+    },
+  });
+});
+
+test("parses custom scalar fields selected by a fragment on a supertype missing from possibleTypes", () => {
+  const cache = new InMemoryCache({
+    scalars: { Date: dateScalar },
+    typePolicies: {
+      Event: {
+        fields: {
+          startDate: { scalar: "Date" },
+          createdAt: { scalar: "Date" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query Event {
+      event {
+        id
+        startDate
+        ... on Node {
+          createdAt
+        }
+      }
+    }
+  `;
+
+  const result = {
+    event: {
+      __typename: "Event",
+      id: "1",
+      startDate: "2026-06-15",
+      createdAt: "2026-01-01",
+    },
+  };
+
+  expect(coerceScalarFieldsToParsed(result, query, cache)).toStrictEqualTyped({
+    event: {
+      __typename: "Event",
+      id: "1",
+      startDate: new Date(2026, 5, 15),
+      createdAt: new Date(2026, 0, 1),
+    },
+  });
+});
+
 test("ignores fields from inline fragments that don't match the returned type", () => {
   const cache = new InMemoryCache({
     scalars: { Date: dateScalar },

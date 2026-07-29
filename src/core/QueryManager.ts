@@ -1806,7 +1806,6 @@ export class QueryManager {
           observable: resultsFromLink().pipe(
             map((notification) => {
               if (
-                notification.source === "network" &&
                 notification.kind === "N" &&
                 notification.value.data != null
               ) {

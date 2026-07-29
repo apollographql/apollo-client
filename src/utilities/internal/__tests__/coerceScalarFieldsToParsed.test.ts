@@ -915,6 +915,54 @@ test("leaves null scalar values as-is", () => {
   });
 });
 
+test("leaves null values in a list as-is", () => {
+  const cache = new InMemoryCache({
+    scalars: { Date: dateScalar },
+    typePolicies: {
+      Event: {
+        fields: {
+          startDate: { scalar: "Date" },
+          dates: { scalar: "Date" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query Events {
+      events {
+        id
+        startDate
+        dates
+      }
+    }
+  `;
+
+  const result = {
+    events: [
+      null,
+      {
+        __typename: "Event",
+        id: "1",
+        startDate: "2026-01-01",
+        dates: [null, "2026-06-15"],
+      },
+    ],
+  };
+
+  expect(coerceScalarFieldsToParsed(result, query, cache)).toStrictEqualTyped({
+    events: [
+      null,
+      {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+        dates: [null, new Date(2026, 5, 15)],
+      },
+    ],
+  });
+});
+
 test("leaves null objects as-is", () => {
   const cache = new InMemoryCache({
     scalars: { Date: dateScalar },
@@ -1121,4 +1169,141 @@ test("parses scalars that serialize to object values", () => {
       metadata: new Map([["attendees", 500]]),
     },
   });
+});
+
+test("parses custom scalar fields on mutation root fields", () => {
+  const cache = new InMemoryCache({
+    scalars: { Date: dateScalar },
+    typePolicies: {
+      Mutation: {
+        fields: {
+          touchedAt: { scalar: "Date" },
+        },
+      },
+    },
+  });
+
+  const mutation = gql`
+    mutation TouchEvent {
+      touchedAt
+    }
+  `;
+
+  const result = { touchedAt: "2026-01-01" };
+
+  expect(
+    coerceScalarFieldsToParsed(result, mutation, cache)
+  ).toStrictEqualTyped({
+    touchedAt: new Date(2026, 0, 1),
+  });
+});
+
+test("parses custom scalar fields on renamed root types", () => {
+  const cache = new InMemoryCache({
+    scalars: { Date: dateScalar },
+    typePolicies: {
+      RootQuery: {
+        queryType: true,
+        fields: {
+          today: { scalar: "Date" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query Today {
+      today
+    }
+  `;
+
+  const result = { today: "2026-01-01" };
+
+  expect(coerceScalarFieldsToParsed(result, query, cache)).toStrictEqualTyped({
+    today: new Date(2026, 0, 1),
+  });
+});
+
+test("parses custom scalar fields configured on an interface type", () => {
+  const cache = new InMemoryCache({
+    possibleTypes: { Node: ["Event"] },
+    scalars: { Date: dateScalar },
+    typePolicies: {
+      Node: {
+        fields: {
+          createdAt: { scalar: "Date" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query Event {
+      event {
+        id
+        createdAt
+      }
+    }
+  `;
+
+  const result = {
+    event: {
+      __typename: "Event",
+      id: "1",
+      createdAt: "2026-01-01",
+    },
+  };
+
+  expect(coerceScalarFieldsToParsed(result, query, cache)).toStrictEqualTyped({
+    event: {
+      __typename: "Event",
+      id: "1",
+      createdAt: new Date(2026, 0, 1),
+    },
+  });
+});
+
+test("does not reparse values when run against an already parsed result", () => {
+  const cache = new InMemoryCache({
+    scalars: { Date: dateScalar, Price: priceScalar },
+    typePolicies: {
+      Product: {
+        fields: {
+          price: { scalar: "Price" },
+          releasedAt: { scalar: "Date" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query Product {
+      product {
+        id
+        price
+        releasedAt
+      }
+    }
+  `;
+
+  const result = {
+    product: {
+      __typename: "Product",
+      id: "1",
+      price: 1099,
+      releasedAt: "2026-01-01",
+    },
+  };
+
+  const parsed = coerceScalarFieldsToParsed(result, query, cache);
+
+  expect(parsed).toStrictEqualTyped({
+    product: {
+      __typename: "Product",
+      id: "1",
+      price: "10.99",
+      releasedAt: new Date(2026, 0, 1),
+    },
+  });
+  expect(coerceScalarFieldsToParsed(parsed, query, cache)).toBe(parsed);
 });

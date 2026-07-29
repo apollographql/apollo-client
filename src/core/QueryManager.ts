@@ -4,7 +4,6 @@ import type {
   DocumentNode,
   FormattedExecutionResult,
 } from "graphql";
-import type { SelectionSetNode } from "graphql";
 import { BREAK, Kind, OperationTypeNode, visit } from "graphql";
 import { Observable, throwError } from "rxjs";
 import {
@@ -44,37 +43,28 @@ import type { DeepPartial } from "@apollo/client/utilities";
 import {
   cacheSizes,
   DocumentTransform,
-  getMainDefinition,
   isNetworkRequestInFlight,
   print,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import type {
-  ExtensionsWithStreamInfo,
-  FragmentMap,
-} from "@apollo/client/utilities/internal";
+import type { ExtensionsWithStreamInfo } from "@apollo/client/utilities/internal";
 import {
   AutoCleanedWeakCache,
   checkDocument,
   coerceScalarFieldsToParsed,
-  createFragmentMap,
   extensionsSymbol,
   filterMap,
   getDefaultValues,
-  getFragmentDefinitions,
-  getFragmentFromSelection,
   getOperationDefinition,
   getOperationName,
   graphQLResultHasError,
   hasDirectives,
   hasForcedResolvers,
   isDocumentNode,
-  isField,
   isNonNullObject,
   makeUniqueId,
   mergeOptions,
   removeDirectivesFromDocument,
-  resultKeyNameFromField,
   streamInfoSymbol,
   toQueryResult,
 } from "@apollo/client/utilities/internal";

@@ -24,8 +24,6 @@ export function coerceScalarFieldsToParsed(
     "Document node must be a query, mutation, or subscription"
   );
 
-  const rootTypename = cache.getRootTypename(operationType);
-
   function coerce(
     fieldValue: unknown,
     typename: string | undefined,
@@ -119,6 +117,6 @@ export function coerceScalarFieldsToParsed(
   return coerceSelectionSet(
     getMainDefinition(query).selectionSet,
     result,
-    rootTypename
+    cache.getRootTypename(operationType)
   );
 }

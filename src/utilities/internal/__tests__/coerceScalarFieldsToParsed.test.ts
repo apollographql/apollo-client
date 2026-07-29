@@ -87,6 +87,42 @@ test("parses custom scalar fields when the query selects __typename", () => {
   });
 });
 
+test("does not parse fields on objects without a __typename", () => {
+  const cache = new InMemoryCache({
+    scalars: { Date: dateScalar },
+    typePolicies: {
+      Query: {
+        fields: {
+          startDate: { scalar: "Date" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query Event {
+      event {
+        id
+        startDate
+      }
+    }
+  `;
+
+  const result = {
+    event: {
+      id: "1",
+      startDate: "2026-01-01",
+    },
+  };
+
+  expect(coerceScalarFieldsToParsed(result, query, cache)).toStrictEqualTyped({
+    event: {
+      id: "1",
+      startDate: "2026-01-01",
+    },
+  });
+});
+
 test("parses custom scalar fields on root fields", () => {
   const cache = new InMemoryCache({
     scalars: { Date: dateScalar },

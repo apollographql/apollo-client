@@ -1,6 +1,7 @@
+import { waitFor } from "@testing-library/react";
 import { print } from "graphql";
 import { gql } from "graphql-tag";
-import { of } from "rxjs";
+import { delay, of } from "rxjs";
 
 import { ApolloClient, LocalStateError, NetworkStatus } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
@@ -981,7 +982,7 @@ describe("@client @export tests", () => {
     let fetchCount = 0;
     const link = new ApolloLink((operation) => {
       fetchCount += 1;
-      const id = operation.variables.userId as string;
+      const id = operation.variables.userId;
       return of({
         data: {
           user: {
@@ -1168,7 +1169,7 @@ describe("@client @export tests", () => {
     let fetchCount = 0;
     const link = new ApolloLink((operation) => {
       fetchCount += 1;
-      const id = operation.variables.userId as string;
+      const id = operation.variables.userId;
       return of({
         data: {
           user: {
@@ -1462,6 +1463,630 @@ describe("@client @export tests", () => {
       data: {
         userId: "2",
         friendList: [{ __typename: "Friend", id: "10", name: "Amidala" }],
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    await expect(stream).not.toEmitAnything();
+  });
+
+  test("delivers both cache and network results for cache-and-network when variables come from @export", async () => {
+    const query = gql`
+      query UserWithExport($userId: ID!) {
+        userId @client @export(as: "userId")
+        user(id: $userId) {
+          id
+          name
+        }
+      }
+    `;
+
+    let fetchCount = 0;
+    const link = new ApolloLink((operation) => {
+      fetchCount += 1;
+      const id = operation.variables.userId;
+      return of({
+        data: {
+          user: {
+            __typename: "User",
+            id,
+            name: `server-${id}`,
+          },
+        },
+      });
+    });
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link,
+      localState: new LocalState(),
+    });
+
+    client.writeQuery({
+      query: gql`
+        {
+          userId
+        }
+      `,
+      data: { userId: "1" },
+    });
+    client.writeQuery({
+      query,
+      variables: { userId: "1" },
+      data: {
+        userId: "1",
+        user: {
+          __typename: "User",
+          id: "1",
+          name: "cached-1",
+        },
+      },
+    });
+
+    const stream = new ObservableStream(
+      client.watchQuery({ query, fetchPolicy: "cache-and-network" })
+    );
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        userId: "1",
+        user: {
+          __typename: "User",
+          id: "1",
+          name: "cached-1",
+        },
+      },
+      dataState: "complete",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: false,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        userId: "1",
+        user: {
+          __typename: "User",
+          id: "1",
+          name: "server-1",
+        },
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+    expect(fetchCount).toBe(1);
+
+    client.cache.evict({
+      id: client.cache.identify({ __typename: "User", id: "1" }),
+      fieldName: "name",
+    });
+    client.cache.gc();
+
+    await expect(stream).toEmitSimilarValue({
+      expected: (previous) => ({
+        ...previous,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+      }),
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        userId: "1",
+        user: {
+          __typename: "User",
+          id: "1",
+          name: "server-1",
+        },
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+    expect(fetchCount).toBe(2);
+
+    await expect(stream).not.toEmitAnything();
+  });
+
+  test("delivers partial cache then network results when returnPartialData is true and variables come from @export", async () => {
+    const query = gql`
+      query UserWithExport($userId: ID!) {
+        userId @client @export(as: "userId")
+        user(id: $userId) {
+          id
+          address {
+            id
+            street
+          }
+        }
+      }
+    `;
+
+    let fetchCount = 0;
+    const link = new ApolloLink((operation) => {
+      fetchCount += 1;
+      const id = operation.variables.userId;
+      return of({
+        data: {
+          user: {
+            __typename: "User",
+            id,
+            address: {
+              __typename: "Address",
+              id: `addr-${id}`,
+              street: `Street ${fetchCount}`,
+            },
+          },
+        },
+      });
+    });
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link,
+      localState: new LocalState(),
+    });
+
+    client.writeQuery({
+      query: gql`
+        {
+          userId
+        }
+      `,
+      data: { userId: "1" },
+    });
+
+    client.writeQuery({
+      query: gql`
+        query ($userId: ID!) {
+          userId @client
+          user(id: $userId) {
+            id
+          }
+        }
+      `,
+      variables: { userId: "1" },
+      data: {
+        userId: "1",
+        user: {
+          __typename: "User",
+          id: "1",
+        },
+      },
+    });
+
+    const stream = new ObservableStream(
+      client.watchQuery({ query, returnPartialData: true })
+    );
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        userId: "1",
+        user: {
+          __typename: "User",
+          id: "1",
+        },
+      },
+      dataState: "partial",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        userId: "1",
+        user: {
+          __typename: "User",
+          id: "1",
+          address: {
+            __typename: "Address",
+            id: "addr-1",
+            street: "Street 1",
+          },
+        },
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+    expect(fetchCount).toBe(1);
+
+    client.cache.evict({
+      id: client.cache.identify({ __typename: "User", id: "1" }),
+      fieldName: "address",
+    });
+    client.cache.gc();
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        userId: "1",
+        user: {
+          __typename: "User",
+          id: "1",
+        },
+      },
+      dataState: "partial",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        userId: "1",
+        user: {
+          __typename: "User",
+          id: "1",
+          address: {
+            __typename: "Address",
+            id: "addr-1",
+            street: "Street 2",
+          },
+        },
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+    expect(fetchCount).toBe(2);
+
+    await expect(stream).not.toEmitAnything();
+  });
+
+  test("ignores a slow in-flight response after @export variables change via reobserve", async () => {
+    const query = gql`
+      query UserWithExport($userId: ID!) {
+        userId @client @export(as: "userId")
+        user(id: $userId) {
+          id
+          name
+        }
+      }
+    `;
+
+    let fetchCount = 0;
+    const link = new ApolloLink((operation) => {
+      fetchCount += 1;
+      const id = operation.variables.userId;
+      return of({
+        data: {
+          user: {
+            __typename: "User",
+            id,
+            name: `user-${id}-fetch-${fetchCount}`,
+          },
+        },
+      }).pipe(delay(id === "1" ? 100 : 10));
+    });
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link,
+      localState: new LocalState(),
+    });
+
+    client.writeQuery({
+      query: gql`
+        {
+          userId
+        }
+      `,
+      data: { userId: "1" },
+    });
+
+    const observable = client.watchQuery({ query });
+    const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await waitFor(() => expect(fetchCount).toBe(1));
+
+    client.writeQuery({
+      query: gql`
+        {
+          userId
+        }
+      `,
+      data: { userId: "2" },
+    });
+    // Cache broadcasts do not reobserve while a network request is active, so
+    // trigger it manually to cancel the in-flight request and start the new
+    // one.
+    void observable.reobserve();
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        userId: "2",
+        user: {
+          __typename: "User",
+          id: "2",
+          name: "user-2-fetch-2",
+        },
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    // Wait longer than the initial request would take to finish to validate it
+    // doesn't overwrite the new request.
+    await expect(stream).not.toEmitAnything({ timeout: 200 });
+    expect(fetchCount).toBe(2);
+
+    client.cache.evict({
+      id: client.cache.identify({ __typename: "User", id: "2" }),
+      fieldName: "name",
+    });
+    client.cache.gc();
+
+    await expect(stream).toEmitSimilarValue({
+      expected: (previous) => ({
+        ...previous,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+      }),
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        userId: "2",
+        user: {
+          __typename: "User",
+          id: "2",
+          name: "user-2-fetch-3",
+        },
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+    expect(fetchCount).toBe(3);
+
+    await expect(stream).not.toEmitAnything();
+  });
+
+  test("should refetch after network-only when a remote field is missing and variables come from @export", async () => {
+    const query = gql`
+      query UserWithExport($userId: ID!) {
+        userId @client @export(as: "userId")
+        user(id: $userId) {
+          id
+          address {
+            id
+            random
+          }
+        }
+      }
+    `;
+
+    let fetchCount = 0;
+    const link = new ApolloLink((operation) => {
+      fetchCount += 1;
+      const id = operation.variables.userId;
+      return of({
+        data: {
+          user: {
+            __typename: "User",
+            id,
+            address: {
+              __typename: "Address",
+              id: `addr-${id}`,
+              random: fetchCount,
+            },
+          },
+        },
+      });
+    });
+
+    const cache = new InMemoryCache();
+    const client = new ApolloClient({
+      cache,
+      link,
+      localState: new LocalState(),
+    });
+
+    client.writeQuery({
+      query: gql`
+        {
+          userId
+        }
+      `,
+      data: { userId: "1" },
+    });
+
+    const stream = new ObservableStream(
+      client.watchQuery({ query, fetchPolicy: "network-only" })
+    );
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        userId: "1",
+        user: {
+          __typename: "User",
+          id: "1",
+          address: {
+            __typename: "Address",
+            id: "addr-1",
+            random: 1,
+          },
+        },
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+    expect(fetchCount).toBe(1);
+
+    cache.evict({
+      id: cache.identify({ __typename: "User", id: "1" }),
+      fieldName: "address",
+    });
+    cache.gc();
+
+    await expect(stream).toEmitSimilarValue({
+      expected: (previous) => ({
+        ...previous,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+      }),
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        userId: "1",
+        user: {
+          __typename: "User",
+          id: "1",
+          address: {
+            __typename: "Address",
+            id: "addr-1",
+            random: 2,
+          },
+        },
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+    expect(fetchCount).toBe(2);
+
+    await expect(stream).not.toEmitAnything();
+  });
+
+  test("starts a new request when @export variables change mid-stream via reobserve", async () => {
+    const multipart = mockDeferStreamGraphQL17Alpha9();
+
+    const query = gql`
+      query FriendListWithExport($userId: ID!) {
+        userId @client @export(as: "userId")
+        friendList(userId: $userId) @stream(initialCount: 1) {
+          id
+          name
+        }
+      }
+    `;
+
+    const client = new ApolloClient({
+      link: multipart.httpLink,
+      cache: new InMemoryCache(),
+      localState: new LocalState(),
+      incrementalHandler: new GraphQL17Alpha9Handler(),
+    });
+
+    client.writeQuery({
+      query: gql`
+        {
+          userId
+        }
+      `,
+      data: { userId: "1" },
+    });
+
+    const observable = client.watchQuery({ query });
+    const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    multipart.enqueueInitialChunk({
+      data: {
+        friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+      },
+      pending: [{ id: "0", path: ["friendList"] }],
+      hasNext: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: markAsStreaming({
+        userId: "1",
+        friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+      }),
+      dataState: "streaming",
+      loading: true,
+      networkStatus: NetworkStatus.streaming,
+      partial: true,
+    });
+
+    client.writeQuery({
+      query: gql`
+        {
+          userId
+        }
+      `,
+      data: { userId: "2" },
+    });
+    // Cache writes alone do not reobserve while a network operation is active
+    // so trigger reobserve manually to start the new request.
+    void observable.reobserve();
+
+    await expect(stream).toEmitSimilarValue({
+      expected: (previous) => ({
+        ...previous,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+      }),
+    });
+
+    multipart.enqueueInitialChunk({
+      data: {
+        friendList: [{ __typename: "Friend", id: "10", name: "Padme" }],
+      },
+      pending: [],
+      hasNext: false,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        userId: "2",
+        friendList: [{ __typename: "Friend", id: "10", name: "Padme" }],
       },
       dataState: "complete",
       loading: false,

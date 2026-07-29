@@ -4,6 +4,7 @@ import type {
   DocumentNode,
   FormattedExecutionResult,
 } from "graphql";
+import type { SelectionSetNode } from "graphql";
 import { BREAK, Kind, OperationTypeNode, visit } from "graphql";
 import { Observable, throwError } from "rxjs";
 import {
@@ -43,27 +44,36 @@ import type { DeepPartial } from "@apollo/client/utilities";
 import {
   cacheSizes,
   DocumentTransform,
+  getMainDefinition,
   isNetworkRequestInFlight,
   print,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import type { ExtensionsWithStreamInfo } from "@apollo/client/utilities/internal";
+import type {
+  ExtensionsWithStreamInfo,
+  FragmentMap,
+} from "@apollo/client/utilities/internal";
 import {
   AutoCleanedWeakCache,
   checkDocument,
+  createFragmentMap,
   extensionsSymbol,
   filterMap,
   getDefaultValues,
+  getFragmentDefinitions,
+  getFragmentFromSelection,
   getOperationDefinition,
   getOperationName,
   graphQLResultHasError,
   hasDirectives,
   hasForcedResolvers,
   isDocumentNode,
+  isField,
   isNonNullObject,
   makeUniqueId,
   mergeOptions,
   removeDirectivesFromDocument,
+  resultKeyNameFromField,
   streamInfoSymbol,
   toQueryResult,
 } from "@apollo/client/utilities/internal";
@@ -1790,11 +1800,110 @@ export class QueryManager {
         };
 
       case "no-cache":
-        return { fromLink: true, observable: resultsFromLink() };
+        return {
+          fromLink: true,
+          observable: resultsFromLink().pipe(
+            map((notification) => {
+              if (
+                notification.source !== "network" ||
+                notification.kind !== "N"
+              ) {
+                return notification;
+              }
+
+              return {
+                ...notification,
+                value: {
+                  ...notification.value,
+                  data: this.processScalars(query, notification.value.data),
+                },
+              };
+            })
+          ),
+        };
 
       case "standby":
         return { fromLink: false, observable: EMPTY };
     }
+  }
+
+  private processScalars(query: DocumentNode, data: unknown): any {
+    const process = (
+      selectionSet: SelectionSetNode,
+      data: any,
+      fragmentMap: FragmentMap
+    ): any => {
+      if (data == null) return data;
+
+      const result: Record<string, any> = {};
+      let changed = false;
+
+      for (const selection of selectionSet.selections) {
+        if (isField(selection)) {
+          const resultName = resultKeyNameFromField(selection);
+          const fieldValue = data[resultName];
+
+          if (Array.isArray(fieldValue)) {
+            const processed = fieldValue.map((item) => {
+              const processedItem = process(selectionSet, item, fragmentMap);
+              changed ||= item !== processedItem;
+
+              return processedItem;
+            });
+
+            result[resultName] = processed;
+
+            continue;
+          } else if (selection.selectionSet) {
+            const processed = process(
+              selection.selectionSet,
+              fieldValue,
+              fragmentMap
+            );
+
+            changed ||= processed !== fieldValue;
+            result[resultName] = processed;
+
+            continue;
+          }
+
+          const typename =
+            Object.hasOwn(data, "__typename") ? data.__typename : undefined;
+
+          if (!typename) {
+            return data;
+          }
+
+          const scalar = this.cache.getScalarForField(
+            typename,
+            selection.name.value
+          );
+
+          if (scalar) {
+            result[resultName] = scalar.coerceToParsed(fieldValue);
+            changed = true;
+          } else {
+            result[resultName] = fieldValue;
+          }
+        } else {
+          const fragment = getFragmentFromSelection(selection, fragmentMap);
+
+          const processed =
+            fragment ? process(fragment.selectionSet, data, fragmentMap) : data;
+          changed ||= processed !== data;
+
+          Object.assign(result, processed);
+        }
+      }
+
+      return changed ? result : data;
+    };
+
+    return process(
+      getMainDefinition(query).selectionSet,
+      data,
+      createFragmentMap(getFragmentDefinitions(query))
+    );
   }
 }
 

@@ -66,29 +66,24 @@ export function coerceScalarFieldsToParsed(
       typename = data.__typename;
     }
 
-    function visit(selectionSet: SelectionSetNode) {
-      for (const selection of selectionSet.selections) {
-        if (isField(selection)) {
-          const resultName = resultKeyNameFromField(selection);
+    const workSet = new Set(selectionSet.selections);
+    workSet.forEach((selection) => {
+      if (isField(selection)) {
+        const resultName = resultKeyNameFromField(selection);
+        if (!Object.hasOwn(data, resultName)) return;
 
-          if (!Object.hasOwn(data, resultName)) continue;
+        const fieldValue = data[resultName];
+        const coerced = coerceField(selection, fieldValue, typename);
 
-          const fieldValue = data[resultName];
-          const coerced = coerceField(selection, fieldValue, typename);
-
-          changed ||= coerced !== fieldValue;
-          result[resultName] = coerced;
-        } else {
-          const fragment = getFragmentFromSelection(selection, fragmentMap);
-
-          if (fragment) {
-            visit(fragment.selectionSet);
-          }
-        }
+        changed ||= coerced !== fieldValue;
+        result[resultName] = coerced;
+      } else {
+        getFragmentFromSelection(
+          selection,
+          fragmentMap
+        )?.selectionSet.selections.forEach((s) => workSet.add(s));
       }
-    }
-
-    visit(selectionSet);
+    });
 
     return changed ? result : data;
   }

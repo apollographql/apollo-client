@@ -56,6 +56,7 @@ import type {
 import {
   AutoCleanedWeakCache,
   checkDocument,
+  coerceScalarFieldsToParsed,
   createFragmentMap,
   extensionsSymbol,
   filterMap,
@@ -1805,19 +1806,18 @@ export class QueryManager {
           observable: resultsFromLink().pipe(
             map((notification) => {
               if (
-                notification.source !== "network" ||
-                notification.kind !== "N"
+                notification.source === "network" &&
+                notification.kind === "N" &&
+                notification.value.data != null
               ) {
-                return notification;
+                notification.value.data = coerceScalarFieldsToParsed(
+                  notification.value.data,
+                  query,
+                  this.cache
+                ) as TData;
               }
 
-              return {
-                ...notification,
-                value: {
-                  ...notification.value,
-                  data: this.processScalars(query, notification.value.data),
-                },
-              };
+              return notification;
             })
           ),
         };
@@ -1825,85 +1825,6 @@ export class QueryManager {
       case "standby":
         return { fromLink: false, observable: EMPTY };
     }
-  }
-
-  private processScalars(query: DocumentNode, data: unknown): any {
-    const process = (
-      selectionSet: SelectionSetNode,
-      data: any,
-      fragmentMap: FragmentMap
-    ): any => {
-      if (data == null) return data;
-
-      const result: Record<string, any> = {};
-      let changed = false;
-
-      for (const selection of selectionSet.selections) {
-        if (isField(selection)) {
-          const resultName = resultKeyNameFromField(selection);
-          const fieldValue = data[resultName];
-
-          if (Array.isArray(fieldValue)) {
-            const processed = fieldValue.map((item) => {
-              const processedItem = process(selectionSet, item, fragmentMap);
-              changed ||= item !== processedItem;
-
-              return processedItem;
-            });
-
-            result[resultName] = processed;
-
-            continue;
-          } else if (selection.selectionSet) {
-            const processed = process(
-              selection.selectionSet,
-              fieldValue,
-              fragmentMap
-            );
-
-            changed ||= processed !== fieldValue;
-            result[resultName] = processed;
-
-            continue;
-          }
-
-          const typename =
-            Object.hasOwn(data, "__typename") ? data.__typename : undefined;
-
-          if (!typename) {
-            return data;
-          }
-
-          const scalar = this.cache.getScalarForField(
-            typename,
-            selection.name.value
-          );
-
-          if (scalar) {
-            result[resultName] = scalar.coerceToParsed(fieldValue);
-            changed = true;
-          } else {
-            result[resultName] = fieldValue;
-          }
-        } else {
-          const fragment = getFragmentFromSelection(selection, fragmentMap);
-
-          const processed =
-            fragment ? process(fragment.selectionSet, data, fragmentMap) : data;
-          changed ||= processed !== data;
-
-          Object.assign(result, processed);
-        }
-      }
-
-      return changed ? result : data;
-    };
-
-    return process(
-      getMainDefinition(query).selectionSet,
-      data,
-      createFragmentMap(getFragmentDefinitions(query))
-    );
   }
 }
 

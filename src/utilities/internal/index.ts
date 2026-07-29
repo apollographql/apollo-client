@@ -28,6 +28,7 @@ export { argumentsObjectFromField } from "./argumentsObjectFromField.js";
 export { canUseDOM } from "./canUseDOM.js";
 export { checkDocument } from "./checkDocument.js";
 export { cloneDeep } from "./cloneDeep.js";
+export { coerceScalarFieldsToParsed } from "./coerceScalarFieldsToParsed.js";
 export { combineLatestBatched } from "./combineLatestBatched.js";
 export { compact } from "./compact.js";
 export { createFragmentMap } from "./createFragmentMap.js";

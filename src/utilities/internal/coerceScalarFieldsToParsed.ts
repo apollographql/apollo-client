@@ -27,7 +27,11 @@ export function coerceScalarFieldsToParsed(
     return scalar ? scalar.coerceToParsed(fieldValue) : fieldValue;
   }
 
-  function coerceArray(field: FieldNode, array: any[], typename: string) {
+  function coerceArray(
+    field: FieldNode,
+    array: any[],
+    typename: string | undefined
+  ) {
     const result: any[] = [];
     let changed = false;
 
@@ -54,9 +58,10 @@ export function coerceScalarFieldsToParsed(
 
     const result: Record<string, any> = {};
     let changed = false;
+    let typename: string | undefined;
 
     if (Object.hasOwn(data, "__typename")) {
-      result.__typename = data.__typename;
+      typename = result.__typename = data.__typename;
     }
 
     for (const selection of selectionSet.selections) {
@@ -64,35 +69,17 @@ export function coerceScalarFieldsToParsed(
         const resultName = resultKeyNameFromField(selection);
         const fieldValue = data[resultName];
 
+        let coerced: unknown;
         if (Array.isArray(fieldValue)) {
-          const coerced = coerceArray(selection, fieldValue, data.__typename);
-
-          changed ||= coerced !== fieldValue;
-          result[resultName] = coerced;
-
-          continue;
+          coerced = coerceArray(selection, fieldValue, typename);
         } else if (selection.selectionSet) {
-          const processed = coerceSelectionSet(
-            selection.selectionSet,
-            fieldValue
-          );
-
-          changed ||= processed !== fieldValue;
-          result[resultName] = processed;
-
-          continue;
+          coerced = coerceSelectionSet(selection.selectionSet, fieldValue);
+        } else {
+          coerced = parseValue(fieldValue, typename, selection);
         }
 
-        const typename =
-          Object.hasOwn(data, "__typename") ? data.__typename : undefined;
-
-        const scalar =
-          typename && cache.getScalarForField(typename, selection.name.value);
-        const processed =
-          scalar ? scalar.coerceToParsed(fieldValue) : fieldValue;
-
-        changed ||= processed !== fieldValue;
-        result[resultName] = processed;
+        changed ||= coerced !== fieldValue;
+        result[resultName] = coerced;
       } else {
         const fragment = getFragmentFromSelection(selection, fragmentMap);
 

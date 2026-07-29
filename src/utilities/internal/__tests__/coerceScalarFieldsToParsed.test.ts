@@ -96,14 +96,25 @@ test("does not parse fields on objects without a __typename", () => {
           startDate: { scalar: "Date" },
         },
       },
+      Conference: {
+        fields: {
+          openedAt: { scalar: "Date" },
+        },
+      },
     },
   });
 
   const query = gql`
-    query Event {
+    query EventAndConference {
       event {
         id
         startDate
+      }
+      conference {
+        id
+        venue {
+          openedAt
+        }
       }
     }
   `;
@@ -113,12 +124,26 @@ test("does not parse fields on objects without a __typename", () => {
       id: "1",
       startDate: "2026-01-01",
     },
+    conference: {
+      __typename: "Conference",
+      id: "2",
+      venue: {
+        openedAt: "2026-02-02",
+      },
+    },
   };
 
   expect(coerceScalarFieldsToParsed(result, query, cache)).toStrictEqualTyped({
     event: {
       id: "1",
       startDate: "2026-01-01",
+    },
+    conference: {
+      __typename: "Conference",
+      id: "2",
+      venue: {
+        openedAt: "2026-02-02",
+      },
     },
   });
 });

@@ -16,7 +16,7 @@ export function coerceScalarFieldsToParsed(
 ): Record<string, any> {
   const fragmentMap = createFragmentMap(getFragmentDefinitions(query));
 
-  function parseValue(
+  function coerce(
     fieldValue: unknown,
     typename: string | undefined,
     field: FieldNode
@@ -43,7 +43,7 @@ export function coerceScalarFieldsToParsed(
       } else if (field.selectionSet) {
         coerced = coerceSelectionSet(field.selectionSet, item);
       } else {
-        coerced = parseValue(item, typename, field);
+        coerced = coerce(item, typename, field);
       }
 
       changed ||= coerced !== item;
@@ -75,7 +75,7 @@ export function coerceScalarFieldsToParsed(
         } else if (selection.selectionSet) {
           coerced = coerceSelectionSet(selection.selectionSet, fieldValue);
         } else {
-          coerced = parseValue(fieldValue, typename, selection);
+          coerced = coerce(fieldValue, typename, selection);
         }
 
         changed ||= coerced !== fieldValue;

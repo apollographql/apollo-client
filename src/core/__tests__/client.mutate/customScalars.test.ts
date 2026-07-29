@@ -9,8 +9,17 @@ import {
   NetworkStatus,
 } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
+import {
+  Defer20220824Handler,
+  GraphQL17Alpha9Handler,
+} from "@apollo/client/incremental";
 import { MockLink } from "@apollo/client/testing";
-import { dateScalar, ObservableStream } from "@apollo/client/testing/internal";
+import {
+  dateScalar,
+  mockDefer20220824,
+  mockDeferStreamGraphQL17Alpha9,
+  ObservableStream,
+} from "@apollo/client/testing/internal";
 
 test("serializes scalar variables used in field arguments", async () => {
   let requestVariables!: OperationVariables;
@@ -853,6 +862,126 @@ test("parses custom scalar fields with an `ignore` error policy", async () => {
         id: "1",
         startDate: new Date(2026, 0, 1),
         endDate: null,
+      },
+    },
+  });
+});
+
+test("parses custom scalar fields across `@defer` payloads (defer20220824)", async () => {
+  const link = mockDefer20220824();
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+            endDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: link.httpLink,
+    incrementalHandler: new Defer20220824Handler(),
+  });
+  const mutation = gql`
+    mutation CreateEvent {
+      createEvent {
+        id
+        startDate
+        ... @defer {
+          endDate
+        }
+      }
+    }
+  `;
+
+  const promise = client.mutate({ mutation });
+
+  link.enqueueInitialChunk({
+    data: {
+      createEvent: {
+        __typename: "Event",
+        id: "1",
+        startDate: "2026-01-01",
+      },
+    },
+    hasNext: true,
+  });
+
+  link.enqueueSubsequentChunk({
+    incremental: [{ data: { endDate: "2026-02-02" }, path: ["createEvent"] }],
+    hasNext: false,
+  });
+
+  await expect(promise).resolves.toStrictEqualTyped({
+    data: {
+      createEvent: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+        endDate: new Date(2026, 1, 2),
+      },
+    },
+  });
+});
+
+test("parses custom scalar fields across `@defer` payloads (graphql17Alpha9)", async () => {
+  const link = mockDeferStreamGraphQL17Alpha9();
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+            endDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: link.httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+  const mutation = gql`
+    mutation CreateEvent {
+      createEvent {
+        id
+        startDate
+        ... @defer {
+          endDate
+        }
+      }
+    }
+  `;
+
+  const promise = client.mutate({ mutation });
+
+  link.enqueueInitialChunk({
+    data: {
+      createEvent: {
+        __typename: "Event",
+        id: "1",
+        startDate: "2026-01-01",
+      },
+    },
+    pending: [{ id: "0", path: ["createEvent"] }],
+    hasNext: true,
+  });
+
+  link.enqueueSubsequentChunk({
+    incremental: [{ data: { endDate: "2026-02-02" }, id: "0" }],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  await expect(promise).resolves.toStrictEqualTyped({
+    data: {
+      createEvent: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+        endDate: new Date(2026, 1, 2),
       },
     },
   });

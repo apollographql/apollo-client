@@ -271,6 +271,14 @@ export abstract class ApolloCache {
     return;
   }
 
+  /** Get a scalar instance for a field in a type */
+  public getScalarForField(
+    typename: string,
+    fieldName: string
+  ): Scalar<unknown, unknown> | undefined {
+    return;
+  }
+
   /**
    * Serializes scalar values in the variables object
    */

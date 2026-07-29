@@ -397,57 +397,54 @@ test("parses network custom scalar fields with a network-only fetch policy", asy
   });
 });
 
-test.failing(
-  "parses custom scalar fields with a no-cache fetch policy",
-  async () => {
-    const query = gql`
-      query Event {
-        event {
-          id
-          startDate
-        }
+test("parses custom scalar fields with a no-cache fetch policy", async () => {
+  const query = gql`
+    query Event {
+      event {
+        id
+        startDate
       }
-    `;
-    const client = new ApolloClient({
-      cache: new InMemoryCache({
-        scalars: { Date: dateScalar },
-        typePolicies: {
-          Event: {
-            fields: {
-              startDate: { scalar: "Date" },
-            },
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
           },
-        },
-      }),
-      link: new ApolloLink(() =>
-        of({
-          data: {
-            event: {
-              __typename: "Event",
-              id: "1",
-              startDate: "2026-01-01",
-            },
-          },
-        }).pipe(delay(20))
-      ),
-    });
-
-    await expect(
-      client.query({
-        query,
-        fetchPolicy: "no-cache",
-      })
-    ).resolves.toStrictEqualTyped({
-      data: {
-        event: {
-          __typename: "Event",
-          id: "1",
-          startDate: new Date(2026, 0, 1),
         },
       },
-    });
-  }
-);
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          event: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+          },
+        },
+      }).pipe(delay(20))
+    ),
+  });
+
+  await expect(
+    client.query({
+      query,
+      fetchPolicy: "no-cache",
+    })
+  ).resolves.toStrictEqualTyped({
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+      },
+    },
+  });
+});
 
 test("preserves referential identity when fetching identical serialized scalar values", async () => {
   const query = gql`

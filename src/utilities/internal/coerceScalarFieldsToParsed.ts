@@ -85,11 +85,11 @@ export function coerceScalarFieldsToParsed(
       } else {
         const fragment = getFragmentFromSelection(selection, fragmentMap);
 
-        const processed =
+        const coerced =
           fragment ? coerceSelectionSet(fragment.selectionSet, data) : data;
-        changed ||= processed !== data;
+        changed ||= coerced !== data;
 
-        Object.assign(result, processed);
+        Object.assign(result, coerced);
       }
     }
 

@@ -471,7 +471,7 @@ test("serializes scalar variables passed to subscribeToMore", async () => {
   });
 });
 
-test("preserves referential identity when refetching identical serialized scalar values", async () => {
+test("preserves referential identity when refetching identical scalar values", async () => {
   let refetchPromise!: ReturnType<
     ReturnType<typeof useQueryRefHandlers>["refetch"]
   >;

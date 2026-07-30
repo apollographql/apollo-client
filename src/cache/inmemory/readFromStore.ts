@@ -16,6 +16,7 @@ import type {
   FragmentMapFunction,
 } from "@apollo/client/utilities/internal";
 import {
+  compact,
   DeepMerger,
   getDefaultValues,
   getFragmentFromSelection,
@@ -204,10 +205,7 @@ export class StoreReader {
   }: DiffQueryAgainstStoreOptions): Cache.DiffResult<T> {
     const policies = this.config.cache.policies;
 
-    variables = {
-      ...getDefaultValues(getQueryDefinition(query)),
-      ...variables!,
-    };
+    variables = compact(getDefaultValues(getQueryDefinition(query)), variables);
 
     const rootRef = makeReference(rootId);
     const execResult = this.executeSelectionSet({

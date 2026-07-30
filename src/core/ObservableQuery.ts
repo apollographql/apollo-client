@@ -1967,8 +1967,12 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     //
     // Note: the check for matching resolved variables typically kicks in for
     // multi-emission fetches (such as defer, or cache-and-network, etc).
+    if (notification.query !== this.query) {
+      return;
+    }
+
     if (!equal(resolvedVariables, this.variables)) {
-      if (!isEqualQuery(notification, this)) {
+      if (!equal(notification.variables, this.variables)) {
         return;
       }
 

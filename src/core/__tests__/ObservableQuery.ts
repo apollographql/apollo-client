@@ -1399,6 +1399,82 @@ describe("ObservableQuery", () => {
       await promise;
       expect(client.getObservableQueries().size).toBe(0);
     });
+
+    it("ignores an in-flight result from the previous query after the query changes", async () => {
+      const initialQuery = gql`
+        query InitialQuery {
+          author {
+            firstName
+          }
+        }
+      `;
+
+      const updatedQuery = gql`
+        query UpdatedQuery {
+          product {
+            name
+          }
+        }
+      `;
+
+      const productData = {
+        product: { __typename: "Product", name: "Widget" },
+      };
+
+      const link = new MockSubscriptionLink();
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link,
+      });
+
+      client.writeQuery({ query: updatedQuery, data: productData });
+
+      const observable = client.watchQuery({ query: initialQuery });
+      const stream = new ObservableStream(observable);
+
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        dataState: "empty",
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+
+      void observable.reobserve({
+        query: updatedQuery,
+        // NOTE: `cache-only` is needed to reproduce because we don't
+        // unsubscribe from the old observable when the request doesn't hit the
+        // link chain.
+        fetchPolicy: "cache-only",
+      });
+
+      await expect(stream).toEmitTypedValue({
+        data: productData,
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
+
+      link.simulateResult(
+        {
+          result: {
+            data: { author: { __typename: "Author", firstName: "John" } },
+          },
+        },
+        true
+      );
+
+      await expect(stream).not.toEmitAnything();
+
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
+        data: productData,
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
+    });
   });
 
   describe("setVariables", () => {

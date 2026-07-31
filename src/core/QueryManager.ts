@@ -1107,10 +1107,6 @@ export class QueryManager {
         }
 
         if (hasErrors) {
-          if (errorPolicy === "none") {
-            aqr.data = void 0 as TData;
-            aqr.dataState = "empty";
-          }
           if (errorPolicy !== "ignore") {
             aqr.error = new CombinedGraphQLErrors(
               removeStreamDetailsFromExtensions(result)

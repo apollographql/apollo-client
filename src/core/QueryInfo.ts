@@ -251,7 +251,7 @@ export class QueryInfo<
     this.observableQuery?.["resetNotifications"]();
 
     const skipCache = cacheWriteBehavior === CacheWriteBehavior.FORBID;
-    const lastDiff =
+    const diff =
       skipCache ? undefined : (
         this.getDiff({
           ...diffOptions,
@@ -263,7 +263,7 @@ export class QueryInfo<
       );
 
     const incrementalResult = this.maybeHandleIncrementalResult(
-      lastDiff?.result,
+      diff?.result,
       incoming,
       query
     );

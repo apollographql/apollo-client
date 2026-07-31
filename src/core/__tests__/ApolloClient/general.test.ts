@@ -3118,6 +3118,158 @@ describe("ApolloClient", () => {
     await expect(stream).not.toEmitAnything();
   });
 
+  it("keeps the clobbered cache value when a polled result matches the last written result", async () => {
+    const query = gql`
+      query {
+        hero {
+          id
+          name
+        }
+      }
+    `;
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new MockLink([
+        {
+          request: { query },
+          result: {
+            data: { hero: { __typename: "Hero", id: "1", name: "Luke" } },
+          },
+          delay: 20,
+          maxUsageCount: Number.POSITIVE_INFINITY,
+        },
+      ]),
+    });
+
+    const observable = client.watchQuery({ query, pollInterval: 10 });
+    const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: { hero: { __typename: "Hero", id: "1", name: "Luke" } },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    // Another writer clobbers the field this query wrote.
+    client.writeQuery({
+      query,
+      data: { hero: { __typename: "Hero", id: "1", name: "Clobbered" } },
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: { hero: { __typename: "Hero", id: "1", name: "Clobbered" } },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: { hero: { __typename: "Hero", id: "1", name: "Clobbered" } },
+      dataState: "complete",
+      loading: true,
+      networkStatus: NetworkStatus.poll,
+      partial: false,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: { hero: { __typename: "Hero", id: "1", name: "Luke" } },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    observable.stopPolling();
+
+    await expect(stream).not.toEmitAnything();
+  });
+
+  it("applies read functions when a polled result matches the last written result", async () => {
+    const query = gql`
+      query {
+        greeting
+      }
+    `;
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              greeting: {
+                read: (existing: string | undefined) =>
+                  existing && existing.toUpperCase(),
+              },
+            },
+          },
+        },
+      }),
+      link: new MockLink([
+        {
+          request: { query },
+          result: { data: { greeting: "hello" } },
+          delay: 20,
+          maxUsageCount: Number.POSITIVE_INFINITY,
+        },
+      ]),
+    });
+
+    const observable = client.watchQuery({ query, pollInterval: 10 });
+    const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: { greeting: "HELLO" },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: { greeting: "HELLO" },
+      dataState: "complete",
+      loading: true,
+      networkStatus: NetworkStatus.poll,
+      partial: false,
+    });
+
+    // The polled result is `hello` again, identical to what this query last
+    // wrote, so the cache write is skipped. The emitted result still comes from
+    // the cache, so the `read` function is applied instead of delivering the
+    // raw network value.
+    await expect(stream).toEmitTypedValue({
+      data: { greeting: "HELLO" },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    observable.stopPolling();
+
+    await expect(stream).not.toEmitAnything();
+  });
+
   it("should not error when replacing unidentified data with a normalized ID", async () => {
     const queryWithoutId = gql`
       query {

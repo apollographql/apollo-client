@@ -3253,10 +3253,6 @@ describe("ApolloClient", () => {
       partial: false,
     });
 
-    // The polled result is `hello` again, identical to what this query last
-    // wrote, so the cache write is skipped. The emitted result still comes from
-    // the cache, so the `read` function is applied instead of delivering the
-    // raw network value.
     await expect(stream).toEmitTypedValue({
       data: { greeting: "HELLO" },
       dataState: "complete",

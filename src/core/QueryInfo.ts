@@ -143,10 +143,10 @@ export class QueryInfo<
     this.queryManager = queryManager;
 
     // Track how often cache.evict is called, since we want eviction to
-    // override the feud-stopping logic in the markQueryResult method, by
-    // causing shouldWrite to return true. Wrapping the cache.evict method
-    // is a bit of a hack, but it saves us from having to make eviction
-    // counting an official part of the ApolloCache API.
+    // override the write-skipping logic in `shouldWrite`, by causing it to
+    // return true. Wrapping the cache.evict method is a bit of a hack, but it
+    // saves us from having to make eviction counting an official part of the
+    // ApolloCache API.
     if (!destructiveMethodCounts.has(cache)) {
       destructiveMethodCounts.set(cache, 0);
       wrapDestructiveCacheMethod(cache, "evict");
@@ -157,8 +157,14 @@ export class QueryInfo<
 
   /**
    * @internal
-   * For feud-preventing behaviour, `lastWrite` should be shared by all `QueryInfo` instances of an `ObservableQuery`.
-   * In the case of a standalone `QueryInfo`, we will keep a local version.
+   * Tracks the last result written to the cache so that `shouldWrite` can skip
+   * an identical write. Since a `QueryInfo` only ever represents a single
+   * network request, this is shared by all `QueryInfo` instances of an
+   * `ObservableQuery`. A standalone `QueryInfo` keeps a local version.
+   *
+   * A network result that was explicitly asked for always takes precedence over
+   * what is already cached, so `ObservableQuery.refetch` and polling clear this
+   * value before starting their request.
    */
   public _lastWrite?: LastWrite;
   private get lastWrite(): LastWrite | undefined {

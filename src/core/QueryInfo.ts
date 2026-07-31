@@ -400,8 +400,8 @@ export class QueryInfo<
 
         if (
           dataState === "complete" ||
-          (returnPartialData && dataState === "partial" && shouldWrite) ||
-          (this.hasNext && dataState === "streaming")
+          dataState === "streaming" ||
+          (returnPartialData && dataState === "partial" && shouldWrite)
         ) {
           result = { ...result, data: diffResult, dataState };
         } else if (

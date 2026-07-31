@@ -2506,13 +2506,13 @@ test("stream that returns an error but continues to stream", async () => {
 
   await expect(observableStream).toEmitTypedValue({
     loading: false,
-    data: {
+    data: markAsStreaming({
       hero: {
         __typename: "Hero",
         id: "1",
         name: "slow",
       },
-    },
+    }),
     error: new CombinedGraphQLErrors({
       data: {
         hero: {
@@ -2529,9 +2529,9 @@ test("stream that returns an error but continues to stream", async () => {
         },
       ],
     }),
-    dataState: "complete",
+    dataState: "streaming",
     networkStatus: NetworkStatus.error,
-    partial: false,
+    partial: true,
   });
 });
 

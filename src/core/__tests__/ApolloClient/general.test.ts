@@ -3118,6 +3118,329 @@ describe("ApolloClient", () => {
     await expect(stream).not.toEmitAnything();
   });
 
+  // https://github.com/apollographql/apollo-client/issues/9293
+  it("applies read functions to a refetch caused by cache.modify leaving the cache incomplete (unsubscribed)", async () => {
+    const query = gql`
+      query EngagementDetail($id: ID!) {
+        engagement(id: $id) {
+          id
+          createdAt
+          products {
+            total
+            items {
+              id
+              label
+            }
+          }
+        }
+      }
+    `;
+
+    const mutation = gql`
+      mutation CreateProduct {
+        createProduct {
+          id
+        }
+      }
+    `;
+
+    const engagement = {
+      __typename: "Engagement",
+      id: "e1",
+      createdAt: "2022-01-11T20:47:23Z",
+      products: {
+        __typename: "ProductList",
+        total: 1,
+        items: [{ __typename: "Product", id: "p1", label: "First" }],
+      },
+    };
+
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Engagement: {
+          fields: {
+            createdAt: {
+              read: (existing: string | undefined) =>
+                existing == null ? existing : new Date(existing),
+            },
+          },
+        },
+      },
+    });
+
+    const client = new ApolloClient({
+      cache,
+      link: new MockLink([
+        {
+          request: { query, variables: { id: "e1" } },
+          result: { data: { engagement } },
+          maxUsageCount: 2,
+        },
+        {
+          request: { query: mutation },
+          result: {
+            data: { createProduct: { __typename: "Product", id: "p2" } },
+          },
+        },
+      ]),
+    });
+
+    {
+      using stream = new ObservableStream(
+        client.watchQuery({ query, variables: { id: "e1" } })
+      );
+
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        dataState: "empty",
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+
+      await expect(stream).toEmitTypedValue({
+        data: {
+          engagement: {
+            __typename: "Engagement",
+            id: "e1",
+            createdAt: new Date("2022-01-11T20:47:23Z"),
+            products: {
+              __typename: "ProductList",
+              total: 1,
+              items: [{ __typename: "Product", id: "p1", label: "First" }],
+            },
+          },
+        },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
+    }
+
+    await client.mutate({
+      mutation,
+      update: (cache, { data }) => {
+        const ref = cache.writeFragment({
+          data: (data as any).createProduct,
+          fragment: gql`
+            fragment NewProduct on Product {
+              id
+            }
+          `,
+        });
+
+        cache.modify({
+          id: cache.identify(engagement)!,
+          fields: {
+            products: (existing: any) => ({
+              ...existing,
+              total: existing.total + 1,
+              items: [...existing.items, ref],
+            }),
+          },
+        });
+      },
+    });
+
+    const stream = new ObservableStream(
+      client.watchQuery({ query, variables: { id: "e1" } })
+    );
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        engagement: {
+          __typename: "Engagement",
+          id: "e1",
+          createdAt: new Date("2022-01-11T20:47:23Z"),
+          products: {
+            __typename: "ProductList",
+            total: 1,
+            items: [{ __typename: "Product", id: "p1", label: "First" }],
+          },
+        },
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    await expect(stream).not.toEmitAnything();
+  });
+
+  // https://github.com/apollographql/apollo-client/issues/9293
+  it("applies read functions to a refetch caused by cache.modify leaving the cache incomplete (subscribed)", async () => {
+    const query = gql`
+      query EngagementDetail($id: ID!) {
+        engagement(id: $id) {
+          id
+          createdAt
+          products {
+            total
+            items {
+              id
+              label
+            }
+          }
+        }
+      }
+    `;
+
+    const mutation = gql`
+      mutation CreateProduct {
+        createProduct {
+          id
+        }
+      }
+    `;
+
+    const engagement = {
+      __typename: "Engagement",
+      id: "e1",
+      createdAt: "2022-01-11T20:47:23Z",
+      products: {
+        __typename: "ProductList",
+        total: 1,
+        items: [{ __typename: "Product", id: "p1", label: "First" }],
+      },
+    };
+
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Engagement: {
+          fields: {
+            createdAt: {
+              read: (existing: string | undefined) =>
+                existing == null ? existing : new Date(existing),
+            },
+          },
+        },
+      },
+    });
+
+    const client = new ApolloClient({
+      cache,
+      link: new MockLink([
+        {
+          request: { query, variables: { id: "e1" } },
+          result: { data: { engagement } },
+          maxUsageCount: 2,
+        },
+        {
+          request: { query: mutation },
+          result: {
+            data: { createProduct: { __typename: "Product", id: "p2" } },
+          },
+        },
+      ]),
+    });
+
+    const stream = new ObservableStream(
+      client.watchQuery({ query, variables: { id: "e1" } })
+    );
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        engagement: {
+          __typename: "Engagement",
+          id: "e1",
+          createdAt: new Date("2022-01-11T20:47:23Z"),
+          products: {
+            __typename: "ProductList",
+            total: 1,
+            items: [{ __typename: "Product", id: "p1", label: "First" }],
+          },
+        },
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    await client.mutate({
+      mutation,
+      update: (cache, { data }) => {
+        const ref = cache.writeFragment({
+          data: (data as any).createProduct,
+          fragment: gql`
+            fragment NewProduct on Product {
+              id
+            }
+          `,
+        });
+
+        cache.modify({
+          id: cache.identify(engagement)!,
+          fields: {
+            products: (existing: any) => ({
+              ...existing,
+              total: existing.total + 1,
+              items: [...existing.items, ref],
+            }),
+          },
+        });
+      },
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        engagement: {
+          __typename: "Engagement",
+          id: "e1",
+          createdAt: new Date("2022-01-11T20:47:23Z"),
+          products: {
+            __typename: "ProductList",
+            total: 1,
+            items: [{ __typename: "Product", id: "p1", label: "First" }],
+          },
+        },
+      },
+      dataState: "complete",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: false,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        engagement: {
+          __typename: "Engagement",
+          id: "e1",
+          createdAt: new Date("2022-01-11T20:47:23Z"),
+          products: {
+            __typename: "ProductList",
+            total: 1,
+            items: [{ __typename: "Product", id: "p1", label: "First" }],
+          },
+        },
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    await expect(stream).not.toEmitAnything();
+  });
+
   it("should not error when replacing unidentified data with a normalized ID", async () => {
     const queryWithoutId = gql`
       query {

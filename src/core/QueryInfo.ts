@@ -177,18 +177,18 @@ export class QueryInfo<
     variables: ApolloClient.WatchQueryOptions["variables"]
   ) {
     const { lastWrite } = this;
-    return !(
-      lastWrite &&
+    return (
+      !lastWrite ||
       // If cache.evict has been called since the last time we wrote this
       // data into the cache, there's a chance writing this result into
       // the cache will repair what was evicted.
-      lastWrite.dmCount === destructiveMethodCounts.get(this.cache) &&
-      equal(variables, lastWrite.variables) &&
-      equal(result.data, lastWrite.result.data) &&
+      lastWrite.dmCount !== destructiveMethodCounts.get(this.cache) ||
+      !equal(variables, lastWrite.variables) ||
+      !equal(result.data, lastWrite.result.data) ||
       // We have to compare these values because its possible the final chunk
       // emitted in the incremental result is just `hasNext: false`. This
       // ensures we trigger a cache write when we get `isLastChunk: true`.
-      result.extensions?.[streamInfoSymbol] ===
+      result.extensions?.[streamInfoSymbol] !==
         lastWrite.result.extensions?.[streamInfoSymbol]
     );
   }

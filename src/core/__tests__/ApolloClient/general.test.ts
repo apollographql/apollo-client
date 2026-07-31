@@ -3118,7 +3118,7 @@ describe("ApolloClient", () => {
     await expect(stream).not.toEmitAnything();
   });
 
-  it("keeps the clobbered cache value when a polled result matches the last written result", async () => {
+  it("writes the latest polled result over a clobbered cache value when polled result equals last polled result", async () => {
     const query = gql`
       query {
         hero {
@@ -3161,7 +3161,6 @@ describe("ApolloClient", () => {
       partial: false,
     });
 
-    // Another writer clobbers the field this query wrote.
     client.writeQuery({
       query,
       data: { hero: { __typename: "Hero", id: "1", name: "Clobbered" } },

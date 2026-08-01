@@ -708,9 +708,9 @@ export namespace useLazyQuery {
         }
     }
     // (undocumented)
-    export type ExecFunction<TData, TVariables extends OperationVariables> = (...args: {} extends TVariables ? [
+    export type ExecFunction<TData, TVariables extends OperationVariables, TErrorPolicy extends ErrorPolicy | undefined = undefined> = (...args: {} extends TVariables ? [
     options?: useLazyQuery.ExecOptions<TVariables>
-    ] : [options: useLazyQuery.ExecOptions<TVariables>]) => ObservableQuery.ResultPromise<ApolloClient.QueryResult<TData>>;
+    ] : [options: useLazyQuery.ExecOptions<TVariables>]) => ObservableQuery.ResultPromise<ApolloClient.QueryResult<TData, TErrorPolicy>>;
     // (undocumented)
     export type ExecOptions<TVariables extends OperationVariables = OperationVariables> = {
         context?: DefaultContext;
@@ -739,10 +739,14 @@ export namespace useLazyQuery {
         dataState: "empty";
     });
     // (undocumented)
-    export type ResultForOptions<TData, TVariables extends OperationVariables, TOptions extends Record<string, never> | Options<TData, TVariables>> = ResultTuple<TData, TVariables, "complete" | "streaming" | "empty" | (OptionWithFallback<TOptions, DefaultOptions, "returnPartialData"> extends false ? never : "partial")>;
+    export type ResultForOptions<TData, TVariables extends OperationVariables, TOptions extends Record<string, never> | Options<TData, TVariables>, TErrorPolicy extends ErrorPolicy | undefined = undefined> = ResultTuple<TData, TVariables, "complete" | "streaming" | "empty" | (OptionWithFallback<TOptions, DefaultOptions, "returnPartialData"> extends false ? never : "partial"), [
+    TErrorPolicy
+    ] extends [undefined] ? DefaultOptions extends {
+        errorPolicy: infer D;
+    } ? D : undefined : TErrorPolicy>;
     // (undocumented)
-    export type ResultTuple<TData, TVariables extends OperationVariables, TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"]> = [
-    execute: ExecFunction<TData, TVariables>,
+    export type ResultTuple<TData, TVariables extends OperationVariables, TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"], TErrorPolicy extends ErrorPolicy | undefined = undefined> = [
+    execute: ExecFunction<TData, TVariables, TErrorPolicy>,
     result: useLazyQuery.Result<TData, TVariables, TStates>
     ];
     export interface Signature extends Signatures.Evaluated {
@@ -776,7 +780,9 @@ export namespace useLazyQuery {
                 variables?: {
                     [K in Exclude<keyof TOptions["variables"], keyof TVariables>]?: never;
                 };
-            }>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: TOptions): useLazyQuery.ResultForOptions<TData, TVariables, TOptions>;
+            }, TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: TOptions & {
+                errorPolicy?: TErrorPolicy;
+            }): useLazyQuery.ResultForOptions<TData, TVariables, TOptions, TErrorPolicy>;
         }
     }
 }

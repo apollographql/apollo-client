@@ -216,16 +216,23 @@ export declare namespace useLazyQuery {
     TVariables extends OperationVariables,
     TStates extends
       DataState<TData>["dataState"] = DataState<TData>["dataState"],
+    TErrorPolicy extends ErrorPolicy | undefined = undefined,
   > = [
-    execute: ExecFunction<TData, TVariables>,
+    execute: ExecFunction<TData, TVariables, TErrorPolicy>,
     result: useLazyQuery.Result<TData, TVariables, TStates>,
   ];
 
-  export type ExecFunction<TData, TVariables extends OperationVariables> = (
+  export type ExecFunction<
+    TData,
+    TVariables extends OperationVariables,
+    TErrorPolicy extends ErrorPolicy | undefined = undefined,
+  > = (
     ...args: {} extends TVariables ?
       [options?: useLazyQuery.ExecOptions<TVariables>]
     : [options: useLazyQuery.ExecOptions<TVariables>]
-  ) => ObservableQuery.ResultPromise<ApolloClient.QueryResult<TData>>;
+  ) => ObservableQuery.ResultPromise<
+    ApolloClient.QueryResult<TData, TErrorPolicy>
+  >;
 
   namespace DocumentationTypes {
     namespace useLazyQuery {
@@ -240,6 +247,7 @@ export declare namespace useLazyQuery {
     TData,
     TVariables extends OperationVariables,
     TOptions extends Record<string, never> | Options<TData, TVariables>,
+    TErrorPolicy extends ErrorPolicy | undefined = undefined,
   > = ResultTuple<
     TData,
     TVariables,
@@ -252,7 +260,12 @@ export declare namespace useLazyQuery {
         "returnPartialData"
       > extends false ?
         never
-      : "partial")
+      : "partial"),
+    [TErrorPolicy] extends [undefined] ?
+      DefaultOptions extends { errorPolicy: infer D } ?
+        D
+      : undefined
+    : TErrorPolicy
   >;
 
   namespace DocumentationTypes {
@@ -441,10 +454,19 @@ export declare namespace useLazyQuery {
             >]?: never;
           };
         },
+        TErrorPolicy extends ErrorPolicy | undefined = undefined,
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-        options?: TOptions
-      ): useLazyQuery.ResultForOptions<TData, TVariables, TOptions>;
+        options?: TOptions & {
+          /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
+          errorPolicy?: TErrorPolicy;
+        }
+      ): useLazyQuery.ResultForOptions<
+        TData,
+        TVariables,
+        TOptions,
+        TErrorPolicy
+      >;
     }
 
     export type Evaluated = SignatureStyle extends "classic" ? Classic : Modern;

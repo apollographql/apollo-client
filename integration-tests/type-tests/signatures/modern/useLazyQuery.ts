@@ -168,7 +168,7 @@ test("uses masked types when using masked document", async () => {
   {
     const { data } = await execute();
 
-    expectTypeOf(data).toEqualTypeOf<Query | undefined>();
+    expectTypeOf(data).toEqualTypeOf<Query>();
   }
 
   {
@@ -284,7 +284,7 @@ test("uses unmodified types when using TypedDocumentNode", async () => {
   {
     const { data } = await execute();
 
-    expectTypeOf(data).toEqualTypeOf<Query | undefined>();
+    expectTypeOf(data).toEqualTypeOf<Query>();
   }
 
   {
@@ -478,4 +478,36 @@ test("execution result has `.retain` method", () => {
 
   // retain should return the same type as the original result
   expectTypeOf(result.retain()).toEqualTypeOf(result);
+});
+
+test("threads errorPolicy through the execute function", async () => {
+  const { query } = setupSimpleCase();
+
+  {
+    const [execute] = useLazyQuery(query, { errorPolicy: "none" });
+    const { data } = await execute();
+
+    expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+  }
+
+  {
+    const [execute] = useLazyQuery(query, { errorPolicy: "all" });
+    const { data } = await execute();
+
+    expectTypeOf(data).toEqualTypeOf<SimpleCaseData | undefined>();
+  }
+
+  {
+    const [execute] = useLazyQuery(query, { errorPolicy: "ignore" });
+    const { data } = await execute();
+
+    expectTypeOf(data).toEqualTypeOf<SimpleCaseData | undefined>();
+  }
+
+  {
+    const [execute] = useLazyQuery(query);
+    const { data } = await execute();
+
+    expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+  }
 });

@@ -2310,6 +2310,139 @@ test.skip("merges fields and path errors when the same entity is written via two
   });
 });
 
+test.skip("layers path error metadata on optimistic layers independently of the root store", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      user {
+        id
+        name @catch(to: RESULT)
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      user: {
+        __typename: "User",
+        id: "1",
+        name: null,
+      },
+    },
+    errors: [
+      {
+        message: "Root name resolver failed",
+        path: ["user", "name"],
+      },
+    ],
+  });
+
+  expect(cache.diff({ query, optimistic: false })).toStrictEqualTyped({
+    complete: true,
+    missing: undefined,
+    result: {
+      user: {
+        __typename: "User",
+        id: "1",
+        name: {
+          ok: false,
+          errors: [
+            {
+              message: "Root name resolver failed",
+              path: ["user", "name"],
+            },
+          ],
+        },
+      },
+    },
+  });
+
+  cache.recordOptimisticTransaction((proxy) => {
+    proxy.writeQuery({
+      query,
+      data: {
+        user: {
+          __typename: "User",
+          id: "1",
+          name: null,
+        },
+      },
+      errors: [
+        {
+          message: "Optimistic name resolver failed",
+          path: ["user", "name"],
+        },
+      ],
+    });
+  }, "optimistic-name-error");
+
+  // Optimistic reads see the layer's error override.
+  expect(cache.diff({ query, optimistic: true })).toStrictEqualTyped({
+    complete: true,
+    missing: undefined,
+    result: {
+      user: {
+        __typename: "User",
+        id: "1",
+        name: {
+          ok: false,
+          errors: [
+            {
+              message: "Optimistic name resolver failed",
+              path: ["user", "name"],
+            },
+          ],
+        },
+      },
+    },
+  });
+
+  // Root is unchanged while the layer is active.
+  expect(cache.diff({ query, optimistic: false })).toStrictEqualTyped({
+    complete: true,
+    missing: undefined,
+    result: {
+      user: {
+        __typename: "User",
+        id: "1",
+        name: {
+          ok: false,
+          errors: [
+            {
+              message: "Root name resolver failed",
+              path: ["user", "name"],
+            },
+          ],
+        },
+      },
+    },
+  });
+
+  cache.removeOptimistic("optimistic-name-error");
+
+  // Removing the layer drops its error meta; optimistic view matches root again.
+  expect(cache.diff({ query, optimistic: true })).toStrictEqualTyped({
+    complete: true,
+    missing: undefined,
+    result: {
+      user: {
+        __typename: "User",
+        id: "1",
+        name: {
+          ok: false,
+          errors: [
+            {
+              message: "Root name resolver failed",
+              path: ["user", "name"],
+            },
+          ],
+        },
+      },
+    },
+  });
+});
+
 test.todo(
   "define @catch behavior for overlapping fields across sibling fragments and unmasked query results"
 );

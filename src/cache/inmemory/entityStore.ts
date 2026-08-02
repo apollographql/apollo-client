@@ -36,7 +36,11 @@ import type {
 
 import { fieldNameFromStoreName, hasOwn } from "./helpers.js";
 import type { Policies, StorageType } from "./policies.js";
-import type { NormalizedCache, NormalizedCacheObject } from "./types.js";
+import type {
+  FieldErrors,
+  NormalizedCache,
+  NormalizedCacheObject,
+} from "./types.js";
 
 const DELETE = {} as DeleteModifier;
 const delModifier: Modifier<any> = () => DELETE;
@@ -46,6 +50,7 @@ export abstract class EntityStore implements NormalizedCache {
   public declare static Root: typeof Root;
 
   protected data: NormalizedCacheObject = {};
+  protected fieldErrors: FieldErrors = {};
 
   constructor(
     public readonly policies: Policies,

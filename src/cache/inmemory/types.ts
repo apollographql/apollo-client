@@ -113,6 +113,12 @@ export interface NormalizedCacheObject {
   [dataId: string]: StoreObject | undefined;
 }
 
+export interface FieldErrors {
+  [dataId: string]: {
+    [storeFieldName: string]: GraphQLFormattedError[] | undefined;
+  };
+}
+
 export type OptimisticStoreItem = {
   id: string;
   data: NormalizedCacheObject;

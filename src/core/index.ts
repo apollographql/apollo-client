@@ -32,6 +32,7 @@ export type {
 } from "./watchQueryOptions.js";
 export { NetworkStatus } from "./networkStatus.js";
 export type {
+  CatchTo,
   DataState,
   DataValue,
   DefaultContext,

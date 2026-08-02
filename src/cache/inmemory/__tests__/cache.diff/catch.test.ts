@@ -2225,3 +2225,91 @@ test.skip("throws a different error instance for @catch(to: THROW) when the path
     "Second name resolver failed"
   );
 });
+
+test.skip("merges fields and path errors when the same entity is written via two selection sets", () => {
+  const cache = new InMemoryCache();
+  const writeQuery = gql`
+    query {
+      user {
+        id
+        bestFriend {
+          id
+          name
+        }
+        coworker {
+          id
+          email
+        }
+      }
+    }
+  `;
+  const readQuery = gql`
+    query {
+      user {
+        id
+        bestFriend {
+          id
+          name @catch(to: RESULT)
+          email
+        }
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query: writeQuery,
+    data: {
+      user: {
+        __typename: "User",
+        id: "1",
+        bestFriend: {
+          __typename: "User",
+          id: "2",
+          name: null,
+        },
+        coworker: {
+          __typename: "User",
+          id: "2",
+          email: "coworker@example.com",
+        },
+      },
+    },
+    errors: [
+      {
+        message: "Cannot resolve bestFriend.name",
+        path: ["user", "bestFriend", "name"],
+      },
+    ],
+  });
+
+  expect(
+    cache.diff({ query: readQuery, optimistic: false })
+  ).toStrictEqualTyped({
+    complete: true,
+    missing: undefined,
+    result: {
+      user: {
+        __typename: "User",
+        id: "1",
+        bestFriend: {
+          __typename: "User",
+          id: "2",
+          name: {
+            ok: false,
+            errors: [
+              {
+                message: "Cannot resolve bestFriend.name",
+                path: ["user", "bestFriend", "name"],
+              },
+            ],
+          },
+          email: "coworker@example.com",
+        },
+      },
+    },
+  });
+});
+
+test.todo(
+  "define @catch behavior for overlapping fields across sibling fragments and unmasked query results"
+);

@@ -117,6 +117,12 @@ export declare namespace Cache {
      * are available in `merge` functions.
      */
     extensions?: ExtensionsWithStreamInfo;
+
+    /**
+     * GraphQL error objects returned by the query to store as field metadata.
+     * Errors without paths are ignored.
+     */
+    errors?: GraphQLFormattedError[];
   }
 
   export interface DiffOptions<

@@ -1,4 +1,5 @@
-import type { DocumentNode, FieldNode } from "graphql";
+import type { Trie } from "@wry/trie";
+import type { DocumentNode, FieldNode, GraphQLFormattedError } from "graphql";
 
 import type { OperationVariables } from "@apollo/client";
 import type {
@@ -196,3 +197,5 @@ export type KnownScalars = RemoveIndexSignature<ApolloCache.Scalars>;
 export type ScalarNames =
   | keyof KnownScalars
   | (string extends keyof ApolloCache.Scalars ? string & {} : never);
+
+export type ResultErrorTrie = Trie<{ error?: GraphQLFormattedError[] }>;

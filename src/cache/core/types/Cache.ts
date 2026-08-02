@@ -1,6 +1,7 @@
 import type { GraphQLFormattedError } from "graphql";
 
 import type {
+  CatchTo,
   DataValue,
   DocumentNode,
   OperationVariables,
@@ -56,6 +57,28 @@ export declare namespace Cache {
     previousResult?: any;
     optimistic: boolean;
     returnPartialData?: boolean;
+
+    /**
+     * Indicates how the cache should handle errors on a given position by
+     * default. Used if the errored field doesn't use `@catch` and the query
+     * doesn't provide a `@catchByDefault` definition.
+     *
+     * The semantics are the same as `@catch` but `catchByDefault` only applies
+     * to positions that can contain JSON `null`. Non-null positions are
+     * unchanged.
+     *
+     * When multiple values of `catchTo` are set for a given position:
+     *
+     * - the `@catch` value is used if set.
+     * - else the `@catchByDefault` value is used if set on the operation/fragment.
+     * - else the schema `catchByDefault` value is used.
+     *
+     * @remarks
+     * This option is set by Apollo Client using the global default configured
+     * with the client. Prefer annotating the query with `@catchByDefault`
+     * instead which has higher precedence than this option.
+     */
+    catchByDefault?: CatchTo;
   }
 
   export interface WriteOptions<

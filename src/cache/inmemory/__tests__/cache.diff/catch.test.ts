@@ -3,7 +3,7 @@ import { InMemoryCache } from "@apollo/client/cache";
 import { markAsStreaming } from "@apollo/client/testing/internal";
 import { handleIncrementalSymbol } from "@apollo/client/utilities/internal";
 
-test.skip("returns null for a field with @catch(to: NULL) when the field has a path error", () => {
+test("returns null for a field with @catch(to: NULL) when the field has a path error", () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -1653,4 +1653,575 @@ test.skip("clears field error metadata when an overlapping write stores a succes
       },
     },
   });
+});
+
+test.skip("updates the path error and invalidates parent identities for @catch(to: RESULT) when the error changes", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      user {
+        id
+        name @catch(to: RESULT)
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      user: {
+        __typename: "User",
+        id: "1",
+        name: null,
+      },
+    },
+    errors: [
+      {
+        message: "First name resolver failed",
+        path: ["user", "name"],
+      },
+    ],
+  });
+
+  const first = cache.diff({ query, optimistic: false });
+
+  expect(first).toStrictEqualTyped({
+    complete: true,
+    missing: undefined,
+    result: {
+      user: {
+        __typename: "User",
+        id: "1",
+        name: {
+          ok: false,
+          errors: [
+            {
+              message: "First name resolver failed",
+              path: ["user", "name"],
+            },
+          ],
+        },
+      },
+    },
+  });
+
+  cache.writeQuery({
+    query,
+    data: {
+      user: {
+        __typename: "User",
+        id: "1",
+        name: null,
+      },
+    },
+    errors: [
+      {
+        message: "Second name resolver failed",
+        path: ["user", "name"],
+      },
+    ],
+  });
+
+  const second = cache.diff({ query, optimistic: false });
+
+  expect(second).toStrictEqualTyped({
+    complete: true,
+    missing: undefined,
+    result: {
+      user: {
+        __typename: "User",
+        id: "1",
+        name: {
+          ok: false,
+          errors: [
+            {
+              message: "Second name resolver failed",
+              path: ["user", "name"],
+            },
+          ],
+        },
+      },
+    },
+  });
+
+  expect(second.result).not.toBe(first.result);
+  expect((second.result as any).user).not.toBe((first.result as any).user);
+  expect((second.result as any).user.name).not.toBe(
+    (first.result as any).user.name
+  );
+});
+
+test.skip("keeps the same result identities for @catch(to: NULL) when the path error changes", () => {
+  const cache = new InMemoryCache();
+  const nullQuery = gql`
+    query {
+      user {
+        id
+        name @catch(to: NULL)
+      }
+    }
+  `;
+  const resultQuery = gql`
+    query {
+      user {
+        id
+        name @catch(to: RESULT)
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query: nullQuery,
+    data: {
+      user: {
+        __typename: "User",
+        id: "1",
+        name: null,
+      },
+    },
+    errors: [
+      {
+        message: "First name resolver failed",
+        path: ["user", "name"],
+      },
+    ],
+  });
+
+  const first = cache.diff({ query: nullQuery, optimistic: false });
+
+  expect(first).toStrictEqualTyped({
+    complete: true,
+    missing: undefined,
+    result: {
+      user: {
+        __typename: "User",
+        id: "1",
+        name: null,
+      },
+    },
+  });
+
+  cache.writeQuery({
+    query: nullQuery,
+    data: {
+      user: {
+        __typename: "User",
+        id: "1",
+        name: null,
+      },
+    },
+    errors: [
+      {
+        message: "Second name resolver failed",
+        path: ["user", "name"],
+      },
+    ],
+  });
+
+  const second = cache.diff({ query: nullQuery, optimistic: false });
+
+  expect(second).toStrictEqualTyped({
+    complete: true,
+    missing: undefined,
+    result: {
+      user: {
+        __typename: "User",
+        id: "1",
+        name: null,
+      },
+    },
+  });
+  expect(second.result).toBe(first.result);
+  expect((second.result as any).user).toBe((first.result as any).user);
+
+  expect(
+    cache.diff({ query: resultQuery, optimistic: false })
+  ).toStrictEqualTyped({
+    complete: true,
+    missing: undefined,
+    result: {
+      user: {
+        __typename: "User",
+        id: "1",
+        name: {
+          ok: false,
+          errors: [
+            {
+              message: "Second name resolver failed",
+              path: ["user", "name"],
+            },
+          ],
+        },
+      },
+    },
+  });
+});
+
+test.skip("does not skip merging when writing back a previously read result object with different path errors", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      user {
+        id
+        name @catch(to: NULL)
+      }
+    }
+  `;
+  const resultQuery = gql`
+    query {
+      user {
+        id
+        name @catch(to: RESULT)
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      user: {
+        __typename: "User",
+        id: "1",
+        name: null,
+      },
+    },
+    errors: [
+      {
+        message: "First name resolver failed",
+        path: ["user", "name"],
+      },
+    ],
+  });
+
+  const { result } = cache.diff({ query, optimistic: false });
+
+  expect(result).toStrictEqualTyped({
+    user: {
+      __typename: "User",
+      id: "1",
+      name: null,
+    },
+  });
+
+  cache.writeQuery({
+    query,
+    data: result as any,
+    errors: [
+      {
+        message: "Second name resolver failed",
+        path: ["user", "name"],
+      },
+    ],
+  });
+
+  expect(
+    cache.diff({ query: resultQuery, optimistic: false })
+  ).toStrictEqualTyped({
+    complete: true,
+    missing: undefined,
+    result: {
+      user: {
+        __typename: "User",
+        id: "1",
+        name: {
+          ok: false,
+          errors: [
+            {
+              message: "Second name resolver failed",
+              path: ["user", "name"],
+            },
+          ],
+        },
+      },
+    },
+  });
+});
+
+test.skip("keeps the same result identities for @catch(to: RESULT) across reads when path errors are deeply equal", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      user {
+        id
+        name @catch(to: RESULT)
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      user: {
+        __typename: "User",
+        id: "1",
+        name: null,
+      },
+    },
+    errors: [
+      {
+        message: "Cannot resolve user.name",
+        path: ["user", "name"],
+      },
+    ],
+  });
+
+  const first = cache.diff({ query, optimistic: false });
+  const second = cache.diff({ query, optimistic: false });
+
+  expect(first).toStrictEqualTyped({
+    complete: true,
+    missing: undefined,
+    result: {
+      user: {
+        __typename: "User",
+        id: "1",
+        name: {
+          ok: false,
+          errors: [
+            {
+              message: "Cannot resolve user.name",
+              path: ["user", "name"],
+            },
+          ],
+        },
+      },
+    },
+  });
+  expect(second.result).toBe(first.result);
+  expect((second.result as any).user).toBe((first.result as any).user);
+  expect((second.result as any).user.name).toBe(
+    (first.result as any).user.name
+  );
+});
+
+test.skip("keeps the same result identities for @catch(to: RESULT) after rewriting deeply equal data and path errors", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      user {
+        id
+        name @catch(to: RESULT)
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      user: {
+        __typename: "User",
+        id: "1",
+        name: null,
+      },
+    },
+    errors: [
+      {
+        message: "Cannot resolve user.name",
+        path: ["user", "name"],
+      },
+    ],
+  });
+
+  const first = cache.diff({ query, optimistic: false });
+
+  cache.writeQuery({
+    query,
+    data: {
+      user: {
+        __typename: "User",
+        id: "1",
+        name: null,
+      },
+    },
+    errors: [
+      {
+        message: "Cannot resolve user.name",
+        path: ["user", "name"],
+      },
+    ],
+  });
+
+  const second = cache.diff({ query, optimistic: false });
+
+  expect(second.result).toBe(first.result);
+  expect((second.result as any).user).toBe((first.result as any).user);
+  expect((second.result as any).user.name).toBe(
+    (first.result as any).user.name
+  );
+});
+
+test.skip("throws the same error instance for @catch(to: THROW) across reads when path errors are deeply equal", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      user {
+        id
+        name @catch(to: THROW)
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      user: {
+        __typename: "User",
+        id: "1",
+        name: null,
+      },
+    },
+    errors: [
+      {
+        message: "Cannot resolve user.name",
+        path: ["user", "name"],
+      },
+    ],
+  });
+
+  let firstError: unknown;
+  try {
+    cache.diff({ query, optimistic: false });
+  } catch (error) {
+    firstError = error;
+  }
+
+  let secondError: unknown;
+  try {
+    cache.diff({ query, optimistic: false });
+  } catch (error) {
+    secondError = error;
+  }
+
+  expect(firstError).toBeInstanceOf(Error);
+  expect(secondError).toBe(firstError);
+});
+
+test.skip("throws the same error instance for @catch(to: THROW) after rewriting deeply equal data and path errors", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      user {
+        id
+        name @catch(to: THROW)
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      user: {
+        __typename: "User",
+        id: "1",
+        name: null,
+      },
+    },
+    errors: [
+      {
+        message: "Cannot resolve user.name",
+        path: ["user", "name"],
+      },
+    ],
+  });
+
+  let firstError: unknown;
+  try {
+    cache.diff({ query, optimistic: false });
+  } catch (error) {
+    firstError = error;
+  }
+
+  cache.writeQuery({
+    query,
+    data: {
+      user: {
+        __typename: "User",
+        id: "1",
+        name: null,
+      },
+    },
+    errors: [
+      {
+        message: "Cannot resolve user.name",
+        path: ["user", "name"],
+      },
+    ],
+  });
+
+  let secondError: unknown;
+  try {
+    cache.diff({ query, optimistic: false });
+  } catch (error) {
+    secondError = error;
+  }
+
+  expect(firstError).toBeInstanceOf(Error);
+  expect(secondError).toBe(firstError);
+});
+
+test.skip("throws a different error instance for @catch(to: THROW) when the path error changes", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      user {
+        id
+        name @catch(to: THROW)
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      user: {
+        __typename: "User",
+        id: "1",
+        name: null,
+      },
+    },
+    errors: [
+      {
+        message: "First name resolver failed",
+        path: ["user", "name"],
+      },
+    ],
+  });
+
+  let firstError: unknown;
+  try {
+    cache.diff({ query, optimistic: false });
+  } catch (error) {
+    firstError = error;
+  }
+
+  cache.writeQuery({
+    query,
+    data: {
+      user: {
+        __typename: "User",
+        id: "1",
+        name: null,
+      },
+    },
+    errors: [
+      {
+        message: "Second name resolver failed",
+        path: ["user", "name"],
+      },
+    ],
+  });
+
+  let secondError: unknown;
+  try {
+    cache.diff({ query, optimistic: false });
+  } catch (error) {
+    secondError = error;
+  }
+
+  expect(firstError).toBeInstanceOf(Error);
+  expect(secondError).toBeInstanceOf(Error);
+  expect(secondError).not.toBe(firstError);
+  expect((secondError as Error).message).toContain(
+    "Second name resolver failed"
+  );
 });

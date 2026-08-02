@@ -222,6 +222,8 @@ export interface ErrorLike {
   stack?: string;
 }
 
+export type CatchTo = "NULL" | "RESULT" | "THROW";
+
 export type OnQueryUpdated<TResult> = (
   observableQuery: ObservableQuery<any>,
   diff: Cache.DiffResult<any>,

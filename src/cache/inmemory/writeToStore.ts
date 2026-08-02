@@ -64,6 +64,7 @@ import type {
   MergeTree,
   NormalizedCache,
   ReadMergeModifyContext,
+  ResultErrorTrie,
 } from "./types.js";
 
 export interface WriteContext extends ReadMergeModifyContext {
@@ -90,6 +91,7 @@ export interface WriteContext extends ReadMergeModifyContext {
   clientOnly: boolean;
   deferred: boolean;
   flavors: Map<string, FlavorableWriteContext>;
+  errorTrie: ResultErrorTrie;
 }
 
 type FlavorableWriteContext = Pick<
@@ -153,6 +155,7 @@ export class StoreWriter {
       variables,
       overwrite,
       extensions,
+      errors,
     }: Cache.WriteOptions<TData, TVariables>
   ): Reference | undefined {
     const operationDefinition = getOperationDefinition(query)!;
@@ -162,6 +165,14 @@ export class StoreWriter {
       ...getDefaultValues(operationDefinition),
       ...variables!,
     };
+
+    const errorTrie: ResultErrorTrie = new Trie(true, () => []);
+
+    errors?.forEach((error) => {
+      if (error.path) {
+        errorTrie.lookupArray(error.path as any[]).push(error);
+      }
+    });
 
     const context: WriteContext = {
       store,
@@ -178,6 +189,7 @@ export class StoreWriter {
       deferred: false,
       flavors: new Map(),
       extensions,
+      errorTrie,
     };
 
     const ref = this.processSelectionSet({

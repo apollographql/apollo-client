@@ -198,4 +198,4 @@ export type ScalarNames =
   | keyof KnownScalars
   | (string extends keyof ApolloCache.Scalars ? string & {} : never);
 
-export type ResultErrorTrie = Trie<{ error?: GraphQLFormattedError[] }>;
+export type ResultErrorTrie = Trie<GraphQLFormattedError[]>;

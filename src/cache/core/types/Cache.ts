@@ -1,3 +1,5 @@
+import type { GraphQLFormattedError } from "graphql";
+
 import type {
   DataValue,
   DocumentNode,
@@ -300,6 +302,11 @@ export declare namespace Cache {
      * are available in `merge` functions.
      */
     extensions?: ExtensionsWithStreamInfo;
+
+    /**
+     * GraphQL error objects returned by the query
+     */
+    errors?: GraphQLFormattedError[];
   }
 
   export type WriteFragmentOptions<

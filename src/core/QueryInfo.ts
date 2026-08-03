@@ -263,7 +263,9 @@ export class QueryInfo<
           ...diffOptions,
           // Always request partial data to ensure the network incremental
           // result is merged with all existing data (especially true to
-          // maintain @stream arrays with partial list items in the right order)
+          // maintain @stream arrays with partial list items in the right order
+          // or when chunk might otherwise replace a partial non-normalized
+          // object)
           returnPartialData: true,
         })
       );

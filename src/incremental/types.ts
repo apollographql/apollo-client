@@ -41,7 +41,6 @@ export declare namespace Incremental {
   > {
     hasNext: boolean;
     pending?: Array<Incremental.PendingResult>;
-    getPendingType?: (id: string) => "defer" | "stream";
     getPendingWithInfo?: () => Array<PendingItemWithInfo>;
     handle: (
       cacheData: TData | DeepPartial<TData> | undefined | null,

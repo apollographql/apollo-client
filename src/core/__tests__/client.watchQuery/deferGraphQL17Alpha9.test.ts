@@ -6088,6 +6088,106 @@ test('does not return complete cached deferred data when a defer boundary comple
   await expect(stream).not.toEmitAnything();
 });
 
+test('does not return complete cached deferred data when a defer boundary completes with errors with a "network-only" fetch policy and errorPolicy "none"', async () => {
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+          }
+        }
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+  const cache = new InMemoryCache();
+
+  cache.writeQuery({
+    query,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Cached hello",
+        recipient: { __typename: "Person", name: "Cached Alice" },
+      },
+    },
+  });
+
+  const client = new ApolloClient({
+    cache,
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({ query, fetchPolicy: "network-only" })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: { greeting: { __typename: "Greeting", message: "Hello world" } },
+    pending: [{ id: "0", path: ["greeting"] }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      greeting: { __typename: "Greeting", message: "Hello world" },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    completed: [
+      {
+        id: "0",
+        errors: [
+          {
+            message: "Could not fetch recipient",
+            path: ["greeting", "recipient"],
+          },
+        ],
+      },
+    ],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      greeting: { __typename: "Greeting", message: "Hello world" },
+    }),
+    dataState: "streaming",
+    error: new CombinedGraphQLErrors({
+      data: { greeting: { __typename: "Greeting", message: "Hello world" } },
+      errors: [
+        {
+          message: "Could not fetch recipient",
+          path: ["greeting", "recipient"],
+        },
+      ],
+    }),
+    loading: false,
+    networkStatus: NetworkStatus.error,
+    partial: true,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
 test('does not return a partial cached defer boundary while streaming with a "network-only" fetch policy', async () => {
   const query = gql`
     query {

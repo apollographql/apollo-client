@@ -31,6 +31,7 @@ import {
   compact,
   DeepMerger,
   getCatchTo,
+  getDefaultCatchTo,
   getDefaultValues,
   getDirectiveArgValue,
   getFragmentFromSelection,
@@ -233,7 +234,8 @@ export class StoreReader {
             return context.store.makeCacheKey(
               selectionSet,
               isReference(parent) ? parent.__ref : parent,
-              context.varString
+              context.varString,
+              context.catchByDefault
             );
           }
         },
@@ -254,7 +256,12 @@ export class StoreReader {
           defaultCacheSizes["inMemoryCache.executeSubSelectedArray"],
         makeCacheKey({ field, array, context }) {
           if (supportsResultCaching(context.store)) {
-            return context.store.makeCacheKey(field, array, context.varString);
+            return context.store.makeCacheKey(
+              field,
+              array,
+              context.varString,
+              context.catchByDefault
+            );
           }
         },
       }
@@ -326,6 +333,7 @@ export class StoreReader {
     query,
     rootId = "ROOT_QUERY",
     variables,
+    catchByDefault = "NULL",
     returnPartialData = true,
     ...options
   }: DiffQueryAgainstStoreOptions & {
@@ -342,6 +350,7 @@ export class StoreReader {
     const context: ReadContext = {
       store,
       query,
+      catchByDefault: getDefaultCatchTo(query, catchByDefault),
       policies,
       variables,
       varString: canonicalStringify(variables),
@@ -536,7 +545,6 @@ export class StoreReader {
           context
         );
 
-        const catchTo = getCatchTo(selection);
         const resultName = resultKeyNameFromField(selection);
         const dataId =
           isReference(objectOrReference) ?
@@ -544,9 +552,14 @@ export class StoreReader {
           : policies.identify(objectOrReference)[0];
 
         let errors: GraphQLFormattedError[] | undefined;
+        let catchTo = getCatchTo(selection, context.catchByDefault);
 
         if (dataId) {
           errors = store.getFieldErrors(dataId, selection.name.value);
+        }
+
+        if (errors) {
+          catchTo ||= context.catchByDefault;
         }
 
         if (errors && catchTo === "THROW") {

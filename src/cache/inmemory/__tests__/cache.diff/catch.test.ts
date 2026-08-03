@@ -490,7 +490,7 @@ test("returns null for an uncaught field when the operation has @catchByDefault(
   });
 });
 
-test.skip("returns FieldResult failure for an uncaught field when the operation has @catchByDefault(to: RESULT)", () => {
+test("returns FieldResult failure for an uncaught field when the operation has @catchByDefault(to: RESULT)", () => {
   const cache = new InMemoryCache();
   const query = gql`
     query UserQuery @catchByDefault(to: RESULT) {

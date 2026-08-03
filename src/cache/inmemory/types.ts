@@ -109,15 +109,17 @@ export interface NormalizedCacheObject {
     // cache.retain. When such IDs exist, we include them in the __META
     // section so that they can survive cache.{extract,restore}.
     extraRootIds: string[];
-    fieldErrors?: FieldErrors;
+    fieldErrors?: FieldErrorsById;
   };
   [dataId: string]: StoreObject | undefined;
 }
 
+export interface FieldErrorsById {
+  [dataId: string]: FieldErrors;
+}
+
 export interface FieldErrors {
-  [dataId: string]: {
-    [storeFieldName: string]: GraphQLFormattedError[] | undefined;
-  };
+  [storeFieldName: string]: GraphQLFormattedError[] | undefined;
 }
 
 export type OptimisticStoreItem = {

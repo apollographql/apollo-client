@@ -1825,6 +1825,169 @@ test('reports partial cached data inside a defer boundary as "partial" when the 
   await expect(stream).not.toEmitAnything();
 });
 
+test("reports partial data correctly when a mid-stream request is abandoned and the query is subscribed to again", async () => {
+  // Suppress expected missing field warning when writing partial value after
+  // first chunk
+  using _ = spyOnConsole("error");
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+            email
+          }
+        }
+      }
+    }
+  `;
+
+  const defer1 = mockDeferStreamGraphQL17Alpha9();
+  const defer2 = mockDeferStreamGraphQL17Alpha9();
+  let requests = 0;
+  const link = ApolloLink.from([
+    new ApolloLink((operation, forward) => {
+      requests++;
+      return forward(operation);
+    }),
+    ApolloLink.split(() => requests === 1, defer1.httpLink, defer2.httpLink),
+  ]);
+
+  const cache = new InMemoryCache();
+  cache.writeQuery({
+    query,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        recipient: { __typename: "Person", name: "Cached Alice" },
+      },
+    },
+  });
+
+  const client = new ApolloClient({
+    cache,
+    link,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const observable = client.watchQuery({
+    query,
+    fetchPolicy: "cache-first",
+    returnPartialData: true,
+  });
+
+  const initialChunk = {
+    data: { greeting: { __typename: "Greeting", message: "Hello world" } },
+    pending: [{ id: "0", path: ["greeting"] }],
+    hasNext: true,
+  };
+
+  const streamA = new ObservableStream(observable);
+
+  await expect(streamA).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        recipient: { __typename: "Person", name: "Cached Alice" },
+      },
+    },
+    dataState: "partial",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  defer1.enqueueInitialChunk({ ...initialChunk });
+
+  await expect(streamA).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Cached Alice" },
+      },
+    },
+    dataState: "partial",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  // Abandon the request before the boundary is delivered.
+  streamA.unsubscribe();
+
+  const streamB = new ObservableStream(observable);
+
+  await expect(streamB).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Cached Alice" },
+      },
+    },
+    dataState: "partial",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  defer2.enqueueInitialChunk({ ...initialChunk });
+
+  await expect(streamB).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Cached Alice" },
+      },
+    },
+    dataState: "partial",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  defer2.enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          __typename: "Greeting",
+          recipient: {
+            name: "Alice",
+            email: "alice@example.com",
+            __typename: "Person",
+          },
+        },
+        id: "0",
+      },
+    ],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  await expect(streamB).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+          email: "alice@example.com",
+        },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(streamB).not.toEmitAnything();
+});
+
 test("emits empty then streaming results for deferred queries with no data in the cache and returnPartialData", async () => {
   const query = gql`
     query {

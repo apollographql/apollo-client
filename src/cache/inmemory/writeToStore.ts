@@ -3,7 +3,6 @@ import { Trie } from "@wry/trie";
 import type {
   FieldNode,
   FragmentSpreadNode,
-  GraphQLFormattedError,
   InlineFragmentNode,
   SelectionSetNode,
 } from "graphql";
@@ -137,6 +136,7 @@ interface ProcessSelectionSetOptions {
   context: WriteContext;
   mergeTree: MergeTree;
   path: Array<string | number>;
+  pathWithAliases: Array<string | number>;
 }
 
 export class StoreWriter {
@@ -202,6 +202,7 @@ export class StoreWriter {
       mergeTree: { map: new Map() },
       context,
       path: [],
+      pathWithAliases: [],
     });
 
     if (!isReference(ref)) {
@@ -292,6 +293,7 @@ export class StoreWriter {
     // to its callers without explicitly returning that information.
     mergeTree,
     path: currentPath,
+    pathWithAliases: currentPathWithAliases,
   }: ProcessSelectionSetOptions): StoreObject | Reference {
     const { policies } = this.cache;
 
@@ -361,6 +363,7 @@ export class StoreWriter {
       const resultFieldKey = resultKeyNameFromField(field);
       const value = result[resultFieldKey];
       const path = [...currentPath, field.name.value];
+      const pathWithAliases = [...currentPathWithAliases, resultFieldKey];
 
       fieldNodeSet.add(field);
 
@@ -373,7 +376,7 @@ export class StoreWriter {
         });
 
         const childTree = getChildMergeTree(mergeTree, storeFieldName);
-        const errors = context.errorTrie.peekArray(path);
+        const errors = context.errorTrie.peekArray(pathWithAliases);
 
         if (errors) {
           fieldErrors ||= {};
@@ -389,7 +392,8 @@ export class StoreWriter {
             getContextFlavor(context, false, false)
           : context,
           childTree,
-          path
+          path,
+          pathWithAliases
         );
 
         // To determine if this field holds a child object with a merge function
@@ -534,7 +538,8 @@ export class StoreWriter {
     field: FieldNode,
     context: WriteContext,
     mergeTree: MergeTree,
-    path: Array<string | number>
+    path: Array<string | number>,
+    pathWithAliases: Array<string | number>
   ): StoreValue {
     if (!field.selectionSet || value === null) {
       // In development, we need to clone scalar values so that they can be
@@ -550,7 +555,8 @@ export class StoreWriter {
           field,
           context,
           getChildMergeTree(mergeTree, i),
-          [...path, i]
+          [...path, i],
+          [...pathWithAliases, i]
         );
         maybeRecycleChildMergeTree(mergeTree, i);
         return value;
@@ -563,6 +569,7 @@ export class StoreWriter {
       context,
       mergeTree,
       path,
+      pathWithAliases,
     });
   }
 

@@ -4675,9 +4675,11 @@ test("does not emit when no data added when a `@stream` completes while a `@defe
   });
 
   enqueueSubsequentChunk({
-    incremental: [{ id: "1", items: [{ __typename: "Friend", name: "Han" }] }],
+    incremental: [
+      { id: "1", items: [{ __typename: "Friend", name: "Han" }] as any },
+    ],
     hasNext: true,
-  } as any);
+  });
 
   await expect(stream).toEmitTypedValue({
     data: markAsStreaming({

@@ -197,16 +197,28 @@ export namespace Incremental {
     // (undocumented)
     export interface IncrementalRequest<Chunk extends Record<string, unknown>, TData> {
         // (undocumented)
-        getPendingType?: (id: string) => "defer" | "stream";
+        getPendingWithInfo?: () => Array<PendingItemWithInfo>;
         // (undocumented)
         handle: (cacheData: TData | DeepPartial<TData> | undefined | null, chunk: Chunk) => FormattedExecutionResult<TData>;
         // (undocumented)
         hasNext: boolean;
-        // (undocumented)
-        pending?: Array<Incremental.PendingResult>;
     }
     // (undocumented)
     export type Path = ReadonlyArray<string | number>;
+    // @internal @deprecated (undocumented)
+    export interface PendingDeferResultWithInfo {
+        // (undocumented)
+        delivered: boolean;
+        // (undocumented)
+        path: Incremental.Path;
+        // (undocumented)
+        type: "defer";
+    }
+    // Warning: (ae-incompatible-release-tags) The symbol "PendingItemWithInfo" is marked as @public, but its signature references "Incremental" which is marked as @internal
+    // Warning: (ae-incompatible-release-tags) The symbol "PendingItemWithInfo" is marked as @public, but its signature references "Incremental" which is marked as @internal
+    //
+    // (undocumented)
+    export type PendingItemWithInfo = PendingDeferResultWithInfo | PendingStreamResultWithInfo;
     // (undocumented)
     export interface PendingResult {
         // (undocumented)
@@ -215,6 +227,13 @@ export namespace Incremental {
         label?: string;
         // (undocumented)
         path: Incremental.Path;
+    }
+    // @internal @deprecated (undocumented)
+    export interface PendingStreamResultWithInfo {
+        // (undocumented)
+        path: Incremental.Path;
+        // (undocumented)
+        type: "stream";
     }
     // @internal @deprecated (undocumented)
     export interface StartRequestOptions {
@@ -233,13 +252,19 @@ export namespace Incremental {
 // @public (undocumented)
 class IncrementalRequest<TData> implements Incremental.IncrementalRequest<GraphQL17Alpha9Handler.Chunk<TData>, TData> {
     // (undocumented)
-    getPendingType(id: string): "defer" | "stream";
+    getPendingWithInfo(): ({
+        type: "stream";
+        path: Incremental.Path;
+        delivered?: undefined;
+    } | {
+        type: "defer";
+        delivered: boolean;
+        path: Incremental.Path;
+    })[];
     // (undocumented)
     handle(cacheData: TData | DeepPartial<TData> | null | undefined, chunk: GraphQL17Alpha9Handler.Chunk<TData>): FormattedExecutionResult<TData>;
     // (undocumented)
     hasNext: boolean;
-    // (undocumented)
-    get pending(): GraphQL17Alpha9Handler.PendingResult[];
 }
 
 // @public (undocumented)

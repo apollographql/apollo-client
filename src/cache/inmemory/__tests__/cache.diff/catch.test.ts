@@ -136,7 +136,7 @@ test.skip("throws for a field with @catch(to: THROW) when the field has a path e
   );
 });
 
-test.skip("returns null for an aliased field with @catch(to: NULL) when the path error uses the alias", () => {
+test("returns null for an aliased field with @catch(to: NULL) when the path error uses the alias", () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {

@@ -399,7 +399,7 @@ export class QueryInfo<
             // Never deliver partial data for network-only requests
             returnPartialData: returnPartialData && !isNetworkOnly,
           },
-          this.getIncrementalInfo(result, { isNetworkOnly })
+          this.getIncrementalInfo({ isNetworkOnly })
         );
 
         if (
@@ -430,12 +430,9 @@ export class QueryInfo<
     return result;
   }
 
-  private getIncrementalInfo(
-    result: MarkQueryResult<any, ExtensionsWithStreamInfo>,
-    { isNetworkOnly }: { isNetworkOnly: boolean }
-  ) {
+  private getIncrementalInfo({ isNetworkOnly }: { isNetworkOnly: boolean }) {
     const pending = this.incremental?.getPendingWithInfo?.() ?? [];
-    const streamInfo = result.extensions?.[streamInfoSymbol]?.deref();
+    const streamInfo = this.incremental?.streamInfo;
     const incrementalInfo: DiffIncrementalInfo = { streamInfo };
 
     // We don't want to deliver stream items or complete defer boundaries

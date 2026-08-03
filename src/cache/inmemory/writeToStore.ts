@@ -3,6 +3,7 @@ import { Trie } from "@wry/trie";
 import type {
   FieldNode,
   FragmentSpreadNode,
+  GraphQLFormattedError,
   InlineFragmentNode,
   SelectionSetNode,
 } from "graphql";
@@ -60,6 +61,7 @@ import {
 } from "./policies.js";
 import type { StoreReader } from "./readFromStore.js";
 import type {
+  FieldErrors,
   InMemoryCacheConfig,
   MergeTree,
   NormalizedCache,
@@ -83,6 +85,7 @@ export interface WriteContext extends ReadMergeModifyContext {
       storeObject: StoreObject;
       mergeTree?: MergeTree;
       fieldNodeSet: Set<FieldNode>;
+      fieldErrors?: FieldErrors;
     }
   >;
   // Directive metadata for @client and @defer. We could use a bitfield for this
@@ -208,7 +211,7 @@ export class StoreWriter {
     // So far, the store has not been modified, so now it's time to process
     // context.incomingById and merge those incoming fields into context.store.
     context.incomingById.forEach(
-      ({ storeObject, mergeTree, fieldNodeSet }, dataId) => {
+      ({ storeObject, mergeTree, fieldNodeSet, fieldErrors }, dataId) => {
         const entityRef = makeReference(dataId);
 
         if (mergeTree && mergeTree.map.size) {
@@ -266,6 +269,7 @@ export class StoreWriter {
         }
 
         store.merge(dataId, storeObject);
+        store.setFieldErrors(dataId, fieldErrors);
       }
     );
 
@@ -343,6 +347,7 @@ export class StoreWriter {
     };
 
     const fieldNodeSet = new Set<FieldNode>();
+    let fieldErrors: FieldErrors | undefined;
 
     this.flattenFields(
       selectionSet,
@@ -368,6 +373,12 @@ export class StoreWriter {
         });
 
         const childTree = getChildMergeTree(mergeTree, storeFieldName);
+        const errors = context.errorTrie.peekArray(path);
+
+        if (errors) {
+          fieldErrors ||= {};
+          fieldErrors[storeFieldName] = errors;
+        }
 
         let incomingValue = this.processFieldValue(
           value,
@@ -508,6 +519,7 @@ export class StoreWriter {
           // reused for entirely different parts of the result tree.
           mergeTree: mergeTreeIsEmpty(mergeTree) ? void 0 : mergeTree,
           fieldNodeSet,
+          fieldErrors,
         });
       }
 

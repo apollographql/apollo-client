@@ -51,6 +51,8 @@ export interface NormalizedCache {
   has(dataId: string): boolean;
   get(dataId: string, fieldName: string): StoreValue;
 
+  setFieldErrors(dataId: string, fieldErrors: FieldErrors | undefined): void;
+
   // The store.merge method allows either argument to be a string ID, but
   // the other argument has to be a StoreObject. Either way, newer fields
   // always take precedence over older fields.

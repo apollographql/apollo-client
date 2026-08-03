@@ -441,11 +441,9 @@ export class QueryInfo<
     // can prune complete defer/stream boundaries at those paths.
     if (isNetworkOnly) {
       for (const item of pending) {
-        if (item.type === "defer") {
+        if (item.type === "defer" && !item.delivered) {
           incrementalInfo.deferInfo ||= new Trie(true, () => true);
-          if (!item.delivered) {
-            incrementalInfo.deferInfo.lookupArray(item.path as any[]);
-          }
+          incrementalInfo.deferInfo.lookupArray(item.path as any[]);
         } else if (streamInfo && item.type === "stream") {
           streamInfo.lookupArray(item.path as any[]).state.truncate = true;
         }

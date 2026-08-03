@@ -87,6 +87,10 @@ class IncrementalRequest<TData>
   private errors: GraphQLFormattedError[] = [];
   private extensions: Record<string, any> = {};
   private pendingMap = new Map<string, GraphQL17Alpha9Handler.PendingResult>();
+  private completedMap = new Map<
+    /* pendingId */ string,
+    /* delivered */ boolean
+  >();
   private streamInfo = makeStreamInfoTrie();
   // `streamPositions` maps `pending.id` to the index that should be set by the
   // next `incremental` stream chunk to ensure the streamed array item is placed
@@ -103,6 +107,20 @@ class IncrementalRequest<TData>
 
   getPendingType(id: string): "defer" | "stream" {
     return id in this.streamPositions ? "stream" : "defer";
+  }
+
+  getPendingWithInfo() {
+    return Array.from(this.pendingMap.values()).map((pending) => {
+      if (pending.id in this.streamPositions) {
+        return { type: "stream" as const, path: pending.path };
+      }
+
+      return {
+        type: "defer" as const,
+        delivered: !!this.completedMap.get(pending.id),
+        path: pending.path,
+      };
+    });
   }
 
   handle(
@@ -211,6 +229,7 @@ class IncrementalRequest<TData>
       for (const completed of chunk.completed) {
         const { path } = this.pendingMap.get(completed.id)!;
         const streamPosition = this.streamPositions[completed.id];
+        this.completedMap.set(completed.id, !completed.errors);
 
         // Truncate any stream arrays in case the chunk only contains `hasNext`
         // and `completed`.

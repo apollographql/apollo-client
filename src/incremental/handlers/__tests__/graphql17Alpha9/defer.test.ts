@@ -2705,3 +2705,87 @@ test("ignores `data` property added to subsequent chunks by misbehaving servers"
     partial: false,
   });
 });
+
+test("handles an incremental payload for a defer id that already completed with errors", async () => {
+  // `hero.name` is selected by both deferred fragments, so the server executes
+  // it as a single unit shared between them and reports it with the id of the
+  // fragment with the deepest path (`inner`). Since `nonNullName` errors,
+  // `inner` completes with errors before that shared unit resolves, which means
+  // an `incremental` payload arrives for an id that has already been completed.
+  const query = gql`
+    query {
+      ... @defer(label: "outer") {
+        hero {
+          name
+        }
+      }
+      hero {
+        ... on Hero @defer(label: "inner") {
+          name
+          nonNullName
+        }
+      }
+    }
+  `;
+
+  const handler = new GraphQL17Alpha9Handler();
+  const request = handler.startRequest({ query });
+
+  const incoming = run(query, {
+    hero: {
+      ...hero,
+      name: async () => {
+        await wait(10);
+        return "Luke";
+      },
+      nonNullName: () => null,
+    },
+  });
+
+  {
+    const { value: chunk, done } = await incoming.next();
+
+    assert(!done);
+    assert(handler.isIncrementalResult(chunk));
+    expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      data: { hero: {} },
+    });
+    expect(request.hasNext).toBe(true);
+  }
+
+  {
+    const { value: chunk, done } = await incoming.next();
+
+    assert(!done);
+    assert(handler.isIncrementalResult(chunk));
+    expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      data: { hero: {} },
+      errors: [
+        {
+          message:
+            "Cannot return null for non-nullable field Hero.nonNullName.",
+          path: ["hero", "nonNullName"],
+        },
+      ],
+    });
+    expect(request.hasNext).toBe(true);
+  }
+
+  {
+    const { value: chunk, done } = await incoming.next();
+
+    assert(!done);
+    assert(handler.isIncrementalResult(chunk));
+    expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      data: { hero: { name: "Luke" } },
+      errors: [
+        {
+          message:
+            "Cannot return null for non-nullable field Hero.nonNullName.",
+          path: ["hero", "nonNullName"],
+        },
+      ],
+    });
+    expect(request.hasNext).toBe(false);
+  }
+});

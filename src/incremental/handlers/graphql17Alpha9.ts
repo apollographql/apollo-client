@@ -232,7 +232,6 @@ class IncrementalRequest<TData>
           };
           details.state.streamPosition = streamPosition;
         }
-        this.pendingMap.delete(completed.id);
 
         if (completed.errors) {
           this.errors.push(...completed.errors);

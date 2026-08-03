@@ -26,6 +26,7 @@ import type {
 } from "@apollo/client/utilities/internal";
 import {
   DeepMerger,
+  getCatchTo,
   getDefaultValues,
   getFragmentFromSelection,
   getMainDefinition,
@@ -69,6 +70,8 @@ import type {
   NormalizedCache,
   ReadMergeModifyContext,
 } from "./types.js";
+import { GraphQLFormattedError } from "graphql";
+import { ErrorResult, FieldResult, OkResult } from "@apollo/client";
 
 type DataState =
   // no data
@@ -549,7 +552,18 @@ export class StoreReader {
           context
         );
 
+        const catchTo = getCatchTo(selection);
         const resultName = resultKeyNameFromField(selection);
+        const dataId =
+          isReference(objectOrReference) ?
+            objectOrReference.__ref
+          : policies.identify(objectOrReference)[0];
+
+        let errors: GraphQLFormattedError[] | undefined;
+
+        if (dataId) {
+          errors = store.getFieldErrors(dataId, selection.name.value);
+        }
 
         if (fieldValue === void 0) {
           if (!addTypenameToDocument.added(selection)) {
@@ -644,6 +658,11 @@ export class StoreReader {
         }
 
         if (fieldValue !== void 0) {
+          if (catchTo === "RESULT") {
+            fieldValue =
+              errors ? toErrorResult(errors) : toOkResult(fieldValue);
+          }
+
           objectsToMerge.push({ [resultName]: fieldValue });
         }
       } else {
@@ -1128,4 +1147,12 @@ function mergeDataState(
   }
 
   return DATA_STATE_MERGES[current][next] || current;
+}
+
+function toOkResult<T>(value: T): OkResult<T> {
+  return { ok: true, value };
+}
+
+function toErrorResult(errors: GraphQLFormattedError[]): ErrorResult {
+  return { ok: false, errors };
 }

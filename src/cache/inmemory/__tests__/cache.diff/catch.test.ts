@@ -94,7 +94,7 @@ test("returns FieldResult failure for a field with @catch(to: RESULT) when the f
   });
 });
 
-test.skip("throws for a field with @catch(to: THROW) when the field has a path error", () => {
+test("throws for a field with @catch(to: THROW) when the field has a path error", () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -226,7 +226,7 @@ test("returns FieldResult failure for an aliased field with @catch(to: RESULT) w
   });
 });
 
-test.skip("throws for an aliased field with @catch(to: THROW) when the path error uses the alias", () => {
+test("throws for an aliased field with @catch(to: THROW) when the path error uses the alias", () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -268,7 +268,7 @@ test.skip("throws for an aliased field with @catch(to: THROW) when the path erro
   );
 });
 
-test.skip("returns null for @catch(to: NULL) when an ancestor field is aliased in the error path", () => {
+test("returns null for @catch(to: NULL) when an ancestor field is aliased in the error path", () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -291,7 +291,6 @@ test.skip("returns null for @catch(to: NULL) when an ancestor field is aliased i
     errors: [
       {
         message: "Cannot resolve user.name",
-        // Alias on an intermediate path segment.
         path: ["viewer", "name"],
       },
     ],
@@ -310,7 +309,7 @@ test.skip("returns null for @catch(to: NULL) when an ancestor field is aliased i
   });
 });
 
-test.skip("returns FieldResult failure for @catch(to: RESULT) when an ancestor field is aliased in the error path", () => {
+test("returns FieldResult failure for @catch(to: RESULT) when an ancestor field is aliased in the error path", () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -359,7 +358,7 @@ test.skip("returns FieldResult failure for @catch(to: RESULT) when an ancestor f
   });
 });
 
-test.skip("throws for @catch(to: THROW) when an ancestor field is aliased in the error path", () => {
+test("throws for @catch(to: THROW) when an ancestor field is aliased in the error path", () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -401,7 +400,7 @@ test.skip("throws for @catch(to: THROW) when an ancestor field is aliased in the
   );
 });
 
-test.skip("returns FieldResult failure for @catch(to: RESULT) when both an ancestor and the errored field are aliased", () => {
+test("returns FieldResult failure for @catch(to: RESULT) when both an ancestor and the errored field are aliased", () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -450,7 +449,7 @@ test.skip("returns FieldResult failure for @catch(to: RESULT) when both an ances
   });
 });
 
-test.skip("returns null for an uncaught field when the operation has @catchByDefault(to: NULL)", () => {
+test("returns null for an uncaught field when the operation has @catchByDefault(to: NULL)", () => {
   const cache = new InMemoryCache();
   const query = gql`
     query UserQuery @catchByDefault(to: NULL) {

@@ -95,6 +95,7 @@ import type {
   MutationFetchPolicy,
   WatchQueryFetchPolicy,
 } from "./watchQueryOptions.js";
+import { dataStateErrorCache } from "./dataStateErrorCache.js";
 
 interface MutationStoreValue {
   mutation: DocumentNode;
@@ -1079,9 +1080,12 @@ export class QueryManager {
         if (hasErrors && errorPolicy === "none") {
           queryInfo.resetLastWrite();
           observableQuery?.["resetNotifications"]();
-          throw new CombinedGraphQLErrors(
+          const error = new CombinedGraphQLErrors(
             removeStreamDetailsFromExtensions(result)
           );
+
+          dataStateErrorCache.set(error, dataState);
+          throw error;
         }
 
         const partial = dataState !== "complete";

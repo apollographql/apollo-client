@@ -55,6 +55,7 @@ import type {
   UpdateQueryOptions,
   WatchQueryFetchPolicy,
 } from "./watchQueryOptions.js";
+import { dataStateErrorCache } from "./dataStateErrorCache.js";
 
 const { assign, hasOwnProperty } = Object;
 
@@ -2022,7 +2023,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         : notification.value;
 
       if (notification.kind === "E" && result.dataState === "streaming") {
-        result.dataState = "complete" as any;
+        result.dataState =
+          dataStateErrorCache.get(notification.error) ?? ("complete" as any);
       }
 
       if (result.error) {

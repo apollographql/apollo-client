@@ -37,7 +37,7 @@ import type {
 import { fieldNameFromStoreName, hasOwn } from "./helpers.js";
 import type { Policies, StorageType } from "./policies.js";
 import type {
-  FieldErrors,
+  FieldErrorsById,
   NormalizedCache,
   NormalizedCacheObject,
 } from "./types.js";
@@ -50,7 +50,7 @@ export abstract class EntityStore implements NormalizedCache {
   public declare static Root: typeof Root;
 
   protected data: NormalizedCacheObject = {};
-  protected fieldErrors: FieldErrors = {};
+  protected fieldErrors: FieldErrorsById = {};
 
   constructor(
     public readonly policies: Policies,

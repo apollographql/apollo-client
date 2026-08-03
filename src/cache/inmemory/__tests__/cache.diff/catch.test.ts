@@ -126,6 +126,302 @@ test.skip("throws for a field with @catch(to: THROW) when the field has a path e
   }).toThrow();
 });
 
+test.skip("returns null for an aliased field with @catch(to: NULL) when the path error uses the alias", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      user {
+        id
+        displayName: name @catch(to: NULL)
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      user: {
+        __typename: "User",
+        id: "1",
+        displayName: null,
+      },
+    },
+    errors: [
+      {
+        message: "Cannot resolve user.name",
+        path: ["user", "displayName"],
+      },
+    ],
+  });
+
+  expect(cache.diff({ query, optimistic: false })).toStrictEqualTyped({
+    complete: true,
+    missing: undefined,
+    result: {
+      user: {
+        __typename: "User",
+        id: "1",
+        displayName: null,
+      },
+    },
+  });
+});
+
+test.skip("returns FieldResult failure for an aliased field with @catch(to: RESULT) when the path error uses the alias", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      user {
+        id
+        displayName: name @catch(to: RESULT)
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      user: {
+        __typename: "User",
+        id: "1",
+        displayName: null,
+      },
+    },
+    errors: [
+      {
+        message: "Cannot resolve user.name",
+        path: ["user", "displayName"],
+      },
+    ],
+  });
+
+  expect(cache.diff({ query, optimistic: false })).toStrictEqualTyped({
+    complete: true,
+    missing: undefined,
+    result: {
+      user: {
+        __typename: "User",
+        id: "1",
+        displayName: {
+          ok: false,
+          errors: [
+            {
+              message: "Cannot resolve user.name",
+              path: ["user", "displayName"],
+            },
+          ],
+        },
+      },
+    },
+  });
+});
+
+test.skip("throws for an aliased field with @catch(to: THROW) when the path error uses the alias", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      user {
+        id
+        displayName: name @catch(to: THROW)
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      user: {
+        __typename: "User",
+        id: "1",
+        displayName: null,
+      },
+    },
+    errors: [
+      {
+        message: "Cannot resolve user.name",
+        path: ["user", "displayName"],
+      },
+    ],
+  });
+
+  expect(() => {
+    cache.diff({ query, optimistic: false });
+  }).toThrow();
+});
+
+test.skip("returns null for @catch(to: NULL) when an ancestor field is aliased in the error path", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      viewer: user {
+        id
+        name @catch(to: NULL)
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      viewer: {
+        __typename: "User",
+        id: "1",
+        name: null,
+      },
+    },
+    errors: [
+      {
+        message: "Cannot resolve user.name",
+        // Alias on an intermediate path segment.
+        path: ["viewer", "name"],
+      },
+    ],
+  });
+
+  expect(cache.diff({ query, optimistic: false })).toStrictEqualTyped({
+    complete: true,
+    missing: undefined,
+    result: {
+      viewer: {
+        __typename: "User",
+        id: "1",
+        name: null,
+      },
+    },
+  });
+});
+
+test.skip("returns FieldResult failure for @catch(to: RESULT) when an ancestor field is aliased in the error path", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      viewer: user {
+        id
+        name @catch(to: RESULT)
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      viewer: {
+        __typename: "User",
+        id: "1",
+        name: null,
+      },
+    },
+    errors: [
+      {
+        message: "Cannot resolve user.name",
+        path: ["viewer", "name"],
+      },
+    ],
+  });
+
+  expect(cache.diff({ query, optimistic: false })).toStrictEqualTyped({
+    complete: true,
+    missing: undefined,
+    result: {
+      viewer: {
+        __typename: "User",
+        id: "1",
+        name: {
+          ok: false,
+          errors: [
+            {
+              message: "Cannot resolve user.name",
+              path: ["viewer", "name"],
+            },
+          ],
+        },
+      },
+    },
+  });
+});
+
+test.skip("throws for @catch(to: THROW) when an ancestor field is aliased in the error path", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      viewer: user {
+        id
+        name @catch(to: THROW)
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      viewer: {
+        __typename: "User",
+        id: "1",
+        name: null,
+      },
+    },
+    errors: [
+      {
+        message: "Cannot resolve user.name",
+        path: ["viewer", "name"],
+      },
+    ],
+  });
+
+  expect(() => {
+    cache.diff({ query, optimistic: false });
+  }).toThrow();
+});
+
+test.skip("returns FieldResult failure for @catch(to: RESULT) when both an ancestor and the errored field are aliased", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      viewer: user {
+        id
+        displayName: name @catch(to: RESULT)
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      viewer: {
+        __typename: "User",
+        id: "1",
+        displayName: null,
+      },
+    },
+    errors: [
+      {
+        message: "Cannot resolve user.name",
+        path: ["viewer", "displayName"],
+      },
+    ],
+  });
+
+  expect(cache.diff({ query, optimistic: false })).toStrictEqualTyped({
+    complete: true,
+    missing: undefined,
+    result: {
+      viewer: {
+        __typename: "User",
+        id: "1",
+        displayName: {
+          ok: false,
+          errors: [
+            {
+              message: "Cannot resolve user.name",
+              path: ["viewer", "displayName"],
+            },
+          ],
+        },
+      },
+    },
+  });
+});
+
 test.skip("returns null for an uncaught field when the operation has @catchByDefault(to: NULL)", () => {
   const cache = new InMemoryCache();
   const query = gql`

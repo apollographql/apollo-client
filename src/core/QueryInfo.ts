@@ -19,7 +19,6 @@ import {
   graphQLResultHasError,
   handleIncrementalSymbol,
   hasDirectives,
-  streamInfoSymbol,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 

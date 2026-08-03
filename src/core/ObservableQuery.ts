@@ -1929,15 +1929,57 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     },
     SubjectValue<TData, TVariables>
   > = filterMap((notification) => {
-    const { query, variables, meta } = notification;
+    const { query, meta } = notification;
 
     if (notification.source === "setResult") {
-      return { query, variables, result: notification.value, meta };
+      return {
+        query,
+        variables: this.variables,
+        result: notification.value,
+        meta,
+      };
     }
 
-    if (notification.kind === "C" || !isEqualQuery(notification, this)) {
+    if (notification.kind === "C") {
       return;
     }
+
+    const resolvedVariables =
+      "resolvedVariables" in notification ?
+        notification.resolvedVariables
+      : undefined;
+
+    // Usually we prefer to drop notifications that don't match this query
+    // but this breaks when used with `@export` queries that resolve variables
+    // after the request is initiated. `notification.resolvedVariables` gives us
+    // the variables the query actually resolved with during evaluation in
+    // QueryManager (which is the variables value after `@export` variables have
+    // been applied), but we need to update this query with those resolved
+    // variables maybe in the middle of a request (updating is handled below).
+    // When we update this.variables to the resolved variables, this causes
+    // isEqualQuery(notification, this) to fail for future notifications since
+    // the notification.variables holds the stale variables value. In this case,
+    // we want to allow the notification through only if the current variables
+    // value matches the resolved variables.
+    //
+    // Note: the check for matching resolved variables typically kicks in for
+    // multi-emission fetches (such as defer, or cache-and-network, etc).
+    if (notification.query !== this.query) {
+      return;
+    }
+
+    if (!equal(resolvedVariables, this.variables)) {
+      if (!equal(notification.variables, this.variables)) {
+        return;
+      }
+
+      if (resolvedVariables) {
+        this.options.variables = resolvedVariables as TVariables;
+        this.resubscribeCache();
+      }
+    }
+
+    const variables = this.variables;
 
     let result: ObservableQuery.Result<TData>;
     const previous = this.subject.getValue();
@@ -1961,7 +2003,11 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       result =
         notification.kind === "E" ?
           ({
-            ...(isEqualQuery(previous, notification) ?
+            ...((
+              isEqualQuery(previous, notification) ||
+              (resolvedVariables &&
+                equal(resolvedVariables, previous.variables))
+            ) ?
               previous.result
             : { data: undefined, dataState: "empty", partial: true }),
             error: notification.error,

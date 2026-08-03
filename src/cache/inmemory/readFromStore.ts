@@ -25,6 +25,7 @@ import type {
   StreamInfoTrie,
 } from "@apollo/client/utilities/internal";
 import {
+  compact,
   DeepMerger,
   getDefaultValues,
   getFragmentFromSelection,
@@ -325,10 +326,7 @@ export class StoreReader {
     const returnIncremental = Object.hasOwn(options, handleIncrementalSymbol);
     const policies = this.config.cache.policies;
 
-    variables = {
-      ...getDefaultValues(getQueryDefinition(query)),
-      ...variables!,
-    };
+    variables = compact(getDefaultValues(getQueryDefinition(query)), variables);
 
     const rootRef = makeReference(rootId);
     const context: ReadContext = {

@@ -314,6 +314,14 @@
   > [!NOTE]
   > Setting a cache type enforces that cache type in the `cache` option for the `ApolloClient` constructor.
 
+## 4.2.9
+
+### Patch Changes
+
+- [#13364](https://github.com/apollographql/apollo-client/pull/13364) [`2f383e7`](https://github.com/apollographql/apollo-client/commit/2f383e7e484ceaec72df205b52abf8430cc59891) Thanks [@atharv-sys32](https://github.com/atharv-sys32)! - Fix a bug where GraphQL variable default values were not applied during cache reads when variables with defaults were explicitly set to `undefined`. This caused `@include`/`@skip` directives to throw "Invalid variable referenced" errors when the variable was passed as `undefined` instead of being omitted entirely.
+
+- [#13367](https://github.com/apollographql/apollo-client/pull/13367) [`2b39cc8`](https://github.com/apollographql/apollo-client/commit/2b39cc8b2e0a6b0a6c1dfc2f64fa2940c59b23bd) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where some `@export` queries would not react to cache updates when the fields keyed by exported variables were updated.
+
 ## 4.2.8
 
 ### Patch Changes

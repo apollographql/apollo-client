@@ -1123,10 +1123,12 @@ interface QueryManagerOptions {
 namespace QueryNotification {
     // (undocumented)
     type FromCache<TData> = NextNotification<ObservableQuery.Result<TData>> & {
+        resolvedVariables?: OperationVariables;
         source: "cache";
     };
     // (undocumented)
     type FromNetwork<TData> = ObservableNotification<ObservableQuery.Result<TData>> & {
+        resolvedVariables?: OperationVariables;
         source: "network";
     };
     // (undocumented)

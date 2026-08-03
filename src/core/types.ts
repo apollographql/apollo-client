@@ -384,10 +384,12 @@ export declare namespace QueryNotification {
   type FromNetwork<TData> = ObservableNotification<
     ObservableQuery.Result<TData>
   > & {
+    resolvedVariables?: OperationVariables;
     source: "network";
   };
 
   type FromCache<TData> = NextNotification<ObservableQuery.Result<TData>> & {
+    resolvedVariables?: OperationVariables;
     source: "cache";
   };
 

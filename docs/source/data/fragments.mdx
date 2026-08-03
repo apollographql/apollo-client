@@ -1790,3 +1790,17 @@ The following masking utility types are available to override:
 - `Unmasked<TData>` - Unwraps `TData` into the full result type
 
 For more information about other overridable types in Apollo Client, see the [TypeScript guide](../development-testing/static-typing).
+
+## Troubleshooting
+
+### Unique names
+
+Fragment names must be unique across your entire application. If you reuse a fragment name, `graphql-tag` provides a warning about the conflict at runtime to help you identify the issue:
+
+```text
+Warning: fragment with name SomeFragment already exists.
+graphql-tag enforces all fragment names across your application to be unique; read more about
+this in the docs: http://dev.apollodata.com/core/fragments.html#unique-names
+```
+
+As a best practice, use descriptive, component-scoped fragment names (like `CartItemFragment` or `UserProfileCardFragment`) to avoid name collisions.

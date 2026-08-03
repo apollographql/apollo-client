@@ -1620,6 +1620,10 @@ export class QueryManager {
         return of({
           kind: "N",
           value: toResult(data),
+          // Always attach the variables used for this fetch so @export
+          // resolution can update ObservableQuery.options.variables and
+          // resubscribe the cache watch under the correct variable set.
+          resolvedVariables: variables,
           source: "cache",
         });
       };
@@ -1654,6 +1658,10 @@ export class QueryManager {
             (resolved): QueryNotification.FromCache<TData> => ({
               kind: "N",
               value: toResult(resolved.data || void 0),
+              // Always attach the variables used for this fetch so @export
+              // resolution can update ObservableQuery.options.variables and
+              // resubscribe the cache watch under the correct variable set.
+              resolvedVariables: variables,
               source: "cache",
             })
           )
@@ -1698,6 +1706,10 @@ export class QueryManager {
         map(
           (result): QueryNotification.FromNetwork<TData> => ({
             ...result,
+            // Always attach the variables used for this fetch so @export
+            // resolution can update ObservableQuery.options.variables and
+            // resubscribe the cache watch under the correct variable set.
+            resolvedVariables: variables,
             source: "network",
           })
         )

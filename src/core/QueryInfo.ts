@@ -293,33 +293,33 @@ export class QueryInfo<
       dataState: incrementalResult.data == null ? "empty" : "complete",
     };
 
+    const hasPendingDefer = this.incremental
+      ?.getPendingWithInfo?.()
+      .some((pending) => pending.type === "defer" && !pending.delivered);
+
+    if (
+      hasPendingDefer ||
+      // The Defer20220824Handler cannot track pending/completed incremental
+      // chunks due to its data format so we naively set dataState to
+      // streaming if we are still processing chunks. The only case where
+      // streaming is incorrect and should actually be complete is when
+      // both a @defer and @stream boundary is present and the @defer chunk
+      // has completed before the `@stream` array.
+      //
+      // Assigning the naive "streaming" value avoids a much more expensive
+      // pass over `result.data` that would otherwise need to traverse the
+      // selection sets and evaluate the data object at each defer boundary
+      // to see if it fulfills the selection set. For such a narrow case where
+      // its incorrect on a format that is now outdated is not worth the
+      // fix so we are ok with reporting a `streaming` here.
+      (!this.incremental?.getPendingWithInfo &&
+        this.hasNext &&
+        hasDirectives(["defer"], query))
+    ) {
+      result.dataState = "streaming";
+    }
+
     if (skipCache) {
-      const hasPendingDefer = this.incremental
-        ?.getPendingWithInfo?.()
-        .some((pending) => pending.type === "defer" && !pending.delivered);
-
-      if (
-        hasPendingDefer ||
-        // The Defer20220824Handler cannot track pending/completed incremental
-        // chunks due to its data format so we naively set dataState to
-        // streaming if we are still processing chunks. The only case where
-        // streaming is incorrect and should actually be complete is when
-        // both a @defer and @stream boundary is present and the @defer chunk
-        // has completed before the `@stream` array.
-        //
-        // Assigning the naive "streaming" value avoids a much more expensive
-        // pass over `result.data` that would otherwise need to traverse the
-        // selection sets and evaluate the data object at each defer boundary
-        // to see if it fulfills the selection set. For such a narrow case where
-        // its incorrect on a format that is now outdated is not worth the
-        // fix so we are ok with reporting a `streaming` here.
-        (!this.incremental?.getPendingWithInfo &&
-          this.hasNext &&
-          hasDirectives(["defer"], query))
-      ) {
-        result.dataState = "streaming";
-      }
-
       return result;
     }
 

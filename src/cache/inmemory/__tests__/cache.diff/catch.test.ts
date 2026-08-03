@@ -94,6 +94,55 @@ test("returns FieldResult failure for a field with @catch(to: RESULT) when the f
   });
 });
 
+test("defaults bare @catch to RESULT and does not inherit @catchByDefault", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query UserQuery @catchByDefault(to: THROW) {
+      user {
+        id
+        name @catch
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      user: {
+        __typename: "User",
+        id: "1",
+        name: null,
+      },
+    },
+    errors: [
+      {
+        message: "Cannot resolve user.name",
+        path: ["user", "name"],
+      },
+    ],
+  });
+
+  expect(cache.diff({ query, optimistic: false })).toStrictEqualTyped({
+    result: {
+      user: {
+        __typename: "User",
+        id: "1",
+        name: {
+          ok: false,
+          errors: [
+            {
+              message: "Cannot resolve user.name",
+              path: ["user", "name"],
+            },
+          ],
+        },
+      },
+    },
+    complete: true,
+    missing: undefined,
+  });
+});
+
 test("throws for a field with @catch(to: THROW) when the field has a path error", () => {
   const cache = new InMemoryCache();
   const query = gql`

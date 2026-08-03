@@ -105,10 +105,6 @@ class IncrementalRequest<TData>
     return Array.from(this.pendingMap.values());
   }
 
-  getPendingType(id: string): "defer" | "stream" {
-    return id in this.streamPositions ? "stream" : "defer";
-  }
-
   getPendingWithInfo() {
     return Array.from(this.pendingMap.values()).map((pending) => {
       if (pending.id in this.streamPositions) {

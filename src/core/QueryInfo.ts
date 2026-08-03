@@ -203,6 +203,10 @@ export class QueryInfo<
     return this.incremental ? this.incremental.hasNext : false;
   }
 
+  get incrementalHandler() {
+    return this.queryManager.incrementalHandler;
+  }
+
   private maybeHandleIncrementalResult(
     cacheData: TData | DeepPartial<TData> | undefined | null,
     incoming: ApolloLink.Result<TData>,
@@ -211,10 +215,8 @@ export class QueryInfo<
     DataValue.Complete<TData> | DataValue.Streaming<TData>,
     ExtensionsWithStreamInfo
   > {
-    const { incrementalHandler } = this.queryManager;
-
-    if (incrementalHandler.isIncrementalResult(incoming)) {
-      this.incremental ||= incrementalHandler.startRequest<
+    if (this.incrementalHandler.isIncrementalResult(incoming)) {
+      this.incremental ||= this.incrementalHandler.startRequest<
         TData & Record<string, unknown>
       >({
         query,

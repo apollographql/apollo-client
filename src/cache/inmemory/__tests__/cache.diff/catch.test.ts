@@ -1,5 +1,6 @@
 import { gql } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { markAsStreaming } from "@apollo/client/testing/internal";
 import { handleIncrementalSymbol } from "@apollo/client/utilities/internal";
 
@@ -123,7 +124,16 @@ test.skip("throws for a field with @catch(to: THROW) when the field has a path e
 
   expect(() => {
     cache.diff({ query, optimistic: false });
-  }).toThrow();
+  }).toThrow(
+    new CombinedGraphQLErrors({
+      errors: [
+        {
+          message: "Cannot resolve user.name",
+          path: ["user", "name"],
+        },
+      ],
+    })
+  );
 });
 
 test.skip("returns null for an aliased field with @catch(to: NULL) when the path error uses the alias", () => {
@@ -246,7 +256,16 @@ test.skip("throws for an aliased field with @catch(to: THROW) when the path erro
 
   expect(() => {
     cache.diff({ query, optimistic: false });
-  }).toThrow();
+  }).toThrow(
+    new CombinedGraphQLErrors({
+      errors: [
+        {
+          message: "Cannot resolve user.name",
+          path: ["user", "displayName"],
+        },
+      ],
+    })
+  );
 });
 
 test.skip("returns null for @catch(to: NULL) when an ancestor field is aliased in the error path", () => {
@@ -370,7 +389,16 @@ test.skip("throws for @catch(to: THROW) when an ancestor field is aliased in the
 
   expect(() => {
     cache.diff({ query, optimistic: false });
-  }).toThrow();
+  }).toThrow(
+    new CombinedGraphQLErrors({
+      errors: [
+        {
+          message: "Cannot resolve user.name",
+          path: ["viewer", "name"],
+        },
+      ],
+    })
+  );
 });
 
 test.skip("returns FieldResult failure for @catch(to: RESULT) when both an ancestor and the errored field are aliased", () => {
@@ -542,7 +570,16 @@ test.skip("throws for an uncaught field when the operation has @catchByDefault(t
 
   expect(() => {
     cache.diff({ query, optimistic: false });
-  }).toThrow();
+  }).toThrow(
+    new CombinedGraphQLErrors({
+      errors: [
+        {
+          message: "Cannot resolve user.name",
+          path: ["user", "name"],
+        },
+      ],
+    })
+  );
 });
 
 test.skip("returns null for an uncaught field when cache.diff is called with catchByDefault: NULL", () => {
@@ -669,7 +706,16 @@ test.skip("throws for an uncaught field when cache.diff is called with catchByDe
 
   expect(() => {
     cache.diff({ query, optimistic: false, catchByDefault: "THROW" });
-  }).toThrow();
+  }).toThrow(
+    new CombinedGraphQLErrors({
+      errors: [
+        {
+          message: "Cannot resolve user.name",
+          path: ["user", "name"],
+        },
+      ],
+    })
+  );
 });
 
 test.skip("returns FieldResult success for a field with @catch(to: RESULT) when the field has no error", () => {
@@ -1199,7 +1245,16 @@ test.skip("throws for a deferred field with @catch(to: THROW) when the deferred 
       optimistic: false,
       [handleIncrementalSymbol]: undefined,
     });
-  }).toThrow();
+  }).toThrow(
+    new CombinedGraphQLErrors({
+      errors: [
+        {
+          message: "Cannot resolve user.name",
+          path: ["user", "name"],
+        },
+      ],
+    })
+  );
 });
 
 test.skip("returns streaming data without applying @catch for deferred fields that have not arrived yet", () => {
@@ -1566,7 +1621,16 @@ test.skip("bubbles a child path error to a parent field with @catch(to: THROW)",
 
   expect(() => {
     cache.diff({ query, optimistic: false });
-  }).toThrow();
+  }).toThrow(
+    new CombinedGraphQLErrors({
+      errors: [
+        {
+          message: "Cannot resolve user.name",
+          path: ["user", "name"],
+        },
+      ],
+    })
+  );
 });
 
 test.skip("bubbles a deeply nested path error to an ancestor field with @catch(to: RESULT)", () => {
@@ -1875,7 +1939,16 @@ test.skip("honors @catch(to: THROW) when reading an overlapping field written by
 
   expect(() => {
     cache.diff({ query: readQuery, optimistic: false });
-  }).toThrow();
+  }).toThrow(
+    new CombinedGraphQLErrors({
+      errors: [
+        {
+          message: "Cannot resolve user.name",
+          path: ["user", "name"],
+        },
+      ],
+    })
+  );
 });
 
 test.skip("clears field error metadata when an overlapping write stores a successful value for the same field", () => {
@@ -2374,6 +2447,15 @@ test.skip("throws the same error instance for @catch(to: THROW) across reads whe
     ],
   });
 
+  const expectedError = new CombinedGraphQLErrors({
+    errors: [
+      {
+        message: "Cannot resolve user.name",
+        path: ["user", "name"],
+      },
+    ],
+  });
+
   let firstError: unknown;
   try {
     cache.diff({ query, optimistic: false });
@@ -2388,7 +2470,7 @@ test.skip("throws the same error instance for @catch(to: THROW) across reads whe
     secondError = error;
   }
 
-  expect(firstError).toBeInstanceOf(Error);
+  expect(firstError).toEqual(expectedError);
   expect(secondError).toBe(firstError);
 });
 
@@ -2420,6 +2502,15 @@ test.skip("throws the same error instance for @catch(to: THROW) after rewriting 
     ],
   });
 
+  const expectedError = new CombinedGraphQLErrors({
+    errors: [
+      {
+        message: "Cannot resolve user.name",
+        path: ["user", "name"],
+      },
+    ],
+  });
+
   let firstError: unknown;
   try {
     cache.diff({ query, optimistic: false });
@@ -2451,7 +2542,7 @@ test.skip("throws the same error instance for @catch(to: THROW) after rewriting 
     secondError = error;
   }
 
-  expect(firstError).toBeInstanceOf(Error);
+  expect(firstError).toEqual(expectedError);
   expect(secondError).toBe(firstError);
 });
 
@@ -2478,6 +2569,23 @@ test.skip("throws a different error instance for @catch(to: THROW) when the path
     errors: [
       {
         message: "First name resolver failed",
+        path: ["user", "name"],
+      },
+    ],
+  });
+
+  const firstExpectedError = new CombinedGraphQLErrors({
+    errors: [
+      {
+        message: "First name resolver failed",
+        path: ["user", "name"],
+      },
+    ],
+  });
+  const secondExpectedError = new CombinedGraphQLErrors({
+    errors: [
+      {
+        message: "Second name resolver failed",
         path: ["user", "name"],
       },
     ],
@@ -2514,12 +2622,9 @@ test.skip("throws a different error instance for @catch(to: THROW) when the path
     secondError = error;
   }
 
-  expect(firstError).toBeInstanceOf(Error);
-  expect(secondError).toBeInstanceOf(Error);
+  expect(firstError).toEqual(firstExpectedError);
+  expect(secondError).toEqual(secondExpectedError);
   expect(secondError).not.toBe(firstError);
-  expect((secondError as Error).message).toContain(
-    "Second name resolver failed"
-  );
 });
 
 test.skip("merges fields and path errors when the same entity is written via two selection sets", () => {

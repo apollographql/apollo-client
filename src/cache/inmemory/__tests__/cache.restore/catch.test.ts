@@ -1,5 +1,6 @@
 import { gql } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
 
 test.skip("restores path errors from __META.fieldErrors for @catch(to: NULL) reads", () => {
   const cache = new InMemoryCache();
@@ -142,7 +143,16 @@ test.skip("restores path errors from __META.fieldErrors for @catch(to: THROW) re
 
   expect(() => {
     cache.diff({ query, optimistic: false });
-  }).toThrow();
+  }).toThrow(
+    new CombinedGraphQLErrors({
+      errors: [
+        {
+          message: "Cannot resolve user.name",
+          path: ["user", "name"],
+        },
+      ],
+    })
+  );
 });
 
 test.skip("restores without __META.fieldErrors leaves fields as ordinary null values", () => {

@@ -1106,18 +1106,12 @@ export class QueryManager {
           aqr[extensionsSymbol] = result.extensions;
         }
 
-        if (hasErrors) {
-          if (errorPolicy === "none") {
-            aqr.data = void 0 as TData;
-            aqr.dataState = "empty";
-          }
-          if (errorPolicy !== "ignore") {
-            aqr.error = new CombinedGraphQLErrors(
-              removeStreamDetailsFromExtensions(result)
-            );
-            if (aqr.networkStatus !== NetworkStatus.streaming) {
-              aqr.networkStatus = NetworkStatus.error;
-            }
+        if (hasErrors && errorPolicy !== "ignore") {
+          aqr.error = new CombinedGraphQLErrors(
+            removeStreamDetailsFromExtensions(result)
+          );
+          if (aqr.networkStatus !== NetworkStatus.streaming) {
+            aqr.networkStatus = NetworkStatus.error;
           }
         }
 

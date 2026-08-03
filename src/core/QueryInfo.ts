@@ -143,10 +143,10 @@ export class QueryInfo<
     this.queryManager = queryManager;
 
     // Track how often cache.evict is called, since we want eviction to
-    // override the feud-stopping logic in the markQueryResult method, by
-    // causing shouldWrite to return true. Wrapping the cache.evict method
-    // is a bit of a hack, but it saves us from having to make eviction
-    // counting an official part of the ApolloCache API.
+    // override the write-skipping logic in `shouldWrite`, by causing it to
+    // return true. Wrapping the cache.evict method is a bit of a hack, but it
+    // saves us from having to make eviction counting an official part of the
+    // ApolloCache API.
     if (!destructiveMethodCounts.has(cache)) {
       destructiveMethodCounts.set(cache, 0);
       wrapDestructiveCacheMethod(cache, "evict");
@@ -157,8 +157,14 @@ export class QueryInfo<
 
   /**
    * @internal
-   * For feud-preventing behaviour, `lastWrite` should be shared by all `QueryInfo` instances of an `ObservableQuery`.
-   * In the case of a standalone `QueryInfo`, we will keep a local version.
+   * Tracks the last result written to the cache so that `shouldWrite` can skip
+   * an identical write. Since a `QueryInfo` only ever represents a single
+   * network request, this is shared by all `QueryInfo` instances of an
+   * `ObservableQuery`. A standalone `QueryInfo` keeps a local version.
+   *
+   * A network result that was explicitly asked for always takes precedence over
+   * what is already cached, so `ObservableQuery.refetch` and polling clear this
+   * value before starting their request.
    */
   public _lastWrite?: LastWrite;
   private get lastWrite(): LastWrite | undefined {
@@ -177,18 +183,18 @@ export class QueryInfo<
     variables: ApolloClient.WatchQueryOptions["variables"]
   ) {
     const { lastWrite } = this;
-    return !(
-      lastWrite &&
+    return (
+      !lastWrite ||
       // If cache.evict has been called since the last time we wrote this
       // data into the cache, there's a chance writing this result into
       // the cache will repair what was evicted.
-      lastWrite.dmCount === destructiveMethodCounts.get(this.cache) &&
-      equal(variables, lastWrite.variables) &&
-      equal(result.data, lastWrite.result.data) &&
+      lastWrite.dmCount !== destructiveMethodCounts.get(this.cache) ||
+      !equal(variables, lastWrite.variables) ||
+      !equal(result.data, lastWrite.result.data) ||
       // We have to compare these values because its possible the final chunk
       // emitted in the incremental result is just `hasNext: false`. This
       // ensures we trigger a cache write when we get `isLastChunk: true`.
-      result.extensions?.[streamInfoSymbol] ===
+      result.extensions?.[streamInfoSymbol] !==
         lastWrite.result.extensions?.[streamInfoSymbol]
     );
   }
@@ -251,7 +257,7 @@ export class QueryInfo<
     this.observableQuery?.["resetNotifications"]();
 
     const skipCache = cacheWriteBehavior === CacheWriteBehavior.FORBID;
-    const lastDiff =
+    const diff =
       skipCache ? undefined : (
         this.getDiff({
           ...diffOptions,
@@ -263,7 +269,7 @@ export class QueryInfo<
       );
 
     const incrementalResult = this.maybeHandleIncrementalResult(
-      lastDiff?.result,
+      diff?.result,
       incoming,
       query
     );
@@ -303,112 +309,100 @@ export class QueryInfo<
       return result;
     }
 
-    if (shouldWriteResult(result, errorPolicy)) {
-      // Using a transaction here so we have a chance to read the result
-      // back from the cache before the watch callback fires as a result
-      // of writeQuery, so we can store the new diff quietly and ignore
-      // it when we receive it redundantly from the watch callback.
-      this.cache.batch({
-        onWatchUpdated: (
-          // all additional options on ObservableQuery.CacheWatchOptions are
-          // optional so we can use the type here
-          watch: ObservableQuery.CacheWatchOptions,
-          diff
-        ) => {
-          if (watch.watcher === this.observableQuery) {
-            // see comment on `lastOwnDiff` for explanation
-            watch.lastOwnDiff = diff;
-          }
-        },
-        update: (cache) => {
-          const shouldWrite = this.shouldWrite(result, variables);
-
-          if (shouldWrite) {
-            cache.writeQuery({
-              query,
-              data: result.data as Unmasked<any>,
-              variables,
-              overwrite: cacheWriteBehavior === CacheWriteBehavior.OVERWRITE,
-              extensions: result.extensions,
-            });
-
-            this.lastWrite = {
-              result,
-              variables,
-              dmCount: destructiveMethodCounts.get(this.cache),
-            };
-          } else {
-            // If result is the same as the last result we received from
-            // the network (and the variables match too), avoid writing
-            // result into the cache again. The wisdom of skipping this
-            // cache write is far from obvious, since any cache write
-            // could be the one that puts the cache back into a desired
-            // state, fixing corruption or missing data. However, if we
-            // always write every network result into the cache, we enable
-            // feuds between queries competing to update the same data in
-            // incompatible ways, which can lead to an endless cycle of
-            // cache broadcasts and useless network requests. As with any
-            // feud, eventually one side must step back from the brink,
-            // letting the other side(s) have the last word(s). There may
-            // be other points where we could break this cycle, such as
-            // silencing the broadcast for cache.writeQuery (not a good
-            // idea, since it just delays the feud a bit) or somehow
-            // avoiding the network request that just happened (also bad,
-            // because the server could return useful new data). All
-            // options considered, skipping this cache write seems to be
-            // the least damaging place to break the cycle, because it
-            // reflects the intuition that we recently wrote this exact
-            // result into the cache, so the cache *should* already/still
-            // contain this data. If some other query has clobbered that
-            // data in the meantime, that's too bad, but there will be no
-            // winners if every query blindly reverts to its own version
-            // of the data. This approach also gives the network a chance
-            // to return new data, which will be written into the cache as
-            // usual, notifying only those queries that are directly
-            // affected by the cache updates, as usual. In the future, an
-            // even more sophisticated cache could perhaps prevent or
-            // mitigate the clobbering somehow, but that would make this
-            // particular cache write even less important, and thus
-            // skipping it would be even safer than it is today.
-            if (lastDiff && lastDiff.complete) {
-              // Reuse data from the last good (complete) diff that we
-              // received, when possible.
-              result = {
-                ...result,
-                data: lastDiff.result,
-                dataState: "complete",
-              };
-              return;
-            }
-            // If the previous this.diff was incomplete, fall through to
-            // re-reading the latest data with cache.diff, below.
-          }
-
-          const isNetworkOnly =
-            fetchPolicy === "network-only" &&
-            networkStatus !== NetworkStatus.refetch;
-
-          const { dataState, result: diffResult } = this.getDiff(
-            {
-              ...diffOptions,
-              // Never deliver partial data for network-only requests
-              returnPartialData: returnPartialData && !isNetworkOnly,
-            },
-            this.getIncrementalInfo(result, { isNetworkOnly })
-          );
-
-          if (
-            dataState === "complete" ||
-            (returnPartialData && dataState === "partial" && shouldWrite) ||
-            (this.hasNext && dataState === "streaming")
-          ) {
-            result = { ...result, data: diffResult, dataState };
-          }
-        },
-      });
-    } else {
+    if (!shouldWriteResult(result, errorPolicy)) {
       this.lastWrite = void 0;
+      return result;
     }
+
+    // Using a transaction here so we have a chance to read the result
+    // back from the cache before the watch callback fires as a result
+    // of writeQuery, so we can store the new diff quietly and ignore
+    // it when we receive it redundantly from the watch callback.
+    this.cache.batch({
+      onWatchUpdated: (
+        // all additional options on ObservableQuery.CacheWatchOptions are
+        // optional so we can use the type here
+        watch: ObservableQuery.CacheWatchOptions,
+        diff
+      ) => {
+        if (watch.watcher === this.observableQuery) {
+          // see comment on `lastOwnDiff` for explanation
+          watch.lastOwnDiff = diff;
+        }
+      },
+      update: (cache) => {
+        const shouldWrite = this.shouldWrite(result, variables);
+
+        // If result is the same as the last result we received from
+        // the network (and the variables match too), avoid writing
+        // result into the cache again. The wisdom of skipping this
+        // cache write is far from obvious, since any cache write
+        // could be the one that puts the cache back into a desired
+        // state, fixing corruption or missing data. However, if we
+        // always write every network result into the cache, we enable
+        // feuds between queries competing to update the same data in
+        // incompatible ways, which can lead to an endless cycle of
+        // cache broadcasts and useless network requests. As with any
+        // feud, eventually one side must step back from the brink,
+        // letting the other side(s) have the last word(s). There may
+        // be other points where we could break this cycle, such as
+        // silencing the broadcast for cache.writeQuery (not a good
+        // idea, since it just delays the feud a bit) or somehow
+        // avoiding the network request that just happened (also bad,
+        // because the server could return useful new data). All
+        // options considered, skipping this cache write seems to be
+        // the least damaging place to break the cycle, because it
+        // reflects the intuition that we recently wrote this exact
+        // result into the cache, so the cache *should* already/still
+        // contain this data. If some other query has clobbered that
+        // data in the meantime, that's too bad, but there will be no
+        // winners if every query blindly reverts to its own version
+        // of the data. This approach also gives the network a chance
+        // to return new data, which will be written into the cache as
+        // usual, notifying only those queries that are directly
+        // affected by the cache updates, as usual. In the future, an
+        // even more sophisticated cache could perhaps prevent or
+        // mitigate the clobbering somehow, but that would make this
+        // particular cache write even less important, and thus
+        // skipping it would be even safer than it is today.
+        if (shouldWrite) {
+          cache.writeQuery({
+            query,
+            data: result.data as Unmasked<any>,
+            variables,
+            overwrite: cacheWriteBehavior === CacheWriteBehavior.OVERWRITE,
+            extensions: result.extensions,
+          });
+
+          this.lastWrite = {
+            result,
+            variables,
+            dmCount: destructiveMethodCounts.get(this.cache),
+          };
+        }
+
+        const isNetworkOnly =
+          fetchPolicy === "network-only" &&
+          networkStatus !== NetworkStatus.refetch;
+
+        const { dataState, result: diffResult } = this.getDiff(
+          {
+            ...diffOptions,
+            // Never deliver partial data for network-only requests
+            returnPartialData: returnPartialData && !isNetworkOnly,
+          },
+          this.getIncrementalInfo(result, { isNetworkOnly })
+        );
+
+        if (
+          dataState === "complete" ||
+          (returnPartialData && dataState === "partial" && shouldWrite) ||
+          (this.hasNext && dataState === "streaming")
+        ) {
+          result = { ...result, data: diffResult, dataState };
+        }
+      },
+    });
 
     return result;
   }

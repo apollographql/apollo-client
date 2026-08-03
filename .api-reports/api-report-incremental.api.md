@@ -251,7 +251,7 @@ export namespace Incremental {
 
 // @public (undocumented)
 class IncrementalRequest<TData> implements Incremental.IncrementalRequest<GraphQL17Alpha9Handler.Chunk<TData>, TData> {
-    // (undocumented)
+    // @internal @deprecated (undocumented)
     getPendingWithInfo(): ({
         type: "stream";
         path: Incremental.Path;
@@ -265,7 +265,7 @@ class IncrementalRequest<TData> implements Incremental.IncrementalRequest<GraphQ
     handle(cacheData: TData | DeepPartial<TData> | null | undefined, chunk: GraphQL17Alpha9Handler.Chunk<TData>): FormattedExecutionResult<TData>;
     // (undocumented)
     hasNext: boolean;
-    // (undocumented)
+    // @internal @deprecated (undocumented)
     get streamInfo(): StreamInfoTrie | undefined;
 }
 

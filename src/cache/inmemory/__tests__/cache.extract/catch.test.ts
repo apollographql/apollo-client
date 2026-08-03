@@ -274,6 +274,60 @@ test.skip("stores path errors for nested entity fields under the nested dataId",
   });
 });
 
+test.skip("stores aliased field path errors under the field name in __META.fieldErrors", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      viewer: user {
+        id
+        displayName: name
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      viewer: {
+        __typename: "User",
+        id: "1",
+        displayName: null,
+      },
+    },
+    errors: [
+      {
+        message: "Cannot resolve user.name",
+        // Response path uses aliases; store keys use field names.
+        path: ["viewer", "displayName"],
+      },
+    ],
+  });
+
+  expect(cache.extract()).toStrictEqualTyped({
+    "User:1": {
+      __typename: "User",
+      id: "1",
+      name: null,
+    },
+    ROOT_QUERY: {
+      __typename: "Query",
+      user: { __ref: "User:1" },
+    },
+    __META: {
+      fieldErrors: {
+        "User:1": {
+          name: [
+            {
+              message: "Cannot resolve user.name",
+              path: ["viewer", "displayName"],
+            },
+          ],
+        },
+      },
+    },
+  });
+});
+
 test.skip("stores multiple path errors for the same field together", () => {
   const cache = new InMemoryCache();
   const query = gql`

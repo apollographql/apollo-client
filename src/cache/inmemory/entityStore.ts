@@ -37,6 +37,7 @@ import type {
 import { fieldNameFromStoreName, hasOwn } from "./helpers.js";
 import type { Policies, StorageType } from "./policies.js";
 import type {
+  FieldErrors,
   FieldErrorsById,
   NormalizedCache,
   NormalizedCacheObject,
@@ -117,6 +118,21 @@ export abstract class EntityStore implements NormalizedCache {
     if (this.policies.rootTypenamesById[dataId]) {
       return {};
     }
+  }
+
+  public setFieldErrors(dataId: string, fieldErrors: FieldErrors | undefined) {
+    const errors = new DeepMerger().merge(
+      this.fieldErrors[dataId],
+      fieldErrors
+    );
+
+    if (errors) {
+      this.fieldErrors[dataId] = errors;
+    }
+  }
+
+  public getFieldErrors(dataId: string, fieldName: string) {
+    this.fieldErrors[dataId]?.[fieldName];
   }
 
   public merge(older: string | StoreObject, newer: StoreObject | string): void {

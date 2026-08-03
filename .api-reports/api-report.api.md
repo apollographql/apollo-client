@@ -1625,17 +1625,31 @@ namespace Incremental {
     }
     // (undocumented)
     interface IncrementalRequest<Chunk extends Record<string, unknown>, TData> {
+        // Warning: (ae-forgotten-export) The symbol "Incremental" needs to be exported by the entry point index.d.ts
+        //
         // (undocumented)
-        getPendingType?: (id: string) => "defer" | "stream";
+        getPendingWithInfo?: () => Array<PendingItemWithInfo>;
         // (undocumented)
         handle: (cacheData: TData | DeepPartial<TData> | undefined | null, chunk: Chunk) => FormattedExecutionResult<TData>;
         // (undocumented)
         hasNext: boolean;
-        // (undocumented)
-        pending?: Array<Incremental.PendingResult>;
     }
     // (undocumented)
     type Path = ReadonlyArray<string | number>;
+    // @internal @deprecated (undocumented)
+    interface PendingDeferResultWithInfo {
+        // (undocumented)
+        delivered: boolean;
+        // (undocumented)
+        path: Incremental.Path;
+        // (undocumented)
+        type: "defer";
+    }
+    // Warning: (ae-forgotten-export) The symbol "Incremental" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "Incremental" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    type PendingItemWithInfo = PendingDeferResultWithInfo | PendingStreamResultWithInfo;
     // (undocumented)
     interface PendingResult {
         // (undocumented)
@@ -1644,6 +1658,13 @@ namespace Incremental {
         label?: string;
         // (undocumented)
         path: Incremental.Path;
+    }
+    // @internal @deprecated (undocumented)
+    interface PendingStreamResultWithInfo {
+        // (undocumented)
+        path: Incremental.Path;
+        // (undocumented)
+        type: "stream";
     }
     // @internal @deprecated (undocumented)
     interface StartRequestOptions {

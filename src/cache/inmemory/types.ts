@@ -1,7 +1,7 @@
 import type { Trie } from "@wry/trie";
 import type { DocumentNode, FieldNode, GraphQLFormattedError } from "graphql";
 
-import type { OperationVariables } from "@apollo/client";
+import type { CatchTo, OperationVariables } from "@apollo/client";
 import type {
   Reference,
   StoreObject,
@@ -147,6 +147,7 @@ export type ReadQueryOptions = {
   previousResult?: any;
   rootId?: string;
   config?: ApolloReducerConfig;
+  catchByDefault?: CatchTo;
 };
 
 /** @internal */
@@ -202,6 +203,7 @@ export interface MergeTree {
 
 export interface ReadMergeModifyContext {
   store: NormalizedCache;
+  catchByDefault: CatchTo;
   variables?: OperationVariables;
   // A JSON.stringify-serialized version of context.variables.
   varString?: string;

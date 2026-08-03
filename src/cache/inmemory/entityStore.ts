@@ -4,6 +4,7 @@ import type { DocumentNode, FieldNode, SelectionSetNode } from "graphql";
 import type { OptimisticDependencyFunction } from "optimism";
 import { dep } from "optimism";
 
+import type { CatchTo } from "@apollo/client";
 import type {
   Reference,
   StoreObject,
@@ -640,13 +641,15 @@ export abstract class EntityStore implements NormalizedCache {
   public makeCacheKey(
     selectionSet: SelectionSetNode,
     parent: string /* = ( Reference.__ref ) */ | StoreObject,
-    varString: string | undefined
+    varString: string | undefined,
+    catchByDefault: CatchTo
   ): object;
   /** overload for `StoreReader.executeSubSelectedArray` */
   public makeCacheKey(
     field: FieldNode,
     array: readonly any[],
-    varString: string | undefined
+    varString: string | undefined,
+    catchByDefault: CatchTo
   ): object;
   /**
    * @deprecated This is only meant for internal usage,

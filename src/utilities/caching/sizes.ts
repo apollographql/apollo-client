@@ -285,6 +285,12 @@ export interface CacheSizes {
    * field selection node is a streamed field.
    */
   isStreamField: number;
+
+  /**
+   * Used by the internal `getCatchTo` utility that gets the CatchTo type from a
+   * field.
+   */
+  getCatchTo: number;
 }
 
 const cacheSizeSymbol = Symbol.for("apollo.cacheSize");
@@ -314,6 +320,7 @@ export const cacheSizes: Partial<CacheSizes> = { ...global[cacheSizeSymbol] };
 
 export const enum defaultCacheSizes {
   checkDocument = 2000,
+  getCatchTo = 2000,
   isDeferredFragment = 2000,
   isStreamField = 2000,
   canonicalStringify = 1000,

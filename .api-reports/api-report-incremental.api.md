@@ -197,13 +197,13 @@ export namespace Incremental {
     }
     // (undocumented)
     export interface IncrementalRequest<Chunk extends Record<string, unknown>, TData> {
-        // (undocumented)
+        // @internal @deprecated (undocumented)
         getPendingWithInfo?: () => Array<PendingItemWithInfo>;
         // (undocumented)
         handle: (cacheData: TData | DeepPartial<TData> | undefined | null, chunk: Chunk) => FormattedExecutionResult<TData>;
         // (undocumented)
         hasNext: boolean;
-        // (undocumented)
+        // @internal @deprecated (undocumented)
         readonly streamInfo?: StreamInfoTrie;
     }
     // (undocumented)
@@ -217,10 +217,7 @@ export namespace Incremental {
         // (undocumented)
         type: "defer";
     }
-    // Warning: (ae-incompatible-release-tags) The symbol "PendingItemWithInfo" is marked as @public, but its signature references "Incremental" which is marked as @internal
-    // Warning: (ae-incompatible-release-tags) The symbol "PendingItemWithInfo" is marked as @public, but its signature references "Incremental" which is marked as @internal
-    //
-    // (undocumented)
+    // @internal @deprecated (undocumented)
     export type PendingItemWithInfo = PendingDeferResultWithInfo | PendingStreamResultWithInfo;
     // (undocumented)
     export interface PendingResult {

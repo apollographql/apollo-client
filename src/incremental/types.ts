@@ -41,8 +41,12 @@ export declare namespace Incremental {
     TData,
   > {
     hasNext: boolean;
+
+    /** @internal */
     readonly streamInfo?: StreamInfoTrie;
+    /** @internal */
     getPendingWithInfo?: () => Array<PendingItemWithInfo>;
+
     handle: (
       cacheData: TData | DeepPartial<TData> | undefined | null,
       chunk: Chunk

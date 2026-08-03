@@ -101,10 +101,12 @@ class IncrementalRequest<TData>
   // of future stream items from already merged stream items.
   private streamPositions: Record<string, number> = {};
 
+  /** @internal */
   get streamInfo() {
     return this._streamInfo["strong"] ? this._streamInfo : undefined;
   }
 
+  /** @internal */
   getPendingWithInfo() {
     return Array.from(this.pendingMap.values()).map((pending) => {
       if (pending.id in this.streamPositions) {

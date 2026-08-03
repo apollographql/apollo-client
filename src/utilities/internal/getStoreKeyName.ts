@@ -7,6 +7,7 @@ type Directives = {
 };
 
 const KNOWN_DIRECTIVES: string[] = [
+  "catch",
   "connection",
   "include",
   "skip",

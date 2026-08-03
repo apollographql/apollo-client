@@ -62,7 +62,7 @@ export declare namespace Incremental {
     path: Incremental.Path;
   }
 
-  /* @internal */
+  /** @internal */
   export type PendingItemWithInfo =
     | PendingDeferResultWithInfo
     | PendingStreamResultWithInfo;

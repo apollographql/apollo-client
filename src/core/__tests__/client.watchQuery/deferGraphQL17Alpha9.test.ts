@@ -1739,7 +1739,6 @@ test('reports partial cached data inside a defer boundary as "partial" when the 
   const stream = new ObservableStream(
     client.watchQuery({
       query,
-      fetchPolicy: "cache-first",
       returnPartialData: true,
       errorPolicy: "all",
     })
@@ -1871,11 +1870,7 @@ test("reports partial data correctly when a mid-stream request is abandoned and 
     incrementalHandler: new GraphQL17Alpha9Handler(),
   });
 
-  const observable = client.watchQuery({
-    query,
-    fetchPolicy: "cache-first",
-    returnPartialData: true,
-  });
+  const observable = client.watchQuery({ query, returnPartialData: true });
 
   const initialChunk = {
     data: { greeting: { __typename: "Greeting", message: "Hello world" } },

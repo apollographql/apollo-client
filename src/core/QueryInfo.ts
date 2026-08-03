@@ -254,6 +254,8 @@ export class QueryInfo<
       variables,
       optimistic: true,
     };
+    const isNetworkOnly =
+      fetchPolicy === "network-only" && networkStatus !== NetworkStatus.refetch;
 
     // Cancel the pending notify timeout (if it exists) to prevent extraneous network
     // requests. To allow future notify timeouts, diff and dirty are reset as well.
@@ -262,15 +264,23 @@ export class QueryInfo<
     const skipCache = cacheWriteBehavior === CacheWriteBehavior.FORBID;
     const diff =
       skipCache ? undefined : (
-        this.getDiff({
-          ...diffOptions,
-          // Always request partial data to ensure the network incremental
-          // result is merged with all existing data (especially true to
-          // maintain @stream arrays with partial list items in the right order
-          // or when chunk might otherwise replace a partial non-normalized
-          // object)
-          returnPartialData: true,
-        })
+        this.getDiff(
+          {
+            ...diffOptions,
+            // We usually request partial data to ensure the network incremental
+            // result is merged with all existing data (especially true to
+            // maintain @stream arrays with partial list items in the right order
+            // or when chunk might otherwise replace a partial non-normalized
+            // object), but if we are about to throw away the result anyways due
+            // to the error policy (which early returns below), prune any
+            // pending boundaries so that CombinedGraphQLErrors contains the
+            // right `data` value.
+            returnPartialData:
+              errorPolicy !== "none" ||
+              !this.incrementalHandler.extractErrors(incoming)?.length,
+          },
+          this.getIncrementalInfo({ isNetworkOnly })
+        )
       );
 
     const incrementalResult = this.maybeHandleIncrementalResult(
@@ -388,10 +398,6 @@ export class QueryInfo<
           };
           written = true;
         }
-
-        const isNetworkOnly =
-          fetchPolicy === "network-only" &&
-          networkStatus !== NetworkStatus.refetch;
 
         const { dataState, result: diffResult } = this.getDiff(
           {

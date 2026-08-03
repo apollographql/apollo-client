@@ -91,7 +91,7 @@ class IncrementalRequest<TData>
     /* pendingId */ string,
     /* delivered */ boolean
   >();
-  private streamInfo = makeStreamInfoTrie();
+  private _streamInfo = makeStreamInfoTrie();
   // `streamPositions` maps `pending.id` to the index that should be set by the
   // next `incremental` stream chunk to ensure the streamed array item is placed
   // at the correct point in the data array. `this.data` contains cached
@@ -100,6 +100,10 @@ class IncrementalRequest<TData>
   // updated by the cache between a streamed chunk aren't overwritten by merges
   // of future stream items from already merged stream items.
   private streamPositions: Record<string, number> = {};
+
+  get streamInfo() {
+    return this._streamInfo["strong"] ? this._streamInfo : undefined;
+  }
 
   getPendingWithInfo() {
     return Array.from(this.pendingMap.values()).map((pending) => {
@@ -134,7 +138,7 @@ class IncrementalRequest<TData>
 
           if (Array.isArray(dataAtPath)) {
             this.streamPositions[pending.id] = dataAtPath.length;
-            const entry = this.streamInfo.lookupArray(pending.path as any[]);
+            const entry = this._streamInfo.lookupArray(pending.path as any[]);
             entry.current = {
               isFirstChunk: true,
               isLastChunk: false,
@@ -169,7 +173,7 @@ class IncrementalRequest<TData>
           }
 
           this.streamPositions[pending.id] += items.length;
-          const entry = this.streamInfo.lookupArray(path);
+          const entry = this._streamInfo.lookupArray(path);
           entry.current = {
             isFirstChunk: false,
             isLastChunk: false,
@@ -235,7 +239,7 @@ class IncrementalRequest<TData>
         }
 
         // peek instead of lookup to avoid creating an entry for non-array values
-        const details = this.streamInfo.peekArray(path as any[]);
+        const details = this._streamInfo.peekArray(path as any[]);
         if (details) {
           details.current = {
             isFirstChunk: false,
@@ -260,7 +264,7 @@ class IncrementalRequest<TData>
       result.extensions = this.extensions;
     }
 
-    if (this.streamInfo["strong"]) {
+    if (this._streamInfo["strong"]) {
       result.extensions = {
         ...result.extensions,
         // Create a new object so we can check for === in QueryInfo to trigger a
@@ -268,7 +272,7 @@ class IncrementalRequest<TData>
         // We create a `WeakRef`, not a plain object to avoid retaining memory
         // in case the `result` or `extensions` stays around longer than the handler
         // itself.
-        [streamInfoSymbol]: new WeakRef(this.streamInfo),
+        [streamInfoSymbol]: new WeakRef(this._streamInfo),
       } satisfies ExtensionsWithStreamInfo;
     }
 

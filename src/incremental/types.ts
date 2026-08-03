@@ -6,6 +6,7 @@ import type {
 
 import type { ApolloLink } from "@apollo/client/link";
 import type { DeepPartial } from "@apollo/client/utilities";
+import { StreamInfoTrie } from "../utilities/internal/index.js";
 
 export declare namespace Incremental {
   export type Path = ReadonlyArray<string | number>;
@@ -40,6 +41,7 @@ export declare namespace Incremental {
     TData,
   > {
     hasNext: boolean;
+    readonly streamInfo?: StreamInfoTrie;
     getPendingWithInfo?: () => Array<PendingItemWithInfo>;
     handle: (
       cacheData: TData | DeepPartial<TData> | undefined | null,

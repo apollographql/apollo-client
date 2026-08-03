@@ -1473,6 +1473,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           !isNetworkRequestInFlight(this.networkStatus) &&
           !this.options.skipPollAttempt?.()
         ) {
+          this._lastWrite = undefined;
           this._reobserve(
             {
               // Most fetchPolicy options don't make sense to use in a polling context, as

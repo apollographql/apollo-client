@@ -10,15 +10,12 @@ import { cacheSizes, defaultCacheSizes } from "../caching/sizes.js";
 import { memoize } from "./memoize.js";
 
 export const getCatchTo = memoize(
-  function getCatchTo(
-    field: FieldNode,
-    defaultCatchTo: CatchTo = "NULL"
-  ): CatchTo | undefined {
+  function getCatchTo(field: FieldNode): CatchTo | undefined {
     const directive = field.directives?.find((d) => d.name.value === "catch");
     if (!directive) return;
 
     const arg = directive.arguments?.find((a) => a.name.value === "to");
-    if (!arg) return defaultCatchTo;
+    if (!arg) return "RESULT";
 
     invariant(
       arg.value.kind === Kind.ENUM,

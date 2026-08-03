@@ -552,7 +552,7 @@ export class StoreReader {
           : policies.identify(objectOrReference)[0];
 
         let errors: GraphQLFormattedError[] | undefined;
-        let catchTo = getCatchTo(selection, context.catchByDefault);
+        let catchTo = getCatchTo(selection);
 
         if (dataId) {
           errors = store.getFieldErrors(dataId, selection.name.value);

@@ -301,7 +301,7 @@ export class QueryInfo<
         // to see if it fulfills the selection set. For such a narrow case where
         // its incorrect on a format that is now outdated is not worth the
         // fix so we are ok with reporting a `streaming` here.
-        (!this.incremental?.pending &&
+        (!this.incremental?.getPendingWithInfo &&
           this.hasNext &&
           hasDirectives(["defer"], query))
       ) {

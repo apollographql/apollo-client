@@ -40,7 +40,6 @@ export declare namespace Incremental {
     TData,
   > {
     hasNext: boolean;
-    pending?: Array<Incremental.PendingResult>;
     getPendingWithInfo?: () => Array<PendingItemWithInfo>;
     handle: (
       cacheData: TData | DeepPartial<TData> | undefined | null,

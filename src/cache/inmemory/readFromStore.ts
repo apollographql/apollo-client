@@ -6,10 +6,13 @@ import type {
   SelectionNode,
   SelectionSetNode,
 } from "graphql";
+import type { GraphQLFormattedError } from "graphql";
 import { Kind } from "graphql";
 import type { OptimisticWrapperFunction } from "optimism";
 import { wrap } from "optimism";
 
+import type { ErrorResult, OkResult } from "@apollo/client";
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import type { Reference, StoreObject } from "@apollo/client/utilities";
 import {
   addTypenameToDocument,
@@ -70,8 +73,6 @@ import type {
   NormalizedCache,
   ReadMergeModifyContext,
 } from "./types.js";
-import { GraphQLFormattedError } from "graphql";
-import { ErrorResult, FieldResult, OkResult } from "@apollo/client";
 
 type DataState =
   // no data
@@ -565,6 +566,10 @@ export class StoreReader {
           errors = store.getFieldErrors(dataId, selection.name.value);
         }
 
+        if (errors && catchTo === "THROW") {
+          throw new CombinedGraphQLErrors({ errors });
+        }
+
         if (fieldValue === void 0) {
           if (!addTypenameToDocument.added(selection)) {
             const id =
@@ -657,14 +662,17 @@ export class StoreReader {
           );
         }
 
-        if (fieldValue !== void 0) {
-          if (catchTo === "RESULT") {
-            fieldValue =
-              errors ? toErrorResult(errors) : toOkResult(fieldValue);
-          }
-
-          objectsToMerge.push({ [resultName]: fieldValue });
+        if (fieldValue === void 0) {
+          return;
         }
+
+        if (catchTo === "RESULT") {
+          fieldValue = errors ? toErrorResult(errors) : toOkResult(fieldValue);
+        } else if (errors && catchTo === "NULL") {
+          fieldValue = null;
+        }
+
+        objectsToMerge.push({ [resultName]: fieldValue });
       } else {
         const fragment = getFragmentFromSelection(
           selection,

@@ -282,9 +282,9 @@ export class QueryInfo<
     };
 
     if (skipCache) {
-      const hasPendingDefer = this.incremental?.pending?.some(
-        (pending) => this.incremental?.getPendingType?.(pending.id) === "defer"
-      );
+      const hasPendingDefer = this.incremental
+        ?.getPendingWithInfo?.()
+        .some((pending) => pending.type === "defer" && !pending.delivered);
 
       if (
         hasPendingDefer ||
@@ -413,7 +413,7 @@ export class QueryInfo<
     result: MarkQueryResult<any, ExtensionsWithStreamInfo>,
     { isNetworkOnly }: { isNetworkOnly: boolean }
   ) {
-    const pending = this.incremental?.pending ?? [];
+    const pending = this.incremental?.getPendingWithInfo?.() ?? [];
     const streamInfo = result.extensions?.[streamInfoSymbol]?.deref();
     const incrementalInfo: DiffIncrementalInfo = { streamInfo };
 
@@ -423,12 +423,12 @@ export class QueryInfo<
     // can prune complete defer/stream boundaries at those paths.
     if (isNetworkOnly) {
       for (const item of pending) {
-        const type = this.incremental?.getPendingType?.(item.id);
-
-        if (type === "defer") {
+        if (item.type === "defer") {
           incrementalInfo.deferInfo ||= new Trie(true, () => true);
-          incrementalInfo.deferInfo.lookupArray(item.path as any[]);
-        } else if (streamInfo && type === "stream") {
+          if (!item.delivered) {
+            incrementalInfo.deferInfo.lookupArray(item.path as any[]);
+          }
+        } else if (streamInfo && item.type === "stream") {
           streamInfo.lookupArray(item.path as any[]).state.truncate = true;
         }
       }

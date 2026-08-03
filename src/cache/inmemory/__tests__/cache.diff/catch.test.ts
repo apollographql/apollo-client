@@ -45,7 +45,7 @@ test("returns null for a field with @catch(to: NULL) when the field has a path e
   });
 });
 
-test.only("returns FieldResult failure for a field with @catch(to: RESULT) when the field has a path error", () => {
+test("returns FieldResult failure for a field with @catch(to: RESULT) when the field has a path error", () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {

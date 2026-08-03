@@ -40,6 +40,7 @@ export { dealias } from "./dealias.js";
 export { decoratePromise } from "./decoratePromise.js";
 export { DeepMerger } from "./DeepMerger.js";
 export { getCatchTo } from "./getCatchTo.js";
+export { getDefaultCatchTo } from "./getDefaultCatchTo.js";
 export { getDefaultValues } from "./getDefaultValues.js";
 export { getDirectiveArgValue } from "./getDirectiveArgValue.js";
 export { getFragmentFromSelection } from "./getFragmentFromSelection.js";

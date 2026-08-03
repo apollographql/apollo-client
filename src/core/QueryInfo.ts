@@ -60,6 +60,7 @@ interface LastWrite {
   result: FormattedExecutionResult<any, ExtensionsWithStreamInfo>;
   variables: ApolloClient.WatchQueryOptions["variables"];
   dmCount: number | undefined;
+  hasNext: boolean;
 }
 
 const destructiveMethodCounts = new WeakMap<ApolloCache, number>();
@@ -194,8 +195,7 @@ export class QueryInfo<
       // We have to compare these values because its possible the final chunk
       // emitted in the incremental result is just `hasNext: false`. This
       // ensures we trigger a cache write when we get `isLastChunk: true`.
-      result.extensions?.[streamInfoSymbol] !==
-        lastWrite.result.extensions?.[streamInfoSymbol]
+      lastWrite.hasNext !== this.hasNext
     );
   }
 
@@ -392,6 +392,7 @@ export class QueryInfo<
             result,
             variables,
             dmCount: destructiveMethodCounts.get(this.cache),
+            hasNext: this.hasNext,
           };
         }
 

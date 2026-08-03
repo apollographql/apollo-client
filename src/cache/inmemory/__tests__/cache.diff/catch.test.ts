@@ -539,7 +539,7 @@ test("returns FieldResult failure for an uncaught field when the operation has @
   });
 });
 
-test.skip("throws for an uncaught field when the operation has @catchByDefault(to: THROW)", () => {
+test("throws for an uncaught field when the operation has @catchByDefault(to: THROW)", () => {
   const cache = new InMemoryCache();
   const query = gql`
     query UserQuery @catchByDefault(to: THROW) {
@@ -581,7 +581,7 @@ test.skip("throws for an uncaught field when the operation has @catchByDefault(t
   );
 });
 
-test.skip("returns null for an uncaught field when cache.diff is called with catchByDefault: NULL", () => {
+test("returns null for an uncaught field when cache.diff is called with catchByDefault: NULL", () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -624,7 +624,7 @@ test.skip("returns null for an uncaught field when cache.diff is called with cat
   });
 });
 
-test.skip("returns FieldResult failure for an uncaught field when cache.diff is called with catchByDefault: RESULT", () => {
+test("returns FieldResult failure for an uncaught field when cache.diff is called with catchByDefault: RESULT", () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -675,7 +675,7 @@ test.skip("returns FieldResult failure for an uncaught field when cache.diff is 
   });
 });
 
-test.skip("throws for an uncaught field when cache.diff is called with catchByDefault: THROW", () => {
+test("throws for an uncaught field when cache.diff is called with catchByDefault: THROW", () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -717,7 +717,7 @@ test.skip("throws for an uncaught field when cache.diff is called with catchByDe
   );
 });
 
-test.skip("returns FieldResult success for a field with @catch(to: RESULT) when the field has no error", () => {
+test("returns FieldResult success for a field with @catch(to: RESULT) when the field has no error", () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -755,7 +755,7 @@ test.skip("returns FieldResult success for a field with @catch(to: RESULT) when 
   });
 });
 
-test.skip("does not treat path-less errors as field errors for @catch(to: RESULT)", () => {
+test("does not treat path-less errors as field errors for @catch(to: RESULT)", () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -794,7 +794,7 @@ test.skip("does not treat path-less errors as field errors for @catch(to: RESULT
   });
 });
 
-test.skip("does not throw for path-less errors when cache.diff uses catchByDefault: THROW", () => {
+test("does not throw for path-less errors when cache.diff uses catchByDefault: THROW", () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -889,7 +889,7 @@ test.skip("returns FieldResult failure for a nested field with @catch(to: RESULT
   });
 });
 
-test.skip("returns FieldResult failure for a list item field with @catch(to: RESULT)", () => {
+test("returns FieldResult failure for a list item field with @catch(to: RESULT)", () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -955,7 +955,7 @@ test.skip("returns FieldResult failure for a list item field with @catch(to: RES
   });
 });
 
-test.skip("keeps sibling fields intact when a field with @catch(to: RESULT) errors", () => {
+test("keeps sibling fields intact when a field with @catch(to: RESULT) errors", () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -1007,7 +1007,7 @@ test.skip("keeps sibling fields intact when a field with @catch(to: RESULT) erro
   });
 });
 
-test.skip("field @catch overrides operation @catchByDefault", () => {
+test("field @catch overrides operation @catchByDefault", () => {
   const cache = new InMemoryCache();
   const query = gql`
     query UserQuery @catchByDefault(to: THROW) {
@@ -1056,7 +1056,7 @@ test.skip("field @catch overrides operation @catchByDefault", () => {
   });
 });
 
-test.skip("field @catch overrides catchByDefault option on cache.diff", () => {
+test("field @catch overrides catchByDefault option on cache.diff", () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -1099,7 +1099,7 @@ test.skip("field @catch overrides catchByDefault option on cache.diff", () => {
   });
 });
 
-test.skip("operation @catchByDefault overrides catchByDefault option on cache.diff", () => {
+test("operation @catchByDefault overrides catchByDefault option on cache.diff", () => {
   const cache = new InMemoryCache();
   const query = gql`
     query UserQuery @catchByDefault(to: RESULT) {
@@ -1150,7 +1150,7 @@ test.skip("operation @catchByDefault overrides catchByDefault option on cache.di
   });
 });
 
-test.skip("returns FieldResult failure for a deferred field with @catch(to: RESULT) when the deferred field has a path error", () => {
+test("returns FieldResult failure for a deferred field with @catch(to: RESULT) when the deferred field has a path error", () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -1208,7 +1208,7 @@ test.skip("returns FieldResult failure for a deferred field with @catch(to: RESU
   });
 });
 
-test.skip("throws for a deferred field with @catch(to: THROW) when the deferred field has a path error", () => {
+test("throws for a deferred field with @catch(to: THROW) when the deferred field has a path error", () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -1256,7 +1256,7 @@ test.skip("throws for a deferred field with @catch(to: THROW) when the deferred 
   );
 });
 
-test.skip("returns streaming data without applying @catch for deferred fields that have not arrived yet", () => {
+test("returns streaming data without applying @catch for deferred fields that have not arrived yet", () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -1299,7 +1299,7 @@ test.skip("returns streaming data without applying @catch for deferred fields th
   });
 });
 
-test.skip("collects multiple path errors on the same field under @catch(to: RESULT)", () => {
+test("collects multiple path errors on the same field under @catch(to: RESULT)", () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -1356,7 +1356,7 @@ test.skip("collects multiple path errors on the same field under @catch(to: RESU
   });
 });
 
-test.skip("applies @catch only to fields under the annotated operation when reading a different query shape", () => {
+test("applies @catch only to fields under the annotated operation when reading a different query shape", () => {
   const cache = new InMemoryCache();
   const writeQuery = gql`
     query {
@@ -1415,7 +1415,7 @@ test.skip("applies @catch only to fields under the annotated operation when read
   });
 });
 
-test.skip("returns FieldResult failure for an error on a root field with @catch(to: RESULT)", () => {
+test("returns FieldResult failure for an error on a root field with @catch(to: RESULT)", () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -1453,7 +1453,7 @@ test.skip("returns FieldResult failure for an error on a root field with @catch(
   });
 });
 
-test.skip("returns null for a nested field with @catch(to: NULL) without nulling ancestor objects", () => {
+test("returns null for a nested field with @catch(to: NULL) without nulling ancestor objects", () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -1682,7 +1682,7 @@ test.skip("bubbles a deeply nested path error to an ancestor field with @catch(t
   });
 });
 
-test.skip("does not bubble a child error to a parent @catch when the child already has @catch(to: NULL)", () => {
+test("does not bubble a child error to a parent @catch when the child already has @catch(to: NULL)", () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -1729,7 +1729,7 @@ test.skip("does not bubble a child error to a parent @catch when the child alrea
   });
 });
 
-test.skip("does not bubble a child error to a parent @catch when the child already has @catch(to: RESULT)", () => {
+test("does not bubble a child error to a parent @catch when the child already has @catch(to: RESULT)", () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -1784,7 +1784,7 @@ test.skip("does not bubble a child error to a parent @catch when the child alrea
   });
 });
 
-test.skip("honors @catch(to: NULL) when reading an overlapping field written by a different query", () => {
+test("honors @catch(to: NULL) when reading an overlapping field written by a different query", () => {
   const cache = new InMemoryCache();
   const writeQuery = gql`
     query WriteUser {
@@ -1837,7 +1837,7 @@ test.skip("honors @catch(to: NULL) when reading an overlapping field written by 
   });
 });
 
-test.skip("honors @catch(to: RESULT) when reading an overlapping field written by a different query", () => {
+test("honors @catch(to: RESULT) when reading an overlapping field written by a different query", () => {
   const cache = new InMemoryCache();
   const writeQuery = gql`
     query WriteUser {
@@ -1898,7 +1898,7 @@ test.skip("honors @catch(to: RESULT) when reading an overlapping field written b
   });
 });
 
-test.skip("honors @catch(to: THROW) when reading an overlapping field written by a different query", () => {
+test("honors @catch(to: THROW) when reading an overlapping field written by a different query", () => {
   const cache = new InMemoryCache();
   const writeQuery = gql`
     query WriteUser {

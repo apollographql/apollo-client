@@ -132,7 +132,7 @@ export abstract class EntityStore implements NormalizedCache {
   }
 
   public getFieldErrors(dataId: string, fieldName: string) {
-    this.fieldErrors[dataId]?.[fieldName];
+    return this.fieldErrors[dataId]?.[fieldName];
   }
 
   public merge(older: string | StoreObject, newer: StoreObject | string): void {

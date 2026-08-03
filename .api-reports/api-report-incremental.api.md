@@ -10,9 +10,7 @@ import type { DocumentNode } from 'graphql';
 import type { FormattedExecutionResult } from 'graphql';
 import type { GraphQLFormattedError } from 'graphql';
 import type { HKT } from '@apollo/client/utilities';
-import type { Incremental as Incremental_2 } from '@apollo/client/incremental';
-import { StreamInfoTrie as StreamInfoTrie_2 } from '@apollo/client/utilities/internal';
-import type { Trie } from '@wry/trie';
+import { StreamInfoTrie } from '@apollo/client/utilities/internal';
 
 // @public (undocumented)
 namespace Defer20220824Handler {
@@ -205,8 +203,6 @@ export namespace Incremental {
         handle: (cacheData: TData | DeepPartial<TData> | undefined | null, chunk: Chunk) => FormattedExecutionResult<TData>;
         // (undocumented)
         hasNext: boolean;
-        // Warning: (ae-forgotten-export) The symbol "StreamInfoTrie" needs to be exported by the entry point index.d.ts
-        //
         // (undocumented)
         readonly streamInfo?: StreamInfoTrie;
     }
@@ -273,7 +269,7 @@ class IncrementalRequest<TData> implements Incremental.IncrementalRequest<GraphQ
     // (undocumented)
     hasNext: boolean;
     // (undocumented)
-    get streamInfo(): StreamInfoTrie_2 | undefined;
+    get streamInfo(): StreamInfoTrie | undefined;
 }
 
 // @public (undocumented)
@@ -305,33 +301,6 @@ export class NotImplementedHandler implements Incremental.Handler<never> {
     // (undocumented)
     startRequest: any;
 }
-
-// @public (undocumented)
-class StreamArrayState {
-    constructor(path: Incremental_2.Path);
-    // (undocumented)
-    depend(): void;
-    // (undocumented)
-    get streamPosition(): number;
-    set streamPosition(value: number);
-    // (undocumented)
-    truncate: boolean;
-}
-
-// @internal @deprecated (undocumented)
-type StreamInfoTrie = Trie<{
-    current: Incremental_2.StreamFieldInfo;
-    state: StreamArrayState;
-    previous?: {
-        incoming: unknown;
-        streamFieldInfo: Incremental_2.StreamFieldInfo;
-        result: unknown;
-    };
-}>;
-
-// Warnings were encountered during analysis:
-//
-// src/utilities/internal/types/StreamInfoTrie.ts:10:3 - (ae-forgotten-export) The symbol "StreamArrayState" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

@@ -1,4 +1,8 @@
-import type { DocumentNode, FormattedExecutionResult } from "graphql";
+import type {
+  DocumentNode,
+  FormattedExecutionResult,
+  GraphQLFormattedError,
+} from "graphql";
 import type {
   NextNotification,
   Observable,
@@ -437,3 +441,8 @@ export interface SubscriptionObservable<T> extends Observable<T> {
    */
   restart: () => void;
 }
+
+export type OkResult<T> = { ok: true; value: T };
+export type ErrorResult = { ok: false; errors: GraphQLFormattedError[] };
+
+export type FieldResult<T> = OkResult<T> | ErrorResult;

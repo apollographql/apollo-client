@@ -51,6 +51,10 @@ export interface NormalizedCache {
   has(dataId: string): boolean;
   get(dataId: string, fieldName: string): StoreValue;
 
+  getFieldErrors(
+    dataId: string,
+    fieldName: string
+  ): GraphQLFormattedError[] | undefined;
   setFieldErrors(dataId: string, fieldErrors: FieldErrors | undefined): void;
 
   // The store.merge method allows either argument to be a string ID, but

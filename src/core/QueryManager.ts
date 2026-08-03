@@ -75,6 +75,7 @@ import {
 import { defaultCacheSizes } from "../utilities/caching/sizes.js";
 
 import type { ApolloClient } from "./ApolloClient.js";
+import { dataStateErrorCache } from "./dataStateErrorCache.js";
 import { NetworkStatus } from "./networkStatus.js";
 import { logMissingFieldErrors, ObservableQuery } from "./ObservableQuery.js";
 import { CacheWriteBehavior, QueryInfo } from "./QueryInfo.js";
@@ -95,7 +96,6 @@ import type {
   MutationFetchPolicy,
   WatchQueryFetchPolicy,
 } from "./watchQueryOptions.js";
-import { dataStateErrorCache } from "./dataStateErrorCache.js";
 
 interface MutationStoreValue {
   mutation: DocumentNode;

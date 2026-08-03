@@ -34,6 +34,7 @@ import {
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import type { ApolloClient } from "./ApolloClient.js";
+import { dataStateErrorCache } from "./dataStateErrorCache.js";
 import { NetworkStatus } from "./networkStatus.js";
 import type { QueryManager } from "./QueryManager.js";
 import type {
@@ -55,7 +56,6 @@ import type {
   UpdateQueryOptions,
   WatchQueryFetchPolicy,
 } from "./watchQueryOptions.js";
-import { dataStateErrorCache } from "./dataStateErrorCache.js";
 
 const { assign, hasOwnProperty } = Object;
 

@@ -6,7 +6,7 @@ import type {
 
 import type { ApolloLink } from "@apollo/client/link";
 import type { DeepPartial } from "@apollo/client/utilities";
-import { StreamInfoTrie } from "../utilities/internal/index.js";
+import type { StreamInfoTrie } from "@apollo/client/utilities/internal";
 
 export declare namespace Incremental {
   export type Path = ReadonlyArray<string | number>;

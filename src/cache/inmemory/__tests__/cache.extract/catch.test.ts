@@ -209,6 +209,126 @@ test.skip("stores path errors for a root field under ROOT_QUERY in __META.fieldE
   });
 });
 
+test.skip("stores path errors under the store field key that includes field arguments", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query User($id: ID!) {
+      user(id: $id) {
+        id
+        name
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    variables: { id: "1" },
+    data: {
+      user: null,
+    },
+    errors: [
+      {
+        message: "Cannot find user 1",
+        path: ["user"],
+      },
+    ],
+  });
+
+  cache.writeQuery({
+    query,
+    variables: { id: "2" },
+    data: {
+      user: {
+        __typename: "User",
+        id: "2",
+        name: "Bob",
+      },
+    },
+  });
+
+  expect(cache.extract()).toStrictEqualTyped({
+    "User:2": {
+      __typename: "User",
+      id: "2",
+      name: "Bob",
+    },
+    ROOT_QUERY: {
+      __typename: "Query",
+      'user({"id":"1"})': null,
+      'user({"id":"2"})': { __ref: "User:2" },
+    },
+    __META: {
+      fieldErrors: {
+        ROOT_QUERY: {
+          // Errors are keyed by storeFieldName (field + args), not the bare
+          // field name "user", so user(id: 2) does not inherit this metadata.
+          'user({"id":"1"})': [
+            {
+              message: "Cannot find user 1",
+              path: ["user"],
+            },
+          ],
+        },
+      },
+    },
+  });
+});
+
+test.skip("stores path errors under the custom keyArgs store field key", () => {
+  const cache = new InMemoryCache({
+    typePolicies: {
+      Query: {
+        fields: {
+          user: {
+            keyArgs: ["id"],
+          },
+        },
+      },
+    },
+  });
+  const query = gql`
+    query User($id: ID!, $locale: String) {
+      user(id: $id, locale: $locale) {
+        id
+        name
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    variables: { id: "1", locale: "en" },
+    data: {
+      user: null,
+    },
+    errors: [
+      {
+        message: "Cannot find user 1",
+        path: ["user"],
+      },
+    ],
+  });
+
+  expect(cache.extract()).toStrictEqualTyped({
+    ROOT_QUERY: {
+      __typename: "Query",
+      'user:{"id":"1"}': null,
+    },
+    __META: {
+      fieldErrors: {
+        ROOT_QUERY: {
+          'user:{"id":"1"}': [
+            {
+              message: "Cannot find user 1",
+              path: ["user"],
+            },
+          ],
+        },
+      },
+    },
+  });
+});
+
 test.skip("stores path errors for nested entity fields under the nested dataId", () => {
   const cache = new InMemoryCache();
   const query = gql`

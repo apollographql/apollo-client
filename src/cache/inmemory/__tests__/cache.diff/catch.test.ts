@@ -2024,6 +2024,721 @@ test.skip("clears field error metadata when an overlapping write stores a succes
   });
 });
 
+test.skip("scopes path errors to the store field key that includes field arguments", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query User($id: ID!) {
+      user(id: $id) @catch(to: RESULT) {
+        id
+        name
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    variables: { id: "1" },
+    data: {
+      user: null,
+    },
+    errors: [
+      {
+        message: "Cannot find user 1",
+        path: ["user"],
+      },
+    ],
+  });
+
+  cache.writeQuery({
+    query,
+    variables: { id: "2" },
+    data: {
+      user: {
+        __typename: "User",
+        id: "2",
+        name: "Bob",
+      },
+    },
+  });
+
+  expect(
+    cache.diff({
+      query,
+      variables: { id: "1" },
+      optimistic: false,
+    })
+  ).toStrictEqualTyped({
+    complete: true,
+    missing: undefined,
+    result: {
+      user: {
+        ok: false,
+        errors: [
+          {
+            message: "Cannot find user 1",
+            path: ["user"],
+          },
+        ],
+      },
+    },
+  });
+
+  expect(
+    cache.diff({
+      query,
+      variables: { id: "2" },
+      optimistic: false,
+    })
+  ).toStrictEqualTyped({
+    complete: true,
+    missing: undefined,
+    result: {
+      user: {
+        ok: true,
+        value: {
+          __typename: "User",
+          id: "2",
+          name: "Bob",
+        },
+      },
+    },
+  });
+});
+
+test.skip("does not surface a path error for a different argument identity of the same field name", () => {
+  const cache = new InMemoryCache();
+  const erroredQuery = gql`
+    query {
+      user(id: 1) @catch(to: NULL) {
+        id
+        name
+      }
+    }
+  `;
+  const otherQuery = gql`
+    query {
+      user(id: 2) @catch(to: NULL) {
+        id
+        name
+      }
+    }
+  `;
+  const otherResultQuery = gql`
+    query {
+      user(id: 2) @catch(to: RESULT) {
+        id
+        name
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query: erroredQuery,
+    data: {
+      user: null,
+    },
+    errors: [
+      {
+        message: "Cannot find user 1",
+        path: ["user"],
+      },
+    ],
+  });
+
+  cache.writeQuery({
+    query: otherQuery,
+    data: {
+      user: {
+        __typename: "User",
+        id: "2",
+        name: "Bob",
+      },
+    },
+  });
+
+  expect(
+    cache.diff({ query: erroredQuery, optimistic: false })
+  ).toStrictEqualTyped({
+    complete: true,
+    missing: undefined,
+    result: {
+      user: null,
+    },
+  });
+
+  expect(
+    cache.diff({ query: otherQuery, optimistic: false })
+  ).toStrictEqualTyped({
+    complete: true,
+    missing: undefined,
+    result: {
+      user: {
+        __typename: "User",
+        id: "2",
+        name: "Bob",
+      },
+    },
+  });
+
+  expect(
+    cache.diff({ query: otherResultQuery, optimistic: false })
+  ).toStrictEqualTyped({
+    complete: true,
+    missing: undefined,
+    result: {
+      user: {
+        ok: true,
+        value: {
+          __typename: "User",
+          id: "2",
+          name: "Bob",
+        },
+      },
+    },
+  });
+});
+
+test.skip("scopes path errors across aliased fields that share a field name but differ by arguments", () => {
+  const cache = new InMemoryCache();
+  const writeUser1 = gql`
+    query {
+      user(id: 1) {
+        id
+        name
+      }
+    }
+  `;
+  const writeUser2 = gql`
+    query {
+      user(id: 2) {
+        id
+        name
+      }
+    }
+  `;
+  const readBoth = gql`
+    query {
+      user1: user(id: 1) @catch(to: RESULT) {
+        id
+        name
+      }
+      user2: user(id: 2) @catch(to: RESULT) {
+        id
+        name
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query: writeUser1,
+    data: {
+      user: null,
+    },
+    errors: [
+      {
+        message: "Cannot find user 1",
+        path: ["user"],
+      },
+    ],
+  });
+
+  cache.writeQuery({
+    query: writeUser2,
+    data: {
+      user: {
+        __typename: "User",
+        id: "2",
+        name: "Bob",
+      },
+    },
+  });
+
+  expect(cache.diff({ query: readBoth, optimistic: false })).toStrictEqualTyped(
+    {
+      complete: true,
+      missing: undefined,
+      result: {
+        user1: {
+          ok: false,
+          errors: [
+            {
+              message: "Cannot find user 1",
+              path: ["user"],
+            },
+          ],
+        },
+        user2: {
+          ok: true,
+          value: {
+            __typename: "User",
+            id: "2",
+            name: "Bob",
+          },
+        },
+      },
+    }
+  );
+});
+
+test.skip("throws CombinedGraphQLErrors only for the matching argument identity under @catch(to: THROW)", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query User($id: ID!) {
+      user(id: $id) @catch(to: THROW) {
+        id
+        name
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    variables: { id: "1" },
+    data: {
+      user: null,
+    },
+    errors: [
+      {
+        message: "Cannot find user 1",
+        path: ["user"],
+      },
+    ],
+  });
+
+  cache.writeQuery({
+    query,
+    variables: { id: "2" },
+    data: {
+      user: {
+        __typename: "User",
+        id: "2",
+        name: "Bob",
+      },
+    },
+  });
+
+  expect(() => {
+    cache.diff({
+      query,
+      variables: { id: "1" },
+      optimistic: false,
+    });
+  }).toThrow(
+    new CombinedGraphQLErrors({
+      errors: [
+        {
+          message: "Cannot find user 1",
+          path: ["user"],
+        },
+      ],
+    })
+  );
+
+  expect(
+    cache.diff({
+      query,
+      variables: { id: "2" },
+      optimistic: false,
+    })
+  ).toStrictEqualTyped({
+    complete: true,
+    missing: undefined,
+    result: {
+      user: {
+        __typename: "User",
+        id: "2",
+        name: "Bob",
+      },
+    },
+  });
+});
+
+test.skip("scopes path errors using custom keyArgs rather than the bare field name", () => {
+  const cache = new InMemoryCache({
+    typePolicies: {
+      Query: {
+        fields: {
+          user: {
+            keyArgs: ["id"],
+          },
+        },
+      },
+    },
+  });
+  const query = gql`
+    query User($id: ID!, $locale: String) {
+      user(id: $id, locale: $locale) @catch(to: RESULT) {
+        id
+        name
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    variables: { id: "1", locale: "en" },
+    data: {
+      user: null,
+    },
+    errors: [
+      {
+        message: "Cannot find user 1",
+        path: ["user"],
+      },
+    ],
+  });
+
+  expect(
+    cache.diff({
+      query,
+      variables: { id: "1", locale: "fr" },
+      optimistic: false,
+    })
+  ).toStrictEqualTyped({
+    complete: true,
+    missing: undefined,
+    result: {
+      user: {
+        ok: false,
+        errors: [
+          {
+            message: "Cannot find user 1",
+            path: ["user"],
+          },
+        ],
+      },
+    },
+  });
+
+  cache.writeQuery({
+    query,
+    variables: { id: "2", locale: "en" },
+    data: {
+      user: {
+        __typename: "User",
+        id: "2",
+        name: "Bob",
+      },
+    },
+  });
+
+  expect(
+    cache.diff({
+      query,
+      variables: { id: "2", locale: "en" },
+      optimistic: false,
+    })
+  ).toStrictEqualTyped({
+    complete: true,
+    missing: undefined,
+    result: {
+      user: {
+        ok: true,
+        value: {
+          __typename: "User",
+          id: "2",
+          name: "Bob",
+        },
+      },
+    },
+  });
+});
+
+test.skip("shares path errors across argument variants when keyArgs is false", () => {
+  const cache = new InMemoryCache({
+    typePolicies: {
+      Query: {
+        fields: {
+          user: {
+            keyArgs: false,
+          },
+        },
+      },
+    },
+  });
+  const query = gql`
+    query User($id: ID!) {
+      user(id: $id) @catch(to: RESULT) {
+        id
+        name
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    variables: { id: "1" },
+    data: {
+      user: null,
+    },
+    errors: [
+      {
+        message: "Cannot find user 1",
+        path: ["user"],
+      },
+    ],
+  });
+
+  cache.writeQuery({
+    query,
+    variables: { id: "2" },
+    data: {
+      user: {
+        __typename: "User",
+        id: "2",
+        name: "Bob",
+      },
+    },
+  });
+
+  expect(
+    cache.diff({
+      query,
+      variables: { id: "1" },
+      optimistic: false,
+    })
+  ).toStrictEqualTyped({
+    complete: true,
+    missing: undefined,
+    result: {
+      user: {
+        ok: true,
+        value: {
+          __typename: "User",
+          id: "2",
+          name: "Bob",
+        },
+      },
+    },
+  });
+
+  expect(
+    cache.diff({
+      query,
+      variables: { id: "2" },
+      optimistic: false,
+    })
+  ).toStrictEqualTyped({
+    complete: true,
+    missing: undefined,
+    result: {
+      user: {
+        ok: true,
+        value: {
+          __typename: "User",
+          id: "2",
+          name: "Bob",
+        },
+      },
+    },
+  });
+});
+
+test.skip("scopes path errors using directive arguments included in keyArgs", () => {
+  const cache = new InMemoryCache({
+    typePolicies: {
+      Query: {
+        fields: {
+          feed: {
+            keyArgs: ["@connection", ["key"]],
+          },
+        },
+      },
+    },
+  });
+  const query = gql`
+    query Feed($key: String!) {
+      feed @connection(key: $key) @catch(to: RESULT) {
+        id
+        text
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    variables: { key: "home" },
+    data: {
+      feed: null,
+    },
+    errors: [
+      {
+        message: "Cannot load home feed",
+        path: ["feed"],
+      },
+    ],
+  });
+
+  cache.writeQuery({
+    query,
+    variables: { key: "popular" },
+    data: {
+      feed: [
+        {
+          __typename: "FeedItem",
+          id: "1",
+          text: "Hello",
+        },
+      ],
+    },
+  });
+
+  expect(
+    cache.diff({
+      query,
+      variables: { key: "home" },
+      optimistic: false,
+    })
+  ).toStrictEqualTyped({
+    complete: true,
+    missing: undefined,
+    result: {
+      feed: {
+        ok: false,
+        errors: [
+          {
+            message: "Cannot load home feed",
+            path: ["feed"],
+          },
+        ],
+      },
+    },
+  });
+
+  expect(
+    cache.diff({
+      query,
+      variables: { key: "popular" },
+      optimistic: false,
+    })
+  ).toStrictEqualTyped({
+    complete: true,
+    missing: undefined,
+    result: {
+      feed: {
+        ok: true,
+        value: [
+          {
+            __typename: "FeedItem",
+            id: "1",
+            text: "Hello",
+          },
+        ],
+      },
+    },
+  });
+});
+
+test.skip("scopes nested path errors to the store field key that includes field arguments", () => {
+  const cache = new InMemoryCache({
+    typePolicies: {
+      User: {
+        fields: {
+          post: {
+            keyArgs: ["id"],
+          },
+        },
+      },
+    },
+  });
+  const query = gql`
+    query UserPost($postId: ID!) {
+      user {
+        id
+        post(id: $postId) @catch(to: RESULT) {
+          id
+          title
+        }
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    variables: { postId: "1" },
+    data: {
+      user: {
+        __typename: "User",
+        id: "u1",
+        post: null,
+      },
+    },
+    errors: [
+      {
+        message: "Cannot find post 1",
+        path: ["user", "post"],
+      },
+    ],
+  });
+
+  cache.writeQuery({
+    query,
+    variables: { postId: "2" },
+    data: {
+      user: {
+        __typename: "User",
+        id: "u1",
+        post: {
+          __typename: "Post",
+          id: "2",
+          title: "Hello",
+        },
+      },
+    },
+  });
+
+  expect(
+    cache.diff({
+      query,
+      variables: { postId: "1" },
+      optimistic: false,
+    })
+  ).toStrictEqualTyped({
+    complete: true,
+    missing: undefined,
+    result: {
+      user: {
+        __typename: "User",
+        id: "u1",
+        post: {
+          ok: false,
+          errors: [
+            {
+              message: "Cannot find post 1",
+              path: ["user", "post"],
+            },
+          ],
+        },
+      },
+    },
+  });
+
+  expect(
+    cache.diff({
+      query,
+      variables: { postId: "2" },
+      optimistic: false,
+    })
+  ).toStrictEqualTyped({
+    complete: true,
+    missing: undefined,
+    result: {
+      user: {
+        __typename: "User",
+        id: "u1",
+        post: {
+          ok: true,
+          value: {
+            __typename: "Post",
+            id: "2",
+            title: "Hello",
+          },
+        },
+      },
+    },
+  });
+});
+
 test.skip("keeps the same result identities for @catch(to: NULL) when the path error changes", () => {
   const cache = new InMemoryCache();
   const nullQuery = gql`

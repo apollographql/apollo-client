@@ -13,9 +13,9 @@ export const getCatchTo = memoize(
   function getCatchTo(
     field: FieldNode,
     defaultCatchTo: CatchTo = "NULL"
-  ): CatchTo {
+  ): CatchTo | undefined {
     const directive = field.directives?.find((d) => d.name.value === "catch");
-    if (!directive) return defaultCatchTo;
+    if (!directive) return;
 
     const arg = directive.arguments?.find((a) => a.name.value === "to");
     if (!arg) return defaultCatchTo;

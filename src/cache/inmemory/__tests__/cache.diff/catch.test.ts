@@ -177,7 +177,7 @@ test("returns null for an aliased field with @catch(to: NULL) when the path erro
   });
 });
 
-test.skip("returns FieldResult failure for an aliased field with @catch(to: RESULT) when the path error uses the alias", () => {
+test("returns FieldResult failure for an aliased field with @catch(to: RESULT) when the path error uses the alias", () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {

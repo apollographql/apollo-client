@@ -33,8 +33,6 @@ test("returns null for a field with @catch(to: NULL) when the field has a path e
   });
 
   expect(cache.diff({ query, optimistic: false })).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         __typename: "User",
@@ -42,6 +40,8 @@ test("returns null for a field with @catch(to: NULL) when the field has a path e
         name: null,
       },
     },
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -74,8 +74,6 @@ test("returns FieldResult failure for a field with @catch(to: RESULT) when the f
   });
 
   expect(cache.diff({ query, optimistic: false })).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         __typename: "User",
@@ -91,6 +89,8 @@ test("returns FieldResult failure for a field with @catch(to: RESULT) when the f
         },
       },
     },
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -165,8 +165,6 @@ test("returns null for an aliased field with @catch(to: NULL) when the path erro
   });
 
   expect(cache.diff({ query, optimistic: false })).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         __typename: "User",
@@ -174,6 +172,8 @@ test("returns null for an aliased field with @catch(to: NULL) when the path erro
         displayName: null,
       },
     },
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -206,8 +206,6 @@ test("returns FieldResult failure for an aliased field with @catch(to: RESULT) w
   });
 
   expect(cache.diff({ query, optimistic: false })).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         __typename: "User",
@@ -223,6 +221,8 @@ test("returns FieldResult failure for an aliased field with @catch(to: RESULT) w
         },
       },
     },
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -297,8 +297,6 @@ test("returns null for @catch(to: NULL) when an ancestor field is aliased in the
   });
 
   expect(cache.diff({ query, optimistic: false })).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       viewer: {
         __typename: "User",
@@ -306,6 +304,8 @@ test("returns null for @catch(to: NULL) when an ancestor field is aliased in the
         name: null,
       },
     },
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -338,8 +338,6 @@ test("returns FieldResult failure for @catch(to: RESULT) when an ancestor field 
   });
 
   expect(cache.diff({ query, optimistic: false })).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       viewer: {
         __typename: "User",
@@ -355,6 +353,8 @@ test("returns FieldResult failure for @catch(to: RESULT) when an ancestor field 
         },
       },
     },
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -429,8 +429,6 @@ test("returns FieldResult failure for @catch(to: RESULT) when both an ancestor a
   });
 
   expect(cache.diff({ query, optimistic: false })).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       viewer: {
         __typename: "User",
@@ -446,6 +444,8 @@ test("returns FieldResult failure for @catch(to: RESULT) when both an ancestor a
         },
       },
     },
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -478,8 +478,6 @@ test("returns null for an uncaught field when the operation has @catchByDefault(
   });
 
   expect(cache.diff({ query, optimistic: false })).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         __typename: "User",
@@ -487,6 +485,8 @@ test("returns null for an uncaught field when the operation has @catchByDefault(
         name: null,
       },
     },
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -519,8 +519,6 @@ test("returns FieldResult failure for an uncaught field when the operation has @
   });
 
   expect(cache.diff({ query, optimistic: false })).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         __typename: "User",
@@ -536,6 +534,8 @@ test("returns FieldResult failure for an uncaught field when the operation has @
         },
       },
     },
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -612,8 +612,6 @@ test("returns null for an uncaught field when cache.diff is called with catchByD
   expect(
     cache.diff({ query, optimistic: false, catchByDefault: "NULL" })
   ).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         __typename: "User",
@@ -621,6 +619,8 @@ test("returns null for an uncaught field when cache.diff is called with catchByD
         name: null,
       },
     },
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -655,8 +655,6 @@ test("returns FieldResult failure for an uncaught field when cache.diff is calle
   expect(
     cache.diff({ query, optimistic: false, catchByDefault: "RESULT" })
   ).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         __typename: "User",
@@ -672,6 +670,8 @@ test("returns FieldResult failure for an uncaught field when cache.diff is calle
         },
       },
     },
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -740,8 +740,6 @@ test("returns FieldResult success for a field with @catch(to: RESULT) when the f
   });
 
   expect(cache.diff({ query, optimistic: false })).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         __typename: "User",
@@ -752,6 +750,8 @@ test("returns FieldResult success for a field with @catch(to: RESULT) when the f
         },
       },
     },
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -779,8 +779,6 @@ test("does not treat path-less errors as field errors for @catch(to: RESULT)", (
   });
 
   expect(cache.diff({ query, optimistic: false })).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         __typename: "User",
@@ -791,6 +789,8 @@ test("does not treat path-less errors as field errors for @catch(to: RESULT)", (
         },
       },
     },
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -820,8 +820,6 @@ test("does not throw for path-less errors when cache.diff uses catchByDefault: T
   expect(
     cache.diff({ query, optimistic: false, catchByDefault: "THROW" })
   ).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         __typename: "User",
@@ -829,6 +827,8 @@ test("does not throw for path-less errors when cache.diff uses catchByDefault: T
         name: "Alice",
       },
     },
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -866,8 +866,6 @@ test.skip("returns FieldResult failure for a nested field with @catch(to: RESULT
   });
 
   expect(cache.diff({ query, optimistic: false })).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         __typename: "User",
@@ -886,6 +884,8 @@ test.skip("returns FieldResult failure for a nested field with @catch(to: RESULT
         },
       },
     },
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -925,8 +925,6 @@ test("returns FieldResult failure for a list item field with @catch(to: RESULT)"
   });
 
   expect(cache.diff({ query, optimistic: false })).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       users: [
         {
@@ -952,6 +950,8 @@ test("returns FieldResult failure for a list item field with @catch(to: RESULT)"
         },
       ],
     },
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -986,8 +986,6 @@ test("keeps sibling fields intact when a field with @catch(to: RESULT) errors", 
   });
 
   expect(cache.diff({ query, optimistic: false })).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         __typename: "User",
@@ -1004,6 +1002,8 @@ test("keeps sibling fields intact when a field with @catch(to: RESULT) errors", 
         age: 30,
       },
     },
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -1036,8 +1036,6 @@ test("field @catch overrides operation @catchByDefault", () => {
   });
 
   expect(cache.diff({ query, optimistic: false })).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         __typename: "User",
@@ -1053,6 +1051,8 @@ test("field @catch overrides operation @catchByDefault", () => {
         },
       },
     },
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -1087,8 +1087,6 @@ test("field @catch overrides catchByDefault option on cache.diff", () => {
   expect(
     cache.diff({ query, optimistic: false, catchByDefault: "THROW" })
   ).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         __typename: "User",
@@ -1096,6 +1094,8 @@ test("field @catch overrides catchByDefault option on cache.diff", () => {
         name: null,
       },
     },
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -1130,8 +1130,6 @@ test("operation @catchByDefault overrides catchByDefault option on cache.diff", 
   expect(
     cache.diff({ query, optimistic: false, catchByDefault: "THROW" })
   ).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         __typename: "User",
@@ -1147,6 +1145,8 @@ test("operation @catchByDefault overrides catchByDefault option on cache.diff", 
         },
       },
     },
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -1187,9 +1187,6 @@ test("returns FieldResult failure for a deferred field with @catch(to: RESULT) w
       [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
-    complete: true,
-    dataState: "complete",
-    missing: undefined,
     result: {
       user: {
         __typename: "User",
@@ -1205,6 +1202,9 @@ test("returns FieldResult failure for a deferred field with @catch(to: RESULT) w
         },
       },
     },
+    dataState: "complete",
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -1287,15 +1287,15 @@ test("returns streaming data without applying @catch for deferred fields that ha
       [handleIncrementalSymbol]: undefined,
     })
   ).toStrictEqualTyped({
-    complete: false,
-    dataState: "streaming",
-    missing: undefined,
     result: markAsStreaming({
       user: {
         __typename: "User",
         id: "1",
       },
     }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
   });
 });
 
@@ -1332,8 +1332,6 @@ test("collects multiple path errors on the same field under @catch(to: RESULT)",
   });
 
   expect(cache.diff({ query, optimistic: false })).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         __typename: "User",
@@ -1353,6 +1351,8 @@ test("collects multiple path errors on the same field under @catch(to: RESULT)",
         },
       },
     },
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -1395,8 +1395,6 @@ test("applies @catch only to fields under the annotated operation when reading a
   expect(
     cache.diff({ query: readQuery, optimistic: false })
   ).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         __typename: "User",
@@ -1412,6 +1410,8 @@ test("applies @catch only to fields under the annotated operation when reading a
         },
       },
     },
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -1437,8 +1437,6 @@ test("returns FieldResult failure for an error on a root field with @catch(to: R
   });
 
   expect(cache.diff({ query, optimistic: false })).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       viewerName: {
         ok: false,
@@ -1450,6 +1448,8 @@ test("returns FieldResult failure for an error on a root field with @catch(to: R
         ],
       },
     },
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -1487,8 +1487,6 @@ test("returns null for a nested field with @catch(to: NULL) without nulling ance
   });
 
   expect(cache.diff({ query, optimistic: false })).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         __typename: "User",
@@ -1499,6 +1497,8 @@ test("returns null for a nested field with @catch(to: NULL) without nulling ance
         },
       },
     },
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -1533,11 +1533,11 @@ test.skip("bubbles a child path error to a parent field with @catch(to: NULL)", 
   });
 
   expect(cache.diff({ query, optimistic: false })).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: null,
     },
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -1572,8 +1572,6 @@ test.skip("bubbles a child path error to a parent field with @catch(to: RESULT)"
   });
 
   expect(cache.diff({ query, optimistic: false })).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         ok: false,
@@ -1585,6 +1583,8 @@ test.skip("bubbles a child path error to a parent field with @catch(to: RESULT)"
         ],
       },
     },
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -1666,8 +1666,6 @@ test.skip("bubbles a deeply nested path error to an ancestor field with @catch(t
   });
 
   expect(cache.diff({ query, optimistic: false })).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         ok: false,
@@ -1679,6 +1677,8 @@ test.skip("bubbles a deeply nested path error to an ancestor field with @catch(t
         ],
       },
     },
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -1713,8 +1713,6 @@ test("does not bubble a child error to a parent @catch when the child already ha
   });
 
   expect(cache.diff({ query, optimistic: false })).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         ok: true,
@@ -1726,6 +1724,8 @@ test("does not bubble a child error to a parent @catch when the child already ha
         },
       },
     },
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -1760,8 +1760,6 @@ test("does not bubble a child error to a parent @catch when the child already ha
   });
 
   expect(cache.diff({ query, optimistic: false })).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         ok: true,
@@ -1781,6 +1779,8 @@ test("does not bubble a child error to a parent @catch when the child already ha
         },
       },
     },
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -1825,8 +1825,6 @@ test("honors @catch(to: NULL) when reading an overlapping field written by a dif
   expect(
     cache.diff({ query: readQuery, optimistic: false })
   ).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         __typename: "User",
@@ -1834,6 +1832,8 @@ test("honors @catch(to: NULL) when reading an overlapping field written by a dif
         name: null,
       },
     },
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -1878,8 +1878,6 @@ test("honors @catch(to: RESULT) when reading an overlapping field written by a d
   expect(
     cache.diff({ query: readQuery, optimistic: false })
   ).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         __typename: "User",
@@ -1895,6 +1893,8 @@ test("honors @catch(to: RESULT) when reading an overlapping field written by a d
         },
       },
     },
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -2008,8 +2008,6 @@ test.skip("clears field error metadata when an overlapping write stores a succes
   expect(
     cache.diff({ query: readQuery, optimistic: false })
   ).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         __typename: "User",
@@ -2020,6 +2018,8 @@ test.skip("clears field error metadata when an overlapping write stores a succes
         },
       },
     },
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -2067,8 +2067,6 @@ test.skip("scopes path errors to the store field key that includes field argumen
       optimistic: false,
     })
   ).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         ok: false,
@@ -2080,6 +2078,8 @@ test.skip("scopes path errors to the store field key that includes field argumen
         ],
       },
     },
+    complete: true,
+    missing: undefined,
   });
 
   expect(
@@ -2089,8 +2089,6 @@ test.skip("scopes path errors to the store field key that includes field argumen
       optimistic: false,
     })
   ).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         ok: true,
@@ -2101,6 +2099,8 @@ test.skip("scopes path errors to the store field key that includes field argumen
         },
       },
     },
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -2158,18 +2158,16 @@ test.skip("does not surface a path error for a different argument identity of th
   expect(
     cache.diff({ query: erroredQuery, optimistic: false })
   ).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: null,
     },
+    complete: true,
+    missing: undefined,
   });
 
   expect(
     cache.diff({ query: otherQuery, optimistic: false })
   ).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         __typename: "User",
@@ -2177,13 +2175,13 @@ test.skip("does not surface a path error for a different argument identity of th
         name: "Bob",
       },
     },
+    complete: true,
+    missing: undefined,
   });
 
   expect(
     cache.diff({ query: otherResultQuery, optimistic: false })
   ).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         ok: true,
@@ -2194,6 +2192,8 @@ test.skip("does not surface a path error for a different argument identity of th
         },
       },
     },
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -2340,8 +2340,6 @@ test.skip("throws CombinedGraphQLErrors only for the matching argument identity 
       optimistic: false,
     })
   ).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         __typename: "User",
@@ -2349,6 +2347,8 @@ test.skip("throws CombinedGraphQLErrors only for the matching argument identity 
         name: "Bob",
       },
     },
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -2394,8 +2394,6 @@ test.skip("scopes path errors using custom keyArgs rather than the bare field na
       optimistic: false,
     })
   ).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         ok: false,
@@ -2407,6 +2405,8 @@ test.skip("scopes path errors using custom keyArgs rather than the bare field na
         ],
       },
     },
+    complete: true,
+    missing: undefined,
   });
 
   cache.writeQuery({
@@ -2428,8 +2428,6 @@ test.skip("scopes path errors using custom keyArgs rather than the bare field na
       optimistic: false,
     })
   ).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         ok: true,
@@ -2440,6 +2438,8 @@ test.skip("scopes path errors using custom keyArgs rather than the bare field na
         },
       },
     },
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -2497,8 +2497,6 @@ test.skip("shares path errors across argument variants when keyArgs is false", (
       optimistic: false,
     })
   ).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         ok: true,
@@ -2509,6 +2507,8 @@ test.skip("shares path errors across argument variants when keyArgs is false", (
         },
       },
     },
+    complete: true,
+    missing: undefined,
   });
 
   expect(
@@ -2518,8 +2518,6 @@ test.skip("shares path errors across argument variants when keyArgs is false", (
       optimistic: false,
     })
   ).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         ok: true,
@@ -2530,6 +2528,8 @@ test.skip("shares path errors across argument variants when keyArgs is false", (
         },
       },
     },
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -2589,8 +2589,6 @@ test.skip("scopes path errors using directive arguments included in keyArgs", ()
       optimistic: false,
     })
   ).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       feed: {
         ok: false,
@@ -2602,6 +2600,8 @@ test.skip("scopes path errors using directive arguments included in keyArgs", ()
         ],
       },
     },
+    complete: true,
+    missing: undefined,
   });
 
   expect(
@@ -2611,8 +2611,6 @@ test.skip("scopes path errors using directive arguments included in keyArgs", ()
       optimistic: false,
     })
   ).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       feed: {
         ok: true,
@@ -2625,6 +2623,8 @@ test.skip("scopes path errors using directive arguments included in keyArgs", ()
         ],
       },
     },
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -2693,8 +2693,6 @@ test.skip("scopes nested path errors to the store field key that includes field 
       optimistic: false,
     })
   ).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         __typename: "User",
@@ -2710,6 +2708,8 @@ test.skip("scopes nested path errors to the store field key that includes field 
         },
       },
     },
+    complete: true,
+    missing: undefined,
   });
 
   expect(
@@ -2719,8 +2719,6 @@ test.skip("scopes nested path errors to the store field key that includes field 
       optimistic: false,
     })
   ).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         __typename: "User",
@@ -2735,6 +2733,8 @@ test.skip("scopes nested path errors to the store field key that includes field 
         },
       },
     },
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -2777,8 +2777,6 @@ test.skip("keeps the same result identities for @catch(to: NULL) when the path e
   const first = cache.diff({ query: nullQuery, optimistic: false });
 
   expect(first).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         __typename: "User",
@@ -2786,6 +2784,8 @@ test.skip("keeps the same result identities for @catch(to: NULL) when the path e
         name: null,
       },
     },
+    complete: true,
+    missing: undefined,
   });
 
   cache.writeQuery({
@@ -2808,8 +2808,6 @@ test.skip("keeps the same result identities for @catch(to: NULL) when the path e
   const second = cache.diff({ query: nullQuery, optimistic: false });
 
   expect(second).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         __typename: "User",
@@ -2817,6 +2815,8 @@ test.skip("keeps the same result identities for @catch(to: NULL) when the path e
         name: null,
       },
     },
+    complete: true,
+    missing: undefined,
   });
   expect(second.result).toBe(first.result);
   expect((second.result as any).user).toBe((first.result as any).user);
@@ -2824,8 +2824,6 @@ test.skip("keeps the same result identities for @catch(to: NULL) when the path e
   expect(
     cache.diff({ query: resultQuery, optimistic: false })
   ).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         __typename: "User",
@@ -2841,6 +2839,8 @@ test.skip("keeps the same result identities for @catch(to: NULL) when the path e
         },
       },
     },
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -2904,8 +2904,6 @@ test.skip("does not skip merging when writing back a previously read result obje
   expect(
     cache.diff({ query: resultQuery, optimistic: false })
   ).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         __typename: "User",
@@ -2921,6 +2919,8 @@ test.skip("does not skip merging when writing back a previously read result obje
         },
       },
     },
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -2955,8 +2955,6 @@ test.skip("updates the path error and invalidates parent identities for @catch(t
   const first = cache.diff({ query, optimistic: false });
 
   expect(first).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         __typename: "User",
@@ -2972,6 +2970,8 @@ test.skip("updates the path error and invalidates parent identities for @catch(t
         },
       },
     },
+    complete: true,
+    missing: undefined,
   });
 
   cache.writeQuery({
@@ -2994,8 +2994,6 @@ test.skip("updates the path error and invalidates parent identities for @catch(t
   const second = cache.diff({ query, optimistic: false });
 
   expect(second).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         __typename: "User",
@@ -3011,6 +3009,8 @@ test.skip("updates the path error and invalidates parent identities for @catch(t
         },
       },
     },
+    complete: true,
+    missing: undefined,
   });
 
   expect(second.result).not.toBe(first.result);
@@ -3052,8 +3052,6 @@ test.skip("keeps the same result identities for @catch(to: RESULT) across reads 
   const second = cache.diff({ query, optimistic: false });
 
   expect(first).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         __typename: "User",
@@ -3069,6 +3067,8 @@ test.skip("keeps the same result identities for @catch(to: RESULT) across reads 
         },
       },
     },
+    complete: true,
+    missing: undefined,
   });
   expect(second.result).toBe(first.result);
   expect((second.result as any).user).toBe((first.result as any).user);
@@ -3400,8 +3400,6 @@ test.skip("merges fields and path errors when the same entity is written via two
   expect(
     cache.diff({ query: readQuery, optimistic: false })
   ).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         __typename: "User",
@@ -3422,6 +3420,8 @@ test.skip("merges fields and path errors when the same entity is written via two
         },
       },
     },
+    complete: true,
+    missing: undefined,
   });
 });
 
@@ -3454,8 +3454,6 @@ test.skip("layers path error metadata on optimistic layers independently of the 
   });
 
   expect(cache.diff({ query, optimistic: false })).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         __typename: "User",
@@ -3471,6 +3469,8 @@ test.skip("layers path error metadata on optimistic layers independently of the 
         },
       },
     },
+    complete: true,
+    missing: undefined,
   });
 
   cache.recordOptimisticTransaction((proxy) => {
@@ -3494,8 +3494,6 @@ test.skip("layers path error metadata on optimistic layers independently of the 
 
   // Optimistic reads see the layer's error override.
   expect(cache.diff({ query, optimistic: true })).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         __typename: "User",
@@ -3511,12 +3509,12 @@ test.skip("layers path error metadata on optimistic layers independently of the 
         },
       },
     },
+    complete: true,
+    missing: undefined,
   });
 
   // Root is unchanged while the layer is active.
   expect(cache.diff({ query, optimistic: false })).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         __typename: "User",
@@ -3532,14 +3530,14 @@ test.skip("layers path error metadata on optimistic layers independently of the 
         },
       },
     },
+    complete: true,
+    missing: undefined,
   });
 
   cache.removeOptimistic("optimistic-name-error");
 
   // Removing the layer drops its error meta; optimistic view matches root again.
   expect(cache.diff({ query, optimistic: true })).toStrictEqualTyped({
-    complete: true,
-    missing: undefined,
     result: {
       user: {
         __typename: "User",
@@ -3555,6 +3553,8 @@ test.skip("layers path error metadata on optimistic layers independently of the 
         },
       },
     },
+    complete: true,
+    missing: undefined,
   });
 });
 

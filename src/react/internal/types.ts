@@ -12,7 +12,7 @@ export type RefetchFunction<
   TErrorPolicy extends ErrorPolicy | undefined = undefined,
 > = (
   variables?: Partial<TVariables>
-) => Promise<ApolloClient.QueryResult<TData, TErrorPolicy>>;
+) => Promise<ApolloClient.QueryResult<MaybeMasked<TData>, TErrorPolicy>>;
 
 export type FetchMoreFunction<TData, TVariables extends OperationVariables> = <
   TFetchData = TData,

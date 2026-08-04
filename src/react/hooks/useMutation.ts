@@ -255,6 +255,19 @@ export declare namespace useMutation {
   export interface DefaultOptions
     extends ApolloClient.DefaultOptions.Mutate.Calculated {}
 
+  export type OptionsFor<TOptions> =
+    [Exclude<keyof TOptions, keyof Options<any, any, any, any>>] extends (
+      [never]
+    ) ?
+      unknown
+    : {
+        // options that are not part of `useMutation.Options`
+        [K in Exclude<
+          keyof TOptions,
+          keyof Options<any, any, any, any>
+        >]: never;
+      };
+
   export type ResultForOptions<
     TData,
     TVariables extends OperationVariables,
@@ -450,10 +463,11 @@ export declare namespace useMutation {
         TErrorPolicy extends ErrorPolicy | undefined = undefined,
       >(
         mutation: DocumentNode | TypedDocumentNode<TData, TVariables>,
-        options?: TOptions & {
-          /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#errorPolicy:member} */
-          errorPolicy?: TErrorPolicy;
-        }
+        options?: TOptions &
+          useMutation.OptionsFor<TOptions> & {
+            /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#errorPolicy:member} */
+            errorPolicy?: TErrorPolicy;
+          }
       ): useMutation.ResultForOptions<
         TData,
         TVariables,

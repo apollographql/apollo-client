@@ -236,6 +236,13 @@ export declare namespace useLazyQuery {
   export interface DefaultOptions
     extends ApolloClient.DefaultOptions.WatchQuery.Calculated {}
 
+  export type OptionsFor<TOptions> =
+    [Exclude<keyof TOptions, keyof Options<any, any>>] extends [never] ? unknown
+    : {
+        // options that are not part of `useLazyQuery.Options`
+        [K in Exclude<keyof TOptions, keyof Options<any, any>>]: never;
+      };
+
   export type ResultForOptions<
     TData,
     TVariables extends OperationVariables,
@@ -433,17 +440,10 @@ export declare namespace useLazyQuery {
         TOptions extends useLazyQuery.Options<
           NoInfer<TData>,
           NoInfer<TVariables>
-        > & {
-          variables?: {
-            [K in Exclude<
-              keyof TOptions["variables"],
-              keyof TVariables
-            >]?: never;
-          };
-        },
+        >,
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-        options?: TOptions
+        options?: TOptions & useLazyQuery.OptionsFor<TOptions>
       ): useLazyQuery.ResultForOptions<TData, TVariables, TOptions>;
     }
 

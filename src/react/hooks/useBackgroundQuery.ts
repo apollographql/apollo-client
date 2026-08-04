@@ -28,6 +28,7 @@ import type {
   DocumentationTypes as UtilityDocumentationTypes,
   NoInfer,
   OptionWithFallback,
+  Prettify,
   SignatureStyle,
   VariablesOption,
 } from "@apollo/client/utilities/internal";
@@ -139,10 +140,36 @@ export declare namespace useBackgroundQuery {
     skip: false;
   }
 
+  export type OptionsFor<
+    TVariables extends OperationVariables,
+    TOptions,
+  > = Options<NoInfer<TVariables>> & {
+    variables?: Prettify<
+      TVariables & {
+        // variables that are not part of `TVariables`
+        [K in keyof TOptions["variables" & keyof TOptions]]: K extends (
+          keyof TVariables
+        ) ?
+          TVariables[K]
+        : never;
+      }
+    >;
+  } & ([
+      Exclude<keyof Exclude<TOptions, SkipToken>, keyof Options<any>>,
+    ] extends [never] ?
+      unknown
+    : {
+        // options that are not part of `useBackgroundQuery.Options`
+        [K in Exclude<
+          keyof Exclude<TOptions, SkipToken>,
+          keyof Options<any>
+        >]: never;
+      });
+
   export type ResultForOptions<
     TData,
     TVariables extends OperationVariables,
-    TOptions extends Record<string, never> | Options<TVariables> | SkipToken,
+    TOptions extends Record<string, never> | Base.Options | SkipToken,
   > = [
     queryRef: TOptions extends any ?
       TOptions extends SkipToken ?
@@ -730,19 +757,18 @@ export declare namespace useBackgroundQuery {
         TData,
         TVariables extends OperationVariables,
         // this overload should never be manually defined, it should always be inferred
-        TOptions extends useBackgroundQuery.Options<NoInfer<TVariables>> &
-          VariablesOption<
-            TVariables & {
-              [K in Exclude<
-                keyof TOptions["variables"],
-                keyof TVariables
-              >]?: never;
-            }
-          >,
+        TOptions extends Base.Options & { variables?: unknown },
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-        ...[options]: {} extends TVariables ? [options?: TOptions]
-        : [options: TOptions]
+        ...[options]: {} extends TVariables ?
+          [
+            options?: TOptions &
+              useBackgroundQuery.OptionsFor<TVariables, TOptions>,
+          ]
+        : [
+            options: TOptions &
+              useBackgroundQuery.OptionsFor<TVariables, TOptions>,
+          ]
       ): useBackgroundQuery.ResultForOptions<TData, TVariables, TOptions>;
 
       /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery:call(1)} */
@@ -761,19 +787,20 @@ export declare namespace useBackgroundQuery {
         TData,
         TVariables extends OperationVariables,
         // this overload should never be manually defined, it should always be inferred
-        TOptions extends useBackgroundQuery.Options<NoInfer<TVariables>> &
-          VariablesOption<
-            TVariables & {
-              [K in Exclude<
-                keyof TOptions["variables"],
-                keyof TVariables
-              >]?: never;
-            }
-          >,
+        TOptions extends Base.Options & { variables?: unknown },
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-        ...[options]: {} extends TVariables ? [options?: TOptions | SkipToken]
-        : [options: TOptions | SkipToken]
+        ...[options]: {} extends TVariables ?
+          [
+            options?:
+              | (TOptions & useBackgroundQuery.OptionsFor<TVariables, TOptions>)
+              | SkipToken,
+          ]
+        : [
+            options:
+              | (TOptions & useBackgroundQuery.OptionsFor<TVariables, TOptions>)
+              | SkipToken,
+          ]
       ): useBackgroundQuery.ResultForOptions<
         TData,
         TVariables,

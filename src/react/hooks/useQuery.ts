@@ -379,7 +379,8 @@ export declare namespace useQuery {
         TData,
         TVariables,
         "empty" | "complete" | "streaming" | "partial",
-        Partial<TVariables>
+        Partial<TVariables>,
+        TErrorPolicy
       >;
 
       /** {@inheritDoc @apollo/client/react!useQuery.DocumentationTypes.useQuery:call(1)} */
@@ -414,7 +415,7 @@ export declare namespace useQuery {
           | SkipToken
           | (useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
               returnPartialData: boolean;
-              TErrorPolicy?: TErrorPolicy;
+              errorPolicy?: TErrorPolicy;
             })
       ): useQuery.Result<
         TData,

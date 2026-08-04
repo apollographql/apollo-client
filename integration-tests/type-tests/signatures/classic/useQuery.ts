@@ -446,11 +446,27 @@ test("refetch narrows the result by errorPolicy", async () => {
     expectTypeOf(data).toEqualTypeOf<Data | undefined>();
     expectTypeOf(error).toEqualTypeOf<undefined>();
   }
+});
+
+test("refetch narrows the result by errorPolicy in every overload", async () => {
+  type Data = { character: string };
+  const query: TypedDocumentNode<Data, Record<string, never>> = gql``;
+
+  let skip!: boolean;
+  let returnPartialData!: boolean;
+
+  {
+    const { refetch } = useQuery(query);
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<ErrorLike | undefined>();
+  }
 
   {
     const { refetch } = useQuery(query, {
-      errorPolicy: "ignore",
       returnPartialData: true,
+      errorPolicy: "ignore",
     });
     const { data, error } = await refetch();
 
@@ -459,7 +475,55 @@ test("refetch narrows the result by errorPolicy", async () => {
   }
 
   {
-    let skip!: boolean;
+    const { refetch } = useQuery(query, skipToken);
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<ErrorLike | undefined>();
+  }
+
+  {
+    const { refetch } = useQuery(
+      query,
+      skip ? skipToken : { returnPartialData: true, errorPolicy: "ignore" }
+    );
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    const { refetch } = useQuery(query, {
+      returnPartialData,
+      errorPolicy: "ignore",
+    });
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    const { refetch } = useQuery(
+      query,
+      skip ? skipToken : { returnPartialData, errorPolicy: "none" }
+    );
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    const { refetch } = useQuery(query, { errorPolicy: "none" });
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
     const { refetch } = useQuery(
       query,
       skip ? skipToken : { errorPolicy: "none" }

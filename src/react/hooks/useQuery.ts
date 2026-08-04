@@ -336,15 +336,19 @@ export declare namespace useQuery {
         TData,
         TVariables extends OperationVariables,
         _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
+        TErrorPolicy extends ErrorPolicy | undefined = undefined,
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
           returnPartialData: true;
+          errorPolicy?: TErrorPolicy;
         }
       ): useQuery.Result<
         TData,
         TVariables,
-        "empty" | "complete" | "streaming" | "partial"
+        "empty" | "complete" | "streaming" | "partial",
+        TVariables,
+        TErrorPolicy
       >;
 
       /** {@inheritDoc @apollo/client/react!useQuery.DocumentationTypes.useQuery:call(1)} */
@@ -362,12 +366,14 @@ export declare namespace useQuery {
         TData,
         TVariables extends OperationVariables,
         _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
+        TErrorPolicy extends ErrorPolicy | undefined = undefined,
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         options:
           | SkipToken
           | (useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
               returnPartialData: true;
+              errorPolicy?: TErrorPolicy;
             })
       ): useQuery.Result<
         TData,
@@ -381,15 +387,19 @@ export declare namespace useQuery {
         TData,
         TVariables extends OperationVariables,
         _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
+        TErrorPolicy extends ErrorPolicy | undefined = undefined,
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
           returnPartialData: boolean;
+          errorPolicy?: TErrorPolicy;
         }
       ): useQuery.Result<
         TData,
         TVariables,
-        "empty" | "complete" | "streaming" | "partial"
+        "empty" | "complete" | "streaming" | "partial",
+        TVariables,
+        TErrorPolicy
       >;
 
       /** {@inheritDoc @apollo/client/react!useQuery.DocumentationTypes.useQuery:call(1)} */
@@ -397,18 +407,21 @@ export declare namespace useQuery {
         TData,
         TVariables extends OperationVariables,
         _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
+        TErrorPolicy extends ErrorPolicy | undefined = undefined,
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         options:
           | SkipToken
           | (useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
               returnPartialData: boolean;
+              TErrorPolicy?: TErrorPolicy;
             })
       ): useQuery.Result<
         TData,
         TVariables,
         "empty" | "complete" | "streaming" | "partial",
-        Partial<TVariables>
+        Partial<TVariables>,
+        TErrorPolicy
       >;
 
       /** {@inheritDoc @apollo/client/react!useQuery.DocumentationTypes.useQuery:call(1)} */
@@ -416,36 +429,57 @@ export declare namespace useQuery {
         TData,
         TVariables extends OperationVariables,
         _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
+        TErrorPolicy extends ErrorPolicy | undefined = undefined,
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         ...[options]: {} extends TVariables ?
-          [options?: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>]
-        : [options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>]
-      ): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming">;
+          [
+            options?: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
+              errorPolicy?: TErrorPolicy;
+            },
+          ]
+        : [
+            options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
+              errorPolicy?: TErrorPolicy;
+            },
+          ]
+      ): useQuery.Result<
+        TData,
+        TVariables,
+        "empty" | "complete" | "streaming",
+        TVariables,
+        TErrorPolicy
+      >;
 
       /** {@inheritDoc @apollo/client/react!useQuery.DocumentationTypes.useQuery:call(1)} */
       <
         TData,
         TVariables extends OperationVariables,
         _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
+        TErrorPolicy extends ErrorPolicy | undefined = undefined,
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         ...[options]: {} extends TVariables ?
           [
             options?:
               | SkipToken
-              | useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>,
+              | (useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
+                  errorPolicy?: TErrorPolicy;
+                }),
           ]
         : [
             options:
               | SkipToken
-              | useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>,
+              | (useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
+                  errorPolicy?: TErrorPolicy;
+                }),
           ]
       ): useQuery.Result<
         TData,
         TVariables,
         "empty" | "complete" | "streaming",
-        Partial<TVariables>
+        Partial<TVariables>,
+        TErrorPolicy
       >;
 
       /** {@inheritDoc @apollo/client/react!useQuery.DocumentationTypes.useQuery_Deprecated:call(1)} */

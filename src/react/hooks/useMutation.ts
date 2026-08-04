@@ -23,6 +23,7 @@ import type { IgnoreModifier } from "@apollo/client/cache";
 import type {
   LazyType,
   NoInfer,
+  OptionWithFallback,
   Prettify,
   SignatureStyle,
 } from "@apollo/client/utilities/internal";
@@ -279,11 +280,12 @@ export declare namespace useMutation {
         ExtractConfiguredVariables<TOptions, TVariables>
       >,
       TCache,
-      [TErrorPolicy] extends [undefined] ?
-        DefaultOptions extends { errorPolicy: infer D } ?
-          D
-        : undefined
-      : TErrorPolicy
+      OptionWithFallback<
+        { errorPolicy: TErrorPolicy },
+        DefaultOptions,
+        "errorPolicy"
+      > &
+        ErrorPolicy
     >
   >;
 

@@ -677,7 +677,9 @@ export namespace useLazyQuery {
         export interface Result<TData, TVariables extends OperationVariables, TErrorPolicy extends ErrorPolicy | undefined = undefined> {
             client: ApolloClient;
             error?: ErrorLike;
-            fetchMore: <TFetchData = TData, TFetchVars extends OperationVariables = TVariables>(fetchMoreOptions: ObservableQuery.FetchMoreOptions<TData, TVariables, TFetchData, TFetchVars>) => Promise<ApolloClient.QueryResult<MaybeMasked<TFetchData>>>;
+            fetchMore: <TFetchData = TData, TFetchVars extends OperationVariables = TVariables, TErrorPolicy extends ErrorPolicy = "none">(fetchMoreOptions: ObservableQuery.FetchMoreOptions<TData, TVariables, TFetchData, TFetchVars> & {
+                errorPolicy?: TErrorPolicy;
+            }) => Promise<ApolloClient.QueryResult<MaybeMasked<TFetchData>, TErrorPolicy>>;
             loading: boolean;
             networkStatus: NetworkStatus;
             observable: ObservableQuery<TData, TVariables>;
@@ -1097,7 +1099,9 @@ export namespace useQuery {
         export interface Result<TData = unknown, TVariables extends OperationVariables = OperationVariables, TReturnVariables extends OperationVariables = TVariables, TErrorPolicy extends ErrorPolicy | undefined = undefined> {
             client: ApolloClient;
             error?: ErrorLike;
-            fetchMore: <TFetchData = TData, TFetchVars extends OperationVariables = TVariables>(fetchMoreOptions: ObservableQuery.FetchMoreOptions<TData, TVariables, TFetchData, TFetchVars>) => Promise<ApolloClient.QueryResult<MaybeMasked_2<TFetchData>>>;
+            fetchMore: <TFetchData = TData, TFetchVars extends OperationVariables = TVariables, TErrorPolicy extends ErrorPolicy = "none">(fetchMoreOptions: ObservableQuery.FetchMoreOptions<TData, TVariables, TFetchData, TFetchVars> & {
+                errorPolicy?: TErrorPolicy;
+            }) => Promise<ApolloClient.QueryResult<MaybeMasked_2<TFetchData>, TErrorPolicy>>;
             loading: boolean;
             networkStatus: NetworkStatus;
             observable: ObservableQuery<TData, TVariables>;

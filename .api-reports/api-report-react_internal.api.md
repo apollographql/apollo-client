@@ -35,7 +35,9 @@ stringifiedVariables: string,
 ];
 
 // @public (undocumented)
-export type FetchMoreFunction<TData, TVariables extends OperationVariables> = <TFetchData = TData, TFetchVars extends OperationVariables = TVariables>(fetchMoreOptions: ObservableQuery.FetchMoreOptions<TData, TVariables, TFetchData, TFetchVars>) => Promise<ApolloClient.QueryResult<MaybeMasked_2<TData>>>;
+export type FetchMoreFunction<TData, TVariables extends OperationVariables> = <TFetchData = TData, TFetchVars extends OperationVariables = TVariables, TErrorPolicy extends ErrorPolicy = "none">(fetchMoreOptions: ObservableQuery.FetchMoreOptions<TData, TVariables, TFetchData, TFetchVars> & {
+    errorPolicy?: TErrorPolicy;
+}) => Promise<ApolloClient.QueryResult<MaybeMasked_2<TFetchData>, TErrorPolicy>>;
 
 // @public (undocumented)
 type FragmentCacheKey = [

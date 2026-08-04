@@ -430,7 +430,7 @@ declare module "@apollo/client" {
     useBackgroundQuery.UndefinedResult<"ignore">
   >;
 
-  useBackgroundQuery.skipToken.returnPartialData._true.branded.toEqualTypeOf<
+  useBackgroundQuery.skipToken.returnPartialData._true.toEqualTypeOf<
     useBackgroundQuery.Result<
       "complete" | "streaming" | "partial" | "empty",
       "ignore",

@@ -110,6 +110,9 @@ export declare namespace useQuery {
 
       /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchOn:member} */
       refetchOn?: RefetchOn.Option;
+
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
+      variables?: unknown;
     }
   }
   export type Options<
@@ -122,7 +125,7 @@ export declare namespace useQuery {
       export interface Options<
         TData = unknown,
         TVariables extends OperationVariables = OperationVariables,
-      > extends Base.Options<TData, TVariables>,
+      > extends Omit<Base.Options<TData, TVariables>, "variables">,
           UtilityDocumentationTypes.VariableOptions<TVariables> {}
     }
   }
@@ -561,9 +564,7 @@ export declare namespace useQuery {
         TData,
         TVariables extends OperationVariables,
         // this overload should never be manually defined, it should always be inferred
-        TOptions extends Base.Options<TData, NoInfer<TVariables>> & {
-          variables?: unknown;
-        },
+        TOptions extends Base.Options<TData, NoInfer<TVariables>>,
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         ...[options]: // we generally do not allow for a `TVariables` of `never`
@@ -595,9 +596,7 @@ export declare namespace useQuery {
         TData,
         TVariables extends OperationVariables,
         // this overload should never be manually defined, it should always be inferred
-        TOptions extends Base.Options<TData, NoInfer<TVariables>> & {
-          variables?: unknown;
-        },
+        TOptions extends Base.Options<TData, NoInfer<TVariables>>,
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         ...[options]: // we generally do not allow for a `TVariables` of `never`

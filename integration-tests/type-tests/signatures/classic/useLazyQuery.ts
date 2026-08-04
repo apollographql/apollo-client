@@ -182,7 +182,7 @@ test("uses masked types when using masked document", async () => {
       },
     });
 
-    expectTypeOf(data).toEqualTypeOf<Query | undefined>();
+    expectTypeOf(data).toEqualTypeOf<Query>();
   }
 
   {
@@ -298,7 +298,7 @@ test("uses unmodified types when using TypedDocumentNode", async () => {
       },
     });
 
-    expectTypeOf(data).toEqualTypeOf<Query | undefined>();
+    expectTypeOf(data).toEqualTypeOf<Query>();
   }
 
   {

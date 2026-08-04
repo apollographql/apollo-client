@@ -2016,7 +2016,7 @@ it("uses proper masked types for fetchMore", async () => {
       },
     });
 
-    expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData | undefined>();
+    expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData>();
   }
 
   {
@@ -2040,7 +2040,7 @@ it("uses proper masked types for fetchMore", async () => {
       },
     });
 
-    expectTypeOf(data).toEqualTypeOf<UnmaskedVariablesCaseData | undefined>();
+    expectTypeOf(data).toEqualTypeOf<UnmaskedVariablesCaseData>();
   }
 });
 

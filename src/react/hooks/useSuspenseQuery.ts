@@ -743,10 +743,10 @@ function useSuspenseQuery_<
 
   const result = fetchPolicy === "standby" ? skipResult : __use(promise);
 
-  const fetchMore = React.useCallback<
-    FetchMoreFunction<unknown, OperationVariables>
-  >(
-    (options) => {
+  const fetchMore = React.useCallback(
+    (
+      options: ObservableQuery.FetchMoreOptions<unknown, OperationVariables>
+    ) => {
       const promise = queryRef.fetchMore(options);
       setPromise([queryRef.key, queryRef.promise]);
 

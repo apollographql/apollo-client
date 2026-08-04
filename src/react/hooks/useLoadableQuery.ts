@@ -397,8 +397,10 @@ export const useLoadableQuery: useLoadableQuery.Signature =
 
     const calledDuringRender = useRenderGuard();
 
-    const fetchMore: FetchMoreFunction<TData, TVariables> = React.useCallback(
-      (options) => {
+    const fetchMore = React.useCallback(
+      (
+        options: ObservableQuery.FetchMoreOptions<TData, TVariables, any, any>
+      ) => {
         if (!internalQueryRef) {
           throw new Error(
             "The query has not been loaded. Please load the query."
@@ -412,7 +414,7 @@ export const useLoadableQuery: useLoadableQuery.Signature =
         return promise;
       },
       [internalQueryRef]
-    );
+    ) as FetchMoreFunction<TData, TVariables>;
 
     const refetch: RefetchFunction<TData, TVariables> = React.useCallback(
       (options) => {

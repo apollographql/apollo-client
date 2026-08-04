@@ -410,6 +410,57 @@ test("refetch narrows the result by errorPolicy", async () => {
   }
 });
 
+test("fetchMore narrows the result by errorPolicy", async () => {
+  type Data = { character: string };
+  const query: TypedDocumentNode<Data, Record<string, never>> = gql``;
+
+  {
+    const { fetchMore } = useQuery(query, {});
+    const { data, error } = await fetchMore({});
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    // `fetchMore` does not inherit the error policy of the hook
+    const { fetchMore } = useQuery(query, { errorPolicy: "all" });
+    const { data, error } = await fetchMore({});
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    const { fetchMore } = useQuery(query, {});
+    const { data, error } = await fetchMore({ errorPolicy: "all" });
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<ErrorLike | undefined>();
+  }
+
+  {
+    const { fetchMore } = useQuery(query, {});
+    const { data, error } = await fetchMore({ errorPolicy: "ignore" });
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    type OtherData = { other: string };
+    const otherQuery: TypedDocumentNode<
+      OtherData,
+      Record<string, never>
+    > = gql``;
+
+    const { fetchMore } = useQuery(query, {});
+    const { data } = await fetchMore({ query: otherQuery });
+
+    expectTypeOf(data).toEqualTypeOf<OtherData>();
+  }
+});
+
 test("rejects unknown options", () => {
   const literalVariables: TypedDocumentNode<
     { character: string },

@@ -117,14 +117,20 @@ export declare namespace useLazyQuery {
       fetchMore: <
         TFetchData = TData,
         TFetchVars extends OperationVariables = TVariables,
+        TErrorPolicy extends ErrorPolicy = "none",
       >(
         fetchMoreOptions: ObservableQuery.FetchMoreOptions<
           TData,
           TVariables,
           TFetchData,
           TFetchVars
-        >
-      ) => Promise<ApolloClient.QueryResult<MaybeMasked<TFetchData>>>;
+        > & {
+          /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
+          errorPolicy?: TErrorPolicy;
+        }
+      ) => Promise<
+        ApolloClient.QueryResult<MaybeMasked<TFetchData>, TErrorPolicy>
+      >;
 
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#client:member} */
       client: ApolloClient;

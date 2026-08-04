@@ -3522,7 +3522,7 @@ describe("ApolloClient", () => {
         },
       });
 
-      expectTypeOf(fetchMoreResult.data).toEqualTypeOf<Query | undefined>();
+      expectTypeOf(fetchMoreResult.data).toEqualTypeOf<Query>();
 
       const refetchResult = await observableQuery.refetch();
 

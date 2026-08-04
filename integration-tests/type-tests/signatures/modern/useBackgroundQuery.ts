@@ -2017,7 +2017,7 @@ it("uses proper masked types for fetchMore", async () => {
       },
     });
 
-    expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData | undefined>();
+    expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData>();
   }
 
   {
@@ -2041,7 +2041,7 @@ it("uses proper masked types for fetchMore", async () => {
       },
     });
 
-    expectTypeOf(data).toEqualTypeOf<UnmaskedVariablesCaseData | undefined>();
+    expectTypeOf(data).toEqualTypeOf<UnmaskedVariablesCaseData>();
   }
 });
 
@@ -2529,6 +2529,57 @@ test("refetch narrows the result by errorPolicy", async () => {
 
     expectTypeOf(data).toEqualTypeOf<Data | undefined>();
     expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+});
+
+test("fetchMore narrows the result by errorPolicy", async () => {
+  type Data = { character: string };
+  const query: TypedDocumentNode<Data, Record<string, never>> = gql``;
+
+  {
+    const [, { fetchMore }] = useBackgroundQuery(query, {});
+    const { data, error } = await fetchMore({});
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    // `fetchMore` does not inherit the error policy of the hook
+    const [, { fetchMore }] = useBackgroundQuery(query, { errorPolicy: "all" });
+    const { data, error } = await fetchMore({});
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    const [, { fetchMore }] = useBackgroundQuery(query, {});
+    const { data, error } = await fetchMore({ errorPolicy: "all" });
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<ErrorLike | undefined>();
+  }
+
+  {
+    const [, { fetchMore }] = useBackgroundQuery(query, {});
+    const { data, error } = await fetchMore({ errorPolicy: "ignore" });
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    type OtherData = { other: string };
+    const otherQuery: TypedDocumentNode<
+      OtherData,
+      Record<string, never>
+    > = gql``;
+
+    const [, { fetchMore }] = useBackgroundQuery(query, {});
+    const { data } = await fetchMore({ query: otherQuery });
+
+    expectTypeOf(data).toEqualTypeOf<OtherData>();
   }
 });
 

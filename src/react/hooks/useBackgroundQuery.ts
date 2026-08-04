@@ -6,6 +6,7 @@ import type {
   DefaultContext,
   DocumentNode,
   ErrorPolicy,
+  ObservableQuery,
   OperationVariables,
   RefetchOn,
   RefetchWritePolicy,
@@ -901,8 +902,10 @@ function useBackgroundQuery_<
     // conditional ensures we aren't running the logic on each render.
   });
 
-  const fetchMore: FetchMoreFunction<TData, TVariables> = React.useCallback(
-    (options) => {
+  const fetchMore = React.useCallback(
+    (
+      options: ObservableQuery.FetchMoreOptions<TData, TVariables, any, any>
+    ) => {
       const promise = queryRef.fetchMore(options);
 
       setWrappedQueryRef(wrapQueryRef(queryRef));
@@ -910,7 +913,7 @@ function useBackgroundQuery_<
       return promise;
     },
     [queryRef]
-  );
+  ) as FetchMoreFunction<TData, TVariables>;
 
   const refetch: RefetchFunction<TData, TVariables> = React.useCallback(
     (variables) => {

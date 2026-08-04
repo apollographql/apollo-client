@@ -17,11 +17,15 @@ export type RefetchFunction<
 export type FetchMoreFunction<TData, TVariables extends OperationVariables> = <
   TFetchData = TData,
   TFetchVars extends OperationVariables = TVariables,
+  TErrorPolicy extends ErrorPolicy = "none",
 >(
   fetchMoreOptions: ObservableQuery.FetchMoreOptions<
     TData,
     TVariables,
     TFetchData,
     TFetchVars
-  >
-) => Promise<ApolloClient.QueryResult<MaybeMasked<TData>>>;
+  > & {
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
+    errorPolicy?: TErrorPolicy;
+  }
+) => Promise<ApolloClient.QueryResult<MaybeMasked<TFetchData>, TErrorPolicy>>;

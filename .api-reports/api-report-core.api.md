@@ -233,15 +233,17 @@ export namespace ApolloClient {
         export interface DefaultOptions extends ApolloClient.DefaultOptions.Mutate.Calculated {
         }
         // (undocumented)
-        export type OptionsFor<TData, TVariables extends OperationVariables, TCache extends ApolloCache, TOptions> = MutateOptions<NoInfer<TData>, NoInfer<TVariables>, TCache> & {
+        export type OptionsFor<TData, TVariables extends OperationVariables, TCache extends ApolloCache, TOptions extends {
+            variables?: unknown;
+        }> = MutateOptions<NoInfer<TData>, NoInfer<TVariables>, TCache> & {
             variables?: Prettify<TVariables & {
-                [K in keyof TOptions["variables" & keyof TOptions]]: K extends (keyof TVariables) ? TVariables[K] : never;
+                [K in keyof TOptions["variables"]]: K extends keyof TVariables ? TVariables[K] : never;
             }>;
-        } & ([Exclude<keyof TOptions, keyof MutateOptions<any, any, any>>] extends ([
-        never
-        ]) ? unknown : {
-            [K in Exclude<keyof TOptions, keyof MutateOptions<any, any, any>>]: never;
-        });
+        } & (Exclude<keyof TOptions, keyof MutateOptions<any, any, any>> extends (infer InvalidOptionNames extends string) ? [
+        InvalidOptionNames
+        ] extends [never] ? unknown : {
+            [K in InvalidOptionNames]: never;
+        } : never);
         // (undocumented)
         export type ResultForOptions<TData, TVariables extends OperationVariables, TCache extends ApolloCache, TOptions extends Record<string, unknown> | Omit<MutateOptions<any, any, TCache>, "variables">> = LazyType<MutateResult<MaybeMasked<TData>, OptionWithFallback<TOptions, DefaultOptions, "errorPolicy"> & ErrorPolicy>>;
         export interface Signature extends Signatures.Evaluated {
@@ -343,15 +345,17 @@ export namespace ApolloClient {
         export interface DefaultOptions extends ApolloClient.DefaultOptions.Query.Calculated {
         }
         // (undocumented)
-        export type OptionsFor<TData, TVariables extends OperationVariables, TOptions> = QueryOptions<NoInfer<TData>, NoInfer<TVariables>> & {
+        export type OptionsFor<TData, TVariables extends OperationVariables, TOptions extends {
+            variables?: unknown;
+        }> = QueryOptions<NoInfer<TData>, NoInfer<TVariables>> & {
             variables?: Prettify<TVariables & {
-                [K in keyof TOptions["variables" & keyof TOptions]]: K extends (keyof TVariables) ? TVariables[K] : never;
+                [K in keyof TOptions["variables"]]: K extends keyof TVariables ? TVariables[K] : never;
             }>;
-        } & ([Exclude<keyof TOptions, keyof QueryOptions<any, any>>] extends ([
-        never
-        ]) ? unknown : {
-            [K in Exclude<keyof TOptions, keyof QueryOptions<any, any>>]: never;
-        });
+        } & (Exclude<keyof TOptions, keyof QueryOptions<any, any>> extends (infer InvalidOptionNames extends string) ? [
+        InvalidOptionNames
+        ] extends [never] ? unknown : {
+            [K in InvalidOptionNames]: never;
+        } : never);
         // (undocumented)
         export type ResultForOptions<TData, TVariables extends OperationVariables, TOptions extends Record<string, unknown> | Omit<QueryOptions<any, any>, "variables">> = LazyType<QueryResult<MaybeMasked<TData>, OptionWithFallback<TOptions, DefaultOptions, "errorPolicy"> & ErrorPolicy>>;
         export interface Signature extends Signatures.Evaluated {
@@ -1388,7 +1392,7 @@ export const windowFocusSource: RefetchEventManager.EventSource<Event>;
 
 // Warnings were encountered during analysis:
 //
-// src/core/ApolloClient.ts:678:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:669:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:375:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:195:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 

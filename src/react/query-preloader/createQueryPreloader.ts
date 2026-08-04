@@ -136,26 +136,23 @@ export declare namespace PreloadQueryFunction {
 
   export type OptionsFor<
     TVariables extends OperationVariables,
-    TOptions,
+    TOptions extends { variables?: unknown },
   > = PreloadQueryOptions<NoInfer<TVariables>> & {
     variables?: Prettify<
       TVariables & {
         // variables that are not part of `TVariables`
-        [K in keyof TOptions["variables" & keyof TOptions]]: K extends (
-          keyof TVariables
-        ) ?
+        [K in keyof TOptions["variables"]]: K extends keyof TVariables ?
           TVariables[K]
         : never;
       }
     >;
-  } & ([Exclude<keyof TOptions, keyof PreloadQueryOptions<any>>] extends (
-      [never]
+  } & (Exclude<keyof TOptions, keyof PreloadQueryOptions<any>> extends (
+      infer InvalidOptionNames extends string
     ) ?
-      unknown
-    : {
-        // options that are not part of `PreloadQueryOptions`
-        [K in Exclude<keyof TOptions, keyof PreloadQueryOptions<any>>]: never;
-      });
+      [InvalidOptionNames] extends [never] ?
+        unknown
+      : { [K in InvalidOptionNames]: never }
+    : never);
 
   export type ResultForOptions<
     TData,

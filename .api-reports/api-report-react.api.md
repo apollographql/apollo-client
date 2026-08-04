@@ -169,15 +169,17 @@ export namespace PreloadQueryFunction {
         }
     }
     // (undocumented)
-    export type OptionsFor<TVariables extends OperationVariables, TOptions> = PreloadQueryOptions<NoInfer_2<TVariables>> & {
+    export type OptionsFor<TVariables extends OperationVariables, TOptions extends {
+        variables?: unknown;
+    }> = PreloadQueryOptions<NoInfer_2<TVariables>> & {
         variables?: Prettify<TVariables & {
-            [K in keyof TOptions["variables" & keyof TOptions]]: K extends (keyof TVariables) ? TVariables[K] : never;
+            [K in keyof TOptions["variables"]]: K extends keyof TVariables ? TVariables[K] : never;
         }>;
-    } & ([Exclude<keyof TOptions, keyof PreloadQueryOptions<any>>] extends ([
-    never
-    ]) ? unknown : {
-        [K in Exclude<keyof TOptions, keyof PreloadQueryOptions<any>>]: never;
-    });
+    } & (Exclude<keyof TOptions, keyof PreloadQueryOptions<any>> extends (infer InvalidOptionNames extends string) ? [
+    InvalidOptionNames
+    ] extends [never] ? unknown : {
+        [K in InvalidOptionNames]: never;
+    } : never);
     // (undocumented)
     export type ResultForOptions<TData, TVariables extends OperationVariables, TOptions extends Record<string, never> | Omit<PreloadQueryOptions<any>, "variables">> = TOptions extends any ? PreloadedQueryRef_2<TData, TVariables, ResultForOptions.States<TOptions, DefaultOptions>> : never;
     // (undocumented)
@@ -297,6 +299,7 @@ export namespace useBackgroundQuery {
             returnPartialData?: boolean;
             // @deprecated
             skip?: boolean;
+            variables?: unknown;
         }
     }
     // (undocumented)
@@ -309,7 +312,7 @@ export namespace useBackgroundQuery {
         // (undocumented)
         export namespace useBackgroundQuery {
             // (undocumented)
-            export interface Options<TVariables extends OperationVariables = OperationVariables> extends Base.Options, DocumentationTypes.VariableOptions<TVariables> {
+            export interface Options<TVariables extends OperationVariables = OperationVariables> extends Omit<Base.Options, "variables">, DocumentationTypes.VariableOptions<TVariables> {
             }
         }
     }
@@ -345,15 +348,17 @@ export namespace useBackgroundQuery {
     // (undocumented)
     export type Options<TVariables extends OperationVariables = OperationVariables> = Base.Options & VariablesOption<TVariables>;
     // (undocumented)
-    export type OptionsFor<TVariables extends OperationVariables, TOptions> = Options<NoInfer_2<TVariables>> & {
+    export type OptionsFor<TVariables extends OperationVariables, TOptions extends {
+        variables?: unknown;
+    }> = useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
         variables?: Prettify<TVariables & {
-            [K in keyof TOptions["variables" & keyof TOptions]]: K extends (keyof TVariables) ? TVariables[K] : never;
+            [K in keyof TOptions["variables"]]: K extends keyof TVariables ? TVariables[K] : never;
         }>;
-    } & ([
-    Exclude<keyof Exclude<TOptions, SkipToken>, keyof Options<any>>
+    } & (Exclude<keyof Exclude<TOptions, SkipToken>, keyof useBackgroundQuery.Options<any>> extends infer InvalidOptionNames extends string ? [
+    InvalidOptionNames
     ] extends [never] ? unknown : {
-        [K in Exclude<keyof Exclude<TOptions, SkipToken>, keyof Options<any>>]: never;
-    });
+        [K in InvalidOptionNames]: never;
+    } : never);
     // (undocumented)
     export interface Result<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
         fetchMore: FetchMoreFunction<TData, TVariables>;
@@ -566,17 +571,13 @@ export namespace useBackgroundQuery {
         export type Evaluated = SignatureStyle extends "classic" ? Classic : Modern;
         export interface Modern {
             <TData, TVariables extends OperationVariables, TOptions extends never>(query: {} extends TVariables ? DocumentNode_2 | TypedDocumentNode_2<TData, TVariables> : never): useBackgroundQuery.ResultForOptions<TData, TVariables, Record<string, never>>;
-            <TData, TVariables extends OperationVariables, TOptions extends Base.Options & {
-                variables?: unknown;
-            }>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...[options]: {} extends TVariables ? [
+            <TData, TVariables extends OperationVariables, TOptions extends Base.Options>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...[options]: {} extends TVariables ? [
             options?: TOptions & useBackgroundQuery.OptionsFor<TVariables, TOptions>
             ] : [
             options: TOptions & useBackgroundQuery.OptionsFor<TVariables, TOptions>
             ]): useBackgroundQuery.ResultForOptions<TData, TVariables, TOptions>;
             <TData, TVariables extends OperationVariables, TOptions extends never>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, skipToken: SkipToken): useBackgroundQuery.ResultForOptions<TData, TVariables, SkipToken>;
-            <TData, TVariables extends OperationVariables, TOptions extends Base.Options & {
-                variables?: unknown;
-            }>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...[options]: {} extends TVariables ? [
+            <TData, TVariables extends OperationVariables, TOptions extends Base.Options>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...[options]: {} extends TVariables ? [
             options?: (TOptions & useBackgroundQuery.OptionsFor<TVariables, TOptions>) | SkipToken
             ] : [
             options: (TOptions & useBackgroundQuery.OptionsFor<TVariables, TOptions>) | SkipToken
@@ -761,11 +762,11 @@ export namespace useLazyQuery {
         skipPollAttempt?: () => boolean;
     }
     // (undocumented)
-    export type OptionsFor<TOptions> = [
-    Exclude<keyof TOptions, keyof Options<any, any>>
+    export type OptionsFor<TOptions> = Exclude<keyof TOptions, keyof useLazyQuery.Options<any, any>> extends (infer InvalidOptionNames extends string) ? [
+    InvalidOptionNames
     ] extends [never] ? unknown : {
-        [K in Exclude<keyof TOptions, keyof Options<any, any>>]: never;
-    };
+        [K in InvalidOptionNames]: never;
+    } : never;
     // (undocumented)
     export type Result<TData, TVariables extends OperationVariables, TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"]> = Base.Result<TData, TVariables> & (({
         called: true;
@@ -859,11 +860,11 @@ export namespace useLoadableQuery {
         returnPartialData?: boolean;
     }
     // (undocumented)
-    export type OptionsFor<TOptions> = [
-    Exclude<keyof TOptions, keyof Options>
+    export type OptionsFor<TOptions> = Exclude<keyof TOptions, keyof useLoadableQuery.Options> extends (infer InvalidOptionNames extends string) ? [
+    InvalidOptionNames
     ] extends [never] ? unknown : {
-        [K in Exclude<keyof TOptions, keyof Options>]: never;
-    };
+        [K in InvalidOptionNames]: never;
+    } : never;
     // (undocumented)
     export type Result<TData = unknown, TVariables extends OperationVariables = OperationVariables, TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"]> = [
     loadQuery: LoadQueryFunction<TVariables>,
@@ -987,13 +988,11 @@ export namespace useMutation {
         variables?: Partial<TVariables> & TConfiguredVariables;
     }
     // (undocumented)
-    export type OptionsFor<TOptions> = [
-    Exclude<keyof TOptions, keyof Options<any, any, any, any>>
-    ] extends ([
-    never
-    ]) ? unknown : {
-        [K in Exclude<keyof TOptions, keyof Options<any, any, any, any>>]: never;
-    };
+    export type OptionsFor<TOptions> = Exclude<keyof TOptions, keyof useMutation.Options<any, any, any, any>> extends infer InvalidOptionNames extends string ? [
+    InvalidOptionNames
+    ] extends [never] ? unknown : {
+        [K in InvalidOptionNames]: never;
+    } : never;
     // (undocumented)
     export type Result<TData = unknown, TErrorPolicy extends ErrorPolicy | undefined = undefined> = Base.Result & ResultStateMap<TData>[`${TErrorPolicy}`];
     // Warning: (ae-forgotten-export) The symbol "MakeRequiredVariablesOptional" needs to be exported by the entry point index.d.ts
@@ -1089,6 +1088,7 @@ export namespace useQuery {
             skip?: boolean;
             skipPollAttempt?: () => boolean;
             ssr?: boolean;
+            variables?: unknown;
         }
     }
     // (undocumented)
@@ -1120,7 +1120,7 @@ export namespace useQuery {
         // (undocumented)
         export namespace useQuery {
             // (undocumented)
-            export interface Options<TData = unknown, TVariables extends OperationVariables = OperationVariables> extends Base.Options<TData, TVariables>, DocumentationTypes.VariableOptions<TVariables> {
+            export interface Options<TData = unknown, TVariables extends OperationVariables = OperationVariables> extends Omit<Base.Options<TData, TVariables>, "variables">, DocumentationTypes.VariableOptions<TVariables> {
             }
         }
     }
@@ -1148,15 +1148,17 @@ export namespace useQuery {
     // (undocumented)
     export type Options<TData = unknown, TVariables extends OperationVariables = OperationVariables> = Base.Options<TData, TVariables> & VariablesOption<TVariables>;
     // (undocumented)
-    export type OptionsFor<TData, TVariables extends OperationVariables, TOptions> = Options<TData, NoInfer_2<TVariables>> & {
+    export type OptionsFor<TData, TVariables extends OperationVariables, TOptions extends {
+        variables?: unknown;
+    }> = useQuery.Options<TData, NoInfer_2<TVariables>> & {
         variables?: Prettify<TVariables & {
-            [K in keyof TOptions["variables" & keyof TOptions]]: K extends (keyof TVariables) ? TVariables[K] : never;
+            [K in keyof TOptions["variables"]]: K extends keyof TVariables ? TVariables[K] : never;
         }>;
-    } & ([
-    Exclude<keyof Exclude<TOptions, SkipToken>, keyof Options<TData, TVariables>>
+    } & (Exclude<keyof Exclude<TOptions, SkipToken>, keyof useQuery.Options<TData, TVariables>> extends infer InvalidOptionNames extends string ? [
+    InvalidOptionNames
     ] extends [never] ? unknown : {
-        [K in Exclude<keyof Exclude<TOptions, SkipToken>, keyof Options<TData, TVariables>>]: never;
-    });
+        [K in InvalidOptionNames]: never;
+    } : never);
     // (undocumented)
     export type Result<TData = unknown, TVariables extends OperationVariables = OperationVariables, TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"], TReturnVariables extends OperationVariables = TVariables> = Base.Result<TData, TVariables, TReturnVariables> & GetDataState<MaybeMasked_2<TData>, TStates>;
     // (undocumented)
@@ -1222,9 +1224,7 @@ export namespace useQuery {
         export type Evaluated = SignatureStyle extends "classic" ? Classic : Modern;
         export interface Modern {
             <TData, TVariables extends OperationVariables, Options extends never>(query: {} extends TVariables ? DocumentNode_2 | TypedDocumentNode_2<TData, TVariables> : never): useQuery.ResultForOptions<TData, TVariables, Record<string, never>>;
-            <TData, TVariables extends OperationVariables, TOptions extends Base.Options<TData, NoInfer_2<TVariables>> & {
-                variables?: unknown;
-            }>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...[options]: [
+            <TData, TVariables extends OperationVariables, TOptions extends Base.Options<TData, NoInfer_2<TVariables>>>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...[options]: [
             TVariables
             ] extends [never] ? [options: never] : {} extends TVariables ? [
             options?: TOptions & useQuery.OptionsFor<TData, TVariables, TOptions>
@@ -1232,9 +1232,7 @@ export namespace useQuery {
             options: TOptions & useQuery.OptionsFor<TData, TVariables, TOptions>
             ]): useQuery.ResultForOptions<TData, TVariables, TOptions>;
             <TData, TVariables extends OperationVariables, TOptions extends SkipToken>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken): useQuery.Result<TData, TVariables, "empty", Record<string, never>>;
-            <TData, TVariables extends OperationVariables, TOptions extends Base.Options<TData, NoInfer_2<TVariables>> & {
-                variables?: unknown;
-            }>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...[options]: [
+            <TData, TVariables extends OperationVariables, TOptions extends Base.Options<TData, NoInfer_2<TVariables>>>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...[options]: [
             TVariables
             ] extends [never] ? [options: never] : {} extends TVariables ? [
             options?: (TOptions & useQuery.OptionsFor<TData, TVariables, TOptions>) | SkipToken
@@ -1478,6 +1476,7 @@ export namespace useSuspenseQuery {
             returnPartialData?: boolean;
             // @deprecated
             skip?: boolean;
+            variables?: unknown;
         }
     }
     // (undocumented)
@@ -1502,7 +1501,7 @@ export namespace useSuspenseQuery {
         // (undocumented)
         export namespace useSuspenseQuery {
             // (undocumented)
-            export interface Options<TVariables extends OperationVariables = OperationVariables> extends Base.Options<TVariables>, DocumentationTypes.VariableOptions<TVariables> {
+            export interface Options<TVariables extends OperationVariables = OperationVariables> extends Omit<Base.Options<TVariables>, "variables">, DocumentationTypes.VariableOptions<TVariables> {
             }
         }
     }
@@ -1532,15 +1531,17 @@ export namespace useSuspenseQuery {
     // (undocumented)
     export type Options<TVariables extends OperationVariables = OperationVariables> = Base.Options<TVariables> & VariablesOption<TVariables>;
     // (undocumented)
-    export type OptionsFor<TVariables extends OperationVariables, TOptions> = Options<NoInfer_2<TVariables>> & {
+    export type OptionsFor<TVariables extends OperationVariables, TOptions extends {
+        variables?: unknown;
+    }> = useSuspenseQuery.Options<NoInfer_2<TVariables>> & {
         variables?: Prettify<TVariables & {
-            [K in keyof TOptions["variables" & keyof TOptions]]: K extends (keyof TVariables) ? TVariables[K] : never;
+            [K in keyof TOptions["variables"]]: K extends keyof TVariables ? TVariables[K] : never;
         }>;
-    } & ([
-    Exclude<keyof Exclude<TOptions, SkipToken>, keyof Options<any>>
+    } & (Exclude<keyof Exclude<TOptions, SkipToken>, keyof useSuspenseQuery.Options<any>> extends infer InvalidOptionNames extends string ? [
+    InvalidOptionNames
     ] extends [never] ? unknown : {
-        [K in Exclude<keyof Exclude<TOptions, SkipToken>, keyof Options<any>>]: never;
-    });
+        [K in InvalidOptionNames]: never;
+    } : never);
     // (undocumented)
     export type Result<TData = unknown, TVariables extends OperationVariables = OperationVariables, TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"]> = Base.Result<TData, TVariables> & GetDataState<MaybeMasked<TData>, TStates>;
     // (undocumented)
@@ -1620,17 +1621,13 @@ export namespace useSuspenseQuery {
         export type Evaluated = SignatureStyle extends "classic" ? Classic : Modern;
         export interface Modern {
             <TData, TVariables extends OperationVariables, Options extends never>(query: {} extends TVariables ? DocumentNode_2 | TypedDocumentNode_2<TData, TVariables> : never): useSuspenseQuery.ResultForOptions<TData, TVariables, Record<string, never>>;
-            <TData, TVariables extends OperationVariables, TOptions extends Base.Options<NoInfer_2<TVariables>> & {
-                variables?: unknown;
-            }>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...[options]: {} extends TVariables ? [
+            <TData, TVariables extends OperationVariables, TOptions extends Base.Options<NoInfer_2<TVariables>>>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...[options]: {} extends TVariables ? [
             options?: TOptions & useSuspenseQuery.OptionsFor<TVariables, TOptions>
             ] : [
             options: TOptions & useSuspenseQuery.OptionsFor<TVariables, TOptions>
             ]): useSuspenseQuery.ResultForOptions<TData, TVariables, TOptions>;
             <TData, TVariables extends OperationVariables, TOptions extends never>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, skipToken: SkipToken): useSuspenseQuery.ResultForOptions<TData, TVariables, SkipToken>;
-            <TData, TVariables extends OperationVariables, TOptions extends Base.Options<NoInfer_2<TVariables>> & {
-                variables?: unknown;
-            }>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...[options]: {} extends TVariables ? [
+            <TData, TVariables extends OperationVariables, TOptions extends Base.Options<NoInfer_2<TVariables>>>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...[options]: {} extends TVariables ? [
             options?: (TOptions & useSuspenseQuery.OptionsFor<TVariables, TOptions>) | SkipToken
             ] : [
             options: (TOptions & useSuspenseQuery.OptionsFor<TVariables, TOptions>) | SkipToken

@@ -95,6 +95,9 @@ export declare namespace useSuspenseQuery {
        * ```
        */
       skip?: boolean;
+
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
+      variables?: unknown;
     }
   }
   export type Options<
@@ -105,7 +108,7 @@ export declare namespace useSuspenseQuery {
     namespace useSuspenseQuery {
       export interface Options<
         TVariables extends OperationVariables = OperationVariables,
-      > extends Base.Options<TVariables>,
+      > extends Omit<Base.Options<TVariables>, "variables">,
           UtilityDocumentationTypes.VariableOptions<TVariables> {}
     }
   }
@@ -159,29 +162,24 @@ export declare namespace useSuspenseQuery {
 
   export type OptionsFor<
     TVariables extends OperationVariables,
-    TOptions,
-  > = Options<NoInfer<TVariables>> & {
+    TOptions extends { variables?: unknown },
+  > = useSuspenseQuery.Options<NoInfer<TVariables>> & {
     variables?: Prettify<
       TVariables & {
         // variables that are not part of `TVariables`
-        [K in keyof TOptions["variables" & keyof TOptions]]: K extends (
-          keyof TVariables
-        ) ?
+        [K in keyof TOptions["variables"]]: K extends keyof TVariables ?
           TVariables[K]
         : never;
       }
     >;
-  } & ([
-      Exclude<keyof Exclude<TOptions, SkipToken>, keyof Options<any>>,
-    ] extends [never] ?
-      unknown
-    : {
-        // options that are not part of `useSuspenseQuery.Options`
-        [K in Exclude<
-          keyof Exclude<TOptions, SkipToken>,
-          keyof Options<any>
-        >]: never;
-      });
+  } & (Exclude<
+      keyof Exclude<TOptions, SkipToken>,
+      keyof useSuspenseQuery.Options<any>
+    > extends infer InvalidOptionNames extends string ?
+      [InvalidOptionNames] extends [never] ?
+        unknown
+      : { [K in InvalidOptionNames]: never }
+    : never);
 
   export type ResultForOptions<
     TData,
@@ -589,9 +587,7 @@ export declare namespace useSuspenseQuery {
         TData,
         TVariables extends OperationVariables,
         // this overload should never be manually defined, it should always be inferred
-        TOptions extends Base.Options<NoInfer<TVariables>> & {
-          variables?: unknown;
-        },
+        TOptions extends Base.Options<NoInfer<TVariables>>,
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         ...[options]: {} extends TVariables ?
@@ -621,9 +617,7 @@ export declare namespace useSuspenseQuery {
         TData,
         TVariables extends OperationVariables,
         // this overload should never be manually defined, it should always be inferred
-        TOptions extends Base.Options<NoInfer<TVariables>> & {
-          variables?: unknown;
-        },
+        TOptions extends Base.Options<NoInfer<TVariables>>,
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         ...[options]: {} extends TVariables ?

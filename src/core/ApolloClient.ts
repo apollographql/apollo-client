@@ -249,29 +249,23 @@ export declare namespace ApolloClient {
       TData,
       TVariables extends OperationVariables,
       TCache extends ApolloCache,
-      TOptions,
+      TOptions extends { variables?: unknown },
     > = MutateOptions<NoInfer<TData>, NoInfer<TVariables>, TCache> & {
       variables?: Prettify<
         TVariables & {
           // variables that are not part of `TVariables`
-          [K in keyof TOptions["variables" & keyof TOptions]]: K extends (
-            keyof TVariables
-          ) ?
+          [K in keyof TOptions["variables"]]: K extends keyof TVariables ?
             TVariables[K]
           : never;
         }
       >;
-    } & ([Exclude<keyof TOptions, keyof MutateOptions<any, any, any>>] extends (
-        [never]
+    } & (Exclude<keyof TOptions, keyof MutateOptions<any, any, any>> extends (
+        infer InvalidOptionNames extends string
       ) ?
-        unknown
-      : {
-          // options that are not part of `ApolloClient.MutateOptions`
-          [K in Exclude<
-            keyof TOptions,
-            keyof MutateOptions<any, any, any>
-          >]: never;
-        });
+        [InvalidOptionNames] extends [never] ?
+          unknown
+        : { [K in InvalidOptionNames]: never }
+      : never);
 
     export type ResultForOptions<
       TData,
@@ -463,26 +457,23 @@ export declare namespace ApolloClient {
     export type OptionsFor<
       TData,
       TVariables extends OperationVariables,
-      TOptions,
+      TOptions extends { variables?: unknown },
     > = QueryOptions<NoInfer<TData>, NoInfer<TVariables>> & {
       variables?: Prettify<
         TVariables & {
           // variables that are not part of `TVariables`
-          [K in keyof TOptions["variables" & keyof TOptions]]: K extends (
-            keyof TVariables
-          ) ?
+          [K in keyof TOptions["variables"]]: K extends keyof TVariables ?
             TVariables[K]
           : never;
         }
       >;
-    } & ([Exclude<keyof TOptions, keyof QueryOptions<any, any>>] extends (
-        [never]
+    } & (Exclude<keyof TOptions, keyof QueryOptions<any, any>> extends (
+        infer InvalidOptionNames extends string
       ) ?
-        unknown
-      : {
-          // options that are not part of `ApolloClient.QueryOptions`
-          [K in Exclude<keyof TOptions, keyof QueryOptions<any, any>>]: never;
-        });
+        [InvalidOptionNames] extends [never] ?
+          unknown
+        : { [K in InvalidOptionNames]: never }
+      : never);
 
     export type ResultForOptions<
       TData,

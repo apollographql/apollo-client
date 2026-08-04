@@ -256,17 +256,14 @@ export declare namespace useMutation {
     extends ApolloClient.DefaultOptions.Mutate.Calculated {}
 
   export type OptionsFor<TOptions> =
-    [Exclude<keyof TOptions, keyof Options<any, any, any, any>>] extends (
-      [never]
-    ) ?
-      unknown
-    : {
-        // options that are not part of `useMutation.Options`
-        [K in Exclude<
-          keyof TOptions,
-          keyof Options<any, any, any, any>
-        >]: never;
-      };
+    Exclude<
+      keyof TOptions,
+      keyof useMutation.Options<any, any, any, any>
+    > extends infer InvalidOptionNames extends string ?
+      [InvalidOptionNames] extends [never] ?
+        unknown
+      : { [K in InvalidOptionNames]: never }
+    : never;
 
   export type ResultForOptions<
     TData,

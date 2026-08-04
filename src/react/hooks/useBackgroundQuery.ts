@@ -86,6 +86,9 @@ export declare namespace useBackgroundQuery {
        * ```
        */
       skip?: boolean;
+
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
+      variables?: unknown;
     }
   }
 
@@ -97,7 +100,7 @@ export declare namespace useBackgroundQuery {
     namespace useBackgroundQuery {
       export interface Options<
         TVariables extends OperationVariables = OperationVariables,
-      > extends Base.Options,
+      > extends Omit<Base.Options, "variables">,
           UtilityDocumentationTypes.VariableOptions<TVariables> {}
     }
   }
@@ -142,29 +145,24 @@ export declare namespace useBackgroundQuery {
 
   export type OptionsFor<
     TVariables extends OperationVariables,
-    TOptions,
-  > = Options<NoInfer<TVariables>> & {
+    TOptions extends { variables?: unknown },
+  > = useBackgroundQuery.Options<NoInfer<TVariables>> & {
     variables?: Prettify<
       TVariables & {
         // variables that are not part of `TVariables`
-        [K in keyof TOptions["variables" & keyof TOptions]]: K extends (
-          keyof TVariables
-        ) ?
+        [K in keyof TOptions["variables"]]: K extends keyof TVariables ?
           TVariables[K]
         : never;
       }
     >;
-  } & ([
-      Exclude<keyof Exclude<TOptions, SkipToken>, keyof Options<any>>,
-    ] extends [never] ?
-      unknown
-    : {
-        // options that are not part of `useBackgroundQuery.Options`
-        [K in Exclude<
-          keyof Exclude<TOptions, SkipToken>,
-          keyof Options<any>
-        >]: never;
-      });
+  } & (Exclude<
+      keyof Exclude<TOptions, SkipToken>,
+      keyof useBackgroundQuery.Options<any>
+    > extends infer InvalidOptionNames extends string ?
+      [InvalidOptionNames] extends [never] ?
+        unknown
+      : { [K in InvalidOptionNames]: never }
+    : never);
 
   export type ResultForOptions<
     TData,
@@ -757,7 +755,7 @@ export declare namespace useBackgroundQuery {
         TData,
         TVariables extends OperationVariables,
         // this overload should never be manually defined, it should always be inferred
-        TOptions extends Base.Options & { variables?: unknown },
+        TOptions extends Base.Options,
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         ...[options]: {} extends TVariables ?
@@ -787,7 +785,7 @@ export declare namespace useBackgroundQuery {
         TData,
         TVariables extends OperationVariables,
         // this overload should never be manually defined, it should always be inferred
-        TOptions extends Base.Options & { variables?: unknown },
+        TOptions extends Base.Options,
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         ...[options]: {} extends TVariables ?

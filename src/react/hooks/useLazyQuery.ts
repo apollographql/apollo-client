@@ -237,11 +237,13 @@ export declare namespace useLazyQuery {
     extends ApolloClient.DefaultOptions.WatchQuery.Calculated {}
 
   export type OptionsFor<TOptions> =
-    [Exclude<keyof TOptions, keyof Options<any, any>>] extends [never] ? unknown
-    : {
-        // options that are not part of `useLazyQuery.Options`
-        [K in Exclude<keyof TOptions, keyof Options<any, any>>]: never;
-      };
+    Exclude<keyof TOptions, keyof useLazyQuery.Options<any, any>> extends (
+      infer InvalidOptionNames extends string
+    ) ?
+      [InvalidOptionNames] extends [never] ?
+        unknown
+      : { [K in InvalidOptionNames]: never }
+    : never;
 
   export type ResultForOptions<
     TData,

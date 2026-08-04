@@ -6312,6 +6312,795 @@ test('reports complete cached deferred data as "complete" while streaming with a
   await expect(stream).not.toEmitAnything();
 });
 
+test('keeps complete cached deferred data when a defer boundary completes with errors with a "cache-and-network" fetch policy', async () => {
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+          }
+        }
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+  const cache = new InMemoryCache();
+
+  cache.writeQuery({
+    query,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello cached",
+        recipient: { __typename: "Person", name: "Cached Alice" },
+      },
+    },
+  });
+
+  const client = new ApolloClient({
+    cache,
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({
+      query,
+      fetchPolicy: "cache-and-network",
+      errorPolicy: "all",
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello cached",
+        recipient: { __typename: "Person", name: "Cached Alice" },
+      },
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: false,
+  });
+
+  enqueueInitialChunk({
+    data: { greeting: { __typename: "Greeting", message: "Hello world" } },
+    pending: [{ id: "0", path: ["greeting"] }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Cached Alice" },
+      },
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  enqueueSubsequentChunk({
+    completed: [
+      {
+        id: "0",
+        errors: [
+          {
+            message: "Could not fetch recipient",
+            path: ["greeting", "recipient"],
+          },
+        ],
+      },
+    ],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Cached Alice" },
+      },
+    },
+    dataState: "complete",
+    error: new CombinedGraphQLErrors({
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+          recipient: { __typename: "Person", name: "Cached Alice" },
+        },
+      },
+      errors: [
+        {
+          message: "Could not fetch recipient",
+          path: ["greeting", "recipient"],
+        },
+      ],
+    }),
+    loading: false,
+    networkStatus: NetworkStatus.error,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test('does not return complete cached deferred data while streaming with a "cache-first" fetch policy when the non-deferred cached data is incomplete', async () => {
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+          }
+        }
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+  const cache = new InMemoryCache();
+
+  // We are intentionally writing partial data to the cache. Suppress console
+  // warnings to avoid unnecessary noise in the test.
+  {
+    using _consoleSpy = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          recipient: { __typename: "Person", name: "Cached Alice" },
+        },
+      },
+    });
+  }
+
+  const client = new ApolloClient({
+    cache,
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(client.watchQuery({ query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: { greeting: { __typename: "Greeting", message: "Hello world" } },
+    pending: [{ id: "0", path: ["greeting"] }],
+    hasNext: true,
+  });
+
+  // The cached recipient was never delivered to the observer because the
+  // non-deferred `message` field was missing from the cache, so the pending
+  // defer boundary is pruned instead of surfacing data that hasn't streamed in.
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      greeting: { __typename: "Greeting", message: "Hello world" },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          __typename: "Greeting",
+          recipient: { __typename: "Person", name: "Alice" },
+        },
+        id: "0",
+      },
+    ],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Alice" },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test('does not return complete cached deferred data when a defer boundary completes with errors with a "cache-first" fetch policy when the non-deferred cached data is incomplete', async () => {
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+          }
+        }
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+  const cache = new InMemoryCache();
+
+  // We are intentionally writing partial data to the cache. Suppress console
+  // warnings to avoid unnecessary noise in the test.
+  {
+    using _consoleSpy = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          recipient: { __typename: "Person", name: "Cached Alice" },
+        },
+      },
+    });
+  }
+
+  const client = new ApolloClient({
+    cache,
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({ query, errorPolicy: "all" })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: { greeting: { __typename: "Greeting", message: "Hello world" } },
+    pending: [{ id: "0", path: ["greeting"] }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      greeting: { __typename: "Greeting", message: "Hello world" },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    completed: [
+      {
+        id: "0",
+        errors: [
+          {
+            message: "Could not fetch recipient",
+            path: ["greeting", "recipient"],
+          },
+        ],
+      },
+    ],
+    hasNext: false,
+  });
+
+  // The network never delivered the defer boundary, so the hole in the data
+  // remains instead of being backfilled with the cached recipient.
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      greeting: { __typename: "Greeting", message: "Hello world" },
+    }),
+    dataState: "streaming",
+    error: new CombinedGraphQLErrors({
+      data: { greeting: { __typename: "Greeting", message: "Hello world" } },
+      errors: [
+        {
+          message: "Could not fetch recipient",
+          path: ["greeting", "recipient"],
+        },
+      ],
+    }),
+    loading: false,
+    networkStatus: NetworkStatus.error,
+    partial: true,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test('does not return complete cached deferred data while streaming with a "cache-and-network" fetch policy when the non-deferred cached data is incomplete', async () => {
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+          }
+        }
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+  const cache = new InMemoryCache();
+
+  // We are intentionally writing partial data to the cache. Suppress console
+  // warnings to avoid unnecessary noise in the test.
+  {
+    using _consoleSpy = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          recipient: { __typename: "Person", name: "Cached Alice" },
+        },
+      },
+    });
+  }
+
+  const client = new ApolloClient({
+    cache,
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({ query, fetchPolicy: "cache-and-network" })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: { greeting: { __typename: "Greeting", message: "Hello world" } },
+    pending: [{ id: "0", path: ["greeting"] }],
+    hasNext: true,
+  });
+
+  // The first emit didn't contain the cached recipient, so the pending defer
+  // boundary is pruned rather than delivering it alongside the network result.
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      greeting: { __typename: "Greeting", message: "Hello world" },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          __typename: "Greeting",
+          recipient: { __typename: "Person", name: "Alice" },
+        },
+        id: "0",
+      },
+    ],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Alice" },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test('does not return complete cached deferred data when a defer boundary completes with errors with a "cache-and-network" fetch policy when the non-deferred cached data is incomplete', async () => {
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+          }
+        }
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+  const cache = new InMemoryCache();
+
+  // We are intentionally writing partial data to the cache. Suppress console
+  // warnings to avoid unnecessary noise in the test.
+  {
+    using _consoleSpy = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          recipient: { __typename: "Person", name: "Cached Alice" },
+        },
+      },
+    });
+  }
+
+  const client = new ApolloClient({
+    cache,
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({
+      query,
+      fetchPolicy: "cache-and-network",
+      errorPolicy: "all",
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: { greeting: { __typename: "Greeting", message: "Hello world" } },
+    pending: [{ id: "0", path: ["greeting"] }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      greeting: { __typename: "Greeting", message: "Hello world" },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    completed: [
+      {
+        id: "0",
+        errors: [
+          {
+            message: "Could not fetch recipient",
+            path: ["greeting", "recipient"],
+          },
+        ],
+      },
+    ],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      greeting: { __typename: "Greeting", message: "Hello world" },
+    }),
+    dataState: "streaming",
+    error: new CombinedGraphQLErrors({
+      data: { greeting: { __typename: "Greeting", message: "Hello world" } },
+      errors: [
+        {
+          message: "Could not fetch recipient",
+          path: ["greeting", "recipient"],
+        },
+      ],
+    }),
+    loading: false,
+    networkStatus: NetworkStatus.error,
+    partial: true,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test('reports residual deferred cached data as "complete" while streaming with a "cache-and-network" fetch policy and returnPartialData', async () => {
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+          }
+        }
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+  const cache = new InMemoryCache();
+
+  // We are intentionally writing partial data to the cache. Suppress console
+  // warnings to avoid unnecessary noise in the test.
+  {
+    using _consoleSpy = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          recipient: { __typename: "Person", name: "Cached Alice" },
+        },
+      },
+    });
+  }
+
+  const client = new ApolloClient({
+    cache,
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({
+      query,
+      fetchPolicy: "cache-and-network",
+      returnPartialData: true,
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        recipient: { __typename: "Person", name: "Cached Alice" },
+      },
+    },
+    dataState: "partial",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: { greeting: { __typename: "Greeting", message: "Hello world" } },
+    pending: [{ id: "0", path: ["greeting"] }],
+    hasNext: true,
+  });
+
+  // The cached recipient was already delivered in the first emit, so it is kept
+  // as residual data instead of being pruned.
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Cached Alice" },
+      },
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          __typename: "Greeting",
+          recipient: { __typename: "Person", name: "Alice" },
+        },
+        id: "0",
+      },
+    ],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Alice" },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test('prunes a list item\'s cached defer boundary while a sibling item has already streamed in with a "cache-first" fetch policy', async () => {
+  const query = gql`
+    query {
+      person {
+        id
+        friends {
+          id
+          ... @defer {
+            name
+          }
+        }
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+  const cache = new InMemoryCache();
+
+  // We are intentionally writing partial data to the cache. Suppress console
+  // warnings to avoid unnecessary noise in the test.
+  {
+    using _consoleSpy = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        person: {
+          __typename: "Person",
+          friends: [
+            { __typename: "Person", id: "2", name: "Cached Leia" },
+            { __typename: "Person", id: "3", name: "Cached Han" },
+          ],
+        },
+      },
+    });
+  }
+
+  const client = new ApolloClient({
+    cache,
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({ query, fetchPolicy: "cache-first" })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: {
+      person: {
+        __typename: "Person",
+        id: "1",
+        friends: [
+          { __typename: "Person", id: "2" },
+          { __typename: "Person", id: "3" },
+        ],
+      },
+    },
+    pending: [
+      { id: "0", path: ["person", "friends", 0] },
+      { id: "1", path: ["person", "friends", 1] },
+    ],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      person: {
+        __typename: "Person",
+        id: "1",
+        friends: [
+          { __typename: "Person", id: "2" },
+          { __typename: "Person", id: "3" },
+        ],
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [{ data: { __typename: "Person", name: "Leia" }, id: "0" }],
+    hasNext: true,
+    completed: [{ id: "0" }],
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      person: {
+        __typename: "Person",
+        id: "1",
+        friends: [
+          { __typename: "Person", id: "2", name: "Leia" },
+          { __typename: "Person", id: "3" },
+        ],
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [{ data: { __typename: "Person", name: "Han" }, id: "1" }],
+    completed: [{ id: "1" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      person: {
+        __typename: "Person",
+        id: "1",
+        friends: [
+          { __typename: "Person", id: "2", name: "Leia" },
+          { __typename: "Person", id: "3", name: "Han" },
+        ],
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
 test('does not return complete cached deferred data while streaming with a "network-only" fetch policy', async () => {
   const query = gql`
     query {

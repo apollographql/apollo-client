@@ -1243,8 +1243,10 @@ export type UseReadQueryResult<TData = unknown> = useReadQuery.Result<TData>;
 
 // @public
 export function useSubscription<TData = unknown, TVariables extends OperationVariables = OperationVariables>(subscription: DocumentNode | TypedDocumentNode<TData, TVariables>, ...[options]: {} extends (TVariables) ? [
-options?: useSubscription.Options<NoInfer_2<TData>, NoInfer_2<TVariables>>
-] : [options: useSubscription.Options<NoInfer_2<TData>, NoInfer_2<TVariables>>]): useSubscription.Result<TData>;
+options?: SkipToken | useSubscription.Options<NoInfer_2<TData>, NoInfer_2<TVariables>>
+] : [
+options: SkipToken | useSubscription.Options<NoInfer_2<TData>, NoInfer_2<TVariables>>
+]): useSubscription.Result<TData>;
 
 // @public (undocumented)
 export namespace useSubscription {

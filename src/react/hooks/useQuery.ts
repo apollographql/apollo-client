@@ -202,14 +202,12 @@ export declare namespace useQuery {
   export type OptionsFor<
     TData,
     TVariables extends OperationVariables,
-    TOptions,
-  > = Options<TData, NoInfer<TVariables>> & {
+    TOptions extends { variables?: unknown },
+  > = useQuery.Options<TData, NoInfer<TVariables>> & {
     variables?: Prettify<
       TVariables & {
         // variables that are not part of `TVariables`
-        [K in keyof TOptions["variables" & keyof TOptions]]: K extends (
-          keyof TVariables
-        ) ?
+        [K in keyof TOptions["variables"]]: K extends keyof TVariables ?
           TVariables[K]
         : never;
       }

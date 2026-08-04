@@ -39,6 +39,7 @@ import { useDeepMemo } from "./internal/useDeepMemo.js";
 import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
+
 export declare namespace useLazyQuery {
   import _self = useLazyQuery;
   export interface Options<

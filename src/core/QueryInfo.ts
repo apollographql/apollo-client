@@ -278,7 +278,7 @@ export class QueryInfo<
               errorPolicy !== "none" ||
               !this.incrementalHandler.extractErrors(incoming)?.length,
           },
-          this.getIncrementalInfo({ isNetworkOnly })
+          this.getIncrementalInfo({ prune: isNetworkOnly })
         )
       );
 
@@ -405,7 +405,7 @@ export class QueryInfo<
             // Never deliver partial data for network-only requests
             returnPartialData: returnPartialData && !isNetworkOnly,
           },
-          this.getIncrementalInfo({ isNetworkOnly })
+          this.getIncrementalInfo({ prune: isNetworkOnly })
         );
 
         if (
@@ -436,7 +436,7 @@ export class QueryInfo<
     return result;
   }
 
-  private getIncrementalInfo({ isNetworkOnly }: { isNetworkOnly: boolean }) {
+  private getIncrementalInfo({ prune }: { prune: boolean }) {
     const pending = this.incremental?.getPendingWithInfo?.() ?? [];
     const streamInfo = this.incremental?.streamInfo;
     const incrementalInfo: DiffIncrementalInfo = { streamInfo };
@@ -445,7 +445,7 @@ export class QueryInfo<
     // for a network-only request if they haven't yet streamed from the
     // network. We record all the still-pending paths so that cache.diff
     // can prune complete defer/stream boundaries at those paths.
-    if (isNetworkOnly) {
+    if (prune) {
       for (const item of pending) {
         if (item.type === "defer" && !item.delivered) {
           incrementalInfo.deferInfo ||= new Trie(true, () => true);

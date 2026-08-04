@@ -380,6 +380,29 @@ test("always returns empty data/dataState with unconditional skipToken", () => {
   expectTypeOf(variables).toEqualTypeOf<Record<string, never>>();
 });
 
+test("errorPolicy does not narrow dataState", () => {
+  type Data = { character: string };
+  const query: TypedDocumentNode<Data, Record<string, never>> = gql``;
+
+  {
+    const { dataState } = useQuery(query, { errorPolicy: "none" });
+
+    expectTypeOf(dataState).toEqualTypeOf<"empty" | "streaming" | "complete">();
+  }
+
+  {
+    const { dataState } = useQuery(query, { errorPolicy: "all" });
+
+    expectTypeOf(dataState).toEqualTypeOf<"empty" | "streaming" | "complete">();
+  }
+
+  {
+    const { dataState } = useQuery(query, { errorPolicy: "ignore" });
+
+    expectTypeOf(dataState).toEqualTypeOf<"empty" | "streaming" | "complete">();
+  }
+});
+
 test("refetch narrows the result by errorPolicy", async () => {
   type Data = { character: string };
   const query: TypedDocumentNode<Data, Record<string, never>> = gql``;

@@ -16,12 +16,12 @@ import type { DocumentationTypes as UtilityDocumentationTypes } from "@apollo/cl
 import type { VariablesOption } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
+import type { SkipToken } from "./constants.js";
+import { skipToken } from "./constants.js";
 import { useDeepMemo } from "./internal/useDeepMemo.js";
 import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
-import { skipToken } from "./constants.js";
-import type { SkipToken } from "./constants.js";
 
 export declare namespace useSubscription {
   import _self = useSubscription;

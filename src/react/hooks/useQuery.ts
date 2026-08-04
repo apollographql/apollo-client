@@ -40,6 +40,7 @@ import type {
   LazyType,
   NoInfer,
   OptionWithFallback,
+  Prettify,
   SignatureStyle,
   VariablesOption,
 } from "@apollo/client/utilities/internal";
@@ -109,6 +110,9 @@ export declare namespace useQuery {
 
       /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchOn:member} */
       refetchOn?: RefetchOn.Option;
+
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
+      variables?: unknown;
     }
   }
   export type Options<
@@ -121,7 +125,7 @@ export declare namespace useQuery {
       export interface Options<
         TData = unknown,
         TVariables extends OperationVariables = OperationVariables,
-      > extends Base.Options<TData, TVariables>,
+      > extends Omit<Base.Options<TData, TVariables>, "variables">,
           UtilityDocumentationTypes.VariableOptions<TVariables> {}
     }
   }
@@ -198,12 +202,34 @@ export declare namespace useQuery {
     skip: false;
   }
 
+  export type OptionsFor<
+    TData,
+    TVariables extends OperationVariables,
+    TOptions extends { variables?: unknown },
+  > = useQuery.Options<TData, NoInfer<TVariables>> & {
+    variables?: Prettify<
+      TVariables & {
+        // variables that are not part of `TVariables`
+        [K in keyof TOptions["variables"]]: K extends keyof TVariables ?
+          TVariables[K]
+        : never;
+      }
+    >;
+  } & (Exclude<
+      keyof Exclude<TOptions, SkipToken>,
+      keyof useQuery.Options<TData, TVariables>
+    > extends infer InvalidOptionNames extends string ?
+      [InvalidOptionNames] extends [never] ?
+        unknown
+      : { [K in InvalidOptionNames]: never }
+    : never);
+
   export type ResultForOptions<
     TData,
     TVariables extends OperationVariables,
     TOptions extends
       | Record<string, never> // no options
-      | Options<TData, TVariables>
+      | Base.Options<TData, TVariables>
       | SkipToken,
   > = LazyType<
     Result<
@@ -538,24 +564,20 @@ export declare namespace useQuery {
         TData,
         TVariables extends OperationVariables,
         // this overload should never be manually defined, it should always be inferred
-        TOptions extends useQuery.Options<TData, NoInfer<TVariables>> &
-          VariablesOption<
-            TVariables & {
-              [K in Exclude<
-                keyof TOptions["variables"],
-                keyof TVariables
-              >]?: never;
-            }
-          >,
+        TOptions extends Base.Options<TData, NoInfer<TVariables>>,
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         ...[options]: // we generally do not allow for a `TVariables` of `never`
         // TODO: check if we need a similar check in other hooks
         [TVariables] extends [never] ? [options: never]
         : // variables optional
-        {} extends TVariables ? [options?: TOptions]
+        {} extends TVariables ?
+          [
+            options?: TOptions &
+              useQuery.OptionsFor<TData, TVariables, TOptions>,
+          ]
         : // variables required
-          [options: TOptions]
+          [options: TOptions & useQuery.OptionsFor<TData, TVariables, TOptions>]
       ): useQuery.ResultForOptions<TData, TVariables, TOptions>;
 
       /** {@inheritDoc @apollo/client/react!useQuery.DocumentationTypes.useQuery:call(1)} */
@@ -574,24 +596,25 @@ export declare namespace useQuery {
         TData,
         TVariables extends OperationVariables,
         // this overload should never be manually defined, it should always be inferred
-        TOptions extends useQuery.Options<TData, NoInfer<TVariables>> &
-          VariablesOption<
-            TVariables & {
-              [K in Exclude<
-                keyof TOptions["variables"],
-                keyof TVariables
-              >]?: never;
-            }
-          >,
+        TOptions extends Base.Options<TData, NoInfer<TVariables>>,
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         ...[options]: // we generally do not allow for a `TVariables` of `never`
         // TODO: check if we need a similar check in other hooks
         [TVariables] extends [never] ? [options: never]
         : // variables optional
-        {} extends TVariables ? [options?: TOptions | SkipToken]
+        {} extends TVariables ?
+          [
+            options?:
+              | (TOptions & useQuery.OptionsFor<TData, TVariables, TOptions>)
+              | SkipToken,
+          ]
         : // variables required
-          [options: TOptions | SkipToken]
+          [
+            options:
+              | (TOptions & useQuery.OptionsFor<TData, TVariables, TOptions>)
+              | SkipToken,
+          ]
       ): useQuery.ResultForOptions<TData, TVariables, TOptions | SkipToken>;
 
       ssrDisabledResult: ObservableQuery.Result<any>;

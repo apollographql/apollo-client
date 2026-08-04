@@ -111,6 +111,15 @@ export declare namespace useLoadableQuery {
   export interface DefaultOptions
     extends ApolloClient.DefaultOptions.WatchQuery.Calculated {}
 
+  export type OptionsFor<TOptions> =
+    Exclude<keyof TOptions, keyof useLoadableQuery.Options> extends (
+      infer InvalidOptionNames extends string
+    ) ?
+      [InvalidOptionNames] extends [never] ?
+        unknown
+      : { [K in InvalidOptionNames]: never }
+    : never;
+
   export type ResultForOptions<
     TData,
     TVariables extends OperationVariables,
@@ -344,7 +353,7 @@ export declare namespace useLoadableQuery {
         TOptions extends useLoadableQuery.Options,
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-        options: TOptions
+        options: TOptions & useLoadableQuery.OptionsFor<TOptions>
       ): useLoadableQuery.ResultForOptions<TData, TVariables, TOptions>;
     }
 

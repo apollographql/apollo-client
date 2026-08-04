@@ -28,6 +28,7 @@ import type {
   DocumentationTypes as UtilityDocumentationTypes,
   NoInfer,
   OptionWithFallback,
+  Prettify,
   SignatureStyle,
   VariablesOption,
 } from "@apollo/client/utilities/internal";
@@ -85,6 +86,9 @@ export declare namespace useBackgroundQuery {
        * ```
        */
       skip?: boolean;
+
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
+      variables?: unknown;
     }
   }
 
@@ -96,7 +100,7 @@ export declare namespace useBackgroundQuery {
     namespace useBackgroundQuery {
       export interface Options<
         TVariables extends OperationVariables = OperationVariables,
-      > extends Base.Options,
+      > extends Omit<Base.Options, "variables">,
           UtilityDocumentationTypes.VariableOptions<TVariables> {}
     }
   }
@@ -139,10 +143,31 @@ export declare namespace useBackgroundQuery {
     skip: false;
   }
 
+  export type OptionsFor<
+    TVariables extends OperationVariables,
+    TOptions extends { variables?: unknown },
+  > = useBackgroundQuery.Options<NoInfer<TVariables>> & {
+    variables?: Prettify<
+      TVariables & {
+        // variables that are not part of `TVariables`
+        [K in keyof TOptions["variables"]]: K extends keyof TVariables ?
+          TVariables[K]
+        : never;
+      }
+    >;
+  } & (Exclude<
+      keyof Exclude<TOptions, SkipToken>,
+      keyof useBackgroundQuery.Options<any>
+    > extends infer InvalidOptionNames extends string ?
+      [InvalidOptionNames] extends [never] ?
+        unknown
+      : { [K in InvalidOptionNames]: never }
+    : never);
+
   export type ResultForOptions<
     TData,
     TVariables extends OperationVariables,
-    TOptions extends Record<string, never> | Options<TVariables> | SkipToken,
+    TOptions extends Record<string, never> | Base.Options | SkipToken,
   > = [
     queryRef: TOptions extends any ?
       TOptions extends SkipToken ?
@@ -730,19 +755,18 @@ export declare namespace useBackgroundQuery {
         TData,
         TVariables extends OperationVariables,
         // this overload should never be manually defined, it should always be inferred
-        TOptions extends useBackgroundQuery.Options<NoInfer<TVariables>> &
-          VariablesOption<
-            TVariables & {
-              [K in Exclude<
-                keyof TOptions["variables"],
-                keyof TVariables
-              >]?: never;
-            }
-          >,
+        TOptions extends Base.Options,
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-        ...[options]: {} extends TVariables ? [options?: TOptions]
-        : [options: TOptions]
+        ...[options]: {} extends TVariables ?
+          [
+            options?: TOptions &
+              useBackgroundQuery.OptionsFor<TVariables, TOptions>,
+          ]
+        : [
+            options: TOptions &
+              useBackgroundQuery.OptionsFor<TVariables, TOptions>,
+          ]
       ): useBackgroundQuery.ResultForOptions<TData, TVariables, TOptions>;
 
       /** {@inheritDoc @apollo/client/react!useBackgroundQuery.DocumentationTypes.useBackgroundQuery:call(1)} */
@@ -761,19 +785,20 @@ export declare namespace useBackgroundQuery {
         TData,
         TVariables extends OperationVariables,
         // this overload should never be manually defined, it should always be inferred
-        TOptions extends useBackgroundQuery.Options<NoInfer<TVariables>> &
-          VariablesOption<
-            TVariables & {
-              [K in Exclude<
-                keyof TOptions["variables"],
-                keyof TVariables
-              >]?: never;
-            }
-          >,
+        TOptions extends Base.Options,
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-        ...[options]: {} extends TVariables ? [options?: TOptions | SkipToken]
-        : [options: TOptions | SkipToken]
+        ...[options]: {} extends TVariables ?
+          [
+            options?:
+              | (TOptions & useBackgroundQuery.OptionsFor<TVariables, TOptions>)
+              | SkipToken,
+          ]
+        : [
+            options:
+              | (TOptions & useBackgroundQuery.OptionsFor<TVariables, TOptions>)
+              | SkipToken,
+          ]
       ): useBackgroundQuery.ResultForOptions<
         TData,
         TVariables,

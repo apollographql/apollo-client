@@ -29,6 +29,7 @@ import type {
   DocumentationTypes as UtilityDocumentationTypes,
   NoInfer,
   OptionWithFallback,
+  Prettify,
   SignatureStyle,
   VariablesOption,
 } from "@apollo/client/utilities/internal";
@@ -94,6 +95,9 @@ export declare namespace useSuspenseQuery {
        * ```
        */
       skip?: boolean;
+
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
+      variables?: unknown;
     }
   }
   export type Options<
@@ -104,7 +108,7 @@ export declare namespace useSuspenseQuery {
     namespace useSuspenseQuery {
       export interface Options<
         TVariables extends OperationVariables = OperationVariables,
-      > extends Base.Options<TVariables>,
+      > extends Omit<Base.Options<TVariables>, "variables">,
           UtilityDocumentationTypes.VariableOptions<TVariables> {}
     }
   }
@@ -156,12 +160,33 @@ export declare namespace useSuspenseQuery {
     skip: false;
   }
 
+  export type OptionsFor<
+    TVariables extends OperationVariables,
+    TOptions extends { variables?: unknown },
+  > = useSuspenseQuery.Options<NoInfer<TVariables>> & {
+    variables?: Prettify<
+      TVariables & {
+        // variables that are not part of `TVariables`
+        [K in keyof TOptions["variables"]]: K extends keyof TVariables ?
+          TVariables[K]
+        : never;
+      }
+    >;
+  } & (Exclude<
+      keyof Exclude<TOptions, SkipToken>,
+      keyof useSuspenseQuery.Options<any>
+    > extends infer InvalidOptionNames extends string ?
+      [InvalidOptionNames] extends [never] ?
+        unknown
+      : { [K in InvalidOptionNames]: never }
+    : never);
+
   export type ResultForOptions<
     TData,
     TVariables extends OperationVariables,
     TOptions extends
       | Record<string, never> // no options
-      | Options<TVariables>
+      | Base.Options<TVariables>
       | SkipToken,
   > = Result<
     TData,
@@ -562,19 +587,18 @@ export declare namespace useSuspenseQuery {
         TData,
         TVariables extends OperationVariables,
         // this overload should never be manually defined, it should always be inferred
-        TOptions extends useSuspenseQuery.Options<NoInfer<TVariables>> &
-          VariablesOption<
-            TVariables & {
-              [K in Exclude<
-                keyof TOptions["variables"],
-                keyof TVariables
-              >]?: never;
-            }
-          >,
+        TOptions extends Base.Options<NoInfer<TVariables>>,
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-        ...[options]: {} extends TVariables ? [options?: TOptions]
-        : [options: TOptions]
+        ...[options]: {} extends TVariables ?
+          [
+            options?: TOptions &
+              useSuspenseQuery.OptionsFor<TVariables, TOptions>,
+          ]
+        : [
+            options: TOptions &
+              useSuspenseQuery.OptionsFor<TVariables, TOptions>,
+          ]
       ): useSuspenseQuery.ResultForOptions<TData, TVariables, TOptions>;
 
       /** {@inheritDoc @apollo/client/react!useSuspenseQuery.DocumentationTypes.useSuspenseQuery:call(1)} */
@@ -593,19 +617,20 @@ export declare namespace useSuspenseQuery {
         TData,
         TVariables extends OperationVariables,
         // this overload should never be manually defined, it should always be inferred
-        TOptions extends useSuspenseQuery.Options<NoInfer<TVariables>> &
-          VariablesOption<
-            TVariables & {
-              [K in Exclude<
-                keyof TOptions["variables"],
-                keyof TVariables
-              >]?: never;
-            }
-          >,
+        TOptions extends Base.Options<NoInfer<TVariables>>,
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-        ...[options]: {} extends TVariables ? [options?: TOptions | SkipToken]
-        : [options: TOptions | SkipToken]
+        ...[options]: {} extends TVariables ?
+          [
+            options?:
+              | (TOptions & useSuspenseQuery.OptionsFor<TVariables, TOptions>)
+              | SkipToken,
+          ]
+        : [
+            options:
+              | (TOptions & useSuspenseQuery.OptionsFor<TVariables, TOptions>)
+              | SkipToken,
+          ]
       ): useSuspenseQuery.ResultForOptions<
         TData,
         TVariables,

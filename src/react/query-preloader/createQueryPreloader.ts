@@ -19,6 +19,7 @@ import {
 import type {
   NoInfer,
   OptionWithFallback,
+  Prettify,
   SignatureStyle,
   VariablesOption,
 } from "@apollo/client/utilities/internal";
@@ -133,10 +134,32 @@ export declare namespace PreloadQueryFunction {
       extends PreloadQueryFunction {}
   }
 
+  export type OptionsFor<
+    TVariables extends OperationVariables,
+    TOptions extends { variables?: unknown },
+  > = PreloadQueryOptions<NoInfer<TVariables>> & {
+    variables?: Prettify<
+      TVariables & {
+        // variables that are not part of `TVariables`
+        [K in keyof TOptions["variables"]]: K extends keyof TVariables ?
+          TVariables[K]
+        : never;
+      }
+    >;
+  } & (Exclude<keyof TOptions, keyof PreloadQueryOptions<any>> extends (
+      infer InvalidOptionNames extends string
+    ) ?
+      [InvalidOptionNames] extends [never] ?
+        unknown
+      : { [K in InvalidOptionNames]: never }
+    : never);
+
   export type ResultForOptions<
     TData,
     TVariables extends OperationVariables,
-    TOptions extends Record<string, never> | PreloadQueryOptions<TVariables>,
+    TOptions extends
+      | Record<string, never>
+      | Omit<PreloadQueryOptions<any>, "variables">,
   > = TOptions extends any ?
     PreloadedQueryRef<
       TData,
@@ -306,19 +329,20 @@ export declare namespace PreloadQueryFunction {
         TData,
         TVariables extends OperationVariables,
         // this overload should never be manually defined, it should always be inferred
-        TOptions extends PreloadQueryOptions<NoInfer<TVariables>> &
-          VariablesOption<
-            TVariables & {
-              [K in Exclude<
-                keyof TOptions["variables"],
-                keyof TVariables
-              >]?: never;
-            }
-          >,
+        TOptions extends Omit<PreloadQueryOptions<any>, "variables"> & {
+          variables?: unknown;
+        },
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-        ...[options]: {} extends TVariables ? [options?: TOptions]
-        : [options: TOptions]
+        ...[options]: {} extends TVariables ?
+          [
+            options?: TOptions &
+              PreloadQueryFunction.OptionsFor<TVariables, TOptions>,
+          ]
+        : [
+            options: TOptions &
+              PreloadQueryFunction.OptionsFor<TVariables, TOptions>,
+          ]
       ): PreloadQueryFunction.ResultForOptions<TData, TVariables, TOptions>;
     }
 

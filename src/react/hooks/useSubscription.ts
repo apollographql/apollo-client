@@ -23,6 +23,8 @@ import { useDeepMemo } from "./internal/useDeepMemo.js";
 import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
+import { skipToken } from "./constants.js";
+import type { SkipToken } from "./constants.js";
 
 export declare namespace useSubscription {
   import _self = useSubscription;
@@ -221,21 +223,40 @@ export function useSubscription<
   ...[options = {} as useSubscription.Options<TData, TVariables>]: {} extends (
     TVariables
   ) ?
-    [options?: useSubscription.Options<NoInfer<TData>, NoInfer<TVariables>>]
-  : [options: useSubscription.Options<NoInfer<TData>, NoInfer<TVariables>>]
+    [
+      options?:
+        | SkipToken
+        | useSubscription.Options<NoInfer<TData>, NoInfer<TVariables>>,
+    ]
+  : [
+      options:
+        | SkipToken
+        | useSubscription.Options<NoInfer<TData>, NoInfer<TVariables>>,
+    ]
 ): useSubscription.Result<TData> {
-  const client = useApolloClient(options.client);
+  const client = useApolloClient(
+    typeof options === "object" ? options.client : undefined
+  );
+
+  const normalizedOptions: useSubscription.Options<TData, TVariables> =
+    typeof options === "object" ? options : (
+      ({ skip: true } as useSubscription.Options<TData, TVariables>)
+    );
+
+  const skip = options === skipToken ? true : normalizedOptions.skip;
 
   const {
-    skip,
     fetchPolicy,
     errorPolicy,
     shouldResubscribe,
     context,
     extensions,
     ignoreResults,
-  } = options;
-  const variables = useDeepMemo(() => options.variables, [options.variables]);
+  } = normalizedOptions;
+  const variables = useDeepMemo(
+    () => normalizedOptions.variables,
+    [normalizedOptions.variables]
+  );
 
   const recreate = () =>
     createSubscription(
@@ -248,9 +269,7 @@ export function useSubscription<
       extensions
     );
 
-  let [observable, setObservable] = React.useState(
-    options.skip ? null : recreate
-  );
+  let [observable, setObservable] = React.useState(skip ? null : recreate);
 
   const recreateRef = React.useRef(recreate);
   useIsomorphicLayoutEffect(() => {
@@ -269,15 +288,15 @@ export function useSubscription<
       errorPolicy !== observable.__.errorPolicy ||
       !equal(variables, observable.__.variables)) &&
       (typeof shouldResubscribe === "function" ?
-        !!shouldResubscribe(options!)
+        !!shouldResubscribe(normalizedOptions)
       : shouldResubscribe) !== false)
   ) {
     setObservable((observable = recreate()));
   }
 
-  const optionsRef = React.useRef(options);
+  const optionsRef = React.useRef(normalizedOptions);
   React.useEffect(() => {
-    optionsRef.current = options;
+    optionsRef.current = normalizedOptions;
   });
 
   const fallbackLoading = !skip && !ignoreResults;

@@ -17,7 +17,11 @@ import {
   CombinedGraphQLErrors,
   CombinedProtocolErrors,
 } from "@apollo/client/errors";
-import { ApolloProvider, useSubscription } from "@apollo/client/react";
+import {
+  ApolloProvider,
+  skipToken,
+  useSubscription,
+} from "@apollo/client/react";
 import { MockSubscriptionLink } from "@apollo/client/testing";
 import {
   mockMultipartSubscriptionStream,
@@ -423,6 +427,62 @@ describe("useSubscription Hook", () => {
       await renderHookToSnapshotStream(
         ({ variables }) =>
           useSubscription(subscription, { variables, skip: true, onData }),
+        {
+          initialProps: {
+            variables: {
+              foo: "bar",
+            },
+          },
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        }
+      );
+
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+      data: undefined,
+      error: undefined,
+      loading: false,
+    });
+
+    await rerender({ variables: { foo: "bar2" } });
+
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+      data: undefined,
+      error: undefined,
+      loading: false,
+    });
+
+    await expect(takeSnapshot).not.toRerender();
+
+    expect(onSetup).toHaveBeenCalledTimes(0);
+    expect(onData).toHaveBeenCalledTimes(0);
+    unmount();
+  });
+
+  it("should never execute a subscription when skipToken is passed", async () => {
+    const subscription = gql`
+      subscription {
+        car {
+          make
+        }
+      }
+    `;
+
+    const onSetup = jest.fn();
+    const link = new MockSubscriptionLink();
+    link.onSetup(onSetup);
+    const client = new ApolloClient({
+      link,
+      cache: new Cache(),
+    });
+
+    const onData = jest.fn();
+
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, unmount, rerender } =
+      await renderHookToSnapshotStream(
+        ({ variables }) => useSubscription(subscription, skipToken),
         {
           initialProps: {
             variables: {
@@ -3770,5 +3830,19 @@ describe.skip("Type Tests", () => {
         foo: "bar",
       },
     });
+  });
+
+  test("accepts skipToken when TVariables includes required variables", () => {
+    const subscription: TypedDocumentNode<
+      { character: string },
+      { id: string }
+    > = gql``;
+
+    useSubscription(subscription, skipToken);
+    useSubscription(subscription, {
+      variables: { id: "1" },
+    });
+    // @ts-expect-error skipToken does not replace the required options object
+    useSubscription(subscription);
   });
 });

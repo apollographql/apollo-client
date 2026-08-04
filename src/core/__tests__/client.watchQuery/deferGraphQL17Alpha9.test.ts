@@ -5231,6 +5231,127 @@ test('reports "streaming" when two `@defer` fragments overlap and only the secon
   await expect(stream).not.toEmitAnything();
 });
 
+test('keeps a delivered `@defer` fragment\'s fields while a sibling fragment at the same path is still pending with a "network-only" fetch policy', async () => {
+  // Suppress expected missing field write warnings since defer context is reset.
+  using _ = spyOnConsole("error");
+
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... @defer {
+          recipient {
+            name
+          }
+        }
+        ... @defer {
+          recipient {
+            name
+            email
+          }
+        }
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({ query, fetchPolicy: "network-only" })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: { greeting: { message: "Hello world", __typename: "Greeting" } },
+    pending: [
+      { id: "0", path: ["greeting"] },
+      { id: "1", path: ["greeting"] },
+    ],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      greeting: { __typename: "Greeting", message: "Hello world" },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: { recipient: { __typename: "Person", name: "Alice" } },
+        id: "0",
+      },
+    ],
+    completed: [{ id: "0" }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Alice" },
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: { __typename: "Person", email: "alice@example.com" },
+        id: "1",
+        subPath: ["recipient"],
+      },
+    ],
+    completed: [{ id: "1" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: {
+          __typename: "Person",
+          name: "Alice",
+          email: "alice@example.com",
+        },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
 test('reports "partial" when a deep defer-only field is present under an overlapped path while another deep defer-only field is still missing', async () => {
   // Suppress expected missing field warning when writing partial nested values.
   using _ = spyOnConsole("error");

@@ -1,4 +1,4 @@
-import { DataValue, gql, TypedDocumentNode } from "@apollo/client";
+import { DataValue, ErrorLike, gql, TypedDocumentNode } from "@apollo/client";
 import { skipToken, useSuspenseQuery } from "@apollo/client/react";
 import { DeepPartial } from "@apollo/client/utilities";
 import { expectTypeOf } from "expect-type";
@@ -2021,7 +2021,7 @@ it("uses proper masked types for refetch", async () => {
     const { refetch } = useSuspenseQuery(query, { variables: { id: "1" } });
     const { data } = await refetch();
 
-    expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData | undefined>();
+    expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData>();
   }
 
   {
@@ -2030,7 +2030,7 @@ it("uses proper masked types for refetch", async () => {
     });
     const { data } = await refetch();
 
-    expectTypeOf(data).toEqualTypeOf<UnmaskedVariablesCaseData | undefined>();
+    expectTypeOf(data).toEqualTypeOf<UnmaskedVariablesCaseData>();
   }
 });
 
@@ -2494,6 +2494,43 @@ test("requires variables with mixed TVariables", () => {
       }
     )
   );
+});
+
+test("refetch narrows the result by errorPolicy", async () => {
+  type Data = { character: string };
+  const query: TypedDocumentNode<Data, Record<string, never>> = gql``;
+
+  {
+    const { refetch } = useSuspenseQuery(query, {});
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    const { refetch } = useSuspenseQuery(query, { errorPolicy: "none" });
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    const { refetch } = useSuspenseQuery(query, { errorPolicy: "all" });
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<ErrorLike | undefined>();
+  }
+
+  {
+    const { refetch } = useSuspenseQuery(query, { errorPolicy: "ignore" });
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
 });
 
 test("rejects unknown options", () => {

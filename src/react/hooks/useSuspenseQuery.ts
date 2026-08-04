@@ -117,6 +117,7 @@ export declare namespace useSuspenseQuery {
     export interface Result<
       TData = unknown,
       TVariables extends OperationVariables = OperationVariables,
+      TErrorPolicy extends ErrorPolicy | undefined = undefined,
     > {
       /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
       client: ApolloClient;
@@ -141,7 +142,7 @@ export declare namespace useSuspenseQuery {
        * @remarks
        * Calling this function will cause the component to re-suspend, unless the call site is wrapped in [`startTransition`](https://react.dev/reference/react/startTransition).
        */
-      refetch: RefetchFunction<TData, TVariables>;
+      refetch: RefetchFunction<TData, TVariables, TErrorPolicy>;
 
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#subscribeToMore:member} */
       subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
@@ -152,7 +153,8 @@ export declare namespace useSuspenseQuery {
     TVariables extends OperationVariables = OperationVariables,
     TStates extends
       DataState<TData>["dataState"] = DataState<TData>["dataState"],
-  > = Base.Result<TData, TVariables> &
+    TErrorPolicy extends ErrorPolicy | undefined = undefined,
+  > = Base.Result<TData, TVariables, TErrorPolicy> &
     GetDataState<MaybeMasked<TData>, TStates>;
 
   export interface DefaultOptions
@@ -223,7 +225,8 @@ export declare namespace useSuspenseQuery {
         DefaultOptions extends { returnPartialData: false } ?
           never
         : "partial"
-      : never)
+      : never),
+    OptionWithFallback<TOptions, DefaultOptions, "errorPolicy"> & ErrorPolicy
   >;
 
   export namespace DocumentationTypes {

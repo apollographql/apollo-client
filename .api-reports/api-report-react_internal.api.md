@@ -10,6 +10,7 @@ import type { DecoratedPromise } from '@apollo/client/utilities/internal';
 import type { DocumentNode } from 'graphql';
 import type { DocumentTypeDecoration } from '@graphql-typed-document-node/core';
 import { ErrorLike } from '@apollo/client';
+import type { ErrorPolicy } from '@apollo/client';
 import type { InternalTypes } from '@apollo/client/react';
 import type { MaybeMasked } from '@apollo/client/masking';
 import type { MaybeMasked as MaybeMasked_2 } from '@apollo/client';
@@ -206,7 +207,7 @@ export namespace QueryRef {
 type QueryRefPromise<TData, TStates extends DataState<TData>["dataState"]> = DecoratedPromise<ObservableQuery.Result<MaybeMasked<TData>, TStates>>;
 
 // @public (undocumented)
-export type RefetchFunction<TData, TVariables extends OperationVariables> = (variables?: Partial<TVariables>) => Promise<ApolloClient.QueryResult<TData>>;
+export type RefetchFunction<TData, TVariables extends OperationVariables, TErrorPolicy extends ErrorPolicy | undefined = undefined> = (variables?: Partial<TVariables>) => Promise<ApolloClient.QueryResult<TData, TErrorPolicy>>;
 
 // @public (undocumented)
 class SuspenseCache {

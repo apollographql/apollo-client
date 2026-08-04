@@ -135,6 +135,7 @@ export declare namespace useQuery {
       TData = unknown,
       TVariables extends OperationVariables = OperationVariables,
       TReturnVariables extends OperationVariables = TVariables,
+      TErrorPolicy extends ErrorPolicy | undefined = undefined,
     > {
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#client:member} */
       client: ApolloClient;
@@ -169,7 +170,7 @@ export declare namespace useQuery {
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
       refetch: (
         variables?: Partial<TVariables>
-      ) => Promise<ApolloClient.QueryResult<MaybeMasked<TData>>>;
+      ) => Promise<ApolloClient.QueryResult<MaybeMasked<TData>, TErrorPolicy>>;
 
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#variables:member} */
       variables: TReturnVariables;
@@ -194,7 +195,8 @@ export declare namespace useQuery {
     TStates extends
       DataState<TData>["dataState"] = DataState<TData>["dataState"],
     TReturnVariables extends OperationVariables = TVariables,
-  > = Base.Result<TData, TVariables, TReturnVariables> &
+    TErrorPolicy extends ErrorPolicy | undefined = undefined,
+  > = Base.Result<TData, TVariables, TReturnVariables, TErrorPolicy> &
     GetDataState<MaybeMasked<TData>, TStates>;
 
   export interface DefaultOptions
@@ -247,7 +249,9 @@ export declare namespace useQuery {
           > extends false ?
             never
           : "partial"
-        : never)
+        : never),
+      TVariables,
+      OptionWithFallback<TOptions, DefaultOptions, "errorPolicy"> & ErrorPolicy
     >
   >;
 

@@ -91,7 +91,11 @@ export declare namespace useLazyQuery {
   }
 
   namespace Base {
-    export interface Result<TData, TVariables extends OperationVariables> {
+    export interface Result<
+      TData,
+      TVariables extends OperationVariables,
+      TErrorPolicy extends ErrorPolicy | undefined = undefined,
+    > {
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#startPolling:member} */
       startPolling: (pollInterval: number) => void;
 
@@ -107,7 +111,7 @@ export declare namespace useLazyQuery {
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
       refetch: (
         variables?: Partial<TVariables>
-      ) => Promise<ApolloClient.QueryResult<MaybeMasked<TData>>>;
+      ) => Promise<ApolloClient.QueryResult<MaybeMasked<TData>, TErrorPolicy>>;
 
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
       fetchMore: <
@@ -147,7 +151,8 @@ export declare namespace useLazyQuery {
     TVariables extends OperationVariables,
     TStates extends
       DataState<TData>["dataState"] = DataState<TData>["dataState"],
-  > = Base.Result<TData, TVariables> &
+    TErrorPolicy extends ErrorPolicy | undefined = undefined,
+  > = Base.Result<TData, TVariables, TErrorPolicy> &
     (
       | ({
           /**
@@ -219,7 +224,7 @@ export declare namespace useLazyQuery {
     TErrorPolicy extends ErrorPolicy | undefined = undefined,
   > = [
     execute: ExecFunction<TData, TVariables, TErrorPolicy>,
-    result: useLazyQuery.Result<TData, TVariables, TStates>,
+    result: useLazyQuery.Result<TData, TVariables, TStates, TErrorPolicy>,
   ];
 
   export type ExecFunction<

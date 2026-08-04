@@ -56,19 +56,21 @@ export declare namespace useLoadableQuery {
     TVariables extends OperationVariables = OperationVariables,
     TStates extends
       DataState<TData>["dataState"] = DataState<TData>["dataState"],
+    TErrorPolicy extends ErrorPolicy | undefined = undefined,
   > = [
     loadQuery: LoadQueryFunction<TVariables>,
     queryRef: QueryRef<TData, TVariables, TStates> | null,
-    handlers: Handlers<TData, TVariables>,
+    handlers: Handlers<TData, TVariables, TErrorPolicy>,
   ];
   export interface Handlers<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
+    TErrorPolicy extends ErrorPolicy | undefined = undefined,
   > {
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
     fetchMore: FetchMoreFunction<TData, TVariables>;
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
-    refetch: RefetchFunction<TData, TVariables>;
+    refetch: RefetchFunction<TData, TVariables, TErrorPolicy>;
     /** {@inheritDoc @apollo/client!ObservableQuery#subscribeToMore:member(1)} */
     subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
     /**
@@ -140,7 +142,8 @@ export declare namespace useLoadableQuery {
         "returnPartialData"
       > extends false ?
         never
-      : "partial")
+      : "partial"),
+    OptionWithFallback<TOptions, DefaultOptions, "errorPolicy"> & ErrorPolicy
   >;
 
   export namespace DocumentationTypes {

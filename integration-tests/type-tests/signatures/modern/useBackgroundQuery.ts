@@ -1,5 +1,6 @@
 import {
   DataValue,
+  ErrorLike,
   gql,
   OperationVariables,
   TypedDocumentNode,
@@ -1983,7 +1984,7 @@ it("uses proper masked types for refetch", async () => {
     });
     const { data } = await refetch();
 
-    expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData | undefined>();
+    expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData>();
   }
 
   {
@@ -1992,7 +1993,7 @@ it("uses proper masked types for refetch", async () => {
     });
     const { data } = await refetch();
 
-    expectTypeOf(data).toEqualTypeOf<UnmaskedVariablesCaseData | undefined>();
+    expectTypeOf(data).toEqualTypeOf<UnmaskedVariablesCaseData>();
   }
 });
 
@@ -2490,6 +2491,45 @@ test("requires variables with mixed TVariables", () => {
       }
     )
   );
+});
+
+test("refetch narrows the result by errorPolicy", async () => {
+  type Data = { character: string };
+  const query: TypedDocumentNode<Data, Record<string, never>> = gql``;
+
+  {
+    const [, { refetch }] = useBackgroundQuery(query);
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    const [, { refetch }] = useBackgroundQuery(query, { errorPolicy: "none" });
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    const [, { refetch }] = useBackgroundQuery(query, { errorPolicy: "all" });
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<ErrorLike | undefined>();
+  }
+
+  {
+    const [, { refetch }] = useBackgroundQuery(query, {
+      errorPolicy: "ignore",
+    });
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
 });
 
 test("rejects unknown options", () => {

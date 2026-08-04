@@ -1,5 +1,6 @@
 import {
   DataValue,
+  ErrorLike,
   gql,
   OperationVariables,
   TypedDocumentNode,
@@ -915,6 +916,45 @@ it("returns correct TData type when combined options that do not affect TData", 
       expectTypeOf(data).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
     }
   } */
+});
+
+it("refetch narrows the result by errorPolicy", async () => {
+  type Data = { character: string };
+  const query: TypedDocumentNode<Data, Record<string, never>> = gql``;
+
+  {
+    const [, , { refetch }] = useLoadableQuery(query, {});
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    const [, , { refetch }] = useLoadableQuery(query, { errorPolicy: "none" });
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    const [, , { refetch }] = useLoadableQuery(query, { errorPolicy: "all" });
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<ErrorLike | undefined>();
+  }
+
+  {
+    const [, , { refetch }] = useLoadableQuery(query, {
+      errorPolicy: "ignore",
+    });
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
 });
 
 it("rejects unknown options", () => {

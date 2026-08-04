@@ -108,6 +108,7 @@ export declare namespace useBackgroundQuery {
   export interface Result<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
+    TErrorPolicy extends ErrorPolicy | undefined = undefined,
   > {
     /** {@inheritDoc @apollo/client!ObservableQuery#subscribeToMore:member(1)} */
     subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
@@ -126,7 +127,7 @@ export declare namespace useBackgroundQuery {
      * @remarks
      * Calling this function will cause the component to re-suspend, unless the call site is wrapped in [`startTransition`](https://react.dev/reference/react/startTransition).
      */
-    refetch: RefetchFunction<TData, TVariables>;
+    refetch: RefetchFunction<TData, TVariables, TErrorPolicy>;
   }
 
   namespace DocumentationTypes {
@@ -198,7 +199,11 @@ export declare namespace useBackgroundQuery {
             never
           : undefined)
     : never,
-    result: useBackgroundQuery.Result<TData, TVariables>,
+    result: useBackgroundQuery.Result<
+      TData,
+      TVariables,
+      OptionWithFallback<TOptions, DefaultOptions, "errorPolicy"> & ErrorPolicy
+    >,
   ];
 
   export namespace DocumentationTypes {

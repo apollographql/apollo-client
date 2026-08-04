@@ -107,8 +107,9 @@ namespace useQueryCase {
   export import hook = useQuery;
   export type Result<
     TStates extends DataState<Data>["dataState"],
+    TErrorPolicy extends ErrorPolicy | undefined = undefined,
     TReturnVariables extends OperationVariables = Variables,
-  > = useQuery.Result<Data, Variables, TStates, TReturnVariables>;
+  > = useQuery.Result<Data, Variables, TStates, TReturnVariables, TErrorPolicy>;
   export const defaults = expectTypeOf(useQuery(QUERY));
   export namespace returnPartialData {
     export const _false = expectTypeOf(
@@ -281,8 +282,10 @@ namespace useLazyQueryCase {
 
 namespace useSuspenseQueryCase {
   export import hook = useSuspenseQuery;
-  export type Result<TStates extends DataState<Data>["dataState"]> =
-    useSuspenseQuery.Result<Data, Variables, TStates>;
+  export type Result<
+    TStates extends DataState<Data>["dataState"],
+    TErrorPolicy extends ErrorPolicy | undefined = undefined,
+  > = useSuspenseQuery.Result<Data, Variables, TStates, TErrorPolicy>;
 
   export namespace errorPolicy {
     export namespace defaults {
@@ -423,15 +426,15 @@ namespace useBackgroundQueryCase {
   export import hook = useBackgroundQuery;
   export type Result<
     TStates extends DataState<Data>["dataState"],
+    TErrorPolicy extends ErrorPolicy | undefined = undefined,
     AdditionalReturnValue = never,
   > = [
     QueryRef<Data, Variables, TStates> | AdditionalReturnValue,
-    useBackgroundQuery.Result<Data, Variables>,
+    useBackgroundQuery.Result<Data, Variables, TErrorPolicy>,
   ];
-  export type UndefinedResult = [
-    undefined,
-    useBackgroundQuery.Result<Data, Variables>,
-  ];
+  export type UndefinedResult<
+    TErrorPolicy extends ErrorPolicy | undefined = undefined,
+  > = [undefined, useBackgroundQuery.Result<Data, Variables, TErrorPolicy>];
 
   export namespace errorPolicy {
     export namespace defaults {
@@ -572,8 +575,10 @@ namespace useBackgroundQueryCase {
 }
 namespace useLoadableQueryCase {
   export import hook = useLoadableQuery;
-  export type Result<TStates extends DataState<Data>["dataState"]> =
-    useLoadableQuery.Result<Data, Variables, TStates>;
+  export type Result<
+    TStates extends DataState<Data>["dataState"],
+    TErrorPolicy extends ErrorPolicy | undefined = undefined,
+  > = useLoadableQuery.Result<Data, Variables, TStates, TErrorPolicy>;
 
   export namespace errorPolicy {
     export namespace defaults {

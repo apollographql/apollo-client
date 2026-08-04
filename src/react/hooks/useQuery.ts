@@ -199,31 +199,6 @@ export declare namespace useQuery {
     skip: false;
   }
 
-  /**
-   * The options as they are checked at the parameter position of the `Modern`
-   * signatures, intersected with the inferred `TOptions`.
-   *
-   * `NoInfer` keeps this from becoming an inference site for `TVariables`.
-   *
-   * The two mapped types report variables that are not part of `TVariables` and
-   * options that are not part of `useQuery.Options`. `TOptions` cannot reject
-   * either on its own, because it is inferred from the very object literal being
-   * checked - every key the user writes becomes part of it. Two details matter
-   * for the option names:
-   *
-   * - `SkipToken` is excluded from `TOptions` first. A conditionally skipped
-   *   query infers `TOptions` as a union of `SkipToken` and the options object,
-   *   and `keyof` of that union is `never`, which would silently make the check
-   *   a no-op.
-   * - The conditional is what keeps the passing case at `unknown` instead of an
-   *   empty mapped type. An empty object type is not a weak type, and an
-   *   intersection is only weak if every member is, so intersecting one in would
-   *   turn the weak type check off for the whole parameter. That check is not
-   *   only about rejecting options objects without a single known option - it
-   *   also affects inference. Without it, an options argument of the type
-   *   `SkipToken | { returnPartialData: false }` infers a `TVariables` that has
-   *   lost the optionality of its properties.
-   */
   export type OptionsFor<
     TData,
     TVariables extends OperationVariables,
@@ -259,8 +234,6 @@ export declare namespace useQuery {
     TVariables extends OperationVariables,
     TOptions extends
       | Record<string, never> // no options
-      // `Base.Options` instead of `Options` because the `variables` option is
-      // not part of `TOptions` - see the `Modern` signatures for details.
       | Base.Options<TData, TVariables>
       | SkipToken,
   > = LazyType<
@@ -577,28 +550,6 @@ export declare namespace useQuery {
     }
 
     /** {@inheritDoc @apollo/client/react!useQuery.DocumentationTypes.useQuery:call(1)} */
-    // Every check on the options lives at the parameter position, in
-    // `OptionsFor`. The constraint only describes the shape of an options
-    // object, because a constraint cannot do the checking.
-    //
-    // TypeScript widens fresh literals when inferring an object literal into a
-    // naked type parameter, so `useQuery(query, { variables: { type: "main" } })`
-    // infers the candidate `{ variables: { type: string } }`. A constraint that
-    // required the exact `TVariables` (`{ type: "main" }`) would reject that
-    // candidate, and TypeScript then silently substitutes the constraint for
-    // `TOptions` - discarding every other inferred option along with it. That is
-    // what made `returnPartialData: false` come back as `boolean` and put
-    // `"partial"` into `dataState`.
-    //
-    // Widening also means the constraint could not do the check even if it did
-    // not collapse: once `{ type: "nope" }` has widened to `{ type: string }`
-    // there is nothing left to distinguish it from a valid value. Only the
-    // parameter position still sees the literal.
-    //
-    // `NoInfer` on `TVariables` there is required. Without it,
-    // `VariablesOption<TVariables>` becomes an inference site and the widened
-    // `{ type: string }` candidate wins over the one from the document, which
-    // stops invalid variable values from being reported at all.
     export interface Modern {
       /** {@inheritDoc @apollo/client/react!useQuery.DocumentationTypes.useQuery:call(1)} */
       <

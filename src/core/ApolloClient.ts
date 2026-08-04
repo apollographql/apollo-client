@@ -269,15 +269,15 @@ export declare namespace ApolloClient {
 
     export type ResultForOptions<
       TData,
-      TVariables extends OperationVariables,
-      TCache extends ApolloCache,
-      TOptions extends
-        | Record<string, unknown>
-        | Omit<MutateOptions<any, any, TCache>, "variables">,
+      TErrorPolicy extends ErrorPolicy | undefined = undefined,
     > = LazyType<
       MutateResult<
         MaybeMasked<TData>,
-        OptionWithFallback<TOptions, DefaultOptions, "errorPolicy"> &
+        OptionWithFallback<
+          { errorPolicy: TErrorPolicy },
+          DefaultOptions,
+          "errorPolicy"
+        > &
           ErrorPolicy
       >
     >;
@@ -325,6 +325,7 @@ export declare namespace ApolloClient {
             ApolloClient.MutateOptions<NoInfer<TData>, any, TCache>,
             "variables"
           > & { variables?: unknown },
+          TErrorPolicy extends ErrorPolicy | undefined = undefined,
         >(
           options: TOptions &
             ApolloClient.mutate.OptionsFor<
@@ -332,15 +333,12 @@ export declare namespace ApolloClient {
               TVariables,
               TCache,
               TOptions
-            > & { mutation: TypedDocumentNode<TData, TVariables> }
-        ): Promise<
-          ApolloClient.mutate.ResultForOptions<
-            TData,
-            TVariables,
-            TCache,
-            TOptions
-          >
-        >;
+            > & {
+              mutation: TypedDocumentNode<TData, TVariables>;
+              /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#errorPolicy:member} */
+              errorPolicy?: TErrorPolicy;
+            }
+        ): Promise<ApolloClient.mutate.ResultForOptions<TData, TErrorPolicy>>;
       }
 
       export type Evaluated =

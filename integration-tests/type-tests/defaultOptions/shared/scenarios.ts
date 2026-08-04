@@ -1,5 +1,6 @@
 import {
   ApolloClient,
+  type ErrorPolicy,
   type OperationVariables,
   type DataState,
   type TypedDocumentNode,
@@ -195,8 +196,10 @@ namespace useQueryCase {
 
 namespace useLazyQueryCase {
   export import hook = useLazyQuery;
-  export type Result<TStates extends DataState<Data>["dataState"]> =
-    useLazyQuery.ResultTuple<Data, Variables, TStates>;
+  export type Result<
+    TStates extends DataState<Data>["dataState"],
+    TErrorPolicy extends ErrorPolicy | undefined = undefined,
+  > = useLazyQuery.ResultTuple<Data, Variables, TStates, TErrorPolicy>;
   export const defaults = expectTypeOf(useLazyQuery(QUERY));
 
   export namespace returnPartialData {

@@ -169,51 +169,62 @@ declare module "@apollo/client" {
     returnPartialData: true;
   }>();
   useLazyQuery.defaults.toEqualTypeOf<
-    useLazyQuery.Result<"empty" | "complete" | "streaming" | "partial">
+    useLazyQuery.Result<"empty" | "complete" | "streaming" | "partial", "none">
   >;
   useLazyQuery.returnPartialData._true.toEqualTypeOf<
-    useLazyQuery.Result<"empty" | "complete" | "streaming" | "partial">
+    useLazyQuery.Result<"empty" | "complete" | "streaming" | "partial", "none">
   >;
   useLazyQuery.returnPartialData._false.toEqualTypeOf<
-    useLazyQuery.Result<"empty" | "complete" | "streaming">
+    useLazyQuery.Result<"empty" | "complete" | "streaming", "none">
   >;
   useLazyQuery.returnPartialData._bool.toEqualTypeOf<
-    useLazyQuery.Result<"empty" | "complete" | "streaming" | "partial">
+    useLazyQuery.Result<"empty" | "complete" | "streaming" | "partial", "none">
   >;
   useLazyQuery.errorPolicy.none.result.branded.toEqualTypeOf<
-    useLazyQuery.Result<"empty" | "complete" | "streaming" | "partial">
+    useLazyQuery.Result<"empty" | "complete" | "streaming" | "partial", "none">
   >;
   useLazyQuery.errorPolicy.none.returnPartialData._false.branded.toEqualTypeOf<
-    useLazyQuery.Result<"empty" | "complete" | "streaming">
+    useLazyQuery.Result<"empty" | "complete" | "streaming", "none">
   >;
   useLazyQuery.errorPolicy.none.returnPartialData._true.branded.toEqualTypeOf<
-    useLazyQuery.Result<"empty" | "complete" | "streaming" | "partial">
+    useLazyQuery.Result<"empty" | "complete" | "streaming" | "partial", "none">
   >;
   useLazyQuery.errorPolicy.none.returnPartialData._bool.branded.toEqualTypeOf<
-    useLazyQuery.Result<"empty" | "complete" | "streaming" | "partial">
+    useLazyQuery.Result<"empty" | "complete" | "streaming" | "partial", "none">
   >;
   useLazyQuery.errorPolicy.all.result.branded.toEqualTypeOf<
-    useLazyQuery.Result<"empty" | "complete" | "streaming" | "partial">
+    useLazyQuery.Result<"empty" | "complete" | "streaming" | "partial", "all">
   >;
   useLazyQuery.errorPolicy.all.returnPartialData._false.branded.toEqualTypeOf<
-    useLazyQuery.Result<"empty" | "complete" | "streaming">
+    useLazyQuery.Result<"empty" | "complete" | "streaming", "all">
   >;
   useLazyQuery.errorPolicy.all.returnPartialData._true.branded.toEqualTypeOf<
-    useLazyQuery.Result<"empty" | "complete" | "streaming" | "partial">
+    useLazyQuery.Result<"empty" | "complete" | "streaming" | "partial", "all">
   >;
   useLazyQuery.errorPolicy.all.returnPartialData._bool.branded.toEqualTypeOf<
-    useLazyQuery.Result<"empty" | "complete" | "streaming" | "partial">
+    useLazyQuery.Result<"empty" | "complete" | "streaming" | "partial", "all">
   >;
   useLazyQuery.errorPolicy.ignore.result.branded.toEqualTypeOf<
-    useLazyQuery.Result<"empty" | "complete" | "streaming" | "partial">
+    useLazyQuery.Result<
+      "empty" | "complete" | "streaming" | "partial",
+      "ignore"
+    >
   >;
   useLazyQuery.errorPolicy.ignore.returnPartialData._false.branded
-    .toEqualTypeOf<useLazyQuery.Result<"empty" | "complete" | "streaming">>;
+    .toEqualTypeOf<
+    useLazyQuery.Result<"empty" | "complete" | "streaming", "ignore">
+  >;
   useLazyQuery.errorPolicy.ignore.returnPartialData._true.branded.toEqualTypeOf<
-    useLazyQuery.Result<"empty" | "complete" | "streaming" | "partial">
+    useLazyQuery.Result<
+      "empty" | "complete" | "streaming" | "partial",
+      "ignore"
+    >
   >;
   useLazyQuery.errorPolicy.ignore.returnPartialData._bool.branded.toEqualTypeOf<
-    useLazyQuery.Result<"empty" | "complete" | "streaming" | "partial">
+    useLazyQuery.Result<
+      "empty" | "complete" | "streaming" | "partial",
+      "ignore"
+    >
   >;
 }
 // useSuspenseQuery

@@ -4,6 +4,7 @@ import { expectTypeOf } from "expect-type";
 import {
   ApolloClient,
   DataValue,
+  ErrorLike,
   gql,
   TypedDocumentNode,
 } from "@apollo/client";
@@ -168,7 +169,7 @@ test("uses masked types when using masked document", async () => {
   {
     const { data } = await execute();
 
-    expectTypeOf(data).toEqualTypeOf<Query | undefined>();
+    expectTypeOf(data).toEqualTypeOf<Query>();
   }
 
   {
@@ -284,7 +285,7 @@ test("uses unmodified types when using TypedDocumentNode", async () => {
   {
     const { data } = await execute();
 
-    expectTypeOf(data).toEqualTypeOf<Query | undefined>();
+    expectTypeOf(data).toEqualTypeOf<Query>();
   }
 
   {
@@ -478,6 +479,53 @@ test("execution result has `.retain` method", () => {
 
   // retain should return the same type as the original result
   expectTypeOf(result.retain()).toEqualTypeOf(result);
+});
+
+test("execute function narrows the result by errorPolicy", async () => {
+  type Data = { character: string };
+  const query: TypedDocumentNode<Data, Record<string, never>> = gql``;
+
+  {
+    const [execute] = useLazyQuery(query);
+    const { data, error } = await execute();
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    const [execute] = useLazyQuery(query, { errorPolicy: "none" });
+    const { data, error } = await execute();
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    const [execute] = useLazyQuery(query, { errorPolicy: "all" });
+    const { data, error } = await execute();
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<ErrorLike | undefined>();
+  }
+
+  {
+    const [execute] = useLazyQuery(query, { errorPolicy: "ignore" });
+    const { data, error } = await execute();
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    const literalVariables: TypedDocumentNode<Data, { type: "main" }> = gql``;
+
+    const [execute] = useLazyQuery(literalVariables, { errorPolicy: "none" });
+    const { data, error } = await execute({ variables: { type: "main" } });
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
 });
 
 test("rejects unknown options", () => {

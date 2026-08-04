@@ -212,20 +212,14 @@ export declare namespace useQuery {
         : never;
       }
     >;
-  } & ([
-      Exclude<
-        keyof Exclude<TOptions, SkipToken>,
-        keyof Options<TData, TVariables>
-      >,
-    ] extends [never] ?
-      unknown
-    : {
-        // options that are not part of `useQuery.Options`
-        [K in Exclude<
-          keyof Exclude<TOptions, SkipToken>,
-          keyof Options<TData, TVariables>
-        >]: never;
-      });
+  } & (Exclude<
+      keyof Exclude<TOptions, SkipToken>,
+      keyof useQuery.Options<TData, TVariables>
+    > extends infer InvalidOptionNames extends string ?
+      [InvalidOptionNames] extends [never] ?
+        unknown
+      : { [K in InvalidOptionNames]: never }
+    : never);
 
   export type ResultForOptions<
     TData,

@@ -904,7 +904,8 @@ export class StoreReader {
         fragment &&
         policies.fragmentMatches(fragment, data.__typename) &&
         !boundaries.has(selection) &&
-        !context.deferInfo?.peekArray(path)
+        (!context.deferInfo?.peekArray(path) ||
+          !isDeferredFragment(selection, variables))
       ) {
         fragment.selectionSet.selections.forEach(workSet.add, workSet);
       }

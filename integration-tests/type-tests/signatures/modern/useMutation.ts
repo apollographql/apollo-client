@@ -1385,3 +1385,142 @@ test("requires variables with mixed TVariables", () => {
     });
   }
 });
+
+test("rejects unknown options", () => {
+  type Data = { character: string };
+  const literalVariables: TypedDocumentNode<Data, { type: "main" }> = gql``;
+  const widenedVariables: TypedDocumentNode<Data, { type: string }> = gql``;
+  const noVariables: TypedDocumentNode<Data, Record<string, never>> = gql``;
+
+  useMutation(literalVariables, {
+    variables: { type: "main" },
+    errorPolicy: "all",
+    awaitRefetchQueries: true,
+    keepRootFields: true,
+    fetchPolicy: "network-only",
+  });
+
+  useMutation(literalVariables, {
+    variables: { type: "main" },
+    // @ts-expect-error unknown option
+    errorPolcy: "all",
+  });
+
+  useMutation(widenedVariables, {
+    variables: { type: "main" },
+    // @ts-expect-error unknown option
+    errorPolcy: "all",
+  });
+
+  useMutation(noVariables, {
+    // @ts-expect-error unknown option
+    errorPolcy: "all",
+  });
+
+  useMutation(literalVariables, {
+    variables: { type: "main" },
+    errorPolicy: "all",
+    // @ts-expect-error unknown option
+    bogusOption: 1,
+  });
+});
+
+test("rejects a known option with an invalid value", () => {
+  type Data = { character: string };
+  const mutation: TypedDocumentNode<Data, { id: string }> = gql``;
+
+  useMutation(mutation, {
+    variables: { id: "1" },
+    fetchPolicy: "network-only",
+  });
+  // @ts-expect-error invalid fetchPolicy
+  useMutation(mutation, { variables: { id: "1" }, fetchPolicy: "bogus" });
+  // @ts-expect-error invalid errorPolicy
+  useMutation(mutation, { variables: { id: "1" }, errorPolicy: "bogus" });
+});
+
+test("rejects invalid variable values for constant variable types", () => {
+  type Data = { character: string };
+  const mutation: TypedDocumentNode<Data, { type: "main" }> = gql``;
+
+  const stringVariables: TypedDocumentNode<Data, { id: string }> = gql``;
+
+  useMutation(mutation, { variables: { type: "main" } });
+  // @ts-expect-error invalid variable value
+  useMutation(mutation, { variables: { type: "nope" } });
+  // @ts-expect-error unknown variable
+  useMutation(mutation, { variables: { type: "main", foo: "bar" } });
+  // @ts-expect-error wrong variable type
+  useMutation(stringVariables, { variables: { id: 1 } });
+  // @ts-expect-error variables must be an object
+  useMutation(stringVariables, { variables: "nonsense" });
+});
+
+test("constant variable types do not widen errorPolicy", () => {
+  type Data = { character: string };
+
+  {
+    const mutation: TypedDocumentNode<Data, { type: "main" }> = gql``;
+
+    const [mutate, { data }] = useMutation(mutation, {
+      variables: { type: "main" },
+    });
+
+    expectTypeOf(data).toEqualTypeOf<Data | null | undefined>();
+    expectTypeOf(mutate()).toEqualTypeOf<
+      Promise<ApolloClient.MutateResult<Data, "none">>
+    >();
+  }
+
+  {
+    const mutation: TypedDocumentNode<Data, { type: "main" }> = gql``;
+
+    const [mutate] = useMutation(mutation, {
+      variables: { type: "main" },
+      errorPolicy: "none",
+    });
+
+    expectTypeOf(mutate()).toEqualTypeOf<
+      Promise<ApolloClient.MutateResult<Data, "none">>
+    >();
+  }
+
+  {
+    const mutation: TypedDocumentNode<Data, { type: "main" }> = gql``;
+
+    const [mutate] = useMutation(mutation, {
+      variables: { type: "main" },
+      errorPolicy: "all",
+    });
+
+    expectTypeOf(mutate()).toEqualTypeOf<
+      Promise<ApolloClient.MutateResult<Data, "all">>
+    >();
+  }
+
+  {
+    const mutation: TypedDocumentNode<Data, { episode: 10 }> = gql``;
+
+    const [mutate] = useMutation(mutation, {
+      variables: { episode: 10 },
+      errorPolicy: "all",
+    });
+
+    expectTypeOf(mutate()).toEqualTypeOf<
+      Promise<ApolloClient.MutateResult<Data, "all">>
+    >();
+  }
+
+  {
+    const mutation: TypedDocumentNode<Data, { main: true }> = gql``;
+
+    const [mutate] = useMutation(mutation, {
+      variables: { main: true },
+      errorPolicy: "all",
+    });
+
+    expectTypeOf(mutate()).toEqualTypeOf<
+      Promise<ApolloClient.MutateResult<Data, "all">>
+    >();
+  }
+});

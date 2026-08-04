@@ -1111,3 +1111,184 @@ test("returns correct TData type when combined with options unrelated to TData",
     }
   } */
 });
+
+test("rejects unknown options", () => {
+  type Data = { character: string };
+  const literalVariables: TypedDocumentNode<Data, { type: "main" }> = gql``;
+  const widenedVariables: TypedDocumentNode<Data, { type: string }> = gql``;
+  const noVariables: TypedDocumentNode<Data, Record<string, never>> = gql``;
+
+  preloadQuery(literalVariables, {
+    variables: { type: "main" },
+    returnPartialData: true,
+    errorPolicy: "all",
+    context: { foo: 1 },
+    fetchPolicy: "cache-first",
+  });
+
+  preloadQuery(literalVariables, {
+    variables: { type: "main" },
+    // @ts-expect-error unknown option
+    returnPartialDta: false,
+  });
+
+  preloadQuery(widenedVariables, {
+    variables: { type: "main" },
+    // @ts-expect-error unknown option
+    returnPartialDta: false,
+  });
+
+  preloadQuery(noVariables, {
+    // @ts-expect-error unknown option
+    returnPartialDta: false,
+  });
+
+  preloadQuery(literalVariables, {
+    variables: { type: "main" },
+    returnPartialData: true,
+    // @ts-expect-error unknown option
+    bogusOption: 1,
+  });
+});
+
+test("rejects a known option with an invalid value", () => {
+  type Data = { character: string };
+  const query: TypedDocumentNode<Data, { id: string }> = gql``;
+
+  preloadQuery(query, { variables: { id: "1" }, fetchPolicy: "cache-first" });
+  // @ts-expect-error invalid fetchPolicy
+  preloadQuery(query, { variables: { id: "1" }, fetchPolicy: "bogus" });
+  // @ts-expect-error invalid errorPolicy
+  preloadQuery(query, { variables: { id: "1" }, errorPolicy: "bogus" });
+});
+
+test("rejects invalid variable values for constant variable types", () => {
+  type Data = { character: string };
+  const query: TypedDocumentNode<Data, { type: "main" }> = gql``;
+
+  preloadQuery(query, { variables: { type: "main" } });
+  // @ts-expect-error invalid variable value
+  preloadQuery(query, { variables: { type: "nope" } });
+  // @ts-expect-error unknown variable
+  preloadQuery(query, { variables: { type: "main", foo: "bar" } });
+});
+
+test("constant variable types do not widen returnPartialData or errorPolicy", () => {
+  type Data = { character: string };
+
+  {
+    const query: TypedDocumentNode<Data, { type: "main" }> = gql``;
+
+    const queryRef = preloadQuery(query, { variables: { type: "main" } });
+
+    expectTypeOf(queryRef).toEqualTypeOf<
+      PreloadedQueryRef<Data, { type: "main" }, "complete" | "streaming">
+    >();
+
+    const { data, dataState } = useReadQuery(queryRef);
+
+    expectTypeOf(data).toEqualTypeOf<
+      DataValue.Complete<Data> | DataValue.Streaming<Data>
+    >();
+    expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
+  }
+
+  {
+    const query: TypedDocumentNode<Data, { type: "main" }> = gql``;
+
+    const queryRef = preloadQuery(query, {
+      variables: { type: "main" },
+      returnPartialData: false,
+    });
+
+    expectTypeOf(queryRef).toEqualTypeOf<
+      PreloadedQueryRef<Data, { type: "main" }, "complete" | "streaming">
+    >();
+  }
+
+  {
+    const query: TypedDocumentNode<Data, { type: "main" }> = gql``;
+
+    const queryRef = preloadQuery(query, {
+      variables: { type: "main" },
+      returnPartialData: true,
+    });
+
+    expectTypeOf(queryRef).toEqualTypeOf<
+      PreloadedQueryRef<
+        Data,
+        { type: "main" },
+        "complete" | "streaming" | "partial"
+      >
+    >();
+  }
+
+  {
+    const query: TypedDocumentNode<Data, { type: "main" }> = gql``;
+
+    const queryRef = preloadQuery(query, {
+      variables: { type: "main" },
+      errorPolicy: "none",
+    });
+
+    expectTypeOf(queryRef).toEqualTypeOf<
+      PreloadedQueryRef<Data, { type: "main" }, "complete" | "streaming">
+    >();
+  }
+
+  {
+    const query: TypedDocumentNode<Data, { type: "main" }> = gql``;
+
+    const queryRef = preloadQuery(query, {
+      variables: { type: "main" },
+      errorPolicy: "all",
+    });
+
+    expectTypeOf(queryRef).toEqualTypeOf<
+      PreloadedQueryRef<
+        Data,
+        { type: "main" },
+        "complete" | "streaming" | "empty"
+      >
+    >();
+  }
+
+  {
+    const query: TypedDocumentNode<Data, { episode: 10 }> = gql``;
+
+    const queryRef = preloadQuery(query, {
+      variables: { episode: 10 },
+      returnPartialData: false,
+    });
+
+    expectTypeOf(queryRef).toEqualTypeOf<
+      PreloadedQueryRef<Data, { episode: 10 }, "complete" | "streaming">
+    >();
+  }
+
+  {
+    const query: TypedDocumentNode<Data, { main: true }> = gql``;
+
+    const queryRef = preloadQuery(query, {
+      variables: { main: true },
+      returnPartialData: false,
+    });
+
+    expectTypeOf(queryRef).toEqualTypeOf<
+      PreloadedQueryRef<Data, { main: true }, "complete" | "streaming">
+    >();
+  }
+});
+
+test("passes through generic variables", () => {
+  function wrapper<TData, TVariables extends OperationVariables>(
+    query: TypedDocumentNode<TData, TVariables>,
+    variables: TVariables
+  ) {
+    return preloadQuery(query, { variables });
+  }
+
+  const query: TypedDocumentNode<{ character: string }, { id: string }> = gql``;
+
+  wrapper(query, { id: "1" });
+});

@@ -446,6 +446,25 @@ test("rejects a known option with an invalid value", () => {
   });
 });
 
+test("rejects invalid variable values for constant variable types", () => {
+  const query: TypedDocumentNode<{ character: string }, { type: "main" }> =
+    gql``;
+  const stringVariables: TypedDocumentNode<
+    { character: string },
+    { id: string }
+  > = gql``;
+
+  useQuery(query, { variables: { type: "main" } });
+  // @ts-expect-error invalid variable value
+  useQuery(query, { variables: { type: "nope" } });
+  // @ts-expect-error unknown variable
+  useQuery(query, { variables: { type: "main", foo: "bar" } });
+  // @ts-expect-error wrong variable type
+  useQuery(stringVariables, { variables: { id: 1 } });
+  // @ts-expect-error variables must be an object
+  useQuery(stringVariables, { variables: "nonsense" });
+});
+
 test("constant variable types do not widen returnPartialData", () => {
   {
     const query: TypedDocumentNode<{ character: string }, { type: "main" }> =

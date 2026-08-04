@@ -2491,3 +2491,205 @@ test("requires variables with mixed TVariables", () => {
     )
   );
 });
+
+test("rejects unknown options", () => {
+  type Data = { character: string };
+  const literalVariables: TypedDocumentNode<Data, { type: "main" }> = gql``;
+  const widenedVariables: TypedDocumentNode<Data, { type: string }> = gql``;
+  const noVariables: TypedDocumentNode<Data, Record<string, never>> = gql``;
+
+  useBackgroundQuery(literalVariables, {
+    variables: { type: "main" },
+    returnPartialData: true,
+    errorPolicy: "all",
+    context: { foo: 1 },
+    fetchPolicy: "cache-first",
+    queryKey: "key",
+  });
+
+  // @ts-expect-error unknown option
+  useBackgroundQuery(literalVariables, {
+    variables: { type: "main" },
+    returnPartialDta: false,
+  });
+
+  // @ts-expect-error unknown option
+  useBackgroundQuery(widenedVariables, {
+    variables: { type: "main" },
+    returnPartialDta: false,
+  });
+
+  // @ts-expect-error unknown option
+  useBackgroundQuery(noVariables, {
+    returnPartialDta: false,
+  });
+
+  // @ts-expect-error unknown option
+  useBackgroundQuery(literalVariables, {
+    variables: { type: "main" },
+    returnPartialData: true,
+    bogusOption: 1,
+  });
+
+  let skip!: boolean;
+  // @ts-expect-error unknown option
+  useBackgroundQuery(
+    noVariables,
+    skip ? skipToken : { returnPartialDta: false }
+  );
+  useBackgroundQuery(
+    literalVariables,
+    // @ts-expect-error unknown option
+    skip ? skipToken : { variables: { type: "main" }, returnPartialDta: false }
+  );
+});
+
+test("rejects a known option with an invalid value", () => {
+  type Data = { character: string };
+  const query: TypedDocumentNode<Data, { id: string }> = gql``;
+
+  useBackgroundQuery(query, {
+    variables: { id: "1" },
+    fetchPolicy: "cache-first",
+  });
+  // @ts-expect-error invalid fetchPolicy
+  useBackgroundQuery(query, { variables: { id: "1" }, fetchPolicy: "bogus" });
+  // @ts-expect-error invalid errorPolicy
+  useBackgroundQuery(query, { variables: { id: "1" }, errorPolicy: "bogus" });
+});
+
+test("rejects invalid variable values for constant variable types", () => {
+  type Data = { character: string };
+  const query: TypedDocumentNode<Data, { type: "main" }> = gql``;
+
+  useBackgroundQuery(query, { variables: { type: "main" } });
+  // @ts-expect-error invalid variable value
+  useBackgroundQuery(query, { variables: { type: "nope" } });
+  // @ts-expect-error unknown variable
+  useBackgroundQuery(query, { variables: { type: "main", foo: "bar" } });
+});
+
+test("constant variable types do not widen returnPartialData, errorPolicy or skip", () => {
+  type Data = { character: string };
+
+  {
+    const query: TypedDocumentNode<Data, { type: "main" }> = gql``;
+
+    const [queryRef] = useBackgroundQuery(query, {
+      variables: { type: "main" },
+    });
+
+    expectTypeOf(queryRef).toEqualTypeOf<
+      QueryRef<Data, { type: "main" }, "complete" | "streaming">
+    >();
+
+    const { data, dataState } = useReadQuery(queryRef);
+
+    expectTypeOf(data).toEqualTypeOf<
+      DataValue.Complete<Data> | DataValue.Streaming<Data>
+    >();
+    expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
+  }
+
+  {
+    const query: TypedDocumentNode<Data, { type: "main" }> = gql``;
+
+    const [queryRef] = useBackgroundQuery(query, {
+      variables: { type: "main" },
+      returnPartialData: false,
+    });
+
+    expectTypeOf(queryRef).toEqualTypeOf<
+      QueryRef<Data, { type: "main" }, "complete" | "streaming">
+    >();
+  }
+
+  {
+    const query: TypedDocumentNode<Data, { type: "main" }> = gql``;
+
+    const [queryRef] = useBackgroundQuery(query, {
+      variables: { type: "main" },
+      returnPartialData: true,
+    });
+
+    expectTypeOf(queryRef).toEqualTypeOf<
+      QueryRef<Data, { type: "main" }, "complete" | "streaming" | "partial">
+    >();
+
+    const { data, dataState } = useReadQuery(queryRef);
+
+    expectTypeOf(data).toEqualTypeOf<
+      | DataValue.Complete<Data>
+      | DataValue.Partial<Data>
+      | DataValue.Streaming<Data>
+    >();
+    expectTypeOf(dataState).toEqualTypeOf<
+      "complete" | "streaming" | "partial"
+    >();
+  }
+
+  {
+    const query: TypedDocumentNode<Data, { type: "main" }> = gql``;
+
+    const [queryRef] = useBackgroundQuery(query, {
+      variables: { type: "main" },
+      errorPolicy: "none",
+    });
+
+    expectTypeOf(queryRef).toEqualTypeOf<
+      QueryRef<Data, { type: "main" }, "complete" | "streaming">
+    >();
+  }
+
+  {
+    const query: TypedDocumentNode<Data, { type: "main" }> = gql``;
+
+    const [queryRef] = useBackgroundQuery(query, {
+      variables: { type: "main" },
+      errorPolicy: "all",
+    });
+
+    expectTypeOf(queryRef).toEqualTypeOf<
+      QueryRef<Data, { type: "main" }, "complete" | "streaming" | "empty">
+    >();
+  }
+
+  {
+    const query: TypedDocumentNode<Data, { type: "main" }> = gql``;
+
+    const [queryRef] = useBackgroundQuery(query, {
+      variables: { type: "main" },
+      skip: false,
+    });
+
+    expectTypeOf(queryRef).toEqualTypeOf<
+      QueryRef<Data, { type: "main" }, "complete" | "streaming">
+    >();
+  }
+
+  {
+    const query: TypedDocumentNode<Data, { episode: 10 }> = gql``;
+
+    const [queryRef] = useBackgroundQuery(query, {
+      variables: { episode: 10 },
+      returnPartialData: false,
+    });
+
+    expectTypeOf(queryRef).toEqualTypeOf<
+      QueryRef<Data, { episode: 10 }, "complete" | "streaming">
+    >();
+  }
+
+  {
+    const query: TypedDocumentNode<Data, { main: true }> = gql``;
+
+    const [queryRef] = useBackgroundQuery(query, {
+      variables: { main: true },
+      returnPartialData: false,
+    });
+
+    expectTypeOf(queryRef).toEqualTypeOf<
+      QueryRef<Data, { main: true }, "complete" | "streaming">
+    >();
+  }
+});

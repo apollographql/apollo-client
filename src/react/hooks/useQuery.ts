@@ -36,6 +36,10 @@ import type { ApolloClient } from "@apollo/client";
 import { NetworkStatus } from "@apollo/client";
 import type { MaybeMasked } from "@apollo/client/masking";
 import type {
+  FetchMoreFunction,
+  RefetchFunction,
+} from "@apollo/client/react/internal";
+import type {
   DocumentationTypes as UtilityDocumentationTypes,
   LazyType,
   NoInfer,
@@ -168,31 +172,13 @@ export declare namespace useQuery {
       updateQuery: (mapFn: UpdateQueryMapFn<TData, TVariables>) => void;
 
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
-      refetch: (
-        variables?: Partial<TVariables>
-      ) => Promise<ApolloClient.QueryResult<MaybeMasked<TData>, TErrorPolicy>>;
+      refetch: RefetchFunction<TData, TVariables, TErrorPolicy>;
 
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#variables:member} */
       variables: TReturnVariables;
 
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
-      fetchMore: <
-        TFetchData = TData,
-        TFetchVars extends OperationVariables = TVariables,
-        TErrorPolicy extends ErrorPolicy = "none",
-      >(
-        fetchMoreOptions: ObservableQuery.FetchMoreOptions<
-          TData,
-          TVariables,
-          TFetchData,
-          TFetchVars
-        > & {
-          /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
-          errorPolicy?: TErrorPolicy;
-        }
-      ) => Promise<
-        ApolloClient.QueryResult<MaybeMasked<TFetchData>, TErrorPolicy>
-      >;
+      fetchMore: FetchMoreFunction<TData, TVariables>;
     }
   }
   export type Result<

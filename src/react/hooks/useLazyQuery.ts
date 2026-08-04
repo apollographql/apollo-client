@@ -22,6 +22,10 @@ import type {
 } from "@apollo/client";
 import { NetworkStatus } from "@apollo/client";
 import type {
+  FetchMoreFunction,
+  RefetchFunction,
+} from "@apollo/client/react/internal";
+import type {
   DocumentationTypes as UtilityDocumentationTypes,
   NoInfer,
   OptionWithFallback,
@@ -110,28 +114,10 @@ export declare namespace useLazyQuery {
       updateQuery: (mapFn: UpdateQueryMapFn<TData, TVariables>) => void;
 
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
-      refetch: (
-        variables?: Partial<TVariables>
-      ) => Promise<ApolloClient.QueryResult<MaybeMasked<TData>, TErrorPolicy>>;
+      refetch: RefetchFunction<TData, TVariables, TErrorPolicy>;
 
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
-      fetchMore: <
-        TFetchData = TData,
-        TFetchVars extends OperationVariables = TVariables,
-        TErrorPolicy extends ErrorPolicy = "none",
-      >(
-        fetchMoreOptions: ObservableQuery.FetchMoreOptions<
-          TData,
-          TVariables,
-          TFetchData,
-          TFetchVars
-        > & {
-          /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
-          errorPolicy?: TErrorPolicy;
-        }
-      ) => Promise<
-        ApolloClient.QueryResult<MaybeMasked<TFetchData>, TErrorPolicy>
-      >;
+      fetchMore: FetchMoreFunction<TData, TVariables>;
 
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#client:member} */
       client: ApolloClient;

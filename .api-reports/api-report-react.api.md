@@ -677,14 +677,12 @@ export namespace useLazyQuery {
         export interface Result<TData, TVariables extends OperationVariables, TErrorPolicy extends ErrorPolicy | undefined = undefined> {
             client: ApolloClient;
             error?: ErrorLike;
-            fetchMore: <TFetchData = TData, TFetchVars extends OperationVariables = TVariables, TErrorPolicy extends ErrorPolicy = "none">(fetchMoreOptions: ObservableQuery.FetchMoreOptions<TData, TVariables, TFetchData, TFetchVars> & {
-                errorPolicy?: TErrorPolicy;
-            }) => Promise<ApolloClient.QueryResult<MaybeMasked<TFetchData>, TErrorPolicy>>;
+            fetchMore: FetchMoreFunction<TData, TVariables>;
             loading: boolean;
             networkStatus: NetworkStatus;
             observable: ObservableQuery<TData, TVariables>;
             previousData?: MaybeMasked<TData>;
-            refetch: (variables?: Partial<TVariables>) => Promise<ApolloClient.QueryResult<MaybeMasked<TData>, TErrorPolicy>>;
+            refetch: RefetchFunction<TData, TVariables, TErrorPolicy>;
             startPolling: (pollInterval: number) => void;
             stopPolling: () => void;
             subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
@@ -1099,14 +1097,12 @@ export namespace useQuery {
         export interface Result<TData = unknown, TVariables extends OperationVariables = OperationVariables, TReturnVariables extends OperationVariables = TVariables, TErrorPolicy extends ErrorPolicy | undefined = undefined> {
             client: ApolloClient;
             error?: ErrorLike;
-            fetchMore: <TFetchData = TData, TFetchVars extends OperationVariables = TVariables, TErrorPolicy extends ErrorPolicy = "none">(fetchMoreOptions: ObservableQuery.FetchMoreOptions<TData, TVariables, TFetchData, TFetchVars> & {
-                errorPolicy?: TErrorPolicy;
-            }) => Promise<ApolloClient.QueryResult<MaybeMasked_2<TFetchData>, TErrorPolicy>>;
+            fetchMore: FetchMoreFunction<TData, TVariables>;
             loading: boolean;
             networkStatus: NetworkStatus;
             observable: ObservableQuery<TData, TVariables>;
             previousData?: MaybeMasked_2<TData>;
-            refetch: (variables?: Partial<TVariables>) => Promise<ApolloClient.QueryResult<MaybeMasked_2<TData>, TErrorPolicy>>;
+            refetch: RefetchFunction<TData, TVariables, TErrorPolicy>;
             startPolling: (pollInterval: number) => void;
             stopPolling: () => void;
             subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;

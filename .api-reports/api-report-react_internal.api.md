@@ -209,7 +209,7 @@ export namespace QueryRef {
 type QueryRefPromise<TData, TStates extends DataState<TData>["dataState"]> = DecoratedPromise<ObservableQuery.Result<MaybeMasked<TData>, TStates>>;
 
 // @public (undocumented)
-export type RefetchFunction<TData, TVariables extends OperationVariables, TErrorPolicy extends ErrorPolicy | undefined = undefined> = (variables?: Partial<TVariables>) => Promise<ApolloClient.QueryResult<TData, TErrorPolicy>>;
+export type RefetchFunction<TData, TVariables extends OperationVariables, TErrorPolicy extends ErrorPolicy | undefined = undefined> = (variables?: Partial<TVariables>) => Promise<ApolloClient.QueryResult<MaybeMasked_2<TData>, TErrorPolicy>>;
 
 // @public (undocumented)
 class SuspenseCache {

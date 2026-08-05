@@ -1122,8 +1122,8 @@ test("does not surface incomplete cached fields inside a later sibling `@defer` 
   enqueueInitialChunk({
     data: { greeting: { message: "Hello world", __typename: "Greeting" } },
     pending: [
-      { id: "0", path: ["greeting"] },
-      { id: "1", path: ["greeting"] },
+      { id: "0", path: ["greeting"], label: "ac_0" },
+      { id: "1", path: ["greeting"], label: "ac_1" },
     ],
     hasNext: true,
   });
@@ -2623,8 +2623,8 @@ test('reports "streaming" when one of multiple sibling `@defer` fragments has fu
   enqueueInitialChunk({
     data: { greeting: { message: "Hello world", __typename: "Greeting" } },
     pending: [
-      { id: "0", path: ["greeting"] },
-      { id: "1", path: ["greeting"] },
+      { id: "0", path: ["greeting"], label: "ac_0" },
+      { id: "1", path: ["greeting"], label: "ac_1" },
     ],
     hasNext: true,
   });
@@ -2842,7 +2842,7 @@ test('evaluates `@defer(if: $variable)` as non-deferred when the variable is fal
         recipient: { __typename: "Person", name: "Alice" },
       },
     },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", path: ["greeting"], label: "ac_1" }],
     hasNext: true,
   });
 
@@ -2937,8 +2937,8 @@ test('evaluates `@defer(if: $variable)` as deferred when the variable is true, r
   enqueueInitialChunk({
     data: { greeting: { message: "Hello world", __typename: "Greeting" } },
     pending: [
-      { id: "0", path: ["greeting"] },
-      { id: "1", path: ["greeting"] },
+      { id: "0", path: ["greeting"], label: "ac_0" },
+      { id: "1", path: ["greeting"], label: "ac_1" },
     ],
     hasNext: true,
   });
@@ -3068,7 +3068,7 @@ test("evaluates `@defer(if: $variable)` for overlapping fields so disabled-defer
         recipient: { __typename: "Person", name: "Alice" },
       },
     },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", path: ["greeting"], label: "ac_1" }],
     hasNext: true,
   });
 
@@ -5009,8 +5009,8 @@ test('reports "partial" when a later `@defer` boundary is incomplete and an earl
   enqueueInitialChunk({
     data: { greeting: { message: "Hello world", __typename: "Greeting" } },
     pending: [
-      { id: "0", path: ["greeting"] },
-      { id: "1", path: ["greeting"] },
+      { id: "0", path: ["greeting"], label: "ac_0" },
+      { id: "1", path: ["greeting"], label: "ac_1" },
     ],
     hasNext: true,
   });
@@ -5149,8 +5149,8 @@ test('reports "streaming" when two `@defer` fragments overlap and only the secon
   enqueueInitialChunk({
     data: { greeting: { message: "Hello world", __typename: "Greeting" } },
     pending: [
-      { id: "0", path: ["greeting"] },
-      { id: "1", path: ["greeting"] },
+      { id: "0", path: ["greeting"], label: "ac_0" },
+      { id: "1", path: ["greeting"], label: "ac_1" },
     ],
     hasNext: true,
   });
@@ -5667,7 +5667,7 @@ test('reports "streaming" when `@defer(if: false)` fields arrive in the initial 
         recipient: { __typename: "Person", name: "Alice" },
       },
     },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", path: ["greeting"], label: "ac_1" }],
     hasNext: true,
   });
 
@@ -6345,7 +6345,7 @@ test('does not return complete cached deferred data while streaming with a "netw
 
   enqueueInitialChunk({
     data: { greeting: { __typename: "Greeting", message: "Hello world" } },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", path: ["greeting"], label: "ac_0" }],
     hasNext: true,
   });
 
@@ -6449,7 +6449,7 @@ test('keeps a non-deferred fragment\'s fields at a path with a pending defer bou
         tone: "warm",
       },
     },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", path: ["greeting"], label: "ac_0" }],
     hasNext: true,
   });
 
@@ -6552,7 +6552,7 @@ test('does not return complete cached deferred data when a defer boundary comple
 
   enqueueInitialChunk({
     data: { greeting: { __typename: "Greeting", message: "Hello world" } },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", path: ["greeting"], label: "ac_0" }],
     hasNext: true,
   });
 
@@ -6652,7 +6652,7 @@ test('does not return complete cached deferred data when a defer boundary comple
 
   enqueueInitialChunk({
     data: { greeting: { __typename: "Greeting", message: "Hello world" } },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", path: ["greeting"], label: "ac_0" }],
     hasNext: true,
   });
 
@@ -6971,8 +6971,8 @@ test('does not return cached defer boundaries for list items while streaming wit
       },
     },
     pending: [
-      { id: "0", path: ["person", "friends", 0] },
-      { id: "1", path: ["person", "friends", 1] },
+      { id: "0", path: ["person", "friends", 0], label: "ac_0" },
+      { id: "1", path: ["person", "friends", 1], label: "ac_0" },
     ],
     hasNext: true,
   });
@@ -7086,8 +7086,8 @@ test('prunes a list item\'s cached defer boundary while a sibling item has alrea
       },
     },
     pending: [
-      { id: "0", path: ["person", "friends", 0] },
-      { id: "1", path: ["person", "friends", 1] },
+      { id: "0", path: ["person", "friends", 0], label: "ac_0" },
+      { id: "1", path: ["person", "friends", 1], label: "ac_0" },
     ],
     hasNext: true,
   });
@@ -7226,8 +7226,8 @@ test('does not leak complete or partial cached defer boundaries while streaming 
       hero: { __typename: "Hero", id: "1" },
     },
     pending: [
-      { id: "0", path: ["greeting"] },
-      { id: "1", path: ["hero"] },
+      { id: "0", path: ["greeting"], label: "ac_0" },
+      { id: "1", path: ["hero"], label: "ac_1" },
     ],
     hasNext: true,
   });
@@ -7843,7 +7843,7 @@ test('applies field read functions to in-flight results while pruning cached def
 
   enqueueInitialChunk({
     data: { greeting: { __typename: "Greeting", message: "Hello world" } },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", path: ["greeting"], label: "ac_0" }],
     hasNext: true,
   });
 

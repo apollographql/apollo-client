@@ -28,6 +28,7 @@ import {
   compact,
   DeepMerger,
   getDefaultValues,
+  getDirectiveArgValue,
   getFragmentFromSelection,
   getMainDefinition,
   getQueryDefinition,
@@ -70,6 +71,7 @@ import type {
   NormalizedCache,
   ReadMergeModifyContext,
 } from "./types.js";
+import { Kind } from "graphql/language/kinds.js";
 
 type DataState =
   // no data
@@ -899,13 +901,24 @@ export class StoreReader {
       // dropped or not.
 
       const fragment = getFragmentFromSelection(selection, lookupFragment);
+      let prune = false;
+
+      if (context.deferInfo && isDeferredFragment(selection, variables)) {
+        const directive = fragment?.directives?.find(
+          (d) => d.name.value === "defer"
+        );
+
+        prune = !!context.deferInfo.peek(
+          ...path,
+          directive && getDirectiveArgValue(directive, "label", Kind.STRING)
+        );
+      }
 
       if (
         fragment &&
         policies.fragmentMatches(fragment, data.__typename) &&
         !boundaries.has(selection) &&
-        (!context.deferInfo?.peekArray(path) ||
-          !isDeferredFragment(selection, variables))
+        !prune
       ) {
         fragment.selectionSet.selections.forEach(workSet.add, workSet);
       }

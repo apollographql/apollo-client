@@ -5278,8 +5278,8 @@ test('keeps a delivered `@defer` fragment\'s fields while a sibling fragment at 
   enqueueInitialChunk({
     data: { greeting: { message: "Hello world", __typename: "Greeting" } },
     pending: [
-      { id: "0", path: ["greeting"] },
-      { id: "1", path: ["greeting"] },
+      { id: "0", path: ["greeting"], label: "ac_0" },
+      { id: "1", path: ["greeting"], label: "ac_1" },
     ],
     hasNext: true,
   });

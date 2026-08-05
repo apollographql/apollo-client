@@ -6487,7 +6487,7 @@ test('does not return complete cached deferred data while streaming with a "cach
 
   enqueueInitialChunk({
     data: { greeting: { __typename: "Greeting", message: "Hello world" } },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", path: ["greeting"], label: "ac_0" }],
     hasNext: true,
   });
 
@@ -6588,7 +6588,7 @@ test('does not return complete cached deferred data when a defer boundary comple
 
   enqueueInitialChunk({
     data: { greeting: { __typename: "Greeting", message: "Hello world" } },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", path: ["greeting"], label: "ac_0" }],
     hasNext: true,
   });
 
@@ -6694,7 +6694,7 @@ test('does not return complete cached deferred data while streaming with a "cach
 
   enqueueInitialChunk({
     data: { greeting: { __typename: "Greeting", message: "Hello world" } },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", path: ["greeting"], label: "ac_0" }],
     hasNext: true,
   });
 
@@ -6798,7 +6798,7 @@ test('does not return complete cached deferred data when a defer boundary comple
 
   enqueueInitialChunk({
     data: { greeting: { __typename: "Greeting", message: "Hello world" } },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", path: ["greeting"], label: "ac_0" }],
     hasNext: true,
   });
 
@@ -7029,8 +7029,8 @@ test('prunes a list item\'s cached defer boundary while a sibling item has alrea
       },
     },
     pending: [
-      { id: "0", path: ["person", "friends", 0] },
-      { id: "1", path: ["person", "friends", 1] },
+      { id: "0", path: ["person", "friends", 0], label: "ac_0" },
+      { id: "1", path: ["person", "friends", 1], label: "ac_0" },
     ],
     hasNext: true,
   });

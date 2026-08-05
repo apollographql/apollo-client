@@ -173,6 +173,108 @@ test("constant variable types do not widen errorPolicy", async () => {
   }
 });
 
+test("optimisticResponse does not widen the result", async () => {
+  interface Data {
+    updateThing: {
+      __typename: "Payload";
+      inner: { __typename: "Inner"; data: Record<string, unknown> };
+    };
+  }
+
+  const mutation: TypedDocumentNode<Data, { id: string }> = gql``;
+
+  {
+    const { data, error } = await client.mutate({
+      mutation,
+      variables: { id: "1" },
+      optimisticResponse: {
+        updateThing: {
+          __typename: "Payload",
+          inner: { __typename: "Inner", data: { x: 1 } },
+        },
+      },
+    });
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    const { data, error } = await client.mutate({
+      mutation,
+      variables: { id: "1" },
+      errorPolicy: "all",
+      optimisticResponse: {
+        updateThing: {
+          __typename: "Payload",
+          inner: { __typename: "Inner", data: { x: 1 } },
+        },
+      },
+    });
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<ErrorLike | undefined>();
+  }
+
+  {
+    const { data, error } = await client.mutate({
+      mutation,
+      variables: { id: "1" },
+      optimisticResponse: () => ({
+        updateThing: {
+          __typename: "Payload" as const,
+          inner: { __typename: "Inner" as const, data: { x: 1 } },
+        },
+      }),
+    });
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+});
+
+test("rejects an invalid optimisticResponse", () => {
+  interface Data {
+    thing: { __typename: "Thing"; name: string };
+  }
+
+  const mutation: TypedDocumentNode<Data, { id: string }> = gql``;
+
+  client.mutate({
+    mutation,
+    variables: { id: "1" },
+    optimisticResponse: { thing: { __typename: "Thing", name: "a" } },
+  });
+
+  client.mutate({
+    mutation,
+    variables: { id: "1" },
+    // @ts-expect-error invalid __typename
+    optimisticResponse: { thing: { __typename: "Nope", name: "a" } },
+  });
+
+  client.mutate({
+    mutation,
+    variables: { id: "1" },
+    // @ts-expect-error missing field
+    optimisticResponse: { thing: { __typename: "Thing" } },
+  });
+
+  client.mutate({
+    mutation,
+    variables: { id: "1" },
+    // @ts-expect-error excess field
+    optimisticResponse: { thing: { __typename: "Thing", name: "a", id: 1 } },
+  });
+
+  client.mutate({
+    mutation,
+    variables: { id: "1" },
+    // @ts-expect-error not an object
+    optimisticResponse: 1,
+  });
+});
+
 test("passes through generic variables", () => {
   function wrapper<TData, TVariables extends OperationVariables>(
     mutation: TypedDocumentNode<TData, TVariables>,

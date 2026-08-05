@@ -1028,11 +1028,9 @@ export namespace useMutation {
     // Warning: (ae-forgotten-export) The symbol "ExtractConfiguredVariables" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    export type ResultForOptions<TData, TVariables extends OperationVariables, TCache extends ApolloCache, TOptions extends Record<string, never> | Options<TData, TVariables, TCache>, TErrorPolicy extends ErrorPolicy | undefined = undefined> = LazyType<ResultTuple<TData, MakeRequiredVariablesOptional<TVariables, ExtractConfiguredVariables<TOptions, TVariables>>, TCache, [
-    TErrorPolicy
-    ] extends [undefined] ? DefaultOptions extends {
-        errorPolicy: infer D;
-    } ? D : undefined : TErrorPolicy>>;
+    export type ResultForOptions<TData, TVariables extends OperationVariables, TCache extends ApolloCache, TOptions extends Record<string, never> | Options<TData, TVariables, TCache>, TErrorPolicy extends ErrorPolicy | undefined = undefined> = LazyType<ResultTuple<TData, MakeRequiredVariablesOptional<TVariables, ExtractConfiguredVariables<TOptions, TVariables>>, TCache, OptionWithFallback<{
+        errorPolicy: TErrorPolicy;
+    }, DefaultOptions, "errorPolicy"> & ErrorPolicy>>;
     export type ResultStateMap<TData = unknown> = {
         none: {
             data: MaybeMasked<TData> | null | undefined;

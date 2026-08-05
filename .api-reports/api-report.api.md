@@ -288,7 +288,9 @@ export namespace ApolloClient {
         // Warning: (ae-forgotten-export) The symbol "OptionWithFallback" needs to be exported by the entry point index.d.ts
         //
         // (undocumented)
-        export type ResultForOptions<TData, TVariables extends OperationVariables, TCache extends ApolloCache, TOptions extends Record<string, unknown> | Omit<MutateOptions<any, any, TCache>, "variables">> = LazyType<MutateResult<MaybeMasked<TData>, OptionWithFallback<TOptions, DefaultOptions, "errorPolicy"> & ErrorPolicy>>;
+        export type ResultForOptions<TData, TErrorPolicy extends ErrorPolicy | undefined = undefined> = LazyType<MutateResult<MaybeMasked<TData>, OptionWithFallback<{
+            errorPolicy: TErrorPolicy;
+        }, DefaultOptions, "errorPolicy"> & ErrorPolicy>>;
         export interface Signature extends Signatures.Evaluated {
         }
         // (undocumented)
@@ -311,9 +313,10 @@ export namespace ApolloClient {
             export interface Modern {
                 <TData, TVariables extends OperationVariables, TCache extends ApolloCache, TOptions extends Omit<ApolloClient.MutateOptions<NoInfer<TData>, any, TCache>, "variables"> & {
                     variables?: unknown;
-                }>(options: TOptions & ApolloClient.mutate.OptionsFor<TData, TVariables, TCache, TOptions> & {
+                }, TErrorPolicy extends ErrorPolicy | undefined = undefined>(options: TOptions & ApolloClient.mutate.OptionsFor<TData, TVariables, TCache, TOptions> & {
                     mutation: TypedDocumentNode<TData, TVariables>;
-                }): Promise<ApolloClient.mutate.ResultForOptions<TData, TVariables, TCache, TOptions>>;
+                    errorPolicy?: TErrorPolicy;
+                }): Promise<ApolloClient.mutate.ResultForOptions<TData, TErrorPolicy>>;
             }
         }
     }
@@ -3096,7 +3099,7 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/policies.ts:173:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:135:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 // src/core/ApolloClient.ts:202:5 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:669:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:667:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:375:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:195:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:149:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts

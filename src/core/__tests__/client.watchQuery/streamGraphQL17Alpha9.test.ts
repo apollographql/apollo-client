@@ -4175,7 +4175,7 @@ test("does not surface complete cached `@defer` boundaries on streamed list item
       friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
     },
     pending: [
-      { id: "0", path: ["friendList", 0] },
+      { id: "0", path: ["friendList", 0], label: "ac_0" },
       { id: "1", path: ["friendList"] },
     ],
     hasNext: true,
@@ -4231,7 +4231,7 @@ test("does not surface complete cached `@defer` boundaries on streamed list item
         id: "1",
       },
     ],
-    pending: [{ id: "2", path: ["friendList", 1] }],
+    pending: [{ id: "2", path: ["friendList", 1], label: "ac_0" }],
     hasNext: true,
   });
 

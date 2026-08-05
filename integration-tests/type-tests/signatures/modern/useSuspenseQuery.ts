@@ -1,4 +1,4 @@
-import { DataValue, gql, TypedDocumentNode } from "@apollo/client";
+import { DataValue, ErrorLike, gql, TypedDocumentNode } from "@apollo/client";
 import { skipToken, useSuspenseQuery } from "@apollo/client/react";
 import { DeepPartial } from "@apollo/client/utilities";
 import { expectTypeOf } from "expect-type";
@@ -2021,7 +2021,7 @@ it("uses proper masked types for refetch", async () => {
     const { refetch } = useSuspenseQuery(query, { variables: { id: "1" } });
     const { data } = await refetch();
 
-    expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData | undefined>();
+    expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData>();
   }
 
   {
@@ -2030,7 +2030,7 @@ it("uses proper masked types for refetch", async () => {
     });
     const { data } = await refetch();
 
-    expectTypeOf(data).toEqualTypeOf<UnmaskedVariablesCaseData | undefined>();
+    expectTypeOf(data).toEqualTypeOf<UnmaskedVariablesCaseData>();
   }
 });
 
@@ -2494,4 +2494,285 @@ test("requires variables with mixed TVariables", () => {
       }
     )
   );
+});
+
+test("refetch narrows the result by errorPolicy", async () => {
+  type Data = { character: string };
+  const query: TypedDocumentNode<Data, Record<string, never>> = gql``;
+
+  {
+    const { refetch } = useSuspenseQuery(query, {});
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    const { refetch } = useSuspenseQuery(query, { errorPolicy: "none" });
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    const { refetch } = useSuspenseQuery(query, { errorPolicy: "all" });
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<ErrorLike | undefined>();
+  }
+
+  {
+    const { refetch } = useSuspenseQuery(query, { errorPolicy: "ignore" });
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+});
+
+test("fetchMore narrows the result by errorPolicy", async () => {
+  type Data = { character: string };
+  const query: TypedDocumentNode<Data, Record<string, never>> = gql``;
+
+  {
+    const { fetchMore } = useSuspenseQuery(query, {});
+    const { data, error } = await fetchMore({});
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    // `fetchMore` does not inherit the error policy of the hook
+    const { fetchMore } = useSuspenseQuery(query, { errorPolicy: "all" });
+    const { data, error } = await fetchMore({});
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    const { fetchMore } = useSuspenseQuery(query, {});
+    const { data, error } = await fetchMore({ errorPolicy: "all" });
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<ErrorLike | undefined>();
+  }
+
+  {
+    const { fetchMore } = useSuspenseQuery(query, {});
+    const { data, error } = await fetchMore({ errorPolicy: "ignore" });
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    type OtherData = { other: string };
+    const otherQuery: TypedDocumentNode<
+      OtherData,
+      Record<string, never>
+    > = gql``;
+
+    const { fetchMore } = useSuspenseQuery(query, {});
+    const { data } = await fetchMore({ query: otherQuery });
+
+    expectTypeOf(data).toEqualTypeOf<OtherData>();
+  }
+});
+
+test("rejects unknown options", () => {
+  type Data = { character: string };
+  const literalVariables: TypedDocumentNode<Data, { type: "main" }> = gql``;
+  const widenedVariables: TypedDocumentNode<Data, { type: string }> = gql``;
+  const noVariables: TypedDocumentNode<Data, Record<string, never>> = gql``;
+
+  useSuspenseQuery(literalVariables, {
+    variables: { type: "main" },
+    returnPartialData: true,
+    errorPolicy: "all",
+    context: { foo: 1 },
+    fetchPolicy: "cache-first",
+    queryKey: "key",
+  });
+
+  // @ts-expect-error unknown option
+  useSuspenseQuery(literalVariables, {
+    variables: { type: "main" },
+    returnPartialDta: false,
+  });
+
+  // @ts-expect-error unknown option
+  useSuspenseQuery(widenedVariables, {
+    variables: { type: "main" },
+    returnPartialDta: false,
+  });
+
+  // @ts-expect-error unknown option
+  useSuspenseQuery(noVariables, {
+    returnPartialDta: false,
+  });
+
+  // @ts-expect-error unknown option
+  useSuspenseQuery(literalVariables, {
+    variables: { type: "main" },
+    returnPartialData: true,
+    bogusOption: 1,
+  });
+
+  let skip!: boolean;
+  // @ts-expect-error unknown option
+  useSuspenseQuery(noVariables, skip ? skipToken : { returnPartialDta: false });
+  useSuspenseQuery(
+    literalVariables,
+    // @ts-expect-error unknown option
+    skip ? skipToken : { variables: { type: "main" }, returnPartialDta: false }
+  );
+});
+
+test("rejects a known option with an invalid value", () => {
+  type Data = { character: string };
+  const query: TypedDocumentNode<Data, { id: string }> = gql``;
+
+  useSuspenseQuery(query, {
+    variables: { id: "1" },
+    fetchPolicy: "cache-first",
+  });
+  // @ts-expect-error invalid fetchPolicy
+  useSuspenseQuery(query, { variables: { id: "1" }, fetchPolicy: "bogus" });
+  // @ts-expect-error invalid errorPolicy
+  useSuspenseQuery(query, { variables: { id: "1" }, errorPolicy: "bogus" });
+});
+
+test("rejects invalid variable values for constant variable types", () => {
+  type Data = { character: string };
+  const query: TypedDocumentNode<Data, { type: "main" }> = gql``;
+
+  useSuspenseQuery(query, { variables: { type: "main" } });
+  // @ts-expect-error invalid variable value
+  useSuspenseQuery(query, { variables: { type: "nope" } });
+  // @ts-expect-error unknown variable
+  useSuspenseQuery(query, { variables: { type: "main", foo: "bar" } });
+});
+
+test("constant variable types do not widen returnPartialData, errorPolicy or skip", () => {
+  type Data = { character: string };
+
+  {
+    const query: TypedDocumentNode<Data, { type: "main" }> = gql``;
+
+    const { data, dataState } = useSuspenseQuery(query, {
+      variables: { type: "main" },
+    });
+
+    expectTypeOf(data).toEqualTypeOf<
+      DataValue.Complete<Data> | DataValue.Streaming<Data>
+    >();
+    expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
+  }
+
+  {
+    const query: TypedDocumentNode<Data, { type: "main" }> = gql``;
+
+    const { data, dataState } = useSuspenseQuery(query, {
+      variables: { type: "main" },
+      returnPartialData: false,
+    });
+
+    expectTypeOf(data).toEqualTypeOf<
+      DataValue.Complete<Data> | DataValue.Streaming<Data>
+    >();
+    expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
+  }
+
+  {
+    const query: TypedDocumentNode<Data, { type: "main" }> = gql``;
+
+    const { data, dataState } = useSuspenseQuery(query, {
+      variables: { type: "main" },
+      returnPartialData: true,
+    });
+
+    expectTypeOf(data).toEqualTypeOf<
+      | DataValue.Complete<Data>
+      | DataValue.Partial<Data>
+      | DataValue.Streaming<Data>
+    >();
+    expectTypeOf(dataState).toEqualTypeOf<
+      "complete" | "streaming" | "partial"
+    >();
+  }
+
+  {
+    const query: TypedDocumentNode<Data, { type: "main" }> = gql``;
+
+    const { data, dataState } = useSuspenseQuery(query, {
+      variables: { type: "main" },
+      errorPolicy: "none",
+    });
+
+    expectTypeOf(data).toEqualTypeOf<
+      DataValue.Complete<Data> | DataValue.Streaming<Data>
+    >();
+    expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
+  }
+
+  {
+    const query: TypedDocumentNode<Data, { type: "main" }> = gql``;
+
+    const { data, dataState } = useSuspenseQuery(query, {
+      variables: { type: "main" },
+      errorPolicy: "all",
+    });
+
+    expectTypeOf(data).toEqualTypeOf<
+      DataValue.Complete<Data> | DataValue.Streaming<Data> | undefined
+    >();
+    expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming" | "empty">();
+  }
+
+  {
+    const query: TypedDocumentNode<Data, { type: "main" }> = gql``;
+
+    const { data, dataState } = useSuspenseQuery(query, {
+      variables: { type: "main" },
+      skip: false,
+    });
+
+    expectTypeOf(data).toEqualTypeOf<
+      DataValue.Complete<Data> | DataValue.Streaming<Data>
+    >();
+    expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
+  }
+
+  {
+    const query: TypedDocumentNode<Data, { episode: 10 }> = gql``;
+
+    const { data, dataState } = useSuspenseQuery(query, {
+      variables: { episode: 10 },
+      returnPartialData: false,
+    });
+
+    expectTypeOf(data).toEqualTypeOf<
+      DataValue.Complete<Data> | DataValue.Streaming<Data>
+    >();
+    expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
+  }
+
+  {
+    const query: TypedDocumentNode<Data, { main: true }> = gql``;
+
+    const { data, dataState } = useSuspenseQuery(query, {
+      variables: { main: true },
+      returnPartialData: false,
+    });
+
+    expectTypeOf(data).toEqualTypeOf<
+      DataValue.Complete<Data> | DataValue.Streaming<Data>
+    >();
+    expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
+  }
 });

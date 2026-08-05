@@ -10,6 +10,7 @@ import type { DecoratedPromise } from '@apollo/client/utilities/internal';
 import type { DocumentNode } from 'graphql';
 import type { DocumentTypeDecoration } from '@graphql-typed-document-node/core';
 import { ErrorLike } from '@apollo/client';
+import type { ErrorPolicy } from '@apollo/client';
 import type { InternalTypes } from '@apollo/client/react';
 import type { MaybeMasked } from '@apollo/client/masking';
 import type { MaybeMasked as MaybeMasked_2 } from '@apollo/client';
@@ -34,7 +35,9 @@ stringifiedVariables: string,
 ];
 
 // @public (undocumented)
-export type FetchMoreFunction<TData, TVariables extends OperationVariables> = <TFetchData = TData, TFetchVars extends OperationVariables = TVariables>(fetchMoreOptions: ObservableQuery.FetchMoreOptions<TData, TVariables, TFetchData, TFetchVars>) => Promise<ApolloClient.QueryResult<MaybeMasked_2<TData>>>;
+export type FetchMoreFunction<TData, TVariables extends OperationVariables> = <TFetchData = TData, TFetchVars extends OperationVariables = TVariables, TErrorPolicy extends ErrorPolicy = "none">(fetchMoreOptions: ObservableQuery.FetchMoreOptions<TData, TVariables, TFetchData, TFetchVars> & {
+    errorPolicy?: TErrorPolicy;
+}) => Promise<ApolloClient.QueryResult<MaybeMasked_2<TFetchData>, TErrorPolicy>>;
 
 // @public (undocumented)
 type FragmentCacheKey = [
@@ -206,7 +209,7 @@ export namespace QueryRef {
 type QueryRefPromise<TData, TStates extends DataState<TData>["dataState"]> = DecoratedPromise<ObservableQuery.Result<MaybeMasked<TData>, TStates>>;
 
 // @public (undocumented)
-export type RefetchFunction<TData, TVariables extends OperationVariables> = (variables?: Partial<TVariables>) => Promise<ApolloClient.QueryResult<TData>>;
+export type RefetchFunction<TData, TVariables extends OperationVariables, TErrorPolicy extends ErrorPolicy | undefined = undefined> = (variables?: Partial<TVariables>) => Promise<ApolloClient.QueryResult<MaybeMasked_2<TData>, TErrorPolicy>>;
 
 // @public (undocumented)
 class SuspenseCache {

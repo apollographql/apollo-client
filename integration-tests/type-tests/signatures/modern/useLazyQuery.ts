@@ -4,6 +4,7 @@ import { expectTypeOf } from "expect-type";
 import {
   ApolloClient,
   DataValue,
+  ErrorLike,
   gql,
   TypedDocumentNode,
 } from "@apollo/client";
@@ -168,7 +169,7 @@ test("uses masked types when using masked document", async () => {
   {
     const { data } = await execute();
 
-    expectTypeOf(data).toEqualTypeOf<Query | undefined>();
+    expectTypeOf(data).toEqualTypeOf<Query>();
   }
 
   {
@@ -182,13 +183,13 @@ test("uses masked types when using masked document", async () => {
       },
     });
 
-    expectTypeOf(data).toEqualTypeOf<Query | undefined>();
+    expectTypeOf(data).toEqualTypeOf<Query>();
   }
 
   {
     const { data } = await refetch();
 
-    expectTypeOf(data).toEqualTypeOf<Query | undefined>();
+    expectTypeOf(data).toEqualTypeOf<Query>();
   }
 });
 
@@ -284,7 +285,7 @@ test("uses unmodified types when using TypedDocumentNode", async () => {
   {
     const { data } = await execute();
 
-    expectTypeOf(data).toEqualTypeOf<Query | undefined>();
+    expectTypeOf(data).toEqualTypeOf<Query>();
   }
 
   {
@@ -298,13 +299,13 @@ test("uses unmodified types when using TypedDocumentNode", async () => {
       },
     });
 
-    expectTypeOf(data).toEqualTypeOf<Query | undefined>();
+    expectTypeOf(data).toEqualTypeOf<Query>();
   }
 
   {
     const { data } = await refetch();
 
-    expectTypeOf(data).toEqualTypeOf<Query | undefined>();
+    expectTypeOf(data).toEqualTypeOf<Query>();
   }
 });
 
@@ -478,4 +479,257 @@ test("execution result has `.retain` method", () => {
 
   // retain should return the same type as the original result
   expectTypeOf(result.retain()).toEqualTypeOf(result);
+});
+
+test("execute function narrows the result by errorPolicy", async () => {
+  type Data = { character: string };
+  const query: TypedDocumentNode<Data, Record<string, never>> = gql``;
+
+  {
+    const [execute] = useLazyQuery(query);
+    const { data, error } = await execute();
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    const [execute] = useLazyQuery(query, { errorPolicy: "none" });
+    const { data, error } = await execute();
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    const [execute] = useLazyQuery(query, { errorPolicy: "all" });
+    const { data, error } = await execute();
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<ErrorLike | undefined>();
+  }
+
+  {
+    const [execute] = useLazyQuery(query, { errorPolicy: "ignore" });
+    const { data, error } = await execute();
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    const literalVariables: TypedDocumentNode<Data, { type: "main" }> = gql``;
+
+    const [execute] = useLazyQuery(literalVariables, { errorPolicy: "none" });
+    const { data, error } = await execute({ variables: { type: "main" } });
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+});
+
+test("refetch narrows the result by errorPolicy", async () => {
+  type Data = { character: string };
+  const query: TypedDocumentNode<Data, Record<string, never>> = gql``;
+
+  {
+    const [, { refetch }] = useLazyQuery(query, {});
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    const [, { refetch }] = useLazyQuery(query, { errorPolicy: "none" });
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    const [, { refetch }] = useLazyQuery(query, { errorPolicy: "all" });
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<ErrorLike | undefined>();
+  }
+
+  {
+    const [, { refetch }] = useLazyQuery(query, { errorPolicy: "ignore" });
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+});
+
+test("fetchMore narrows the result by errorPolicy", async () => {
+  type Data = { character: string };
+  const query: TypedDocumentNode<Data, Record<string, never>> = gql``;
+
+  {
+    const [, { fetchMore }] = useLazyQuery(query, {});
+    const { data, error } = await fetchMore({});
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    // `fetchMore` does not inherit the error policy of the hook
+    const [, { fetchMore }] = useLazyQuery(query, { errorPolicy: "all" });
+    const { data, error } = await fetchMore({});
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    const [, { fetchMore }] = useLazyQuery(query, {});
+    const { data, error } = await fetchMore({ errorPolicy: "all" });
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<ErrorLike | undefined>();
+  }
+
+  {
+    const [, { fetchMore }] = useLazyQuery(query, {});
+    const { data, error } = await fetchMore({ errorPolicy: "ignore" });
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    type OtherData = { other: string };
+    const otherQuery: TypedDocumentNode<
+      OtherData,
+      Record<string, never>
+    > = gql``;
+
+    const [, { fetchMore }] = useLazyQuery(query, {});
+    const { data } = await fetchMore({ query: otherQuery });
+
+    expectTypeOf(data).toEqualTypeOf<OtherData>();
+  }
+});
+
+test("rejects unknown options", () => {
+  type Data = { character: string };
+  const literalVariables: TypedDocumentNode<Data, { type: "main" }> = gql``;
+  const noVariables: TypedDocumentNode<Data, Record<string, never>> = gql``;
+
+  useLazyQuery(literalVariables, {
+    returnPartialData: true,
+    errorPolicy: "all",
+    notifyOnNetworkStatusChange: true,
+    fetchPolicy: "cache-first",
+  });
+
+  useLazyQuery(literalVariables, {
+    // @ts-expect-error unknown option
+    returnPartialDta: false,
+  });
+
+  useLazyQuery(noVariables, {
+    // @ts-expect-error unknown option
+    returnPartialDta: false,
+  });
+
+  useLazyQuery(literalVariables, {
+    returnPartialData: true,
+    // @ts-expect-error unknown option
+    bogusOption: 1,
+  });
+
+  useLazyQuery(literalVariables, {
+    // @ts-expect-error variables are passed to the execute function
+    variables: { type: "main" },
+  });
+});
+
+test("rejects a known option with an invalid value", () => {
+  type Data = { character: string };
+  const query: TypedDocumentNode<Data, { id: string }> = gql``;
+
+  useLazyQuery(query, { fetchPolicy: "cache-first" });
+  // @ts-expect-error invalid fetchPolicy
+  useLazyQuery(query, { fetchPolicy: "bogus" });
+  // @ts-expect-error invalid errorPolicy
+  useLazyQuery(query, { errorPolicy: "bogus" });
+});
+
+test("rejects invalid variable values for constant variable types", () => {
+  type Data = { character: string };
+  const query: TypedDocumentNode<Data, { type: "main" }> = gql``;
+  const stringVariables: TypedDocumentNode<Data, { id: string }> = gql``;
+
+  const [execute] = useLazyQuery(query);
+  const [executeStringVariables] = useLazyQuery(stringVariables);
+
+  execute({ variables: { type: "main" } });
+  // @ts-expect-error invalid variable value
+  execute({ variables: { type: "nope" } });
+  // @ts-expect-error unknown variable
+  execute({ variables: { type: "main", foo: "bar" } });
+  // @ts-expect-error wrong variable type
+  executeStringVariables({ variables: { id: 1 } });
+  // @ts-expect-error variables must be an object
+  executeStringVariables({ variables: "nonsense" });
+});
+
+test("constant variable types do not widen returnPartialData", () => {
+  type Data = { character: string };
+
+  {
+    const query: TypedDocumentNode<Data, { type: "main" }> = gql``;
+
+    const [, { dataState }] = useLazyQuery(query);
+
+    expectTypeOf(dataState).toEqualTypeOf<"empty" | "complete" | "streaming">();
+  }
+
+  {
+    const query: TypedDocumentNode<Data, { type: "main" }> = gql``;
+
+    const [, { dataState }] = useLazyQuery(query, {
+      returnPartialData: false,
+    });
+
+    expectTypeOf(dataState).toEqualTypeOf<"empty" | "complete" | "streaming">();
+  }
+
+  {
+    const query: TypedDocumentNode<Data, { type: "main" }> = gql``;
+
+    const [, { dataState }] = useLazyQuery(query, {
+      returnPartialData: true,
+    });
+
+    expectTypeOf(dataState).toEqualTypeOf<
+      "empty" | "complete" | "streaming" | "partial"
+    >();
+  }
+
+  {
+    const query: TypedDocumentNode<Data, { episode: 10 }> = gql``;
+
+    const [, { dataState }] = useLazyQuery(query, {
+      returnPartialData: false,
+    });
+
+    expectTypeOf(dataState).toEqualTypeOf<"empty" | "complete" | "streaming">();
+  }
+
+  {
+    const query: TypedDocumentNode<Data, { main: true }> = gql``;
+
+    const [, { dataState }] = useLazyQuery(query, {
+      returnPartialData: false,
+    });
+
+    expectTypeOf(dataState).toEqualTypeOf<"empty" | "complete" | "streaming">();
+  }
 });

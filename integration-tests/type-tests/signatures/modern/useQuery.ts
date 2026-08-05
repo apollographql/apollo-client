@@ -1,4 +1,4 @@
-import { DataValue, gql, TypedDocumentNode } from "@apollo/client";
+import { DataValue, ErrorLike, gql, TypedDocumentNode } from "@apollo/client";
 import { skipToken, useQuery } from "@apollo/client/react";
 import { DeepPartial } from "@apollo/client/utilities";
 import { expectTypeOf } from "expect-type";
@@ -193,6 +193,12 @@ test("optional variables are optional", () => {
     },
   });
 
+  let validVariables!: { limit: number };
+  let excessVariables!: { limit: number; foo: string };
+  useQuery(query, { variables: validVariables });
+  // @ts-expect-error unknown variables
+  useQuery(query, { variables: excessVariables });
+
   let skip!: boolean;
   useQuery(query, skip ? skipToken : undefined);
   useQuery(query, skip ? skipToken : {});
@@ -365,6 +371,347 @@ test("requires variables with mixed TVariables", () => {
       }
     )
   );
+});
+
+test("refetch narrows the result by errorPolicy", async () => {
+  type Data = { character: string };
+  const query: TypedDocumentNode<Data, Record<string, never>> = gql``;
+
+  {
+    const { refetch } = useQuery(query, {});
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    const { refetch } = useQuery(query, { errorPolicy: "none" });
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    const { refetch } = useQuery(query, { errorPolicy: "all" });
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<ErrorLike | undefined>();
+  }
+
+  {
+    const { refetch } = useQuery(query, { errorPolicy: "ignore" });
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+});
+
+test("fetchMore narrows the result by errorPolicy", async () => {
+  type Data = { character: string };
+  const query: TypedDocumentNode<Data, Record<string, never>> = gql``;
+
+  {
+    const { fetchMore } = useQuery(query, {});
+    const { data, error } = await fetchMore({});
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    // `fetchMore` does not inherit the error policy of the hook
+    const { fetchMore } = useQuery(query, { errorPolicy: "all" });
+    const { data, error } = await fetchMore({});
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    const { fetchMore } = useQuery(query, {});
+    const { data, error } = await fetchMore({ errorPolicy: "all" });
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<ErrorLike | undefined>();
+  }
+
+  {
+    const { fetchMore } = useQuery(query, {});
+    const { data, error } = await fetchMore({ errorPolicy: "ignore" });
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    type OtherData = { other: string };
+    const otherQuery: TypedDocumentNode<
+      OtherData,
+      Record<string, never>
+    > = gql``;
+
+    const { fetchMore } = useQuery(query, {});
+    const { data } = await fetchMore({ query: otherQuery });
+
+    expectTypeOf(data).toEqualTypeOf<OtherData>();
+  }
+});
+
+test("rejects unknown options", () => {
+  const literalVariables: TypedDocumentNode<
+    { character: string },
+    { type: "main" }
+  > = gql``;
+  const widenedVariables: TypedDocumentNode<
+    { character: string },
+    { type: string }
+  > = gql``;
+  const noVariables: TypedDocumentNode<
+    { greeting: string },
+    Record<string, never>
+  > = gql``;
+
+  useQuery(literalVariables, {
+    variables: { type: "main" },
+    returnPartialData: true,
+    notifyOnNetworkStatusChange: true,
+    errorPolicy: "all",
+    context: { foo: 1 },
+    skipPollAttempt: () => false,
+  });
+
+  // @ts-expect-error unknown option
+  useQuery(literalVariables, {
+    variables: { type: "main" },
+    returnPartialDta: false,
+  });
+
+  // @ts-expect-error unknown option
+  useQuery(widenedVariables, {
+    variables: { type: "main" },
+    returnPartialDta: false,
+  });
+
+  // @ts-expect-error unknown option
+  useQuery(noVariables, {
+    returnPartialDta: false,
+  });
+
+  // @ts-expect-error unknown option
+  useQuery(literalVariables, {
+    variables: { type: "main" },
+    returnPartialData: true,
+    bogusOption: 1,
+  });
+
+  let skip!: boolean;
+  // @ts-expect-error unknown option
+  useQuery(noVariables, skip ? skipToken : { returnPartialDta: false });
+  useQuery(
+    literalVariables,
+    // @ts-expect-error unknown option
+    skip ? skipToken : { variables: { type: "main" }, returnPartialDta: false }
+  );
+});
+
+test("rejects a known option with an invalid value", () => {
+  const query: TypedDocumentNode<{ character: string }, { id: string }> = gql``;
+
+  useQuery(query, { variables: { id: "1" }, fetchPolicy: "cache-first" });
+  // @ts-expect-error invalid fetchPolicy
+  useQuery(query, {
+    variables: { id: "1" },
+    fetchPolicy: "bogus",
+  });
+  // @ts-expect-error invalid errorPolicy
+  useQuery(query, {
+    variables: { id: "1" },
+    errorPolicy: "bogus",
+  });
+});
+
+test("rejects invalid variable values for constant variable types", () => {
+  const query: TypedDocumentNode<{ character: string }, { type: "main" }> =
+    gql``;
+  const stringVariables: TypedDocumentNode<
+    { character: string },
+    { id: string }
+  > = gql``;
+
+  useQuery(query, { variables: { type: "main" } });
+  // @ts-expect-error invalid variable value
+  useQuery(query, { variables: { type: "nope" } });
+  // @ts-expect-error unknown variable
+  useQuery(query, { variables: { type: "main", foo: "bar" } });
+  // @ts-expect-error wrong variable type
+  useQuery(stringVariables, { variables: { id: 1 } });
+  // @ts-expect-error variables must be an object
+  useQuery(stringVariables, { variables: "nonsense" });
+});
+
+test("constant variable types do not widen returnPartialData", () => {
+  {
+    const query: TypedDocumentNode<{ character: string }, { type: "main" }> =
+      gql``;
+
+    const { data, dataState } = useQuery(query, {
+      variables: { type: "main" },
+    });
+
+    expectTypeOf(data).toEqualTypeOf<
+      | DataValue.Complete<{ character: string }>
+      | DataValue.Streaming<{ character: string }>
+      | undefined
+    >();
+    expectTypeOf(dataState).toEqualTypeOf<"empty" | "streaming" | "complete">();
+  }
+
+  {
+    const query: TypedDocumentNode<{ character: string }, { type: "main" }> =
+      gql``;
+
+    const { data, dataState } = useQuery(query, {
+      variables: { type: "main" },
+      returnPartialData: false,
+    });
+
+    expectTypeOf(data).toEqualTypeOf<
+      | DataValue.Complete<{ character: string }>
+      | DataValue.Streaming<{ character: string }>
+      | undefined
+    >();
+    expectTypeOf(dataState).toEqualTypeOf<"empty" | "streaming" | "complete">();
+  }
+
+  {
+    const query: TypedDocumentNode<{ character: string }, { type: "main" }> =
+      gql``;
+
+    const { data, dataState } = useQuery(query, {
+      variables: { type: "main" },
+      returnPartialData: true,
+    });
+
+    expectTypeOf(data).toEqualTypeOf<
+      | DataValue.Complete<{ character: string }>
+      | DataValue.Streaming<{ character: string }>
+      | DataValue.Partial<{ character: string }>
+      | undefined
+    >();
+    expectTypeOf(dataState).toEqualTypeOf<
+      "empty" | "partial" | "streaming" | "complete"
+    >();
+  }
+
+  {
+    const query: TypedDocumentNode<{ character: string }, { episode: 10 }> =
+      gql``;
+
+    const { data, dataState } = useQuery(query, {
+      variables: { episode: 10 },
+    });
+
+    expectTypeOf(data).toEqualTypeOf<
+      | DataValue.Complete<{ character: string }>
+      | DataValue.Streaming<{ character: string }>
+      | undefined
+    >();
+    expectTypeOf(dataState).toEqualTypeOf<"empty" | "streaming" | "complete">();
+  }
+
+  {
+    const query: TypedDocumentNode<{ character: string }, { episode: 10 }> =
+      gql``;
+
+    const { data, dataState } = useQuery(query, {
+      variables: { episode: 10 },
+      returnPartialData: false,
+    });
+
+    expectTypeOf(data).toEqualTypeOf<
+      | DataValue.Complete<{ character: string }>
+      | DataValue.Streaming<{ character: string }>
+      | undefined
+    >();
+    expectTypeOf(dataState).toEqualTypeOf<"empty" | "streaming" | "complete">();
+  }
+
+  {
+    const query: TypedDocumentNode<{ character: string }, { episode: 10 }> =
+      gql``;
+
+    const { data, dataState } = useQuery(query, {
+      variables: { episode: 10 },
+      returnPartialData: true,
+    });
+
+    expectTypeOf(data).toEqualTypeOf<
+      | DataValue.Complete<{ character: string }>
+      | DataValue.Streaming<{ character: string }>
+      | DataValue.Partial<{ character: string }>
+      | undefined
+    >();
+    expectTypeOf(dataState).toEqualTypeOf<
+      "empty" | "partial" | "streaming" | "complete"
+    >();
+  }
+
+  {
+    const query: TypedDocumentNode<{ character: string }, { main: true }> =
+      gql``;
+
+    const { data, dataState } = useQuery(query, {
+      variables: { main: true },
+    });
+
+    expectTypeOf(data).toEqualTypeOf<
+      | DataValue.Complete<{ character: string }>
+      | DataValue.Streaming<{ character: string }>
+      | undefined
+    >();
+    expectTypeOf(dataState).toEqualTypeOf<"empty" | "streaming" | "complete">();
+  }
+
+  {
+    const query: TypedDocumentNode<{ character: string }, { main: true }> =
+      gql``;
+
+    const { data, dataState } = useQuery(query, {
+      variables: { main: true },
+      returnPartialData: false,
+    });
+
+    expectTypeOf(data).toEqualTypeOf<
+      | DataValue.Complete<{ character: string }>
+      | DataValue.Streaming<{ character: string }>
+      | undefined
+    >();
+    expectTypeOf(dataState).toEqualTypeOf<"empty" | "streaming" | "complete">();
+  }
+
+  {
+    const query: TypedDocumentNode<{ character: string }, { main: true }> =
+      gql``;
+
+    const { data, dataState } = useQuery(query, {
+      variables: { main: true },
+      returnPartialData: true,
+    });
+
+    expectTypeOf(data).toEqualTypeOf<
+      | DataValue.Complete<{ character: string }>
+      | DataValue.Streaming<{ character: string }>
+      | DataValue.Partial<{ character: string }>
+      | undefined
+    >();
+    expectTypeOf(dataState).toEqualTypeOf<
+      "empty" | "partial" | "streaming" | "complete"
+    >();
+  }
 });
 
 test("always returns empty data/dataState with unconditional skipToken", () => {

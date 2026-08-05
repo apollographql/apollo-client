@@ -1,4 +1,4 @@
-import { DataValue, gql, TypedDocumentNode } from "@apollo/client";
+import { DataValue, ErrorLike, gql, TypedDocumentNode } from "@apollo/client";
 import { skipToken, useQuery } from "@apollo/client/react";
 import { DeepPartial } from "@apollo/client/utilities";
 import { expectTypeOf } from "expect-type";
@@ -378,4 +378,210 @@ test("always returns empty data/dataState with unconditional skipToken", () => {
   expectTypeOf(data).toEqualTypeOf<undefined>();
   expectTypeOf(dataState).toEqualTypeOf<"empty">();
   expectTypeOf(variables).toEqualTypeOf<Record<string, never>>();
+});
+
+test("errorPolicy does not narrow dataState", () => {
+  type Data = { character: string };
+  const query: TypedDocumentNode<Data, Record<string, never>> = gql``;
+
+  {
+    const { dataState } = useQuery(query, { errorPolicy: "none" });
+
+    expectTypeOf(dataState).toEqualTypeOf<"empty" | "streaming" | "complete">();
+  }
+
+  {
+    const { dataState } = useQuery(query, { errorPolicy: "all" });
+
+    expectTypeOf(dataState).toEqualTypeOf<"empty" | "streaming" | "complete">();
+  }
+
+  {
+    const { dataState } = useQuery(query, { errorPolicy: "ignore" });
+
+    expectTypeOf(dataState).toEqualTypeOf<"empty" | "streaming" | "complete">();
+  }
+});
+
+test("refetch narrows the result by errorPolicy", async () => {
+  type Data = { character: string };
+  const query: TypedDocumentNode<Data, Record<string, never>> = gql``;
+
+  {
+    const { refetch } = useQuery(query);
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<ErrorLike | undefined>();
+  }
+
+  {
+    const { refetch } = useQuery(query, {});
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<ErrorLike | undefined>();
+  }
+
+  {
+    const { refetch } = useQuery(query, { errorPolicy: "none" });
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    const { refetch } = useQuery(query, { errorPolicy: "all" });
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<ErrorLike | undefined>();
+  }
+
+  {
+    const { refetch } = useQuery(query, { errorPolicy: "ignore" });
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+});
+
+test("refetch narrows the result by errorPolicy in every overload", async () => {
+  type Data = { character: string };
+  const query: TypedDocumentNode<Data, Record<string, never>> = gql``;
+
+  let skip!: boolean;
+  let returnPartialData!: boolean;
+
+  {
+    const { refetch } = useQuery(query);
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<ErrorLike | undefined>();
+  }
+
+  {
+    const { refetch } = useQuery(query, {
+      returnPartialData: true,
+      errorPolicy: "ignore",
+    });
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    const { refetch } = useQuery(query, skipToken);
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<ErrorLike | undefined>();
+  }
+
+  {
+    const { refetch } = useQuery(
+      query,
+      skip ? skipToken : { returnPartialData: true, errorPolicy: "ignore" }
+    );
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    const { refetch } = useQuery(query, {
+      returnPartialData,
+      errorPolicy: "ignore",
+    });
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    const { refetch } = useQuery(
+      query,
+      skip ? skipToken : { returnPartialData, errorPolicy: "none" }
+    );
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    const { refetch } = useQuery(query, { errorPolicy: "none" });
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    const { refetch } = useQuery(
+      query,
+      skip ? skipToken : { errorPolicy: "none" }
+    );
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+});
+
+test("fetchMore narrows the result by errorPolicy", async () => {
+  type Data = { character: string };
+  const query: TypedDocumentNode<Data, Record<string, never>> = gql``;
+
+  {
+    const { fetchMore } = useQuery(query, {});
+    const { data, error } = await fetchMore({});
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    // `fetchMore` does not inherit the error policy of the hook
+    const { fetchMore } = useQuery(query, { errorPolicy: "all" });
+    const { data, error } = await fetchMore({});
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    const { fetchMore } = useQuery(query, {});
+    const { data, error } = await fetchMore({ errorPolicy: "all" });
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<ErrorLike | undefined>();
+  }
+
+  {
+    const { fetchMore } = useQuery(query, {});
+    const { data, error } = await fetchMore({ errorPolicy: "ignore" });
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    type OtherData = { other: string };
+    const otherQuery: TypedDocumentNode<
+      OtherData,
+      Record<string, never>
+    > = gql``;
+
+    const { fetchMore } = useQuery(query, {});
+    const { data } = await fetchMore({ query: otherQuery });
+
+    expectTypeOf(data).toEqualTypeOf<OtherData>();
+  }
 });

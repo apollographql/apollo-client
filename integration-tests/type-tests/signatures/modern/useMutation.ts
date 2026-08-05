@@ -1,5 +1,10 @@
 import { useMutation } from "@apollo/client/react";
-import { ApolloClient, gql, TypedDocumentNode } from "@apollo/client";
+import {
+  ApolloClient,
+  ErrorLike,
+  gql,
+  TypedDocumentNode,
+} from "@apollo/client";
 import { expectTypeOf } from "expect-type";
 
 import { test } from "./shared.js";
@@ -1384,4 +1389,243 @@ test("requires variables with mixed TVariables", () => {
       },
     });
   }
+});
+
+test("rejects unknown options", () => {
+  type Data = { character: string };
+  const literalVariables: TypedDocumentNode<Data, { type: "main" }> = gql``;
+  const widenedVariables: TypedDocumentNode<Data, { type: string }> = gql``;
+  const noVariables: TypedDocumentNode<Data, Record<string, never>> = gql``;
+
+  useMutation(literalVariables, {
+    variables: { type: "main" },
+    errorPolicy: "all",
+    awaitRefetchQueries: true,
+    keepRootFields: true,
+    fetchPolicy: "network-only",
+  });
+
+  useMutation(literalVariables, {
+    variables: { type: "main" },
+    // @ts-expect-error unknown option
+    errorPolcy: "all",
+  });
+
+  useMutation(widenedVariables, {
+    variables: { type: "main" },
+    // @ts-expect-error unknown option
+    errorPolcy: "all",
+  });
+
+  useMutation(noVariables, {
+    // @ts-expect-error unknown option
+    errorPolcy: "all",
+  });
+
+  useMutation(literalVariables, {
+    variables: { type: "main" },
+    errorPolicy: "all",
+    // @ts-expect-error unknown option
+    bogusOption: 1,
+  });
+});
+
+test("rejects a known option with an invalid value", () => {
+  type Data = { character: string };
+  const mutation: TypedDocumentNode<Data, { id: string }> = gql``;
+
+  useMutation(mutation, {
+    variables: { id: "1" },
+    fetchPolicy: "network-only",
+  });
+  // @ts-expect-error invalid fetchPolicy
+  useMutation(mutation, { variables: { id: "1" }, fetchPolicy: "bogus" });
+  // @ts-expect-error invalid errorPolicy
+  useMutation(mutation, { variables: { id: "1" }, errorPolicy: "bogus" });
+});
+
+test("rejects invalid variable values for constant variable types", () => {
+  type Data = { character: string };
+  const mutation: TypedDocumentNode<Data, { type: "main" }> = gql``;
+
+  const stringVariables: TypedDocumentNode<Data, { id: string }> = gql``;
+
+  useMutation(mutation, { variables: { type: "main" } });
+  // @ts-expect-error invalid variable value
+  useMutation(mutation, { variables: { type: "nope" } });
+  // @ts-expect-error unknown variable
+  useMutation(mutation, { variables: { type: "main", foo: "bar" } });
+  // @ts-expect-error wrong variable type
+  useMutation(stringVariables, { variables: { id: 1 } });
+  // @ts-expect-error variables must be an object
+  useMutation(stringVariables, { variables: "nonsense" });
+});
+
+test("constant variable types do not widen errorPolicy", () => {
+  type Data = { character: string };
+
+  {
+    const mutation: TypedDocumentNode<Data, { type: "main" }> = gql``;
+
+    const [mutate, { data }] = useMutation(mutation, {
+      variables: { type: "main" },
+    });
+
+    expectTypeOf(data).toEqualTypeOf<Data | null | undefined>();
+    expectTypeOf(mutate()).toEqualTypeOf<
+      Promise<ApolloClient.MutateResult<Data, "none">>
+    >();
+  }
+
+  {
+    const mutation: TypedDocumentNode<Data, { type: "main" }> = gql``;
+
+    const [mutate] = useMutation(mutation, {
+      variables: { type: "main" },
+      errorPolicy: "none",
+    });
+
+    expectTypeOf(mutate()).toEqualTypeOf<
+      Promise<ApolloClient.MutateResult<Data, "none">>
+    >();
+  }
+
+  {
+    const mutation: TypedDocumentNode<Data, { type: "main" }> = gql``;
+
+    const [mutate] = useMutation(mutation, {
+      variables: { type: "main" },
+      errorPolicy: "all",
+    });
+
+    expectTypeOf(mutate()).toEqualTypeOf<
+      Promise<ApolloClient.MutateResult<Data, "all">>
+    >();
+  }
+
+  {
+    const mutation: TypedDocumentNode<Data, { episode: 10 }> = gql``;
+
+    const [mutate] = useMutation(mutation, {
+      variables: { episode: 10 },
+      errorPolicy: "all",
+    });
+
+    expectTypeOf(mutate()).toEqualTypeOf<
+      Promise<ApolloClient.MutateResult<Data, "all">>
+    >();
+  }
+
+  {
+    const mutation: TypedDocumentNode<Data, { main: true }> = gql``;
+
+    const [mutate] = useMutation(mutation, {
+      variables: { main: true },
+      errorPolicy: "all",
+    });
+
+    expectTypeOf(mutate()).toEqualTypeOf<
+      Promise<ApolloClient.MutateResult<Data, "all">>
+    >();
+  }
+});
+
+test("optimisticResponse does not widen the result", async () => {
+  interface Data {
+    updateThing: {
+      __typename: "Payload";
+      inner: { __typename: "Inner"; data: Record<string, unknown> };
+    };
+  }
+
+  const mutation: TypedDocumentNode<Data, { id: string }> = gql``;
+
+  {
+    const [mutate] = useMutation(mutation, {
+      variables: { id: "1" },
+      optimisticResponse: {
+        updateThing: {
+          __typename: "Payload",
+          inner: { __typename: "Inner", data: { x: 1 } },
+        },
+      },
+    });
+
+    const { data, error } = await mutate();
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    const [mutate] = useMutation(mutation, {
+      variables: { id: "1" },
+      errorPolicy: "all",
+      optimisticResponse: {
+        updateThing: {
+          __typename: "Payload",
+          inner: { __typename: "Inner", data: { x: 1 } },
+        },
+      },
+    });
+
+    const { data, error } = await mutate();
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<ErrorLike | undefined>();
+  }
+
+  {
+    const [mutate] = useMutation(mutation, {
+      variables: { id: "1" },
+      optimisticResponse: () => ({
+        updateThing: {
+          __typename: "Payload" as const,
+          inner: { __typename: "Inner" as const, data: { x: 1 } },
+        },
+      }),
+    });
+
+    const { data, error } = await mutate();
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+});
+
+test("rejects an invalid optimisticResponse", () => {
+  interface Data {
+    thing: { __typename: "Thing"; name: string };
+  }
+
+  const mutation: TypedDocumentNode<Data, { id: string }> = gql``;
+
+  useMutation(mutation, {
+    variables: { id: "1" },
+    optimisticResponse: { thing: { __typename: "Thing", name: "a" } },
+  });
+
+  useMutation(mutation, {
+    variables: { id: "1" },
+    // @ts-expect-error invalid __typename
+    optimisticResponse: { thing: { __typename: "Nope", name: "a" } },
+  });
+
+  useMutation(mutation, {
+    variables: { id: "1" },
+    // @ts-expect-error missing field
+    optimisticResponse: { thing: { __typename: "Thing" } },
+  });
+
+  useMutation(mutation, {
+    variables: { id: "1" },
+    // @ts-expect-error excess field
+    optimisticResponse: { thing: { __typename: "Thing", name: "a", id: 1 } },
+  });
+
+  useMutation(mutation, {
+    variables: { id: "1" },
+    // @ts-expect-error not an object
+    optimisticResponse: 1,
+  });
 });

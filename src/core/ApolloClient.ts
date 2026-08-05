@@ -22,6 +22,7 @@ import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
   LazyType,
   OptionWithFallback,
+  Prettify,
   SignatureStyle,
   VariablesOption,
   variablesUnknownSymbol,
@@ -244,17 +245,39 @@ export declare namespace ApolloClient {
     export interface DefaultOptions
       extends ApolloClient.DefaultOptions.Mutate.Calculated {}
 
-    export type ResultForOptions<
+    export type OptionsFor<
       TData,
       TVariables extends OperationVariables,
       TCache extends Cache.Implementation,
-      TOptions extends
-        | Record<string, unknown>
-        | MutateOptions<any, TVariables, TCache>,
+      TOptions extends { variables?: unknown },
+    > = MutateOptions<NoInfer<TData>, NoInfer<TVariables>, TCache> & {
+      variables?: Prettify<
+        TVariables & {
+          // variables that are not part of `TVariables`
+          [K in keyof TOptions["variables"]]: K extends keyof TVariables ?
+            TVariables[K]
+          : never;
+        }
+      >;
+    } & (Exclude<keyof TOptions, keyof MutateOptions<any, any, any>> extends (
+        infer InvalidOptionNames extends string
+      ) ?
+        [InvalidOptionNames] extends [never] ?
+          unknown
+        : { [K in InvalidOptionNames]: never }
+      : never);
+
+    export type ResultForOptions<
+      TData,
+      TErrorPolicy extends ErrorPolicy | undefined = undefined,
     > = LazyType<
       MutateResult<
         MaybeMasked<TData>,
-        OptionWithFallback<TOptions, DefaultOptions, "errorPolicy"> &
+        OptionWithFallback<
+          { errorPolicy: TErrorPolicy },
+          DefaultOptions,
+          "errorPolicy"
+        > &
           ErrorPolicy
       >
     >;
@@ -297,31 +320,28 @@ export declare namespace ApolloClient {
           TData,
           TVariables extends OperationVariables,
           // this overload should never be manually defined, it should always be inferred
-          TOptions extends ApolloClient.MutateOptions<
-            NoInfer<TData>,
-            NoInfer<TVariables>,
-            Cache.Implementation
-          > &
-            VariablesOption<
-              TVariables & {
-                [K in Exclude<
-                  keyof TOptions["variables"],
-                  keyof TVariables
-                >]?: never;
-              }
+          TOptions extends Omit<
+            ApolloClient.MutateOptions<
+              NoInfer<TData>,
+              any,
+              Cache.Implementation
             >,
+            "variables"
+          > & { variables?: unknown },
+          TErrorPolicy extends ErrorPolicy | undefined = undefined,
         >(
-          options: TOptions & {
-            mutation: TypedDocumentNode<TData, TVariables>;
-          }
-        ): Promise<
-          ApolloClient.mutate.ResultForOptions<
-            TData,
-            TVariables,
-            Cache.Implementation,
-            TOptions
-          >
-        >;
+          options: TOptions &
+            ApolloClient.mutate.OptionsFor<
+              TData,
+              TVariables,
+              Cache.Implementation,
+              TOptions
+            > & {
+              mutation: TypedDocumentNode<TData, TVariables>;
+              /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#errorPolicy:member} */
+              errorPolicy?: TErrorPolicy;
+            }
+        ): Promise<ApolloClient.mutate.ResultForOptions<TData, TErrorPolicy>>;
       }
 
       export type Evaluated =
@@ -435,10 +455,33 @@ export declare namespace ApolloClient {
     export interface DefaultOptions
       extends ApolloClient.DefaultOptions.Query.Calculated {}
 
+    export type OptionsFor<
+      TData,
+      TVariables extends OperationVariables,
+      TOptions extends { variables?: unknown },
+    > = QueryOptions<NoInfer<TData>, NoInfer<TVariables>> & {
+      variables?: Prettify<
+        TVariables & {
+          // variables that are not part of `TVariables`
+          [K in keyof TOptions["variables"]]: K extends keyof TVariables ?
+            TVariables[K]
+          : never;
+        }
+      >;
+    } & (Exclude<keyof TOptions, keyof QueryOptions<any, any>> extends (
+        infer InvalidOptionNames extends string
+      ) ?
+        [InvalidOptionNames] extends [never] ?
+          unknown
+        : { [K in InvalidOptionNames]: never }
+      : never);
+
     export type ResultForOptions<
       TData,
       TVariables extends OperationVariables,
-      TOptions extends Record<string, unknown> | QueryOptions<any, TVariables>,
+      TOptions extends
+        | Record<string, unknown>
+        | Omit<QueryOptions<any, any>, "variables">,
     > = LazyType<
       QueryResult<
         MaybeMasked<TData>,
@@ -482,20 +525,15 @@ export declare namespace ApolloClient {
           TData,
           TVariables extends OperationVariables,
           // this overload should never be manually defined, it should always be inferred
-          TOptions extends ApolloClient.QueryOptions<
-            NoInfer<TData>,
-            NoInfer<TVariables>
-          > &
-            VariablesOption<
-              TVariables & {
-                [K in Exclude<
-                  keyof TOptions["variables"],
-                  keyof TVariables
-                >]?: never;
-              }
-            >,
+          TOptions extends Omit<
+            ApolloClient.QueryOptions<NoInfer<TData>, any>,
+            "variables"
+          > & { variables?: unknown },
         >(
-          options: TOptions & { query: TypedDocumentNode<TData, TVariables> }
+          options: TOptions &
+            ApolloClient.query.OptionsFor<TData, TVariables, TOptions> & {
+              query: TypedDocumentNode<TData, TVariables>;
+            }
         ): Promise<
           ApolloClient.query.ResultForOptions<TData, TVariables, TOptions>
         >;

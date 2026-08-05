@@ -251,7 +251,7 @@ test("uses masked types when using masked document", async () => {
         },
       });
 
-      expectTypeOf(data).toEqualTypeOf<Query | undefined>();
+      expectTypeOf(data).toEqualTypeOf<Query>();
     }
 
     {
@@ -321,7 +321,7 @@ test("uses masked types when using masked document", async () => {
         },
       });
 
-      expectTypeOf(data).toEqualTypeOf<Query | undefined>();
+      expectTypeOf(data).toEqualTypeOf<Query>();
     }
 
     {

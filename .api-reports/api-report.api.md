@@ -289,11 +289,25 @@ export namespace ApolloClient {
         // (undocumented)
         export interface DefaultOptions extends ApolloClient.DefaultOptions.Mutate.Calculated {
         }
+        // (undocumented)
+        export type OptionsFor<TData, TVariables extends OperationVariables, TCache extends Cache_2.Implementation, TOptions extends {
+            variables?: unknown;
+        }> = MutateOptions<NoInfer<TData>, NoInfer<TVariables>, TCache> & {
+            variables?: Prettify<TVariables & {
+                [K in keyof TOptions["variables"]]: K extends keyof TVariables ? TVariables[K] : never;
+            }>;
+        } & (Exclude<keyof TOptions, keyof MutateOptions<any, any, any>> extends (infer InvalidOptionNames extends string) ? [
+        InvalidOptionNames
+        ] extends [never] ? unknown : {
+            [K in InvalidOptionNames]: never;
+        } : never);
         // Warning: (ae-forgotten-export) The symbol "LazyType" needs to be exported by the entry point index.d.ts
         // Warning: (ae-forgotten-export) The symbol "OptionWithFallback" needs to be exported by the entry point index.d.ts
         //
         // (undocumented)
-        export type ResultForOptions<TData, TVariables extends OperationVariables, TCache extends Cache_2.Implementation, TOptions extends Record<string, unknown> | MutateOptions<any, TVariables, TCache>> = LazyType<MutateResult<MaybeMasked<TData>, OptionWithFallback<TOptions, DefaultOptions, "errorPolicy"> & ErrorPolicy>>;
+        export type ResultForOptions<TData, TErrorPolicy extends ErrorPolicy | undefined = undefined> = LazyType<MutateResult<MaybeMasked<TData>, OptionWithFallback<{
+            errorPolicy: TErrorPolicy;
+        }, DefaultOptions, "errorPolicy"> & ErrorPolicy>>;
         export interface Signature extends Signatures.Evaluated {
         }
         // (undocumented)
@@ -314,11 +328,12 @@ export namespace ApolloClient {
             export type Evaluated = SignatureStyle extends "classic" ? Classic : Modern;
             // (undocumented)
             export interface Modern {
-                <TData, TVariables extends OperationVariables, TOptions extends ApolloClient.MutateOptions<NoInfer<TData>, NoInfer<TVariables>, Cache_2.Implementation> & VariablesOption<TVariables & {
-                    [K in Exclude<keyof TOptions["variables"], keyof TVariables>]?: never;
-                }>>(options: TOptions & {
+                <TData, TVariables extends OperationVariables, TOptions extends Omit<ApolloClient.MutateOptions<NoInfer<TData>, any, Cache_2.Implementation>, "variables"> & {
+                    variables?: unknown;
+                }, TErrorPolicy extends ErrorPolicy | undefined = undefined>(options: TOptions & ApolloClient.mutate.OptionsFor<TData, TVariables, Cache_2.Implementation, TOptions> & {
                     mutation: TypedDocumentNode<TData, TVariables>;
-                }): Promise<ApolloClient.mutate.ResultForOptions<TData, TVariables, Cache_2.Implementation, TOptions>>;
+                    errorPolicy?: TErrorPolicy;
+                }): Promise<ApolloClient.mutate.ResultForOptions<TData, TErrorPolicy>>;
             }
         }
     }
@@ -404,7 +419,19 @@ export namespace ApolloClient {
         export interface DefaultOptions extends ApolloClient.DefaultOptions.Query.Calculated {
         }
         // (undocumented)
-        export type ResultForOptions<TData, TVariables extends OperationVariables, TOptions extends Record<string, unknown> | QueryOptions<any, TVariables>> = LazyType<QueryResult<MaybeMasked<TData>, OptionWithFallback<TOptions, DefaultOptions, "errorPolicy"> & ErrorPolicy>>;
+        export type OptionsFor<TData, TVariables extends OperationVariables, TOptions extends {
+            variables?: unknown;
+        }> = QueryOptions<NoInfer<TData>, NoInfer<TVariables>> & {
+            variables?: Prettify<TVariables & {
+                [K in keyof TOptions["variables"]]: K extends keyof TVariables ? TVariables[K] : never;
+            }>;
+        } & (Exclude<keyof TOptions, keyof QueryOptions<any, any>> extends (infer InvalidOptionNames extends string) ? [
+        InvalidOptionNames
+        ] extends [never] ? unknown : {
+            [K in InvalidOptionNames]: never;
+        } : never);
+        // (undocumented)
+        export type ResultForOptions<TData, TVariables extends OperationVariables, TOptions extends Record<string, unknown> | Omit<QueryOptions<any, any>, "variables">> = LazyType<QueryResult<MaybeMasked<TData>, OptionWithFallback<TOptions, DefaultOptions, "errorPolicy"> & ErrorPolicy>>;
         export interface Signature extends Signatures.Evaluated {
         }
         // (undocumented)
@@ -423,9 +450,9 @@ export namespace ApolloClient {
             export type Evaluated = SignatureStyle extends "classic" ? Classic : Modern;
             // (undocumented)
             export interface Modern {
-                <TData, TVariables extends OperationVariables, TOptions extends ApolloClient.QueryOptions<NoInfer<TData>, NoInfer<TVariables>> & VariablesOption<TVariables & {
-                    [K in Exclude<keyof TOptions["variables"], keyof TVariables>]?: never;
-                }>>(options: TOptions & {
+                <TData, TVariables extends OperationVariables, TOptions extends Omit<ApolloClient.QueryOptions<NoInfer<TData>, any>, "variables"> & {
+                    variables?: unknown;
+                }>(options: TOptions & ApolloClient.query.OptionsFor<TData, TVariables, TOptions> & {
                     query: TypedDocumentNode<TData, TVariables>;
                 }): Promise<ApolloClient.query.ResultForOptions<TData, TVariables, TOptions>>;
             }
@@ -2337,7 +2364,9 @@ export class ObservableQuery<TData = unknown, TVariables extends OperationVariab
     });
     // @internal @deprecated (undocumented)
     applyOptions(newOptions: Partial<ObservableQuery.Options<TData, TVariables>>): void;
-    fetchMore<TFetchData = TData, TFetchVars extends OperationVariables = TVariables>(options: ObservableQuery.FetchMoreOptions<TData, TVariables, TFetchData, TFetchVars>): Promise<ApolloClient.QueryResult<TFetchData>>;
+    fetchMore<TFetchData = TData, TFetchVars extends OperationVariables = TVariables, TErrorPolicy extends ErrorPolicy = "none">(options: ObservableQuery.FetchMoreOptions<TData, TVariables, TFetchData, TFetchVars> & {
+        errorPolicy?: TErrorPolicy;
+    }): Promise<ApolloClient.QueryResult<TFetchData, TErrorPolicy>>;
     // @internal @deprecated (undocumented)
     getCacheDiff({ optimistic }?: {
         optimistic?: boolean | undefined;
@@ -3261,8 +3290,8 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/policies.ts:179:3 - (ae-forgotten-export) The symbol "ScalarNames" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:147:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:162:3 - (ae-forgotten-export) The symbol "FragmentRegistryAPI" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:201:5 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:635:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:202:5 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:673:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:375:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:195:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:149:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts

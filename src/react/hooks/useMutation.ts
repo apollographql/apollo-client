@@ -22,6 +22,7 @@ import type { Cache, IgnoreModifier } from "@apollo/client/cache";
 import type {
   LazyType,
   NoInfer,
+  OptionWithFallback,
   Prettify,
   SignatureStyle,
 } from "@apollo/client/utilities/internal";
@@ -254,6 +255,16 @@ export declare namespace useMutation {
   export interface DefaultOptions
     extends ApolloClient.DefaultOptions.Mutate.Calculated {}
 
+  export type OptionsFor<TOptions> =
+    Exclude<
+      keyof TOptions,
+      keyof useMutation.Options<any, any, any, any>
+    > extends infer InvalidOptionNames extends string ?
+      [InvalidOptionNames] extends [never] ?
+        unknown
+      : { [K in InvalidOptionNames]: never }
+    : never;
+
   export type ResultForOptions<
     TData,
     TVariables extends OperationVariables,
@@ -268,11 +279,12 @@ export declare namespace useMutation {
         ExtractConfiguredVariables<TOptions, TVariables>
       >,
       TCache,
-      [TErrorPolicy] extends [undefined] ?
-        DefaultOptions extends { errorPolicy: infer D } ?
-          D
-        : undefined
-      : TErrorPolicy
+      OptionWithFallback<
+        { errorPolicy: TErrorPolicy },
+        DefaultOptions,
+        "errorPolicy"
+      > &
+        ErrorPolicy
     >
   >;
 
@@ -447,10 +459,11 @@ export declare namespace useMutation {
         TErrorPolicy extends ErrorPolicy | undefined = undefined,
       >(
         mutation: DocumentNode | TypedDocumentNode<TData, TVariables>,
-        options?: TOptions & {
-          /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#errorPolicy:member} */
-          errorPolicy?: TErrorPolicy;
-        }
+        options?: TOptions &
+          useMutation.OptionsFor<TOptions> & {
+            /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#errorPolicy:member} */
+            errorPolicy?: TErrorPolicy;
+          }
       ): useMutation.ResultForOptions<
         TData,
         TVariables,

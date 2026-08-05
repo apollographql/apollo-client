@@ -234,6 +234,11 @@ export class QueryManager {
           // selections and fragments from the fragment registry.
           .concat(defaultDocumentTransform)
       : defaultDocumentTransform;
+    // Put the incremental transform last so custom document transforms don't
+    // revert changes made to the document accidentally.
+    this.documentTransform = this.documentTransform.concat(
+      this.incrementalHandler.documentTransform ?? DocumentTransform.identity()
+    );
     this.defaultContext = options.defaultContext || {};
 
     if ((this.onBroadcast = options.onBroadcast)) {

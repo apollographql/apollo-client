@@ -6,6 +6,7 @@ import type {
   SelectionNode,
   SelectionSetNode,
 } from "graphql";
+import { Kind } from "graphql";
 import type { OptimisticWrapperFunction } from "optimism";
 import { wrap } from "optimism";
 
@@ -70,7 +71,6 @@ import type {
   NormalizedCache,
   ReadMergeModifyContext,
 } from "./types.js";
-import { Kind } from "graphql/language/kinds.js";
 
 type DataState =
   // no data

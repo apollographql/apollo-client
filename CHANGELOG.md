@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 4.3.0-alpha.5
+
+### Patch Changes
+
+- [#13373](https://github.com/apollographql/apollo-client/pull/13373) [`2551937`](https://github.com/apollographql/apollo-client/commit/25519374c7137dee7b1ddd4a70b28288936fcef0) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where a cache write in the middle of polling would remain as the query value if future poll requests returned deep equal results to previous polling results.
+
 ## 4.3.0-alpha.4
 
 ### Patch Changes

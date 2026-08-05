@@ -7158,6 +7158,194 @@ test('prunes a list item\'s cached defer boundary while a sibling item has alrea
   await expect(stream).not.toEmitAnything();
 });
 
+test('prunes each list item\'s sibling `@defer` boundaries independently by label with a "network-only" fetch policy', async () => {
+  const query = gql`
+    query {
+      person {
+        id
+        friends {
+          id
+          ... @defer {
+            name
+          }
+          ... @defer {
+            email
+          }
+        }
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+  const cache = new InMemoryCache();
+
+  cache.writeQuery({
+    query,
+    data: {
+      person: {
+        __typename: "Person",
+        id: "1",
+        friends: [
+          {
+            __typename: "Person",
+            id: "2",
+            name: "Cached Leia",
+            email: "cached-leia@example.com",
+          },
+          {
+            __typename: "Person",
+            id: "3",
+            name: "Cached Han",
+            email: "cached-han@example.com",
+          },
+        ],
+      },
+    },
+  });
+
+  const client = new ApolloClient({
+    cache,
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({ query, fetchPolicy: "network-only" })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: {
+      person: {
+        __typename: "Person",
+        id: "1",
+        friends: [
+          { __typename: "Person", id: "2" },
+          { __typename: "Person", id: "3" },
+        ],
+      },
+    },
+    pending: [
+      { id: "0", path: ["person", "friends", 0], label: "ac_0" },
+      { id: "1", path: ["person", "friends", 0], label: "ac_1" },
+      { id: "2", path: ["person", "friends", 1], label: "ac_0" },
+      { id: "3", path: ["person", "friends", 1], label: "ac_1" },
+    ],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      person: {
+        __typename: "Person",
+        id: "1",
+        friends: [
+          { __typename: "Person", id: "2" },
+          { __typename: "Person", id: "3" },
+        ],
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [{ data: { __typename: "Person", name: "Leia" }, id: "0" }],
+    completed: [{ id: "0" }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      person: {
+        __typename: "Person",
+        id: "1",
+        friends: [
+          { __typename: "Person", id: "2", name: "Leia" },
+          { __typename: "Person", id: "3" },
+        ],
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      { data: { __typename: "Person", email: "han@example.com" }, id: "3" },
+    ],
+    completed: [{ id: "3" }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      person: {
+        __typename: "Person",
+        id: "1",
+        friends: [
+          { __typename: "Person", id: "2", name: "Leia" },
+          { __typename: "Person", id: "3", email: "han@example.com" },
+        ],
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      { data: { __typename: "Person", email: "leia@example.com" }, id: "1" },
+      { data: { __typename: "Person", name: "Han" }, id: "2" },
+    ],
+    completed: [{ id: "1" }, { id: "2" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      person: {
+        __typename: "Person",
+        id: "1",
+        friends: [
+          {
+            __typename: "Person",
+            id: "2",
+            name: "Leia",
+            email: "leia@example.com",
+          },
+          {
+            __typename: "Person",
+            id: "3",
+            name: "Han",
+            email: "han@example.com",
+          },
+        ],
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
 test('does not leak complete or partial cached defer boundaries while streaming with a "network-only" fetch policy and returnPartialData: true', async () => {
   const query = gql`
     query {

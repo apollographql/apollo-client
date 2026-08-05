@@ -239,9 +239,11 @@ export class QueryInfo<
       returnPartialData,
       fetchPolicy,
       networkStatus,
+      prunePendingDeferFragments: prune,
     }: OperationInfo<TData, TVariables> & {
       fetchPolicy: WatchQueryFetchPolicy;
       networkStatus: NetworkStatus;
+      prunePendingDeferFragments: boolean;
     }
   ): MarkQueryResult<
     DataValue.Complete<TData> | DataValue.Streaming<TData>,
@@ -252,16 +254,9 @@ export class QueryInfo<
       variables,
       optimistic: true,
     };
+
     const isNetworkOnly =
       fetchPolicy === "network-only" && networkStatus !== NetworkStatus.refetch;
-    const prune =
-      // Always prune network-only since it doesn't deliver results from the
-      // cache
-      isNetworkOnly ||
-      // If we've reached this point with a cache-first fetch policy, a
-      // network request occurred, so prune anything that hasn't been
-      // delivered yet, even if its in the cache
-      fetchPolicy === "cache-first";
 
     // Cancel the pending notify timeout (if it exists) to prevent extraneous network
     // requests. To allow future notify timeouts, diff and dirty are reset as well.

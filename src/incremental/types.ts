@@ -6,6 +6,7 @@ import type {
 
 import type { ApolloLink } from "@apollo/client/link";
 import type { DeepPartial } from "@apollo/client/utilities";
+import type { StreamInfoTrie } from "@apollo/client/utilities/internal";
 
 export declare namespace Incremental {
   export type Path = ReadonlyArray<string | number>;
@@ -40,13 +41,35 @@ export declare namespace Incremental {
     TData,
   > {
     hasNext: boolean;
-    pending?: Array<Incremental.PendingResult>;
-    getPendingType?: (id: string) => "defer" | "stream";
+
+    /** @internal */
+    readonly streamInfo?: StreamInfoTrie;
+    /** @internal */
+    getPendingWithInfo?: () => Array<PendingItemWithInfo>;
+
     handle: (
       cacheData: TData | DeepPartial<TData> | undefined | null,
       chunk: Chunk
     ) => FormattedExecutionResult<TData>;
   }
+
+  /** @internal */
+  export interface PendingDeferResultWithInfo {
+    type: "defer";
+    delivered: boolean;
+    path: Incremental.Path;
+  }
+
+  /** @internal */
+  export interface PendingStreamResultWithInfo {
+    type: "stream";
+    path: Incremental.Path;
+  }
+
+  /** @internal */
+  export type PendingItemWithInfo =
+    | PendingDeferResultWithInfo
+    | PendingStreamResultWithInfo;
 
   /** @internal */
   export interface StreamFieldInfo {

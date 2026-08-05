@@ -4611,3 +4611,128 @@ function createMockStreamMergeFn() {
     return result;
   });
 }
+
+test("does not emit when no data added when a `@stream` completes while a `@defer` boundary is still pending", async () => {
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+          }
+        }
+      }
+      friendList @stream(initialCount: 1) {
+        name
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+  const cache = new InMemoryCache();
+
+  const client = new ApolloClient({
+    cache,
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({ query, fetchPolicy: "network-only" })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: {
+      greeting: { __typename: "Greeting", message: "Hello world" },
+      friendList: [{ __typename: "Friend", name: "Luke" }],
+    },
+    pending: [
+      { id: "0", path: ["greeting"] },
+      { id: "1", path: ["friendList"] },
+    ],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      greeting: { __typename: "Greeting", message: "Hello world" },
+      friendList: [{ __typename: "Friend", name: "Luke" }],
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      { id: "1", items: [{ __typename: "Friend", name: "Han" }] as any },
+    ],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      greeting: { __typename: "Greeting", message: "Hello world" },
+      friendList: [
+        { __typename: "Friend", name: "Luke" },
+        { __typename: "Friend", name: "Han" },
+      ],
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    completed: [{ id: "1" }],
+    hasNext: true,
+  });
+
+  await expect(stream).not.toEmitAnything();
+
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        id: "0",
+        data: {
+          __typename: "Greeting",
+          recipient: { __typename: "Person", name: "Alice" },
+        },
+      },
+    ],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Alice" },
+      },
+      friendList: [
+        { __typename: "Friend", name: "Luke" },
+        { __typename: "Friend", name: "Han" },
+      ],
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});

@@ -18,7 +18,6 @@ import {
   graphQLResultHasError,
   handleIncrementalSymbol,
   hasDirectives,
-  streamInfoSymbol,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
@@ -60,6 +59,7 @@ interface LastWrite {
   result: FormattedExecutionResult<any, ExtensionsWithStreamInfo>;
   variables: ApolloClient.WatchQueryOptions["variables"];
   dmCount: number | undefined;
+  hasNext: boolean;
 }
 
 const destructiveMethodCounts = new WeakMap<ApolloCache, number>();
@@ -194,13 +194,16 @@ export class QueryInfo<
       // We have to compare these values because its possible the final chunk
       // emitted in the incremental result is just `hasNext: false`. This
       // ensures we trigger a cache write when we get `isLastChunk: true`.
-      result.extensions?.[streamInfoSymbol] !==
-        lastWrite.result.extensions?.[streamInfoSymbol]
+      lastWrite.hasNext !== this.hasNext
     );
   }
 
   get hasNext() {
     return this.incremental ? this.incremental.hasNext : false;
+  }
+
+  get incrementalHandler() {
+    return this.queryManager.incrementalHandler;
   }
 
   private maybeHandleIncrementalResult(
@@ -211,10 +214,8 @@ export class QueryInfo<
     DataValue.Complete<TData> | DataValue.Streaming<TData>,
     ExtensionsWithStreamInfo
   > {
-    const { incrementalHandler } = this.queryManager;
-
-    if (incrementalHandler.isIncrementalResult(incoming)) {
-      this.incremental ||= incrementalHandler.startRequest<
+    if (this.incrementalHandler.isIncrementalResult(incoming)) {
+      this.incremental ||= this.incrementalHandler.startRequest<
         TData & Record<string, unknown>
       >({
         query,
@@ -251,6 +252,8 @@ export class QueryInfo<
       variables,
       optimistic: true,
     };
+    const isNetworkOnly =
+      fetchPolicy === "network-only" && networkStatus !== NetworkStatus.refetch;
 
     // Cancel the pending notify timeout (if it exists) to prevent extraneous network
     // requests. To allow future notify timeouts, diff and dirty are reset as well.
@@ -259,13 +262,23 @@ export class QueryInfo<
     const skipCache = cacheWriteBehavior === CacheWriteBehavior.FORBID;
     const diff =
       skipCache ? undefined : (
-        this.getDiff({
-          ...diffOptions,
-          // Always request partial data to ensure the network incremental
-          // result is merged with all existing data (especially true to
-          // maintain @stream arrays with partial list items in the right order)
-          returnPartialData: true,
-        })
+        this.getDiff(
+          {
+            ...diffOptions,
+            // We usually request partial data to ensure the network incremental
+            // result is merged with all existing data (especially true to
+            // maintain @stream arrays with partial list items in the right order
+            // or when chunk might otherwise replace a partial non-normalized
+            // object), but if we are about to throw away the result anyways due
+            // to the error policy (which early returns below), prune any
+            // pending boundaries so that CombinedGraphQLErrors contains the
+            // right `data` value.
+            returnPartialData:
+              errorPolicy !== "none" ||
+              !this.incrementalHandler.extractErrors(incoming)?.length,
+          },
+          this.getIncrementalInfo({ isNetworkOnly })
+        )
       );
 
     const incrementalResult = this.maybeHandleIncrementalResult(
@@ -279,33 +292,33 @@ export class QueryInfo<
       dataState: incrementalResult.data == null ? "empty" : "complete",
     };
 
+    const hasPendingDefer = this.incremental
+      ?.getPendingWithInfo?.()
+      .some((pending) => pending.type === "defer" && !pending.delivered);
+
+    if (
+      hasPendingDefer ||
+      // The Defer20220824Handler cannot track pending/completed incremental
+      // chunks due to its data format so we naively set dataState to
+      // streaming if we are still processing chunks. The only case where
+      // streaming is incorrect and should actually be complete is when
+      // both a @defer and @stream boundary is present and the @defer chunk
+      // has completed before the `@stream` array.
+      //
+      // Assigning the naive "streaming" value avoids a much more expensive
+      // pass over `result.data` that would otherwise need to traverse the
+      // selection sets and evaluate the data object at each defer boundary
+      // to see if it fulfills the selection set. For such a narrow case where
+      // its incorrect on a format that is now outdated is not worth the
+      // fix so we are ok with reporting a `streaming` here.
+      (!this.incremental?.getPendingWithInfo &&
+        this.hasNext &&
+        hasDirectives(["defer"], query))
+    ) {
+      result.dataState = "streaming";
+    }
+
     if (skipCache) {
-      const hasPendingDefer = this.incremental?.pending?.some(
-        (pending) => this.incremental?.getPendingType?.(pending.id) === "defer"
-      );
-
-      if (
-        hasPendingDefer ||
-        // The Defer20220824Handler cannot track pending/completed incremental
-        // chunks due to its data format so we naively set dataState to
-        // streaming if we are still processing chunks. The only case where
-        // streaming is incorrect and should actually be complete is when
-        // both a @defer and @stream boundary is present and the @defer chunk
-        // has completed before the `@stream` array.
-        //
-        // Assigning the naive "streaming" value avoids a much more expensive
-        // pass over `result.data` that would otherwise need to traverse the
-        // selection sets and evaluate the data object at each defer boundary
-        // to see if it fulfills the selection set. For such a narrow case where
-        // its incorrect on a format that is now outdated is not worth the
-        // fix so we are ok with reporting a `streaming` here.
-        (!this.incremental?.pending &&
-          this.hasNext &&
-          hasDirectives(["defer"], query))
-      ) {
-        result.dataState = "streaming";
-      }
-
       return result;
     }
 
@@ -378,12 +391,9 @@ export class QueryInfo<
             result,
             variables,
             dmCount: destructiveMethodCounts.get(this.cache),
+            hasNext: this.hasNext,
           };
         }
-
-        const isNetworkOnly =
-          fetchPolicy === "network-only" &&
-          networkStatus !== NetworkStatus.refetch;
 
         const { dataState, result: diffResult } = this.getDiff(
           {
@@ -391,13 +401,13 @@ export class QueryInfo<
             // Never deliver partial data for network-only requests
             returnPartialData: returnPartialData && !isNetworkOnly,
           },
-          this.getIncrementalInfo(result, { isNetworkOnly })
+          this.getIncrementalInfo({ isNetworkOnly })
         );
 
         if (
           dataState === "complete" ||
-          (returnPartialData && dataState === "partial" && shouldWrite) ||
-          (this.hasNext && dataState === "streaming")
+          dataState === "streaming" ||
+          (returnPartialData && dataState === "partial" && shouldWrite)
         ) {
           result = { ...result, data: diffResult, dataState };
         }
@@ -407,12 +417,9 @@ export class QueryInfo<
     return result;
   }
 
-  private getIncrementalInfo(
-    result: MarkQueryResult<any, ExtensionsWithStreamInfo>,
-    { isNetworkOnly }: { isNetworkOnly: boolean }
-  ) {
-    const pending = this.incremental?.pending ?? [];
-    const streamInfo = result.extensions?.[streamInfoSymbol]?.deref();
+  private getIncrementalInfo({ isNetworkOnly }: { isNetworkOnly: boolean }) {
+    const pending = this.incremental?.getPendingWithInfo?.() ?? [];
+    const streamInfo = this.incremental?.streamInfo;
     const incrementalInfo: DiffIncrementalInfo = { streamInfo };
 
     // We don't want to deliver stream items or complete defer boundaries
@@ -421,12 +428,10 @@ export class QueryInfo<
     // can prune complete defer/stream boundaries at those paths.
     if (isNetworkOnly) {
       for (const item of pending) {
-        const type = this.incremental?.getPendingType?.(item.id);
-
-        if (type === "defer") {
+        if (item.type === "defer" && !item.delivered) {
           incrementalInfo.deferInfo ||= new Trie(true, () => true);
           incrementalInfo.deferInfo.lookupArray(item.path as any[]);
-        } else if (streamInfo && type === "stream") {
+        } else if (streamInfo && item.type === "stream") {
           streamInfo.lookupArray(item.path as any[]).state.truncate = true;
         }
       }

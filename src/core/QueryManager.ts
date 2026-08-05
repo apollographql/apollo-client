@@ -75,6 +75,7 @@ import {
 import { defaultCacheSizes } from "../utilities/caching/sizes.js";
 
 import type { ApolloClient } from "./ApolloClient.js";
+import { dataStateErrorCache } from "./dataStateErrorCache.js";
 import { NetworkStatus } from "./networkStatus.js";
 import { logMissingFieldErrors, ObservableQuery } from "./ObservableQuery.js";
 import { CacheWriteBehavior, QueryInfo } from "./QueryInfo.js";
@@ -1079,9 +1080,12 @@ export class QueryManager {
         if (hasErrors && errorPolicy === "none") {
           queryInfo.resetLastWrite();
           observableQuery?.["resetNotifications"]();
-          throw new CombinedGraphQLErrors(
+          const error = new CombinedGraphQLErrors(
             removeStreamDetailsFromExtensions(result)
           );
+
+          dataStateErrorCache.set(error, dataState);
+          throw error;
         }
 
         const partial = dataState !== "complete";

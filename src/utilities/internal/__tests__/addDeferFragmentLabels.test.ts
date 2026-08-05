@@ -213,6 +213,64 @@ test("does not consume a label number for a user-defined label", () => {
   `);
 });
 
+test("overwrites user-defined labels that use the reserved `ac_` prefix", () => {
+  const duplicatesGeneratedLabel = gql`
+    query {
+      greeting {
+        ... on Greeting @defer {
+          recipient
+        }
+        ... on Greeting @defer(label: "ac_0") {
+          language
+        }
+      }
+    }
+  `;
+
+  expect(
+    addDeferFragmentLabels.transformDocument(duplicatesGeneratedLabel)
+  ).toMatchDocument(gql`
+    query {
+      greeting {
+        ... on Greeting @defer(label: "ac_0") {
+          recipient
+        }
+        ... on Greeting @defer(label: "ac_1") {
+          language
+        }
+      }
+    }
+  `);
+
+  const reservedPrefixWithCustomSuffix = gql`
+    query {
+      greeting {
+        ... on Greeting @defer(label: "ac_custom") {
+          recipient
+        }
+        ... on Greeting @defer {
+          language
+        }
+      }
+    }
+  `;
+
+  expect(
+    addDeferFragmentLabels.transformDocument(reservedPrefixWithCustomSuffix)
+  ).toMatchDocument(gql`
+    query {
+      greeting {
+        ... on Greeting @defer(label: "ac_0") {
+          recipient
+        }
+        ... on Greeting @defer(label: "ac_1") {
+          language
+        }
+      }
+    }
+  `);
+});
+
 test("keeps the `if` argument and adds the label after it", () => {
   const query = gql`
     query ($shouldDefer: Boolean!) {

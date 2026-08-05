@@ -906,11 +906,10 @@ export class StoreReader {
         const directive = fragment?.directives?.find(
           (d) => d.name.value === "defer"
         );
+        const label =
+          directive && getDirectiveArgValue(directive, "label", Kind.STRING);
 
-        prune = !!context.deferInfo.peek(
-          ...path,
-          directive && getDirectiveArgValue(directive, "label", Kind.STRING)
-        );
+        prune = !!context.deferInfo.peekArray(path.concat(label || []));
       }
 
       if (

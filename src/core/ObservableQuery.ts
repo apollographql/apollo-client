@@ -823,14 +823,18 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   public fetchMore<
     TFetchData = TData,
     TFetchVars extends OperationVariables = TVariables,
+    TErrorPolicy extends ErrorPolicy = "none",
   >(
     options: ObservableQuery.FetchMoreOptions<
       TData,
       TVariables,
       TFetchData,
       TFetchVars
-    >
-  ): Promise<ApolloClient.QueryResult<TFetchData>>;
+    > & {
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
+      errorPolicy?: TErrorPolicy;
+    }
+  ): Promise<ApolloClient.QueryResult<TFetchData, TErrorPolicy>>;
 
   public fetchMore<
     TFetchData = TData,

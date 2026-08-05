@@ -119,8 +119,10 @@ function useQueryRefHandlers_<
     [internalQueryRef]
   );
 
-  const fetchMore: FetchMoreFunction<TData, TVariables> = React.useCallback(
-    (options) => {
+  const fetchMore = React.useCallback(
+    (
+      options: ObservableQuery.FetchMoreOptions<TData, TVariables, any, any>
+    ) => {
       const promise = internalQueryRef.fetchMore(
         options as ObservableQuery.FetchMoreOptions<any, any>
       );
@@ -130,7 +132,7 @@ function useQueryRefHandlers_<
       return promise;
     },
     [internalQueryRef]
-  );
+  ) as FetchMoreFunction<TData, TVariables>;
 
   return {
     refetch,

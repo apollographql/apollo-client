@@ -23,6 +23,7 @@ export type {
 } from "./types/SignatureStyle.js";
 export type { OptionWithFallback } from "./types/OptionWithFallback.js";
 
+export { addDeferFragmentLabels } from "./addDeferFragmentLabels.js";
 export { argumentsObjectFromField } from "./argumentsObjectFromField.js";
 export { canUseDOM } from "./canUseDOM.js";
 export { checkDocument } from "./checkDocument.js";

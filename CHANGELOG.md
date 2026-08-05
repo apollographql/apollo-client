@@ -1,5 +1,17 @@
 # @apollo/client
 
+## 4.2.10
+
+### Patch Changes
+
+- [#13385](https://github.com/apollographql/apollo-client/pull/13385) [`bfb674e`](https://github.com/apollographql/apollo-client/commit/bfb674ec0ac9cd296b7ea2992d9deebf68edaea9) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix accidental widening of the `client.mutate` return type when `optimisticResponse` was present.
+
+- [#13382](https://github.com/apollographql/apollo-client/pull/13382) [`365373e`](https://github.com/apollographql/apollo-client/commit/365373e0a0b647e89183245c3904d58499aa63e1) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix result types widened when a query's variables had constant types (e.g. `TypedDocumentNode<Data, { type: "main" }>`). This caused options such as `returnPartialData` or `errorPolicy` to be reported as their widened types (e.g. `boolean`, `ErrorPolicy`) instead of the value that was passed which returned the wrong `data` and `dataState` types.
+
+- [#13382](https://github.com/apollographql/apollo-client/pull/13382) [`365373e`](https://github.com/apollographql/apollo-client/commit/365373e0a0b647e89183245c3904d58499aa63e1) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix issue where unknown options were permitted by TypeScript when passed alongside a valid option to APIs with modern signatures.
+
+- [#13383](https://github.com/apollographql/apollo-client/pull/13383) [`5840f50`](https://github.com/apollographql/apollo-client/commit/5840f5014d0a6bb9b963801657cd68b0a1aba6c8) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Update the return type of `refetch`, `fetchMore` and `useLazyQuery`'s `execute` function on the provided `errorPolicy`. Previously these APIs all used the default type which typed `data` as `TData | undefined` and `error` as `ErrorLike | undefined`.
+
 ## 4.2.9
 
 ### Patch Changes

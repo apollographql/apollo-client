@@ -1,5 +1,6 @@
 import {
   DataValue,
+  ErrorLike,
   gql,
   OperationVariables,
   TypedDocumentNode,
@@ -2490,4 +2491,205 @@ test("requires variables with mixed TVariables", () => {
       }
     )
   );
+});
+
+test("refetch narrows the result by errorPolicy in every overload", async () => {
+  type Data = { character: string };
+  const query: TypedDocumentNode<Data, Record<string, never>> = gql``;
+  let skip!: boolean;
+  let returnPartialData!: boolean;
+
+  {
+    const [, { refetch }] = useBackgroundQuery(query);
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<ErrorLike | undefined>();
+  }
+
+  {
+    const [, { refetch }] = useBackgroundQuery(query, {
+      returnPartialData,
+      fetchPolicy: "no-cache",
+      errorPolicy: "ignore",
+    });
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    const [, { refetch }] = useBackgroundQuery(query, {
+      returnPartialData: false,
+      errorPolicy: "ignore",
+    });
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    const [, { refetch }] = useBackgroundQuery(query, {
+      returnPartialData,
+      errorPolicy: "all",
+    });
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<ErrorLike | undefined>();
+  }
+
+  {
+    const [, { refetch }] = useBackgroundQuery(query, { errorPolicy: "all" });
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<ErrorLike | undefined>();
+  }
+
+  {
+    const [, { refetch }] = useBackgroundQuery(query, {
+      skip,
+      returnPartialData: false,
+      errorPolicy: "none",
+    });
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    const [, { refetch }] = useBackgroundQuery(query, {
+      skip,
+      returnPartialData,
+      errorPolicy: "none",
+    });
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    const [, { refetch }] = useBackgroundQuery(query, {
+      returnPartialData: false,
+      errorPolicy: "none",
+    });
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    const [, { refetch }] = useBackgroundQuery(query, {
+      returnPartialData,
+      errorPolicy: "none",
+    });
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    const [, { refetch }] = useBackgroundQuery(query, {
+      skip,
+      errorPolicy: "none",
+    });
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    const [, { refetch }] = useBackgroundQuery(query, skipToken);
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<ErrorLike | undefined>();
+  }
+
+  {
+    const [, { refetch }] = useBackgroundQuery(
+      query,
+      skip ? skipToken : { returnPartialData: false, errorPolicy: "none" }
+    );
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    const [, { refetch }] = useBackgroundQuery(
+      query,
+      skip ? skipToken : { returnPartialData, errorPolicy: "none" }
+    );
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    const [, { refetch }] = useBackgroundQuery(query, { errorPolicy: "none" });
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    const [, { refetch }] = useBackgroundQuery(
+      query,
+      skip ? skipToken : { errorPolicy: "none" }
+    );
+    const { data, error } = await refetch();
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+});
+
+test("fetchMore narrows the result by errorPolicy", async () => {
+  type Data = { character: string };
+  const query: TypedDocumentNode<Data, Record<string, never>> = gql``;
+
+  {
+    const [, { fetchMore }] = useBackgroundQuery(query, {});
+    const { data, error } = await fetchMore({});
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    // `fetchMore` does not inherit the error policy of the hook
+    const [, { fetchMore }] = useBackgroundQuery(query, { errorPolicy: "all" });
+    const { data, error } = await fetchMore({});
+
+    expectTypeOf(data).toEqualTypeOf<Data>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
+
+  {
+    const [, { fetchMore }] = useBackgroundQuery(query, {});
+    const { data, error } = await fetchMore({ errorPolicy: "all" });
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<ErrorLike | undefined>();
+  }
+
+  {
+    const [, { fetchMore }] = useBackgroundQuery(query, {});
+    const { data, error } = await fetchMore({ errorPolicy: "ignore" });
+
+    expectTypeOf(data).toEqualTypeOf<Data | undefined>();
+    expectTypeOf(error).toEqualTypeOf<undefined>();
+  }
 });

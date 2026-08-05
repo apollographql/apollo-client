@@ -234,16 +234,18 @@ export declare namespace useLoadableQuery {
         TData,
         TVariables extends OperationVariables,
         _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
+        TErrorPolicy extends ErrorPolicy | undefined = undefined,
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         options: useLoadableQuery.Options & {
           returnPartialData: true;
-          errorPolicy: "ignore" | "all";
+          errorPolicy: TErrorPolicy & ("ignore" | "all");
         }
       ): useLoadableQuery.Result<
         TData,
         TVariables,
-        "complete" | "streaming" | "partial" | "empty"
+        "complete" | "streaming" | "partial" | "empty",
+        TErrorPolicy
       >;
 
       /** {@inheritDoc @apollo/client/react!useLoadableQuery.DocumentationTypes.useLoadableQuery:call(1)} */
@@ -251,15 +253,17 @@ export declare namespace useLoadableQuery {
         TData,
         TVariables extends OperationVariables,
         _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
+        TErrorPolicy extends ErrorPolicy | undefined = undefined,
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         options: useLoadableQuery.Options & {
-          errorPolicy: "ignore" | "all";
+          errorPolicy: TErrorPolicy & ("ignore" | "all");
         }
       ): useLoadableQuery.Result<
         TData,
         TVariables,
-        "complete" | "streaming" | "empty"
+        "complete" | "streaming" | "empty",
+        TErrorPolicy
       >;
 
       /** {@inheritDoc @apollo/client/react!useLoadableQuery.DocumentationTypes.useLoadableQuery:call(1)} */
@@ -267,15 +271,18 @@ export declare namespace useLoadableQuery {
         TData,
         TVariables extends OperationVariables,
         _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
+        TErrorPolicy extends ErrorPolicy | undefined = undefined,
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         options: useLoadableQuery.Options & {
           returnPartialData: true;
+          errorPolicy?: TErrorPolicy;
         }
       ): useLoadableQuery.Result<
         TData,
         TVariables,
-        "complete" | "streaming" | "partial"
+        "complete" | "streaming" | "partial",
+        TErrorPolicy
       >;
 
       /** {@inheritDoc @apollo/client/react!useLoadableQuery.DocumentationTypes.useLoadableQuery:call(1)} */
@@ -283,10 +290,16 @@ export declare namespace useLoadableQuery {
         TData,
         TVariables extends OperationVariables,
         _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
+        TErrorPolicy extends ErrorPolicy | undefined = undefined,
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-        options?: useLoadableQuery.Options
-      ): useLoadableQuery.Result<TData, TVariables, "complete" | "streaming">;
+        options?: useLoadableQuery.Options & { errorPolicy?: TErrorPolicy }
+      ): useLoadableQuery.Result<
+        TData,
+        TVariables,
+        "complete" | "streaming",
+        TErrorPolicy
+      >;
 
       /** {@inheritDoc @apollo/client/react!useLoadableQuery.DocumentationTypes.useLoadableQuery_Deprecated:call(1)} */
       <TData, TVariables extends OperationVariables = OperationVariables>(

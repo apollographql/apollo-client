@@ -348,15 +348,18 @@ export declare namespace useLazyQuery {
         TData,
         TVariables extends OperationVariables,
         _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
+        TErrorPolicy extends ErrorPolicy | undefined = undefined,
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         options: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
           returnPartialData: true;
+          errorPolicy?: TErrorPolicy;
         }
       ): useLazyQuery.ResultTuple<
         TData,
         TVariables,
-        "empty" | "complete" | "streaming" | "partial"
+        "empty" | "complete" | "streaming" | "partial",
+        TErrorPolicy
       >;
 
       /** {@inheritDoc @apollo/client/react!useLazyQuery.DocumentationTypes.useLazyQuery:call(1)} */
@@ -364,15 +367,18 @@ export declare namespace useLazyQuery {
         TData,
         TVariables extends OperationVariables,
         _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
+        TErrorPolicy extends ErrorPolicy | undefined = undefined,
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
         options: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
           returnPartialData: boolean;
+          errorPolicy?: TErrorPolicy;
         }
       ): useLazyQuery.ResultTuple<
         TData,
         TVariables,
-        "empty" | "complete" | "streaming" | "partial"
+        "empty" | "complete" | "streaming" | "partial",
+        TErrorPolicy
       >;
 
       /** {@inheritDoc @apollo/client/react!useLazyQuery.DocumentationTypes.useLazyQuery:call(1)} */
@@ -380,13 +386,17 @@ export declare namespace useLazyQuery {
         TData,
         TVariables extends OperationVariables,
         _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred",
+        TErrorPolicy extends ErrorPolicy | undefined = undefined,
       >(
         query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-        options?: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>>
+        options?: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
+          errorPolicy?: TErrorPolicy;
+        }
       ): useLazyQuery.ResultTuple<
         TData,
         TVariables,
-        "empty" | "complete" | "streaming"
+        "empty" | "complete" | "streaming",
+        TErrorPolicy
       >;
 
       /** {@inheritDoc @apollo/client/react!useLazyQuery.DocumentationTypes.useLazyQuery_Deprecated:call(1)} */

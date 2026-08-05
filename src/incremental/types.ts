@@ -29,7 +29,7 @@ export declare namespace Incremental {
     startRequest: <TData extends Record<string, unknown>>(
       request: Incremental.StartRequestOptions
     ) => IncrementalRequest<Chunk, TData>;
-    documentTransform?: DocumentTransform;
+    readonly documentTransform?: DocumentTransform;
   }
 
   /** @internal */

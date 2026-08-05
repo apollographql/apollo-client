@@ -19,6 +19,7 @@ import type { GraphQLFormattedError } from 'graphql';
 import type { HKT } from '@apollo/client/utilities';
 import type { Incremental } from '@apollo/client/incremental';
 import type { InlineFragmentNode } from 'graphql';
+import { Kind } from 'graphql';
 import type { MaybeMasked } from '@apollo/client';
 import type { NetworkStatus } from '@apollo/client';
 import { Observable } from 'rxjs';
@@ -37,6 +38,11 @@ import type { Trie } from '@wry/trie';
 import type { TypeNode } from 'graphql';
 import type { TypeOverrides } from '@apollo/client';
 import { WeakCache } from '@wry/caches';
+
+// Warning: (ae-forgotten-export) The symbol "DocumentTransform" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+export const addDeferFragmentLabels: DocumentTransform;
 
 // @internal @deprecated (undocumented)
 export type ApplyHKT<fn extends HKT, arg1, arg2 = never, arg3 = never, arg4 = never> = (fn & {
@@ -211,6 +217,35 @@ export namespace DocumentationTypes {
     }
 }
 
+// @public
+class DocumentTransform {
+    // Warning: (ae-forgotten-export) The symbol "TransformFn" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "DocumentTransformOptions" needs to be exported by the entry point index.d.ts
+    constructor(transform: TransformFn, options?: DocumentTransformOptions);
+    concat(otherTransform: DocumentTransform): DocumentTransform;
+    static identity(): DocumentTransform;
+    // @internal @deprecated
+    readonly left?: DocumentTransform;
+    resetCache(): void;
+    // @internal @deprecated
+    readonly right?: DocumentTransform;
+    static split(predicate: (document: DocumentNode) => boolean, left: DocumentTransform, right?: DocumentTransform): DocumentTransform & {
+        left: DocumentTransform;
+        right: DocumentTransform;
+    };
+    transformDocument(document: DocumentNode): DocumentNode;
+}
+
+// @public (undocumented)
+type DocumentTransformCacheKey = ReadonlyArray<unknown>;
+
+// @public (undocumented)
+interface DocumentTransformOptions {
+    cache?: boolean;
+    // Warning: (ae-forgotten-export) The symbol "DocumentTransformCacheKey" needs to be exported by the entry point index.d.ts
+    getCacheKey?: (document: DocumentNode) => DocumentTransformCacheKey | undefined;
+}
+
 // @public (undocumented)
 export function equalByQuery(query: DocumentNode, { data: aData, ...aRest }: Partial<ObservableQuery.Result<unknown>>, { data: bData, ...bRest }: Partial<ObservableQuery.Result<unknown>>, variables?: OperationVariables): boolean;
 
@@ -293,6 +328,9 @@ export const getApolloClientMemoryInternals: (() => {
 
 // @internal @deprecated (undocumented)
 export function getDefaultValues(definition: OperationDefinitionNode | undefined): Record<string, any>;
+
+// @internal @deprecated (undocumented)
+export function getDirectiveArgValue(directive: DirectiveNode, name: string, kind: typeof Kind.STRING): string | undefined;
 
 // @internal @deprecated (undocumented)
 export function getFragmentDefinition(doc: DocumentNode): FragmentDefinitionNode;
@@ -568,6 +606,9 @@ export function toQueryResult<TData = unknown>(value: ObservableQuery.Result<TDa
     data: TData | undefined;
     error?: ErrorLike;
 };
+
+// @public (undocumented)
+type TransformFn = (document: DocumentNode) => DocumentNode;
 
 // @public (undocumented)
 type TupleToIntersection<T extends any[]> = T extends [infer A] ? A : T extends [infer A, infer B] ? A & B : T extends [infer A, infer B, infer C] ? A & B & C : T extends [infer A, infer B, infer C, infer D] ? A & B & C & D : T extends [infer A, infer B, infer C, infer D, infer E] ? A & B & C & D & E : T extends (infer U)[] ? U : any;

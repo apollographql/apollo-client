@@ -59,6 +59,7 @@ export declare namespace Incremental {
     type: "defer";
     delivered: boolean;
     path: Incremental.Path;
+    label: string | undefined;
   }
 
   /** @internal */

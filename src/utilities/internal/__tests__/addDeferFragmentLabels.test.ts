@@ -13,7 +13,7 @@ test("adds a label to an inline fragment with @defer", () => {
     }
   `;
 
-  expect(addDeferFragmentLabels.transformDocument(query)).toMatchDocument(gql`
+  expect(addDeferFragmentLabels(query)).toMatchDocument(gql`
     query {
       greeting {
         name
@@ -39,7 +39,7 @@ test("adds a label to a fragment spread with @defer", () => {
     }
   `;
 
-  expect(addDeferFragmentLabels.transformDocument(query)).toMatchDocument(gql`
+  expect(addDeferFragmentLabels(query)).toMatchDocument(gql`
     query {
       greeting {
         name
@@ -75,7 +75,7 @@ test("increments the label for each @defer in visit order", () => {
     }
   `;
 
-  expect(addDeferFragmentLabels.transformDocument(query)).toMatchDocument(gql`
+  expect(addDeferFragmentLabels(query)).toMatchDocument(gql`
     query {
       greeting {
         name
@@ -113,7 +113,7 @@ test("adds labels to @defer inside fragment definitions", () => {
     }
   `;
 
-  expect(addDeferFragmentLabels.transformDocument(query)).toMatchDocument(gql`
+  expect(addDeferFragmentLabels(query)).toMatchDocument(gql`
     query {
       greeting {
         ...GreetingFields
@@ -143,7 +143,7 @@ test("adds labels to nested @defer", () => {
     }
   `;
 
-  expect(addDeferFragmentLabels.transformDocument(query)).toMatchDocument(gql`
+  expect(addDeferFragmentLabels(query)).toMatchDocument(gql`
     query {
       greeting {
         ... on Greeting @defer(label: "ac_0") {
@@ -168,7 +168,7 @@ test("keeps user-defined labels", () => {
     }
   `;
 
-  expect(addDeferFragmentLabels.transformDocument(query)).toMatchDocument(gql`
+  expect(addDeferFragmentLabels(query)).toMatchDocument(gql`
     query {
       greeting {
         ... on Greeting @defer(label: "myLabel") {
@@ -196,7 +196,7 @@ test("does not consume a label number for a user-defined label", () => {
     }
   `;
 
-  expect(addDeferFragmentLabels.transformDocument(query)).toMatchDocument(gql`
+  expect(addDeferFragmentLabels(query)).toMatchDocument(gql`
     query {
       greeting {
         ... on Greeting @defer(label: "myLabel") {
@@ -227,9 +227,7 @@ test("overwrites user-defined labels that use the reserved `ac_` prefix", () => 
     }
   `;
 
-  expect(
-    addDeferFragmentLabels.transformDocument(duplicatesGeneratedLabel)
-  ).toMatchDocument(gql`
+  expect(addDeferFragmentLabels(duplicatesGeneratedLabel)).toMatchDocument(gql`
     query {
       greeting {
         ... on Greeting @defer(label: "ac_0") {
@@ -256,7 +254,7 @@ test("overwrites user-defined labels that use the reserved `ac_` prefix", () => 
   `;
 
   expect(
-    addDeferFragmentLabels.transformDocument(reservedPrefixWithCustomSuffix)
+    addDeferFragmentLabels(reservedPrefixWithCustomSuffix)
   ).toMatchDocument(gql`
     query {
       greeting {
@@ -285,7 +283,7 @@ test("keeps the `if` argument and adds the label after it", () => {
     }
   `;
 
-  expect(addDeferFragmentLabels.transformDocument(query)).toMatchDocument(gql`
+  expect(addDeferFragmentLabels(query)).toMatchDocument(gql`
     query ($shouldDefer: Boolean!) {
       greeting {
         ... on Greeting @defer(if: $shouldDefer, label: "ac_0") {
@@ -310,7 +308,7 @@ test("keeps other directives on the fragment", () => {
     }
   `;
 
-  expect(addDeferFragmentLabels.transformDocument(query)).toMatchDocument(gql`
+  expect(addDeferFragmentLabels(query)).toMatchDocument(gql`
     query {
       greeting {
         ... on Greeting
@@ -337,7 +335,7 @@ test("does not add labels to directives other than @defer", () => {
     }
   `;
 
-  expect(addDeferFragmentLabels.transformDocument(query)).toMatchDocument(gql`
+  expect(addDeferFragmentLabels(query)).toMatchDocument(gql`
     query {
       greeting @nonreactive {
         name @custom
@@ -361,7 +359,7 @@ test("does not add a label to @stream on a deferred fragment", () => {
     }
   `;
 
-  expect(addDeferFragmentLabels.transformDocument(query)).toMatchDocument(gql`
+  expect(addDeferFragmentLabels(query)).toMatchDocument(gql`
     query {
       greeting {
         ... on Greeting @defer(label: "ac_0") {
@@ -386,7 +384,7 @@ test("returns the document unchanged when it contains no @defer", () => {
     }
   `;
 
-  expect(addDeferFragmentLabels.transformDocument(query)).toMatchDocument(gql`
+  expect(addDeferFragmentLabels(query)).toMatchDocument(gql`
     query {
       greeting {
         name
@@ -421,7 +419,7 @@ test("restarts the label sequence for each document", () => {
     }
   `;
 
-  expect(addDeferFragmentLabels.transformDocument(query1)).toMatchDocument(gql`
+  expect(addDeferFragmentLabels(query1)).toMatchDocument(gql`
     query Greeting {
       greeting {
         ... on Greeting @defer(label: "ac_0") {
@@ -431,7 +429,7 @@ test("restarts the label sequence for each document", () => {
     }
   `);
 
-  expect(addDeferFragmentLabels.transformDocument(query2)).toMatchDocument(gql`
+  expect(addDeferFragmentLabels(query2)).toMatchDocument(gql`
     query Hero {
       hero {
         ... on Hero @defer(label: "ac_0") {
@@ -440,39 +438,6 @@ test("restarts the label sequence for each document", () => {
       }
     }
   `);
-});
-
-test("caches the result when the same document is transformed again", () => {
-  const query = gql`
-    query {
-      greeting {
-        ... on Greeting @defer {
-          recipient
-        }
-        ... on Greeting @defer {
-          language
-        }
-      }
-    }
-  `;
-
-  const expected = gql`
-    query {
-      greeting {
-        ... on Greeting @defer(label: "ac_0") {
-          recipient
-        }
-        ... on Greeting @defer(label: "ac_1") {
-          language
-        }
-      }
-    }
-  `;
-
-  const transformed = addDeferFragmentLabels.transformDocument(query);
-
-  expect(transformed).toMatchDocument(expected);
-  expect(addDeferFragmentLabels.transformDocument(query)).toBe(transformed);
 });
 
 test("keeps the labels when a transformed document is transformed again", () => {
@@ -489,20 +454,18 @@ test("keeps the labels when a transformed document is transformed again", () => 
     }
   `;
 
-  const transformed = addDeferFragmentLabels.transformDocument(query);
+  const transformed = addDeferFragmentLabels(query);
 
-  expect(addDeferFragmentLabels.transformDocument(transformed)).toMatchDocument(
-    gql`
-      query {
-        greeting {
-          ... on Greeting @defer(label: "ac_0") {
-            recipient
-          }
-          ... on Greeting @defer(label: "ac_1") {
-            language
-          }
+  expect(addDeferFragmentLabels(transformed)).toMatchDocument(gql`
+    query {
+      greeting {
+        ... on Greeting @defer(label: "ac_0") {
+          recipient
+        }
+        ... on Greeting @defer(label: "ac_1") {
+          language
         }
       }
-    `
-  );
+    }
+  `);
 });

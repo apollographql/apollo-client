@@ -1,14 +1,11 @@
-import type { ArgumentNode } from "graphql";
+import type { ArgumentNode, DocumentNode } from "graphql";
 import { Kind, visit } from "graphql";
-
-// eslint-disable-next-line local-rules/import-from-inside-other-export
-import { DocumentTransform } from "../graphql/DocumentTransform.js";
 
 import { getDirectiveArgValue } from "./getDirectiveArgValue.js";
 
 const RESERVED_PREFIX = "ac_";
 
-export const addDeferFragmentLabels = new DocumentTransform((document) => {
+export function addDeferFragmentLabels(document: DocumentNode) {
   let count = 0;
 
   return visit(document, {
@@ -37,4 +34,4 @@ export const addDeferFragmentLabels = new DocumentTransform((document) => {
       };
     },
   });
-});
+}

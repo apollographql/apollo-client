@@ -236,9 +236,11 @@ export class QueryManager {
       : defaultDocumentTransform;
     // Put the incremental transform last so custom document transforms don't
     // revert changes made to the document accidentally.
-    this.documentTransform = this.documentTransform.concat(
-      this.incrementalHandler.documentTransform ?? DocumentTransform.identity()
-    );
+    if (this.incrementalHandler.documentTransform) {
+      this.documentTransform = this.documentTransform.concat(
+        this.incrementalHandler.documentTransform
+      );
+    }
     this.defaultContext = options.defaultContext || {};
 
     if ((this.onBroadcast = options.onBroadcast)) {

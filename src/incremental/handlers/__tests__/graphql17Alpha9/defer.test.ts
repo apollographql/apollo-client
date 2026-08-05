@@ -2591,9 +2591,9 @@ test("handles final chunk of { hasNext: false } correctly in usage with Apollo C
 
   await expect(observableStream).toEmitTypedValue({
     loading: true,
-    data: markAsStreaming({
+    data: {
       allProducts: [null, null, null],
-    }),
+    },
     error: new CombinedGraphQLErrors({
       data: {
         allProducts: [null, null, null],
@@ -2613,9 +2613,9 @@ test("handles final chunk of { hasNext: false } correctly in usage with Apollo C
         },
       ],
     }),
-    dataState: "streaming",
+    dataState: "complete",
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitSimilarValue({

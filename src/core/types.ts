@@ -5,7 +5,6 @@ import type {
   ObservableNotification,
 } from "rxjs";
 
-import type { ApolloCache } from "@apollo/client/cache";
 import type { Cache } from "@apollo/client/cache";
 import type { ClientAwarenessLink } from "@apollo/client/link/client-awareness";
 import type { Unmasked } from "@apollo/client/masking";
@@ -273,7 +272,7 @@ export type RefetchQueriesPromiseResults<TResult> =
 
 // Used by QueryManager["refetchQueries"]
 export interface InternalRefetchQueriesOptions<
-  TCache extends ApolloCache,
+  TCache extends Cache.Implementation,
   TResult,
 > extends Omit<ApolloClient.RefetchQueriesOptions<TCache, TResult>, "include"> {
   // Just like the refetchQueries option for a mutation, an array of strings,
@@ -361,7 +360,7 @@ export type MutationQueryReducersMap<T = { [key: string]: any }> = {
 export type MutationUpdaterFunction<
   TData,
   TVariables extends OperationVariables,
-  TCache extends ApolloCache,
+  TCache extends Cache.Implementation,
 > = (
   cache: TCache,
   result: FormattedExecutionResult<Unmasked<TData>>,

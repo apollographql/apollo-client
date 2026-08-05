@@ -29,6 +29,7 @@ import type { Reference, StoreObject } from "@apollo/client/utilities";
 import { cacheSizes, canonicalStringify } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
+  handleIncrementalSymbol,
   IsAny,
   NoInfer,
   Prettify,
@@ -45,7 +46,9 @@ import {
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
+import type { DiffIncrementalInfo } from "../inmemory/types.js";
 
+import type { Scalar } from "./Scalar.js";
 import type { Cache } from "./types/Cache.js";
 import type { MissingTree } from "./types/common.js";
 
@@ -156,6 +159,16 @@ export declare namespace ApolloCache {
      */
     getCurrentResult: () => ApolloCache.WatchFragmentResult<TData>;
   }
+
+  // Registration type for custom scalars
+  export interface Scalars {}
+
+  export type GetScalarType<TKey extends keyof ApolloCache.Scalars> =
+    ApolloCache.Scalars[TKey] extends (
+      { serialized: infer TSerialized; parsed: infer TParsed }
+    ) ?
+      Scalar<TSerialized, TParsed>
+    : never;
 }
 
 export abstract class ApolloCache {
@@ -183,6 +196,15 @@ export abstract class ApolloCache {
    * returned if it contains at least one field that can be fulfilled from the
    * cache.
    */
+  public abstract diff<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    query: Cache.DiffOptions<TData, TVariables> & {
+      [handleIncrementalSymbol]: DiffIncrementalInfo | undefined;
+    }
+  ): Cache.InternalDiffResultWithDataState<TData> | Cache.DiffResult<TData>;
+
   public abstract diff<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
@@ -239,6 +261,43 @@ export abstract class ApolloCache {
   // that register fragments ahead of time so they can be referenced by name.
   public lookupFragment(fragmentName: string): FragmentDefinitionNode | null {
     return null;
+  }
+
+  // Custom scalars API
+
+  public getScalar<TKey extends keyof ApolloCache.Scalars>(
+    key: TKey
+  ): ApolloCache.GetScalarType<TKey> | undefined {
+    return;
+  }
+
+  /**
+   * Serializes scalar values in the variables object
+   */
+  public serializeVariables<
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    document: DocumentNode | TypedDocumentNode<any, TVariables>,
+    variables: NoInfer<TVariables>
+  ): TVariables;
+
+  /**
+   * {@inheritDoc @apollo/client/cache!ApolloCache#serializeVariables:member(1)}
+   */
+  public serializeVariables<
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    document: DocumentNode | TypedDocumentNode<any, TVariables>,
+    variables: NoInfer<TVariables> | undefined
+  ): TVariables | undefined;
+
+  public serializeVariables<
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    document: DocumentNode | TypedDocumentNode<any, TVariables>,
+    variables: NoInfer<TVariables> | undefined
+  ): TVariables | undefined {
+    return variables;
   }
 
   // Local state API

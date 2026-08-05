@@ -14,6 +14,7 @@ import { ErrorLike } from '@apollo/client';
 import type { FieldNode } from 'graphql';
 import type { FormattedExecutionResult } from 'graphql';
 import type { FragmentDefinitionNode } from 'graphql';
+import type { FragmentSpreadNode } from 'graphql';
 import type { GraphQLFormattedError } from 'graphql';
 import type { HKT } from '@apollo/client/utilities';
 import type { Incremental } from '@apollo/client/incremental';
@@ -33,6 +34,7 @@ import type { SelectionSetNode } from 'graphql';
 import { StrongCache } from '@wry/caches';
 import type { Subscription } from 'rxjs';
 import type { Trie } from '@wry/trie';
+import type { TypeNode } from 'graphql';
 import type { TypeOverrides } from '@apollo/client';
 import { WeakCache } from '@wry/caches';
 
@@ -165,6 +167,9 @@ type DeepOmitArray<T extends any[], K> = {
 // @public (undocumented)
 type DeepOmitPrimitive = Primitive | Function;
 
+// @internal @deprecated
+export type DeferInfoTrie = Trie<true>;
+
 // @public (undocumented)
 type Directives = {
     [directiveName: string]: {
@@ -266,6 +271,8 @@ export const getApolloClientMemoryInternals: (() => {
             executeSelectionSet: number | undefined;
             executeSubSelectedArray: number | undefined;
             maybeBroadcastWatch: number | undefined;
+            prunePartialBoundaries: number | undefined;
+            prunePartialStreamArray: number | undefined;
         } | undefined;
         fragmentRegistry?: {
             findFragmentSpreads: number | undefined;
@@ -313,6 +320,8 @@ export const getInMemoryCacheMemoryInternals: (() => {
         executeSelectionSet: number | undefined;
         executeSubSelectedArray: number | undefined;
         maybeBroadcastWatch: number | undefined;
+        prunePartialBoundaries: number | undefined;
+        prunePartialStreamArray: number | undefined;
     };
     fragmentRegistry: {
         findFragmentSpreads: number | undefined;
@@ -343,6 +352,9 @@ export const getStoreKeyName: ((fieldName: string, args?: Record<string, any> | 
     setStringify(s: typeof storeKeyNameStringify): (value: any) => string;
 };
 
+// @internal @deprecated (undocumented)
+export function getUnwrappedType(node: TypeNode): string;
+
 // @public (undocumented)
 const globalCaches: {
     print?: () => number;
@@ -351,6 +363,9 @@ const globalCaches: {
 
 // @internal @deprecated (undocumented)
 export function graphQLResultHasError(result: FormattedExecutionResult<any>): boolean;
+
+// @internal @deprecated
+export const handleIncrementalSymbol: unique symbol;
 
 // @internal @deprecated (undocumented)
 export function hasDirectives(names: string[], root: ASTNode, all?: boolean): boolean;
@@ -365,10 +380,20 @@ export type IsAny<T> = 0 extends 1 & T ? true : false;
 export const isArray: (a: any) => a is any[] | readonly any[];
 
 // @internal @deprecated (undocumented)
+export const isDeferredFragment: (fragmentSelection: FragmentSpreadNode | InlineFragmentNode, variables: OperationVariables | undefined) => boolean;
+
+// @internal @deprecated (undocumented)
 export function isDocumentNode(value: unknown): value is DocumentNode;
 
 // @internal @deprecated (undocumented)
 export function isField(selection: SelectionNode): selection is FieldNode;
+
+// @public
+export type IsLooselyEqual<A, B> = [
+A
+] extends [B] ? [
+B
+] extends [A] ? true : false : false;
 
 // @internal @deprecated (undocumented)
 export function isNonEmptyArray<T>(value: ArrayLike<T> | null | undefined): value is Array<T>;
@@ -379,6 +404,12 @@ export function isNonNullObject(obj: unknown): obj is Record<string | number, an
 // @internal @deprecated (undocumented)
 export function isPlainObject(obj: unknown): obj is Record<string | number, any>;
 
+// @internal @deprecated (undocumented)
+export const isStreamField: (field: FieldNode, variables: OperationVariables | undefined) => boolean;
+
+// @public (undocumented)
+export function isTypenameField(field: FieldNode): boolean;
+
 // @public
 export type LazyType<T> = T & {
     [K in "" as never]: LazyType<never>;
@@ -386,6 +417,9 @@ export type LazyType<T> = T & {
 
 // @internal @deprecated (undocumented)
 export function makeReference(id: string): Reference;
+
+// @internal @deprecated (undocumented)
+export function makeStreamInfoTrie(): StreamInfoTrie;
 
 // @internal @deprecated
 export function makeUniqueId(prefix: string): string;
@@ -500,12 +534,25 @@ export function storeKeyNameFromField(field: FieldNode, variables?: Object): str
 // @public (undocumented)
 let storeKeyNameStringify: (value: any) => string;
 
+// @public (undocumented)
+export class StreamArrayState {
+    constructor(path: Incremental.Path);
+    // (undocumented)
+    depend(): void;
+    // (undocumented)
+    get streamPosition(): number;
+    set streamPosition(value: number);
+    // (undocumented)
+    truncate: boolean;
+}
+
 // @public
 export const streamInfoSymbol: unique symbol;
 
 // @internal @deprecated (undocumented)
 export type StreamInfoTrie = Trie<{
     current: Incremental.StreamFieldInfo;
+    state: StreamArrayState;
     previous?: {
         incoming: unknown;
         streamFieldInfo: Incremental.StreamFieldInfo;

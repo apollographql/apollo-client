@@ -1,8 +1,4 @@
-import type {
-  DocumentNode,
-  FormattedExecutionResult,
-  GraphQLFormattedError,
-} from "graphql";
+import type { FormattedExecutionResult, GraphQLFormattedError } from "graphql";
 
 import type { ApolloLink } from "@apollo/client/link";
 import type { DeepPartial, HKT } from "@apollo/client/utilities";
@@ -214,9 +210,9 @@ export class Defer20220824Handler
 
     return request;
   }
-  startRequest<TData extends Record<string, unknown>>(_: {
-    query: DocumentNode;
-  }) {
+  startRequest<TData extends Record<string, unknown>>(
+    _: Incremental.StartRequestOptions
+  ) {
     return new DeferRequest<TData>();
   }
 }

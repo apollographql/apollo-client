@@ -1349,10 +1349,10 @@ describe("@client @export tests", () => {
         userId: "1",
         friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
       }),
-      dataState: "streaming",
+      dataState: "complete",
       loading: true,
       networkStatus: NetworkStatus.streaming,
-      partial: true,
+      partial: false,
     });
 
     client.writeFragment({
@@ -2049,10 +2049,10 @@ describe("@client @export tests", () => {
         userId: "1",
         friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
       }),
-      dataState: "streaming",
+      dataState: "complete",
       loading: true,
       networkStatus: NetworkStatus.streaming,
-      partial: true,
+      partial: false,
     });
 
     client.writeQuery({

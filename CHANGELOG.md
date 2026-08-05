@@ -1,5 +1,319 @@
 # @apollo/client
 
+## 4.3.0-alpha.4
+
+### Patch Changes
+
+- [#13347](https://github.com/apollographql/apollo-client/pull/13347) [`7d543d6`](https://github.com/apollographql/apollo-client/commit/7d543d6416688ed113295a69e73b706c097a0d31) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where `network-only` incremental queries could cause cache data to leak into the emitted result when a `@defer` or `@stream` boundary already had complete data in the cache. Cache data inside pending `@defer` objects and `@stream` arrays are now pruned so that only completed `@defer` or `@stream` boundaries are returned.
+
+  NOTE: This change only applies to `InMemoryCache` when using `GraphQL17Alpha9Handler`.
+
+- [#13329](https://github.com/apollographql/apollo-client/pull/13329) [`1d581d2`](https://github.com/apollographql/apollo-client/commit/1d581d282fe223e4bf39ea5e7a3cbc44fdbf32b5) Thanks [@AmariahAK](https://github.com/AmariahAK)! - Cache diffs for incomplete queries no longer pay the cost of building a full `MissingFieldError` when the `missing` property is not accessed. The error object is now only constructed when the `missing` property is accessed the first time. This improves performance by avoiding a V8 stack capture when `missing` is ignored entirely.
+
+  As an additional small performance improvement, `JSON.stringify` is no longer used in the error message on objects whose cache ID is known. `JSON.stringify` is only used for non-normalized objects.
+
+- [#13347](https://github.com/apollographql/apollo-client/pull/13347) [`7d543d6`](https://github.com/apollographql/apollo-client/commit/7d543d6416688ed113295a69e73b706c097a0d31) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where partial cache data could leak into intermediate incremental results. This could cause runtime crashes if you relied on the presence of values to determine whether the `@defer` data had streamed in or not.
+
+## 4.3.0-alpha.3
+
+### Minor Changes
+
+- [#13324](https://github.com/apollographql/apollo-client/pull/13324) [`0abd8de`](https://github.com/apollographql/apollo-client/commit/0abd8de53a408c6b5925b2a909acde5179eaac46) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix the accuracy of `dataState` in complex incremental streaming scenarios, especially when combined with `returnPartialData: true`.
+
+  Prior to this change, all intermediate chunks used for both `@defer` and `@stream` directives returned a `dataState` of `streaming`, regardless of whether the actual data shape fit the definition of the `streaming` data state. The `streaming` data state represents an incomplete incremental response where the only holes in the data occur at `@defer` boundaries.
+
+  Let's use the following example of where the previous `dataState` fell down when combined with `returnPartialData`.
+
+  ```gql
+  query GreetingQuery {
+    greeting {
+      message
+      ... @defer {
+        recipient {
+          name
+          email
+        }
+      }
+    }
+  }
+  ```
+
+  1. Scenario 1: partial data inside a `@defer` boundary written to the cache
+
+  Let's say the cache contained the following partial data:
+
+  ```ts
+  {
+    greeting: {
+      __typename: "Greeting",
+      recipient: {
+        __typename: "Person",
+        name: "John Doe",
+      },
+    },
+  };
+  ```
+
+  After the first chunk arrives from the server, the data looks like the following:
+
+  ```ts
+  {
+    greeting: {
+      __typename: "Greeting",
+      message: "Hello, John",
+      recipient: {
+        __typename: "Person",
+        name: "John Doe",
+      },
+    },
+  };
+  ```
+
+  This data is not `complete` because `recipient.email` is missing. This data is also not `streaming` because the data requirements in the `@defer` boundary are partially fulfilled due to the existence of `recipient`. This could lead to runtime crashes on `recipient.email` if you use the existence of `recipient` to detect whether data in the `@defer` boundary has streamed in or not. This change now accurately reports this as `partial` to ensure the field is marked as a partial field in `recipient`.
+
+  2. Scenario 2: partial data written to the cache that fulfills the data requirements of the `@defer` boundary
+
+  Let's say the cache contained the following partial data:
+
+  ```ts
+  {
+    greeting: {
+      __typename: "Greeting",
+      recipient: {
+        __typename: "Person",
+        name: "John Doe",
+        email: "john@example.com",
+      },
+    },
+  };
+  ```
+
+  After the first chunk arrives from the server, the data looks like the following:
+
+  ```ts
+  {
+    greeting: {
+      __typename: "Greeting",
+      message: "Hello, John",
+      recipient: {
+        __typename: "Person",
+        name: "John Doe",
+        email: "john@example.com",
+      },
+    },
+  };
+  ```
+
+  In this case, the combination of the first chunk and the partial data in the cache now fulfills the data requirements of the query. Even though the server is still streaming data (`NetworkStatus.streaming`), we can report this as `dataState: "complete"` since it is safe to access data on all fields.
+
+  This change also means `@stream` queries by definition fulfill the data requirements of the query after the first chunk arrives since `@stream` operates on lists and contains no data holes. `@stream` queries now accurately report `dataState` as `complete` or `partial`, depending on whether the list mixes partial data with streamed list items.
+
+  As a result of this change, some cases where you'd previously see `dataState` reported as `"streaming"` are now reported as `partial` or `complete`.
+
+  If you use `dataState` to determine whether an incremental request is still in-flight, please use `networkStatus` instead to check for `NetworkStatus.streaming`. `dataState` is type narrowing feature and not intended to report the network status.
+
+### Patch Changes
+
+- [#13324](https://github.com/apollographql/apollo-client/pull/13324) [`0abd8de`](https://github.com/apollographql/apollo-client/commit/0abd8de53a408c6b5925b2a909acde5179eaac46) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where field `read` functions were not applied to intermediate results while streaming `@defer` responses. `cache.diff` ran the `read` functions, but the transformed values were only applied to the emitted result when the updated cache result was considered complete. Intermediate chunks whose only holes were at `@defer` boundaries now correctly return the result of field `read` functions.
+
+  ```ts
+  new InMemoryCache({
+    typePolicies: {
+      Greeting: {
+        fields: {
+          message: {
+            read: (message) => message.toUpperCase(),
+          },
+        },
+      },
+    },
+  });
+
+  // query GreetingQuery {
+  //   greeting {
+  //     message
+  //     ... @defer {
+  //       recipient { name }
+  //     }
+  //   }
+  // }
+
+  // First chunk previously returned:
+  // { greeting: { message: "Hello world" } }
+  //
+  // Now correctly returns while still streaming:
+  // { greeting: { message: "HELLO WORLD" } }
+  ```
+
+- [#13324](https://github.com/apollographql/apollo-client/pull/13324) [`0abd8de`](https://github.com/apollographql/apollo-client/commit/0abd8de53a408c6b5925b2a909acde5179eaac46) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue with `@stream` queries when using `returnPartialData: true` where the streamed list was truncated after the first incremental chunk when the list contained partial cache data. The list is no longer truncated and partial list items are now retained as incremental chunks arrive. The `dataState` is now reported as `partial` until the server has streamed enough of the list so that each list item fully satisfies the query.
+
+  This change also updates `@stream` queries so that they reported with `dataState: "complete` instead of `"streaming"` since it is safe to access all fields in the response.
+
+## 4.3.0-alpha.2
+
+### Minor Changes
+
+- [#13274](https://github.com/apollographql/apollo-client/pull/13274) [`7b10078`](https://github.com/apollographql/apollo-client/commit/7b10078f4bcd8d82890ca438bf7355677fe2f841) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Adds `Scalar.fromGraphQLScalarType` helper to create a `Scalar` instance from an existing graphql.js `GraphQLScalarType`.
+
+  ```ts
+  import { GraphQLScalarType } from "graphql";
+  import { Scalar } from "@apollo/client";
+
+  const dateTimeScalarType = new GraphQLScalarType<Date, string>({
+    // ...
+  });
+
+  const dateTimeScalar = Scalar.fromGraphQLScalarType(dateTimeScalarType, {
+    is: (value) => value instanceof Date,
+  });
+  ```
+
+- [#13252](https://github.com/apollographql/apollo-client/pull/13252) [`ed86234`](https://github.com/apollographql/apollo-client/commit/ed8623485683c38982c87278d1381412ef39a9db) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Adds the plumbing and types implementation for declaring custom scalars and configuring custom scalars in `InMemoryCache`.
+
+  You can declare custom scalar types with declaration merging on the `ApolloCache.Scalars` interface:
+
+  ```ts
+  // apollo.d.ts
+  import "@apollo/client";
+
+  declare module "@apollo/client" {
+    namespace ApolloCache {
+      interface Scalars {
+        Date: { serialized: string; parsed: Date };
+      }
+    }
+  }
+  ```
+
+  This enables the `scalars` option in `InMemoryCache`:
+
+  ```ts
+  import { Scalar } from "@apollo/client";
+
+  const cache = new InMemoryCache({
+    scalars: {
+      Date: new Scalar({
+        parse: (dateString) => new Date(dateString),
+        serialize: (date) => date.toISOString(),
+        is: (value) => value instanceof Date,
+      }),
+    },
+  });
+  ```
+
+- [#13259](https://github.com/apollographql/apollo-client/pull/13259) [`ccaf686`](https://github.com/apollographql/apollo-client/commit/ccaf6867be15e413f08594b54b3516003e28c108) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Adds a `scalar` option to `InMemoryCache` field policies that tells the cache which scalar to use when parsing or serializing the field value.
+
+  ```ts
+  import { Scalar } from "@apollo/client";
+
+  new InMemoryCache({
+    scalars: {
+      DateTime: new Scalar({
+        parse: (dateString) => new Date(dateString),
+        serialize: (date) => date.toISOString(),
+      }),
+    },
+    typePolicies: {
+      Event: {
+        fields: {
+          startTime: {
+            // Parse this field using the DateTime scalar
+            scalar: "DateTime",
+          },
+        },
+      },
+    },
+  });
+  ```
+
+  This scalar definition is now used to properly parse or serialize the field value for cache reads and writes as well as `cache.extract()` and `cache.restore()`.
+
+- [#13273](https://github.com/apollographql/apollo-client/pull/13273) [`0886de1`](https://github.com/apollographql/apollo-client/commit/0886de19ed67ca24bbcc075dcf5a94ba01589902) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Automatically serialize variables that include custom scalar values. This includes cache reads and writes as well as requests to the network.
+
+  For more complex input objects, a new `inputObjects` option is available to `InMemoryCache` that specifies where nested scalar fields are found.
+
+  ```ts
+  const cache = new InMemoryCache({
+    scalars: {
+      DateTime: new Scalar({
+        parse: (value) => new Date(value),
+        serialize: (value) => value.toISOString(),
+        is: (value) => value instanceof Date,
+      }),
+    },
+    inputObjects: {
+      EventFilter: {
+        fields: {
+          date: "DateTime",
+        },
+      },
+    },
+  });
+
+  const client = new ApolloClient({ cache, link });
+
+  await client.query({
+    query: gql`
+      query Event($filter: EventFilter!) {
+        event(filter: $filter) {
+          name
+        }
+      }
+    `,
+    variables: {
+      filter: {
+        date: new Date("2026-01-01T00:00:00.000Z"),
+      },
+    },
+  });
+
+  // The link receives:
+  // { filter: { date: "2026-01-01T00:00:00.000Z" } }
+  ```
+
+- [#13252](https://github.com/apollographql/apollo-client/pull/13252) [`ed86234`](https://github.com/apollographql/apollo-client/commit/ed8623485683c38982c87278d1381412ef39a9db) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Adds the `getScalar` abstract method to `ApolloCache` that cache subclasses override to provide scalar behavior to Apollo Client. Defaults to unconditionally return `undefined` if not specified.
+
+## 4.3.0-alpha.1
+
+### Patch Changes
+
+- [#13268](https://github.com/apollographql/apollo-client/pull/13268) [`419e2b5`](https://github.com/apollographql/apollo-client/commit/419e2b5bfe573d1eb4c3a0ff7aa9084e6aaa2f37) Thanks [@DaleSeo](https://github.com/DaleSeo)! - Align the remaining cache generic constraints with `Cache.Implementation`. The deprecated React mutation types (`MutationHookOptions`, `MutationFunctionOptions`, `MutationTuple`) and the internal `InternalRefetchQueriesOptions` and `QueryInfo` types still constrained their cache type parameter to `ApolloCache`, so they now match the rest of the overridable cache API.
+
+## 4.3.0-alpha.0
+
+### Minor Changes
+
+- [#13250](https://github.com/apollographql/apollo-client/pull/13250) [`bad7035`](https://github.com/apollographql/apollo-client/commit/bad7035565e15c18800080d9e0abf1d89b3d82fa) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add the ability to define the cache type for the client. `client.cache` currently returns `ApolloCache` as the cache type regardless of what cache you've provided to `ApolloClient`.
+
+  Declare the cache type using the `cache` property in the `TypeOverrides` interface to set the cache implementation used for the client.
+
+  ```ts
+  // apollo.d.ts
+  import type { InMemoryCache } from "@apollo/client";
+
+  declare module "@apollo/client" {
+    export interface TypeOverrides {
+      cache: InMemoryCache;
+    }
+  }
+  ```
+
+  Now anywhere `cache` is accessible, the type is the declared cache type:
+
+  ```ts
+  client.cache;
+  //     ^? InMemoryCache
+
+  client.mutate({
+    update: (cache) => {
+      //     ^? InMemoryCache
+    },
+  });
+  ```
+
+  > [!NOTE]
+  > Setting a cache type enforces that cache type in the `cache` option for the `ApolloClient` constructor.
+
 ## 4.2.10
 
 ### Patch Changes

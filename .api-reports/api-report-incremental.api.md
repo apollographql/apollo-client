@@ -74,9 +74,7 @@ class Defer20220824Handler implements Incremental.Handler<Defer20220824Handler.C
     // Warning: (ae-forgotten-export) The symbol "DeferRequest" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    startRequest<TData extends Record<string, unknown>>(_: {
-        query: DocumentNode;
-    }): DeferRequest<TData>;
+    startRequest<TData extends Record<string, unknown>>(_: Incremental.StartRequestOptions): DeferRequest<TData>;
 }
 export { Defer20220824Handler }
 export { Defer20220824Handler as GraphQL17Alpha2Handler }
@@ -180,9 +178,7 @@ export class GraphQL17Alpha9Handler implements Incremental.Handler<GraphQL17Alph
     // Warning: (ae-forgotten-export) The symbol "IncrementalRequest" needs to be exported by the entry point index.d.ts
     //
     // @internal @deprecated (undocumented)
-    startRequest<TData>(_: {
-        query: DocumentNode;
-    }): IncrementalRequest<TData>;
+    startRequest<TData>(_: Incremental.StartRequestOptions): IncrementalRequest<TData>;
 }
 
 // @public (undocumented)
@@ -196,19 +192,35 @@ export namespace Incremental {
         // (undocumented)
         prepareRequest: (request: ApolloLink.Request) => ApolloLink.Request;
         // (undocumented)
-        startRequest: <TData extends Record<string, unknown>>(request: {
-            query: DocumentNode;
-        }) => IncrementalRequest<Chunk, TData>;
+        startRequest: <TData extends Record<string, unknown>>(request: Incremental.StartRequestOptions) => IncrementalRequest<Chunk, TData>;
     }
     // (undocumented)
     export interface IncrementalRequest<Chunk extends Record<string, unknown>, TData> {
         // (undocumented)
+        getPendingType?: (id: string) => "defer" | "stream";
+        // (undocumented)
         handle: (cacheData: TData | DeepPartial<TData> | undefined | null, chunk: Chunk) => FormattedExecutionResult<TData>;
         // (undocumented)
         hasNext: boolean;
+        // (undocumented)
+        pending?: Array<Incremental.PendingResult>;
     }
     // (undocumented)
     export type Path = ReadonlyArray<string | number>;
+    // (undocumented)
+    export interface PendingResult {
+        // (undocumented)
+        id: string;
+        // (undocumented)
+        label?: string;
+        // (undocumented)
+        path: Incremental.Path;
+    }
+    // @internal @deprecated (undocumented)
+    export interface StartRequestOptions {
+        // (undocumented)
+        query: DocumentNode;
+    }
     // @internal @deprecated (undocumented)
     export interface StreamFieldInfo {
         // (undocumented)
@@ -221,9 +233,13 @@ export namespace Incremental {
 // @public (undocumented)
 class IncrementalRequest<TData> implements Incremental.IncrementalRequest<GraphQL17Alpha9Handler.Chunk<TData>, TData> {
     // (undocumented)
+    getPendingType(id: string): "defer" | "stream";
+    // (undocumented)
     handle(cacheData: TData | DeepPartial<TData> | null | undefined, chunk: GraphQL17Alpha9Handler.Chunk<TData>): FormattedExecutionResult<TData>;
     // (undocumented)
     hasNext: boolean;
+    // (undocumented)
+    get pending(): GraphQL17Alpha9Handler.PendingResult[];
 }
 
 // @public (undocumented)

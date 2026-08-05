@@ -1,5 +1,67 @@
 # @apollo/client-graphql-codegen
 
+## 2.2.0-alpha.0
+
+### Minor Changes
+
+- [#13310](https://github.com/apollographql/apollo-client/pull/13310) [`8ab63fc`](https://github.com/apollographql/apollo-client/commit/8ab63fc4bbf9f2c5b5f225ba2c54c2a255f0632e) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Introduce a new GraphQL Codegen plugin to generate the input object configuration needed to configure custom scalars for each field.
+
+  ```ts
+  // codegen.ts
+  import type { CustomScalarsPluginConfig } from "@apollo/client-graphql-codegen/custom-scalars";
+
+  const config: CodegenConfig = {
+    // ...
+    generates: {
+      "./path/to/custom-scalars.ts": {
+        plugins: ["@apollo/client-graphql-codegen/custom-scalars"],
+        config: {
+          // ...
+        } satisfies CustomScalarsPluginConfig,
+      },
+    },
+  };
+  ```
+
+  This will generate an `inputObjects` object in the generated file that can be used to configure the `inputObjects` option for `InMemoryCache`.
+
+  ```ts
+  import { inputObjects } from "./path/to/custom-scalars";
+
+  const cache = new InMemoryCache({
+    inputObjects,
+  });
+  ```
+
+- [#13318](https://github.com/apollographql/apollo-client/pull/13318) [`01f255b`](https://github.com/apollographql/apollo-client/commit/01f255be684808c763664e84b4c2d5391ee807dd) Thanks [@jerelmiller](https://github.com/jerelmiller)! - The `@apollo/client-graphql-codegen/custom-scalars` GraphQL Codegen plugin now generates the type policy configuration needed to configure custom scalars for each field.
+
+  ```ts
+  // codegen.ts
+  import type { CustomScalarsPluginConfig } from "@apollo/client-graphql-codegen/custom-scalars";
+
+  const config: CodegenConfig = {
+    // ...
+    generates: {
+      "./path/to/custom-scalars.ts": {
+        plugins: ["@apollo/client-graphql-codegen/custom-scalars"],
+        config: {
+          // ...
+        } satisfies CustomScalarsPluginConfig,
+      },
+    },
+  };
+  ```
+
+  This will generate a `scalarTypePolicies` object in the generated file that can be used to configure type policies.
+
+  ```ts
+  import { scalarTypePolicies } from "./path/to/custom-scalars";
+
+  const cache = new InMemoryCache();
+
+  cache.policies.addTypePolicies(scalarTypePolicies);
+  ```
+
 ## 2.1.1
 
 ### Patch Changes

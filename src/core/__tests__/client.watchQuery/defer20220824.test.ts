@@ -166,7 +166,7 @@ test("deduplicates queries as long as a query still has deferred chunks", async 
 });
 
 it.each([["cache-first"], ["no-cache"]] as const)(
-  "correctly merges deleted rows when receiving a deferred payload",
+  "correctly merges deleted rows when receiving a deferred payload with %s fetch policy",
   async (fetchPolicy) => {
     const query = gql`
       query Characters {
@@ -317,10 +317,11 @@ it.each([["cache-first"], ["no-cache"]] as const)(
               },
             ],
       }),
-      dataState: "streaming",
+      // no-cache is incomplete (lowercase still pending); cache policies merge residual lowercase
+      dataState: fetchPolicy === "no-cache" ? "streaming" : "complete",
       loading: true,
       networkStatus: NetworkStatus.streaming,
-      partial: true,
+      partial: fetchPolicy === "no-cache",
     });
 
     enqueueSubsequentChunk({

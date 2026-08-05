@@ -6,9 +6,14 @@ import type {
   StoreObject,
   StoreValue,
 } from "@apollo/client/utilities";
-import type { ExtensionsWithStreamInfo } from "@apollo/client/utilities/internal";
+import type {
+  DeferInfoTrie,
+  ExtensionsWithStreamInfo,
+  RemoveIndexSignature,
+  StreamInfoTrie,
+} from "@apollo/client/utilities/internal";
 
-import type { Transaction } from "../core/cache.js";
+import type { ApolloCache, Transaction } from "../core/cache.js";
 import type {
   AllFieldsModifier,
   CanReadFunction,
@@ -18,6 +23,7 @@ import type {
 
 import type { FieldValueGetter } from "./entityStore.js";
 import type { FragmentRegistryAPI } from "./fragmentRegistry.js";
+import type { InMemoryCache } from "./inMemoryCache.js";
 import type {
   FieldMergeFunction,
   KeyFieldsFunction,
@@ -127,6 +133,12 @@ export type ReadQueryOptions = {
   config?: ApolloReducerConfig;
 };
 
+/** @internal */
+export interface DiffIncrementalInfo {
+  streamInfo?: StreamInfoTrie;
+  deferInfo?: DeferInfoTrie;
+}
+
 export type DiffQueryAgainstStoreOptions = ReadQueryOptions & {
   returnPartialData?: boolean;
 };
@@ -135,12 +147,30 @@ export type ApolloReducerConfig = {
   dataIdFromObject?: KeyFieldsFunction;
 };
 
-export interface InMemoryCacheConfig extends ApolloReducerConfig {
+export interface InputObjectConfig {
+  fields: Record<string, string>;
+}
+
+export interface InputObjectsOption {
+  [inputObjectName: string]: InputObjectConfig;
+}
+
+export type InMemoryCacheConfig = ApolloReducerConfig & {
   resultCaching?: boolean;
   possibleTypes?: PossibleTypesMap;
   typePolicies?: TypePolicies;
   fragments?: FragmentRegistryAPI;
-}
+  inputObjects?: InputObjectsOption;
+} & ({} extends InMemoryCache.ScalarsOption ?
+    InMemoryCache.ScalarsOption extends Record<string, never> ?
+      {
+        scalars?: Record<
+          string,
+          `Scalar types must be declared in ApolloCache.Scalars before usage. See https://www.apollographql.com/docs/react/data/typescript#declaring-scalar-types.`
+        >;
+      }
+    : { scalars?: InMemoryCache.ScalarsOption }
+  : { scalars: InMemoryCache.ScalarsOption });
 
 export interface MergeInfo {
   field: FieldNode;
@@ -161,3 +191,8 @@ export interface ReadMergeModifyContext {
   varString?: string;
   extensions?: ExtensionsWithStreamInfo;
 }
+
+export type KnownScalars = RemoveIndexSignature<ApolloCache.Scalars>;
+export type ScalarNames =
+  | keyof KnownScalars
+  | (string extends keyof ApolloCache.Scalars ? string & {} : never);

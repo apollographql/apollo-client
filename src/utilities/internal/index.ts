@@ -5,6 +5,7 @@ export type { FragmentMap } from "./types/FragmentMap.js";
 export type { FragmentMapFunction } from "./types/FragmentMapFunction.js";
 export type { FulfilledPromise } from "./types/FulfilledPromise.js";
 export type { IsAny } from "./types/IsAny.js";
+export type { IsLooselyEqual } from "./types/IsLooselyEqual.js";
 export type { NoInfer } from "./types/NoInfer.js";
 export type { PendingPromise } from "./types/PendingPromise.js";
 export type { Prettify } from "./types/Prettify.js";
@@ -12,6 +13,7 @@ export type { Primitive } from "./types/Primitive.js";
 export type { RejectedPromise } from "./types/RejectedPromise.js";
 export type { RemoveIndexSignature } from "./types/RemoveIndexSignature.js";
 export type { StreamInfoTrie } from "./types/StreamInfoTrie.js";
+export type { DeferInfoTrie } from "./types/DeferInfo.js";
 export type { VariablesOption } from "./types/VariablesOption.js";
 export type { DocumentationTypes } from "./types/DocumentationTypes.js";
 export type { LazyType } from "./LazyType.js";
@@ -44,15 +46,20 @@ export { getOperationDefinition } from "./getOperationDefinition.js";
 export { getOperationName } from "./getOperationName.js";
 export { getQueryDefinition } from "./getQueryDefinition.js";
 export { getStoreKeyName } from "./getStoreKeyName.js";
+export { getUnwrappedType } from "./getUnwrappedType.js";
 export { graphQLResultHasError } from "./graphQLResultHasError.js";
 export { hasDirectives } from "./hasDirectives.js";
 export { hasForcedResolvers } from "./hasForcedResolvers.js";
 export { isArray } from "./isArray.js";
+export { isDeferredFragment } from "./isDeferredFragment.js";
 export { isDocumentNode } from "./isDocumentNode.js";
 export { isField } from "./isField.js";
 export { isNonEmptyArray } from "./isNonEmptyArray.js";
 export { isNonNullObject } from "./isNonNullObject.js";
 export { isPlainObject } from "./isPlainObject.js";
+export { isStreamField } from "./isStreamField.js";
+export { isTypenameField } from "./isTypenameField.js";
+export { makeStreamInfoTrie } from "./makeStreamInfoTrie.js";
 export { makeReference } from "./makeReference.js";
 export { makeUniqueId } from "./makeUniqueId.js";
 export { maybeDeepFreeze } from "./maybeDeepFreeze.js";
@@ -66,6 +73,7 @@ export { removeMaskedFragmentSpreads } from "./removeFragmentSpreads.js";
 export { resultKeyNameFromField } from "./resultKeyNameFromField.js";
 export { shouldInclude } from "./shouldInclude.js";
 export { storeKeyNameFromField } from "./storeKeyNameFromField.js";
+export { StreamArrayState } from "./StreamArrayState.js";
 export { stringifyForDisplay } from "./stringifyForDisplay.js";
 export { toQueryResult } from "./toQueryResult.js";
 export { filterMap } from "./filterMap.js";
@@ -74,6 +82,7 @@ export { canonicalStringify } from "./canonicalStringify.js";
 export { mapObservableFragmentMemoized } from "./mapObservableFragment.js";
 export {
   extensionsSymbol,
+  handleIncrementalSymbol,
   streamInfoSymbol,
   variablesUnknownSymbol,
 } from "./constants.js";

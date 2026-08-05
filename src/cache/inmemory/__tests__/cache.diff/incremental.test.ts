@@ -9310,6 +9310,117 @@ test("prunes only the labeled @defer boundary that deferInfo marks as pending wh
   });
 });
 
+test("prunes a labeled @defer boundary on a fragment spread that deferInfo marks as pending", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        ...GreetingRecipient @defer(label: "ac_0")
+      }
+    }
+
+    fragment GreetingRecipient on Greeting {
+      recipient {
+        name
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Alice" },
+      },
+    },
+  });
+
+  const deferInfo: DeferInfoTrie = new Trie();
+  deferInfo.lookup("greeting", "ac_0");
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: { deferInfo },
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
+test("prunes only the labeled @defer boundary that deferInfo marks as pending when sibling fragment spreads share a path", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        ...GreetingRecipient @defer(label: "ac_0")
+        ...GreetingSignature @defer(label: "ac_1")
+      }
+    }
+
+    fragment GreetingRecipient on Greeting {
+      recipient {
+        name
+      }
+    }
+
+    fragment GreetingSignature on Greeting {
+      signature
+    }
+  `;
+
+  // The cached data fully satisfies both defer boundaries, so anything missing
+  // from the result was pruned rather than absent from the cache.
+  cache.writeQuery({
+    query,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Alice" },
+        signature: "Sent from my phone",
+      },
+    },
+  });
+
+  const deferInfo: DeferInfoTrie = new Trie();
+  deferInfo.lookup("greeting", "ac_1");
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: { deferInfo },
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Alice" },
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
 test("does not apply deferInfo pruning when returnPartialData is true", () => {
   const cache = new InMemoryCache();
   const query = gql`

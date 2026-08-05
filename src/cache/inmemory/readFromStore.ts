@@ -903,7 +903,7 @@ export class StoreReader {
       let prune = false;
 
       if (context.deferInfo && isDeferredFragment(selection, variables)) {
-        const directive = fragment?.directives?.find(
+        const directive = selection.directives?.find(
           (d) => d.name.value === "defer"
         );
         const label =

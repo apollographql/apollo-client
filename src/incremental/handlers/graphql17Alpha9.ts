@@ -1,9 +1,14 @@
 import type { FormattedExecutionResult, GraphQLFormattedError } from "graphql";
 
 import type { ApolloLink } from "@apollo/client/link";
-import type { DeepPartial, HKT } from "@apollo/client/utilities";
+import type {
+  DeepPartial,
+  DocumentTransform,
+  HKT,
+} from "@apollo/client/utilities";
 import type { ExtensionsWithStreamInfo } from "@apollo/client/utilities/internal";
 import {
+  addDeferFragmentLabels,
   DeepMerger,
   makeStreamInfoTrie,
   streamInfoSymbol,
@@ -308,6 +313,8 @@ class IncrementalRequest<TData>
 export class GraphQL17Alpha9Handler
   implements Incremental.Handler<GraphQL17Alpha9Handler.Chunk<any>>
 {
+  readonly documentTransform = addDeferFragmentLabels;
+
   /** @internal */
   isIncrementalResult(
     result: ApolloLink.Result<any>

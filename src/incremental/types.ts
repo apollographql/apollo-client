@@ -5,7 +5,7 @@ import type {
 } from "graphql";
 
 import type { ApolloLink } from "@apollo/client/link";
-import type { DeepPartial } from "@apollo/client/utilities";
+import type { DeepPartial, DocumentTransform } from "@apollo/client/utilities";
 import type { StreamInfoTrie } from "@apollo/client/utilities/internal";
 
 export declare namespace Incremental {
@@ -29,6 +29,7 @@ export declare namespace Incremental {
     startRequest: <TData extends Record<string, unknown>>(
       request: Incremental.StartRequestOptions
     ) => IncrementalRequest<Chunk, TData>;
+    documentTransform?: DocumentTransform;
   }
 
   /** @internal */

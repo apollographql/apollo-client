@@ -64,3 +64,59 @@ exports[`client should warn if server returns wrong data 1`] = `
   ],
 }
 `;
+
+exports[`client should warn if server returns wrong data 2`] = `
+[MockFunction] {
+  "calls": Array [
+    Array [
+      "The network result for query %s was written to the cache, but reading it back returned a partial result.
+
+A \`read\` or \`merge\` function left missing fields after this write. Because the cache result is incomplete, Apollo Client cannot apply it to the network result. The raw network result was returned instead, and doesn't include any transformed values returned from \`read\` functions.
+
+To address this problem (which is not a bug in Apollo Client), check the \`read\` and \`merge\` functions for the fields in this query. A \`read\` or \`merge\` function that leaves missing fields leaves the cache unable to fulfill the query's data requirements.
+
+  missing fields: %o
+  network result: %o
+  cache result: %o
+
+For more information, please refer to the documentation:
+
+  * Customizing cache field behavior: https://go.apollo.dev/c/cache-field-behavior
+",
+      "(anonymous)",
+      Object {
+        "todos": Object {
+          "0": Object {
+            "description": "Can't find field 'description' on Todo:1 object",
+          },
+        },
+      },
+      Object {
+        "todos": Array [
+          Object {
+            "__typename": "Todo",
+            "id": "1",
+            "name": "Todo 1",
+            "price": 100,
+          },
+        ],
+      },
+      Object {
+        "todos": Array [
+          Object {
+            "__typename": "Todo",
+            "id": "1",
+            "name": "Todo 1",
+          },
+        ],
+      },
+    ],
+  ],
+  "results": Array [
+    Object {
+      "type": "return",
+      "value": undefined,
+    },
+  ],
+}
+`;

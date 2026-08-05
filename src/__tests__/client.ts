@@ -3018,7 +3018,7 @@ describe("client", () => {
   });
 
   it("should warn if server returns wrong data", async () => {
-    using _consoleSpies = spyOnConsole.takeSnapshots("error");
+    using _consoleSpies = spyOnConsole.takeSnapshots("error", "warn");
     const query = gql`
       query {
         todos {

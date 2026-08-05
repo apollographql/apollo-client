@@ -118,6 +118,7 @@ class IncrementalRequest<TData>
         type: "defer" as const,
         delivered: !!this.completedMap.get(pending.id),
         path: pending.path,
+        label: pending.label,
       };
     });
   }

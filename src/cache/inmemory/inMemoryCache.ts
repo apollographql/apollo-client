@@ -3,6 +3,7 @@ import type {
   DocumentNode,
   FragmentDefinitionNode,
   InlineFragmentNode,
+  OperationTypeNode,
 } from "graphql";
 import type { OptimisticWrapperFunction } from "optimism";
 import { wrap } from "optimism";
@@ -206,6 +207,10 @@ export class InMemoryCache extends ApolloCache {
     );
   }
 
+  public getRootTypename(operation: OperationTypeNode): string {
+    return this.policies.rootTypenamesById[`ROOT_${operation.toUpperCase()}`];
+  }
+
   public getScalar<TKey extends keyof ApolloCache.Scalars>(
     key: TKey
   ): ApolloCache.GetScalarType<TKey> extends (
@@ -218,6 +223,14 @@ export class InMemoryCache extends ApolloCache {
     : ApolloCache.GetScalarType<TKey>
   : never {
     return this.config.scalars?.[key as string] as any;
+  }
+
+  /** Get a scalar instance for a field in a type */
+  public getScalarForField(
+    typename: string,
+    fieldName: string
+  ): Scalar<unknown, unknown> | undefined {
+    return this.policies.getScalarForField(typename, fieldName);
   }
 
   /**

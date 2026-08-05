@@ -446,6 +446,7 @@ Array [
   "canonicalStringify",
   "checkDocument",
   "cloneDeep",
+  "coerceScalarFieldsToParsed",
   "combineLatestBatched",
   "compact",
   "createFragmentMap",

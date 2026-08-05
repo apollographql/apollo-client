@@ -5,6 +5,7 @@ import type {
   DocumentNode,
   FragmentDefinitionNode,
   InlineFragmentNode,
+  OperationTypeNode,
 } from "graphql";
 import { wrap } from "optimism";
 import {
@@ -263,11 +264,23 @@ export abstract class ApolloCache {
     return null;
   }
 
+  public getRootTypename(operation: OperationTypeNode): string | undefined {
+    return;
+  }
+
   // Custom scalars API
 
   public getScalar<TKey extends keyof ApolloCache.Scalars>(
     key: TKey
   ): ApolloCache.GetScalarType<TKey> | undefined {
+    return;
+  }
+
+  /** Get a scalar instance for a field in a type */
+  public getScalarForField(
+    typename: string,
+    fieldName: string
+  ): Scalar<unknown, unknown> | undefined {
     return;
   }
 

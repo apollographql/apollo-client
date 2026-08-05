@@ -5,7 +5,7 @@
 ```ts
 
 import { ApolloLink } from '@apollo/client/link';
-import type { DocumentNode } from 'graphql';
+import type { DocumentNode } from '@apollo/client';
 import { FormattedExecutionResult } from 'graphql';
 import { Observable } from 'rxjs';
 import type { OperationVariables } from '@apollo/client';

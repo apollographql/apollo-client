@@ -1613,6 +1613,8 @@ namespace Incremental {
     // @internal @deprecated (undocumented)
     interface Handler<Chunk extends Record<string, unknown> = Record<string, unknown>> {
         // (undocumented)
+        readonly documentTransform?: DocumentTransform;
+        // (undocumented)
         extractErrors: (result: ApolloLink.Result<any>) => readonly GraphQLFormattedError[] | undefined | void;
         // (undocumented)
         isIncrementalResult: (result: ApolloLink.Result<any>) => result is Chunk;
@@ -1642,6 +1644,8 @@ namespace Incremental {
     interface PendingDeferResultWithInfo {
         // (undocumented)
         delivered: boolean;
+        // (undocumented)
+        label: string | undefined;
         // (undocumented)
         path: Incremental.Path;
         // (undocumented)

@@ -28,6 +28,7 @@ import {
   compact,
   DeepMerger,
   getDefaultValues,
+  getDirectiveArgValue,
   getFragmentFromSelection,
   getMainDefinition,
   getQueryDefinition,
@@ -899,12 +900,23 @@ export class StoreReader {
       // dropped or not.
 
       const fragment = getFragmentFromSelection(selection, lookupFragment);
+      let prune = false;
+
+      if (context.deferInfo && isDeferredFragment(selection, variables)) {
+        const directive = selection.directives?.find(
+          (d) => d.name.value === "defer"
+        );
+        const label =
+          directive && getDirectiveArgValue(directive, "label", Kind.STRING);
+
+        prune = !!context.deferInfo.peekArray(path.concat(label || []));
+      }
 
       if (
         fragment &&
         policies.fragmentMatches(fragment, data.__typename) &&
         !boundaries.has(selection) &&
-        !context.deferInfo?.peekArray(path)
+        !prune
       ) {
         fragment.selectionSet.selections.forEach(workSet.add, workSet);
       }

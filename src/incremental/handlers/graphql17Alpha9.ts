@@ -1,11 +1,7 @@
 import type { FormattedExecutionResult, GraphQLFormattedError } from "graphql";
 
 import type { ApolloLink } from "@apollo/client/link";
-import type {
-  DeepPartial,
-  DocumentTransform,
-  HKT,
-} from "@apollo/client/utilities";
+import type { DeepPartial, HKT } from "@apollo/client/utilities";
 import type { ExtensionsWithStreamInfo } from "@apollo/client/utilities/internal";
 import {
   addDeferFragmentLabels,

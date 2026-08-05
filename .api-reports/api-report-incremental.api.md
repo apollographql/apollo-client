@@ -7,6 +7,7 @@
 import type { ApolloLink } from '@apollo/client/link';
 import type { DeepPartial } from '@apollo/client/utilities';
 import type { DocumentNode } from 'graphql';
+import { DocumentTransform } from '@apollo/client/utilities';
 import type { FormattedExecutionResult } from 'graphql';
 import type { GraphQLFormattedError } from 'graphql';
 import type { HKT } from '@apollo/client/utilities';
@@ -170,6 +171,8 @@ export namespace GraphQL17Alpha9Handler {
 
 // @public
 export class GraphQL17Alpha9Handler implements Incremental.Handler<GraphQL17Alpha9Handler.Chunk<any>> {
+    // (undocumented)
+    readonly documentTransform: DocumentTransform;
     // @internal @deprecated (undocumented)
     extractErrors(result: ApolloLink.Result<any>): GraphQLFormattedError[] | undefined;
     // @internal @deprecated (undocumented)
@@ -186,6 +189,8 @@ export class GraphQL17Alpha9Handler implements Incremental.Handler<GraphQL17Alph
 export namespace Incremental {
     // @internal @deprecated (undocumented)
     export interface Handler<Chunk extends Record<string, unknown> = Record<string, unknown>> {
+        // (undocumented)
+        readonly documentTransform?: DocumentTransform;
         // (undocumented)
         extractErrors: (result: ApolloLink.Result<any>) => readonly GraphQLFormattedError[] | undefined | void;
         // (undocumented)
@@ -212,6 +217,8 @@ export namespace Incremental {
     export interface PendingDeferResultWithInfo {
         // (undocumented)
         delivered: boolean;
+        // (undocumented)
+        label: string | undefined;
         // (undocumented)
         path: Incremental.Path;
         // (undocumented)
@@ -256,10 +263,12 @@ class IncrementalRequest<TData> implements Incremental.IncrementalRequest<GraphQ
         type: "stream";
         path: Incremental.Path;
         delivered?: undefined;
+        label?: undefined;
     } | {
         type: "defer";
         delivered: boolean;
         path: Incremental.Path;
+        label: string | undefined;
     })[];
     // (undocumented)
     handle(cacheData: TData | DeepPartial<TData> | null | undefined, chunk: GraphQL17Alpha9Handler.Chunk<TData>): FormattedExecutionResult<TData>;

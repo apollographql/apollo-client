@@ -5,8 +5,13 @@ import { asapScheduler, Observable, observeOn, throwError } from "rxjs";
 import type { OperationVariables } from "@apollo/client";
 import { ApolloLink } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
-import { addTypenameToDocument, print } from "@apollo/client/utilities";
 import {
+  addTypenameToDocument,
+  DocumentTransform,
+  print,
+} from "@apollo/client/utilities";
+import {
+  addDeferFragmentLabels,
   checkDocument,
   cloneDeep,
   getDefaultValues,
@@ -228,8 +233,12 @@ export class MockLink extends ApolloLink {
   }
 
   private getMockedResponses(request: MockLink.MockedRequest) {
+    const documentTransform = new DocumentTransform(
+      addTypenameToDocument
+    ).concat(addDeferFragmentLabels);
+
     const key = JSON.stringify({
-      query: print(addTypenameToDocument(request.query)),
+      query: print(documentTransform.transformDocument(request.query)),
     });
 
     let mockedResponses = this.mockedResponsesByKey[key];

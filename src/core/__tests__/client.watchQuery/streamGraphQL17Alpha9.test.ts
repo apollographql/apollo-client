@@ -3650,10 +3650,7 @@ test("does not surface incomplete cached fields on a streamed item after the net
 
   await expect(stream).toEmitTypedValue({
     data: {
-      friendList: [
-        { __typename: "Friend", id: "1", name: "Luke" },
-        { __typename: "Friend", id: "2", name: "Cached Han" },
-      ],
+      friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
     },
     dataState: "complete",
     loading: true,
@@ -3693,7 +3690,7 @@ test("does not surface incomplete cached fields on a streamed item after the net
   await expect(stream).not.toEmitAnything();
 });
 
-test("does not surface incomplete cached fields inside a `@defer` boundary on streamed list items with returnPartialData: false", async () => {
+test("prunes undelivered defer fragments from partial cached fields inside a `@defer` boundary on streamed list items with returnPartialData: false", async () => {
   const mock = mockDeferStreamGraphQL17Alpha9();
 
   const query = gql`
@@ -3774,11 +3771,6 @@ test("does not surface incomplete cached fields inside a `@defer` boundary on st
           id: "1",
           name: "Luke",
         },
-        {
-          __typename: "Friend",
-          id: "2",
-          name: "Cached Han",
-        },
       ],
     }),
     dataState: "streaming",
@@ -3803,7 +3795,7 @@ test("does not surface incomplete cached fields inside a `@defer` boundary on st
   });
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [
         {
           __typename: "Friend",
@@ -3812,17 +3804,12 @@ test("does not surface incomplete cached fields inside a `@defer` boundary on st
           email: "luke@example.com",
           phone: "555-0101",
         },
-        {
-          __typename: "Friend",
-          id: "2",
-          name: "Cached Han",
-        },
       ],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   mock.enqueueSubsequentChunk({
@@ -4218,10 +4205,10 @@ test("does not surface complete cached `@defer` boundaries on streamed list item
         },
       ],
     }),
-    dataState: "streaming",
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   mock.enqueueSubsequentChunk({

@@ -2988,6 +2988,136 @@ test("truncates a complete stream array to the stream position when truncation i
   });
 });
 
+test('returns dataState "complete" when truncating a stream item with an empty @defer boundary', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 1) {
+        id
+        name
+        ... on Friend @defer {
+          email
+          phone
+        }
+      }
+    }
+  `;
+  const streamInfo = makeStreamInfoTrie();
+  streamInfo.lookupArray(["friendList"]).state.truncate = true;
+  streamInfo.lookupArray(["friendList"]).state.streamPosition = 1;
+
+  cache.writeQuery({
+    query,
+    data: {
+      friendList: [
+        {
+          __typename: "Friend",
+          id: "1",
+          name: "Luke",
+          email: "luke@example.com",
+          phone: "555-0101",
+        },
+        {
+          __typename: "Friend",
+          id: "2",
+          name: "Han",
+        },
+      ],
+    },
+  });
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: { streamInfo },
+    })
+  ).toStrictEqualTyped({
+    result: {
+      friendList: [
+        {
+          __typename: "Friend",
+          id: "1",
+          name: "Luke",
+          email: "luke@example.com",
+          phone: "555-0101",
+        },
+      ],
+    },
+    dataState: "complete",
+    complete: true,
+    missing: undefined,
+  });
+});
+
+test('returns dataState "complete" when truncating a stream item with a partial @defer boundary', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 1) {
+        id
+        name
+        ... on Friend @defer {
+          email
+          phone
+        }
+      }
+    }
+  `;
+  const streamInfo = makeStreamInfoTrie();
+  streamInfo.lookupArray(["friendList"]).state.truncate = true;
+  streamInfo.lookupArray(["friendList"]).state.streamPosition = 1;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        friendList: [
+          {
+            __typename: "Friend",
+            id: "1",
+            name: "Luke",
+            email: "luke@example.com",
+            phone: "555-0101",
+          },
+          {
+            __typename: "Friend",
+            id: "2",
+            name: "Han",
+            email: "han@example.com",
+          },
+        ],
+      },
+    });
+  }
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: { streamInfo },
+    })
+  ).toStrictEqualTyped({
+    result: {
+      friendList: [
+        {
+          __typename: "Friend",
+          id: "1",
+          name: "Luke",
+          email: "luke@example.com",
+          phone: "555-0101",
+        },
+      ],
+    },
+    dataState: "complete",
+    complete: true,
+    missing: undefined,
+  });
+});
+
 test("invalidates a pruned stream array when the stream position changes", () => {
   const cache = new InMemoryCache();
   const query = gql`

@@ -690,7 +690,10 @@ export class StoreReader {
             missing = missingMerger.merge(missing, execResult.missing);
           }
 
-          if (isDeferBoundary && nextDataState === "partial") {
+          if (
+            isDeferBoundary &&
+            (nextDataState === "partial" || nextDataState === "empty")
+          ) {
             partialBoundaries.add(selection);
           }
 

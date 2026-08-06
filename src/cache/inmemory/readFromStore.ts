@@ -103,6 +103,11 @@ type ExecResult<R = any> = {
   missing?: MissingTree;
 };
 
+type PruneResult<R = any> = {
+  result: R;
+  dataState: DataState;
+};
+
 type ExecSelectionSetOptions = {
   selectionSet: SelectionSetNode;
   objectOrReference: StoreObject | Reference;
@@ -168,11 +173,11 @@ export class StoreReader {
 
   private prunePartialStreamArray: OptimisticWrapperFunction<
     [PruneArrayOptions],
-    any[]
+    PruneResult
   >;
   private prunePartialBoundaries: OptimisticWrapperFunction<
     [PruneSelectionSetOptions],
-    Record<string, any>
+    PruneResult
   >;
 
   private config: {
@@ -371,7 +376,7 @@ export class StoreReader {
         context,
         path: [],
       });
-      const changed = execResult.result !== pruned;
+      const changed = execResult.result !== pruned.result;
       // It's possible that pruning didn't actually change the result which can
       // happen if a defer boundary is misclassified as "deferPartial" instead
       // of "streaming" (sibling defer boundaries with overlapping selection
@@ -381,21 +386,12 @@ export class StoreReader {
       // we want to keep the original execResult which contains the partial
       // data.
       if (!changed || !returnPartialData) {
-        const { dataState } = execResult;
-
         // Omit `missing` property since pruning puts it in a state that doesn't
         // report missing fields.
         execResult = {
-          result: pruned,
+          result: pruned.result,
           partialBoundaries: execResult.partialBoundaries,
-          dataState:
-            dataState === "deferPartial" ? "streaming"
-            : dataState === "streamPartial" ? "complete"
-              // A cached @defer boundary the network hasn't delivered was
-              // pruned from an otherwise complete result, so we're still
-              // streaming.
-            : context.deferInfo && changed ? "streaming"
-            : dataState,
+          dataState: pruned.dataState,
         };
       }
     }
@@ -694,7 +690,10 @@ export class StoreReader {
             missing = missingMerger.merge(missing, execResult.missing);
           }
 
-          if (isDeferBoundary && nextDataState === "partial") {
+          if (
+            isDeferBoundary &&
+            (nextDataState === "partial" || nextDataState === "empty")
+          ) {
             partialBoundaries.add(selection);
           }
 
@@ -826,14 +825,17 @@ export class StoreReader {
     data,
     path,
     selectionSet,
-  }: PruneSelectionSetOptions): any {
+  }: PruneSelectionSetOptions): PruneResult<any> {
     const { variables, lookupFragment, policies } = context;
 
-    if (data == null || !boundaries) return data;
+    if (data == null || !boundaries) {
+      return { result: data, dataState: "complete" };
+    }
 
     const merger = new DeepMerger();
 
     let changed = false;
+    let dataState: DataState = "complete";
     const result: Record<string, any> = {};
 
     // __typename might not be part of the selection set, so preserve it when
@@ -865,8 +867,9 @@ export class StoreReader {
             path: path.concat(resultName),
           });
 
-          changed ||= pruned !== fieldValue;
-          result[resultName] = pruned;
+          changed ||= pruned.result !== fieldValue;
+          result[resultName] = pruned.result;
+          dataState = mergeDataState(dataState, pruned.dataState);
         } else if (!selection.selectionSet) {
           result[resultName] = fieldValue;
         } else {
@@ -878,14 +881,15 @@ export class StoreReader {
             path: path.concat(resultName),
           });
 
-          changed ||= pruned !== fieldValue;
+          changed ||= pruned.result !== fieldValue;
+          dataState = mergeDataState(dataState, pruned.dataState);
 
           // A response key can be selected by more than one selection (e.g. a
           // field and an overlapping fragment), so merge their kept fields.
           result[resultName] =
             Object.hasOwn(result, resultName) ?
-              merger.merge(result[resultName], pruned)
-            : pruned;
+              merger.merge(result[resultName], pruned.result)
+            : pruned.result;
         }
 
         return;
@@ -912,13 +916,12 @@ export class StoreReader {
         prune = !!context.deferInfo.peekArray(path.concat(label || []));
       }
 
-      if (
-        fragment &&
-        policies.fragmentMatches(fragment, data.__typename) &&
-        !boundaries.has(selection) &&
-        !prune
-      ) {
-        fragment.selectionSet.selections.forEach(workSet.add, workSet);
+      if (fragment && policies.fragmentMatches(fragment, data.__typename)) {
+        if (boundaries.has(selection) || prune) {
+          dataState = mergeDataState(dataState, "streaming");
+        } else {
+          fragment.selectionSet.selections.forEach(workSet.add, workSet);
+        }
       }
     });
 
@@ -932,7 +935,7 @@ export class StoreReader {
       changed = !equal(result, data);
     }
 
-    return changed ? result : data;
+    return { result: changed ? result : data, dataState };
   }
 
   private prunePartialStreamArrayImpl({
@@ -941,10 +944,11 @@ export class StoreReader {
     boundaries,
     context,
     path,
-  }: PruneArrayOptions) {
-    if (!boundaries) return array;
+  }: PruneArrayOptions): PruneResult<any> {
+    if (!boundaries) return { result: array, dataState: "complete" };
 
     let changed = false;
+    let dataState: DataState = "complete";
     let pruned: any[] = [];
 
     const state = context.streamInfo?.peekArray(path)?.state;
@@ -956,7 +960,10 @@ export class StoreReader {
     for (let i = 0; i < length; i++) {
       const item = array[i];
 
-      let prunedItem = item;
+      let prunedResult: PruneResult<any> = {
+        result: item,
+        dataState: "complete",
+      };
       const boundary = boundaries.getChild(i);
 
       if (boundary?.has(field)) {
@@ -971,13 +978,14 @@ export class StoreReader {
           pruned = pruned.slice(0, state.streamPosition);
         } else {
           pruned = [];
+          dataState = "complete";
         }
 
         break;
       }
 
       if (Array.isArray(item)) {
-        prunedItem = this.prunePartialStreamArray({
+        prunedResult = this.prunePartialStreamArray({
           field,
           array: item,
           boundaries: boundaries.getChild(i),
@@ -985,7 +993,7 @@ export class StoreReader {
           path: path.concat(i),
         });
       } else if (field.selectionSet) {
-        prunedItem = this.prunePartialBoundaries({
+        prunedResult = this.prunePartialBoundaries({
           data: item,
           selectionSet: field.selectionSet,
           boundaries: boundaries.getChild(i),
@@ -994,13 +1002,14 @@ export class StoreReader {
         });
       }
 
-      pruned.push(prunedItem);
-      changed ||= prunedItem !== item;
+      pruned.push(prunedResult.result);
+      changed ||= prunedResult.result !== item;
+      dataState = mergeDataState(dataState, prunedResult.dataState);
     }
 
     changed ||= pruned.length !== array.length;
 
-    return changed ? pruned : array;
+    return { result: changed ? pruned : array, dataState };
   }
 }
 

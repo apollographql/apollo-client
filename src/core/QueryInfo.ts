@@ -239,9 +239,11 @@ export class QueryInfo<
       returnPartialData,
       fetchPolicy,
       networkStatus,
+      prunePendingDeferFragments: prune,
     }: OperationInfo<TData, TVariables> & {
       fetchPolicy: WatchQueryFetchPolicy;
       networkStatus: NetworkStatus;
+      prunePendingDeferFragments: boolean;
     }
   ): MarkQueryResult<
     DataValue.Complete<TData> | DataValue.Streaming<TData>,
@@ -252,8 +254,6 @@ export class QueryInfo<
       variables,
       optimistic: true,
     };
-    const isNetworkOnly =
-      fetchPolicy === "network-only" && networkStatus !== NetworkStatus.refetch;
 
     // Cancel the pending notify timeout (if it exists) to prevent extraneous network
     // requests. To allow future notify timeouts, diff and dirty are reset as well.
@@ -277,7 +277,7 @@ export class QueryInfo<
               errorPolicy !== "none" ||
               !this.incrementalHandler.extractErrors(incoming)?.length,
           },
-          this.getIncrementalInfo({ isNetworkOnly })
+          this.getIncrementalInfo({ prune })
         )
       );
 
@@ -398,10 +398,13 @@ export class QueryInfo<
         const { dataState, result: diffResult } = this.getDiff(
           {
             ...diffOptions,
-            // Never deliver partial data for network-only requests
-            returnPartialData: returnPartialData && !isNetworkOnly,
+            returnPartialData:
+              returnPartialData &&
+              // Never deliver partial data for network-only requests
+              (fetchPolicy !== "network-only" ||
+                networkStatus === NetworkStatus.refetch),
           },
-          this.getIncrementalInfo({ isNetworkOnly })
+          this.getIncrementalInfo({ prune })
         );
 
         if (
@@ -417,7 +420,7 @@ export class QueryInfo<
     return result;
   }
 
-  private getIncrementalInfo({ isNetworkOnly }: { isNetworkOnly: boolean }) {
+  private getIncrementalInfo({ prune }: { prune: boolean }) {
     const pending = this.incremental?.getPendingWithInfo?.() ?? [];
     const streamInfo = this.incremental?.streamInfo;
     const incrementalInfo: DiffIncrementalInfo = { streamInfo };
@@ -426,7 +429,7 @@ export class QueryInfo<
     // for a network-only request if they haven't yet streamed from the
     // network. We record all the still-pending paths so that cache.diff
     // can prune complete defer/stream boundaries at those paths.
-    if (isNetworkOnly) {
+    if (prune) {
       for (const item of pending) {
         if (item.type === "defer" && !item.delivered) {
           incrementalInfo.deferInfo ||= new Trie(true, () => true);

@@ -256,9 +256,6 @@ export class QueryInfo<
       optimistic: true,
     };
 
-    const isNetworkOnly =
-      fetchPolicy === "network-only" && networkStatus !== NetworkStatus.refetch;
-
     // Cancel the pending notify timeout (if it exists) to prevent extraneous network
     // requests. To allow future notify timeouts, diff and dirty are reset as well.
     this.observableQuery?.["resetNotifications"]();
@@ -405,8 +402,11 @@ export class QueryInfo<
         const { dataState, result: diffResult } = this.getDiff(
           {
             ...diffOptions,
-            // Never deliver partial data for network-only requests
-            returnPartialData: returnPartialData && !isNetworkOnly,
+            returnPartialData:
+              returnPartialData &&
+              // Never deliver partial data for network-only requests
+              (fetchPolicy !== "network-only" ||
+                networkStatus === NetworkStatus.refetch),
           },
           this.getIncrementalInfo({ prune })
         );

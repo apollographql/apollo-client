@@ -978,6 +978,7 @@ export class StoreReader {
           pruned = pruned.slice(0, state.streamPosition);
         } else {
           pruned = [];
+          dataState = "complete";
         }
 
         break;

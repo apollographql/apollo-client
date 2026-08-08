@@ -110,10 +110,28 @@ describe("canonicalStringify", () => {
     );
   });
 
-  it("should not pollute Object.prototype while sorting a __proto__ key", () => {
-    canonicalStringify(JSON.parse('{"b":2,"__proto__":{"polluted":true}}'));
+  it("should not run the inherited __proto__ setter while sorting", () => {
+    const descriptor = Object.getOwnPropertyDescriptor(
+      Object.prototype,
+      "__proto__"
+    )!;
+    let setterCalls = 0;
 
-    expect(({} as any).polluted).toBeUndefined();
+    Object.defineProperty(Object.prototype, "__proto__", {
+      ...descriptor,
+      set(this: unknown, value: unknown) {
+        setterCalls++;
+        descriptor.set!.call(this, value);
+      },
+    });
+
+    try {
+      canonicalStringify(JSON.parse('{"b":2,"__proto__":{"x":1}}'));
+    } finally {
+      Object.defineProperty(Object.prototype, "__proto__", descriptor);
+    }
+
+    expect(setterCalls).toBe(0);
   });
 
   it("should not modify keys of custom-prototype objects", () => {

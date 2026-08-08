@@ -102,7 +102,20 @@ function stableObjectReplacer(key: string, value: any) {
       // Reassigning the keys in sorted order will cause JSON.stringify to
       // serialize them in sorted order.
       sortedKeys.forEach((key) => {
-        sortedObject[key] = value[key];
+        if (key === "__proto__") {
+          // Assigning "__proto__" runs the setter inherited from
+          // Object.prototype rather than creating a property, so the key would
+          // be dropped here while the already-sorted path above kept it. The
+          // proto === null branch has no such accessor to run.
+          Object.defineProperty(sortedObject, key, {
+            value: value[key],
+            enumerable: true,
+            configurable: true,
+            writable: true,
+          });
+        } else {
+          sortedObject[key] = value[key];
+        }
       });
       return sortedObject;
     }

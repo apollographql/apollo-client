@@ -85,6 +85,37 @@ describe("canonicalStringify", () => {
     expect(stableStrings.size).toBe(1);
   });
 
+  // An own `__proto__` key comes from JSON, which is where variables restored
+  // from a query string, from storage, or from a server response come from.
+  // `JSON.parse` is used here rather than `allObjectPermutations`, which builds
+  // its objects by assignment and so cannot carry the key either.
+  it("should stringify an own __proto__ key the same way in every position", () => {
+    const protoFirst = JSON.parse('{"__proto__":{"x":1},"b":2}');
+    const protoLast = JSON.parse('{"b":2,"__proto__":{"x":1}}');
+
+    // JSON.stringify keeps the key in both orders, so the two objects really
+    // do hold the same data going in.
+    expect(JSON.stringify(protoFirst)).toBe('{"__proto__":{"x":1},"b":2}');
+    expect(JSON.stringify(protoLast)).toBe('{"b":2,"__proto__":{"x":1}}');
+
+    expect(canonicalStringify(protoFirst)).toBe('{"__proto__":{"x":1},"b":2}');
+    expect(canonicalStringify(protoLast)).toBe('{"__proto__":{"x":1},"b":2}');
+  });
+
+  it("should stringify an own __proto__ key on a nested object", () => {
+    const obj = JSON.parse('{"z":"z","y":{"b":2,"__proto__":{"x":1}},"x":"x"}');
+
+    expect(canonicalStringify(obj)).toBe(
+      '{"x":"x","y":{"__proto__":{"x":1},"b":2},"z":"z"}'
+    );
+  });
+
+  it("should not pollute Object.prototype while sorting a __proto__ key", () => {
+    canonicalStringify(JSON.parse('{"b":2,"__proto__":{"polluted":true}}'));
+
+    expect(({} as any).polluted).toBeUndefined();
+  });
+
   it("should not modify keys of custom-prototype objects", () => {
     class Custom {
       z = "z";

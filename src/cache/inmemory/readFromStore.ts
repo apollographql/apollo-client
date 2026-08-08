@@ -11,7 +11,7 @@ import { Kind } from "graphql";
 import type { OptimisticWrapperFunction } from "optimism";
 import { wrap } from "optimism";
 
-import type { ErrorResult, OkResult } from "@apollo/client";
+import type { CatchTo, ErrorResult, OkResult } from "@apollo/client";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import type { Reference, StoreObject } from "@apollo/client/utilities";
 import {
@@ -95,6 +95,7 @@ interface ReadContext extends ReadMergeModifyContext {
   policies: Policies;
   fragmentMap: FragmentMap;
   lookupFragment: FragmentMapFunction;
+  catchByDefault: CatchTo;
   streamInfo?: StreamInfoTrie;
   deferInfo?: DeferInfoTrie;
 }

@@ -203,7 +203,6 @@ export interface MergeTree {
 
 export interface ReadMergeModifyContext {
   store: NormalizedCache;
-  catchByDefault: CatchTo;
   variables?: OperationVariables;
   // A JSON.stringify-serialized version of context.variables.
   varString?: string;

@@ -4443,7 +4443,7 @@ test("ignores a read function added by policies.addTypePolicies with the field p
   );
 });
 
-test("deep merges scalar option with policies.addTypePolices", () => {
+test("deep merges scalar option with policies.addTypePolicies", () => {
   using _ = spyOnConsole("warn");
   const endDateMerge = jest.fn(
     (_existing: unknown, incoming: unknown) => incoming

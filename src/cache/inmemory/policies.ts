@@ -358,7 +358,7 @@ type InternalFieldPolicy = {
   keyFn?: KeyArgsFunction;
   read?: FieldReadFunction<any>;
   merge?: FieldMergeFunction<any>;
-  scalar?: keyof ApolloCache.Scalars;
+  scalar?: keyof ApolloCache.Scalars & string;
 };
 
 export class Policies {
@@ -568,12 +568,48 @@ export class Policies {
         const incoming = fields[fieldName];
 
         if (typeof incoming === "function") {
-          existing.read = incoming;
+          if (existing.scalar) {
+            if (__DEV__) {
+              warnAboutScalarConfig(
+                typename,
+                fieldName,
+                existing.scalar,
+                "read"
+              );
+            }
+          } else {
+            existing.read = incoming;
+          }
         } else {
-          const { keyArgs, read, merge, scalar } = incoming;
+          let { keyArgs, read, merge, scalar } = incoming;
 
           if (scalar) {
             existing.scalar = scalar;
+          }
+
+          if (existing.scalar) {
+            if (__DEV__) {
+              if (read !== undefined || existing.read !== undefined) {
+                warnAboutScalarConfig(
+                  typename,
+                  fieldName,
+                  existing.scalar,
+                  "read"
+                );
+              }
+
+              if (merge !== undefined || existing.merge !== undefined) {
+                warnAboutScalarConfig(
+                  typename,
+                  fieldName,
+                  existing.scalar,
+                  "merge"
+                );
+              }
+            }
+
+            existing.read = read = undefined;
+            existing.merge = merge = undefined;
           }
 
           existing.keyFn =
@@ -1231,4 +1267,18 @@ function makeMergeObjectsFunction(
 
     return incoming;
   };
+}
+
+function warnAboutScalarConfig(
+  typename: string,
+  fieldName: string,
+  scalar: string,
+  kind: "read" | "merge"
+) {
+  invariant.warn(
+    "The field policy for '%s' is configured with the '%s' scalar, so its '%s' function is ignored. Scalar configuration cannot be used with custom read or merge functions.",
+    `${typename}.${fieldName}`,
+    scalar,
+    kind
+  );
 }

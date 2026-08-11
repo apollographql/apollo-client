@@ -13,6 +13,11 @@ import {
 
 const IS_GRAPHQL_17 = graphqlVersion.startsWith("17");
 
+const WARNINGS = {
+  SCALAR_FIELD_CONFIG:
+    "The field policy for '%s' is configured with the '%s' scalar, so its '%s' function is ignored. Scalar configuration cannot be used with custom read or merge functions.",
+};
+
 test("creates a scalar from a GraphQLScalarType", () => {
   const graphQLScalar = new GraphQLScalarType<Date, string>({
     name: "DateTime",
@@ -871,7 +876,10 @@ test("stores parsed scalar value in the cache when overwriting an existing field
   });
 });
 
-test("stores parsed scalar value in the cache when a merge function is also configured on the field", () => {
+test("ignores the merge function and stores the parsed scalar value when a merge function is also configured on the field", () => {
+  using _ = spyOnConsole("warn");
+  const merge = jest.fn((_existing: unknown, incoming: unknown) => incoming);
+
   const cache = new InMemoryCache({
     scalars: { DateTime: dateTimeScalar },
     typePolicies: {
@@ -879,7 +887,7 @@ test("stores parsed scalar value in the cache when a merge function is also conf
         fields: {
           startTime: {
             scalar: "DateTime",
-            merge: (_, incoming) => incoming,
+            merge,
           },
         },
       },
@@ -906,6 +914,7 @@ test("stores parsed scalar value in the cache when a merge function is also conf
     },
   });
 
+  expect(merge).not.toHaveBeenCalled();
   expect(rawCacheData(cache)).toEqual({
     ROOT_QUERY: {
       __typename: "Query",
@@ -917,9 +926,19 @@ test("stores parsed scalar value in the cache when a merge function is also conf
       startTime: new Date("2026-01-01T00:00:00.000Z"),
     },
   });
+
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    WARNINGS.SCALAR_FIELD_CONFIG,
+    "Event.startTime",
+    "DateTime",
+    "merge"
+  );
 });
 
-test("stores the parsed value returned by a merge function in the cache", () => {
+test("stores the parsed incoming value instead of the value returned by an ignored merge function", () => {
+  using _ = spyOnConsole("warn");
+
   const cache = new InMemoryCache({
     scalars: { DateTime: dateTimeScalar },
     typePolicies: {
@@ -927,7 +946,7 @@ test("stores the parsed value returned by a merge function in the cache", () => 
         fields: {
           startTime: {
             scalar: "DateTime",
-            merge: (_, incoming) => new Date(incoming),
+            merge: () => new Date("2020-06-15T14:30:00.000Z"),
           },
         },
       },
@@ -967,7 +986,10 @@ test("stores the parsed value returned by a merge function in the cache", () => 
   });
 });
 
-test("stores each element as a parsed value when writing an array of scalar values with a merge function", () => {
+test("stores each element as a parsed value when writing an array of scalar values with an ignored merge function", () => {
+  using _ = spyOnConsole("warn");
+  const merge = jest.fn((_existing: unknown, incoming: unknown) => incoming);
+
   const cache = new InMemoryCache({
     scalars: { DateTime: dateTimeScalar },
     typePolicies: {
@@ -975,7 +997,7 @@ test("stores each element as a parsed value when writing an array of scalar valu
         fields: {
           meetingTimes: {
             scalar: "DateTime",
-            merge: (_, incoming) => incoming,
+            merge,
           },
         },
       },
@@ -1003,6 +1025,7 @@ test("stores each element as a parsed value when writing an array of scalar valu
     },
   });
 
+  expect(merge).not.toHaveBeenCalled();
   expect(rawCacheData(cache)).toEqual({
     ROOT_QUERY: {
       __typename: "Query",
@@ -1017,7 +1040,10 @@ test("stores each element as a parsed value when writing an array of scalar valu
   });
 });
 
-test("stores each leaf element as a parsed value when writing a 2D array of scalar values with a merge function", () => {
+test("stores each leaf element as a parsed value when writing a 2D array of scalar values with an ignored merge function", () => {
+  using _ = spyOnConsole("warn");
+  const merge = jest.fn((_existing: unknown, incoming: unknown) => incoming);
+
   const cache = new InMemoryCache({
     scalars: { DateTime: dateTimeScalar },
     typePolicies: {
@@ -1025,7 +1051,7 @@ test("stores each leaf element as a parsed value when writing a 2D array of scal
         fields: {
           availabilitySlots: {
             scalar: "DateTime",
-            merge: (_, incoming) => incoming,
+            merge,
           },
         },
       },
@@ -1056,6 +1082,7 @@ test("stores each leaf element as a parsed value when writing a 2D array of scal
     },
   });
 
+  expect(merge).not.toHaveBeenCalled();
   expect(rawCacheData(cache)).toEqual({
     ROOT_QUERY: {
       __typename: "Query",
@@ -3807,7 +3834,619 @@ test("ignores scalar and emits a dev warning when a scalar option is set on a fi
   );
 });
 
+test("ignores a read function and emits a dev warning when the field is configured with a scalar", () => {
+  using _ = spyOnConsole("warn");
+  const read = jest.fn(() => new Date("2020-06-15T14:30:00.000Z"));
+
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Event: {
+        fields: {
+          startTime: { scalar: "DateTime", read },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      event {
+        id
+        startTime
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startTime: "2026-01-01T00:00:00.000Z",
+      },
+    },
+  });
+
+  expect(cache.readQuery({ query })).toEqual({
+    event: {
+      __typename: "Event",
+      id: "1",
+      startTime: new Date("2026-01-01T00:00:00.000Z"),
+    },
+  });
+
+  expect(read).not.toHaveBeenCalled();
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    WARNINGS.SCALAR_FIELD_CONFIG,
+    "Event.startTime",
+    "DateTime",
+    "read"
+  );
+});
+
+test("ignores both read and merge functions and warns for each when the field is configured with a scalar", () => {
+  using _ = spyOnConsole("warn");
+  const read = jest.fn(() => new Date("2020-06-15T14:30:00.000Z"));
+  const merge = jest.fn((_existing: unknown, incoming: unknown) => incoming);
+
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Event: {
+        fields: {
+          startTime: { scalar: "DateTime", read, merge },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      event {
+        id
+        startTime
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startTime: "2026-01-01T00:00:00.000Z",
+      },
+    },
+  });
+
+  expect(cache.readQuery({ query })).toEqual({
+    event: {
+      __typename: "Event",
+      id: "1",
+      startTime: new Date("2026-01-01T00:00:00.000Z"),
+    },
+  });
+
+  expect(read).not.toHaveBeenCalled();
+  expect(merge).not.toHaveBeenCalled();
+  expect(console.warn).toHaveBeenCalledTimes(2);
+  expect(console.warn).toHaveBeenCalledWith(
+    WARNINGS.SCALAR_FIELD_CONFIG,
+    "Event.startTime",
+    "DateTime",
+    "read"
+  );
+  expect(console.warn).toHaveBeenCalledWith(
+    WARNINGS.SCALAR_FIELD_CONFIG,
+    "Event.startTime",
+    "DateTime",
+    "merge"
+  );
+});
+
+test("ignores the merge: true shorthand and warns when the field is configured with a scalar", () => {
+  using _ = spyOnConsole("warn");
+
+  const cache = new InMemoryCache({
+    scalars: { JSONObject: jsonObjectScalar },
+    typePolicies: {
+      Product: {
+        fields: {
+          metadata: { scalar: "JSONObject", merge: true },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      product {
+        id
+        metadata
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      product: {
+        __typename: "Product",
+        id: "1",
+        metadata: { color: "red" },
+      },
+    },
+  });
+
+  cache.writeQuery({
+    query,
+    data: {
+      product: {
+        __typename: "Product",
+        id: "1",
+        metadata: { size: "large" },
+      },
+    },
+  });
+
+  expect(rawCacheData(cache)).toEqual({
+    ROOT_QUERY: { __typename: "Query", product: { __ref: "Product:1" } },
+    "Product:1": {
+      __typename: "Product",
+      id: "1",
+      metadata: new Map([["size", "large"]]),
+    },
+  });
+
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    WARNINGS.SCALAR_FIELD_CONFIG,
+    "Product.metadata",
+    "JSONObject",
+    "merge"
+  );
+});
+
+test("does not apply the implicit keyArgs: false when read and merge functions are ignored for a scalar field", () => {
+  using _ = spyOnConsole("warn");
+
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Event: {
+        fields: {
+          startTime: {
+            scalar: "DateTime",
+            read: (existing) => existing,
+            merge: (_, incoming) => incoming,
+          },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      event {
+        id
+        startTime(timezone: "UTC")
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startTime: "2026-01-01T00:00:00.000Z",
+      },
+    },
+  });
+
+  expect(rawCacheData(cache)).toEqual({
+    ROOT_QUERY: { __typename: "Query", event: { __ref: "Event:1" } },
+    "Event:1": {
+      __typename: "Event",
+      id: "1",
+      'startTime({"timezone":"UTC"})': new Date("2026-01-01T00:00:00.000Z"),
+    },
+  });
+});
+
+test("warns once for an ignored function no matter how many times the field is written or read", () => {
+  using _ = spyOnConsole("warn");
+
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Event: {
+        fields: {
+          startTime: {
+            scalar: "DateTime",
+            merge: (_, incoming) => incoming,
+          },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      event {
+        id
+        startTime
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startTime: "2026-01-01T00:00:00.000Z",
+      },
+    },
+  });
+
+  cache.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startTime: "2026-06-15T14:30:00.000Z",
+      },
+    },
+  });
+
+  cache.readQuery({ query });
+  cache.readQuery({ query });
+
+  expect(console.warn).toHaveBeenCalledTimes(1);
+});
+
+test("runs read and merge functions and does not warn when the field policy has no scalar option", () => {
+  using _ = spyOnConsole("warn");
+  const read = jest.fn((existing: string) => existing.toUpperCase());
+  const merge = jest.fn((_existing: unknown, incoming: string) =>
+    incoming.trim()
+  );
+
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Event: {
+        fields: {
+          name: { read, merge },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      event {
+        id
+        name
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        name: "  Opening keynote  ",
+      },
+    },
+  });
+
+  expect(cache.readQuery({ query })).toEqual({
+    event: {
+      __typename: "Event",
+      id: "1",
+      name: "OPENING KEYNOTE",
+    },
+  });
+
+  expect(read).toHaveBeenCalled();
+  expect(merge).toHaveBeenCalled();
+  expect(console.warn).not.toHaveBeenCalled();
+});
+
+test("ignores read and merge functions when the scalar option names an unregistered scalar", () => {
+  using _ = spyOnConsole("warn");
+  const read = jest.fn(() => "read value");
+  const merge = jest.fn((_existing: unknown, incoming: unknown) => incoming);
+
+  const cache = new InMemoryCache({
+    typePolicies: {
+      Event: {
+        fields: {
+          startTime: { scalar: "Unregistered", read, merge },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      event {
+        id
+        startTime
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startTime: "2026-01-01T00:00:00.000Z",
+      },
+    },
+  });
+
+  expect(cache.readQuery({ query })).toEqual({
+    event: {
+      __typename: "Event",
+      id: "1",
+      startTime: "2026-01-01T00:00:00.000Z",
+    },
+  });
+
+  expect(read).not.toHaveBeenCalled();
+  expect(merge).not.toHaveBeenCalled();
+  expect(console.warn).toHaveBeenCalledTimes(2);
+  expect(console.warn).toHaveBeenCalledWith(
+    WARNINGS.SCALAR_FIELD_CONFIG,
+    "Event.startTime",
+    "Unregistered",
+    "read"
+  );
+  expect(console.warn).toHaveBeenCalledWith(
+    WARNINGS.SCALAR_FIELD_CONFIG,
+    "Event.startTime",
+    "Unregistered",
+    "merge"
+  );
+});
+
+test("unsets read and merge functions when policies.addTypePolicies adds a scalar to the field", () => {
+  using _ = spyOnConsole("warn");
+  const read = jest.fn(() => new Date("2020-06-15T14:30:00.000Z"));
+  const merge = jest.fn((_existing: unknown, incoming: unknown) => incoming);
+
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Event: {
+        fields: {
+          startTime: { read, merge },
+        },
+      },
+    },
+  });
+
+  cache.policies.addTypePolicies({
+    Event: {
+      fields: {
+        startTime: { scalar: "DateTime" },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      event {
+        id
+        startTime
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startTime: "2026-01-01T00:00:00.000Z",
+      },
+    },
+  });
+
+  expect(rawCacheData(cache)).toEqual({
+    ROOT_QUERY: { __typename: "Query", event: { __ref: "Event:1" } },
+    "Event:1": {
+      __typename: "Event",
+      id: "1",
+      startTime: new Date("2026-01-01T00:00:00.000Z"),
+    },
+  });
+
+  expect(cache.readQuery({ query })).toEqual({
+    event: {
+      __typename: "Event",
+      id: "1",
+      startTime: new Date("2026-01-01T00:00:00.000Z"),
+    },
+  });
+
+  expect(read).not.toHaveBeenCalled();
+  expect(merge).not.toHaveBeenCalled();
+  expect(console.warn).toHaveBeenCalledTimes(2);
+  expect(console.warn).toHaveBeenCalledWith(
+    WARNINGS.SCALAR_FIELD_CONFIG,
+    "Event.startTime",
+    "DateTime",
+    "read"
+  );
+  expect(console.warn).toHaveBeenCalledWith(
+    WARNINGS.SCALAR_FIELD_CONFIG,
+    "Event.startTime",
+    "DateTime",
+    "merge"
+  );
+});
+
+test("ignores read and merge functions added by policies.addTypePolicies to a field that already has a scalar", () => {
+  using _ = spyOnConsole("warn");
+  const read = jest.fn(() => new Date("2020-06-15T14:30:00.000Z"));
+  const merge = jest.fn((_existing: unknown, incoming: unknown) => incoming);
+
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Event: {
+        fields: {
+          startTime: { scalar: "DateTime" },
+        },
+      },
+    },
+  });
+
+  cache.policies.addTypePolicies({
+    Event: {
+      fields: {
+        startTime: { read, merge },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      event {
+        id
+        startTime
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startTime: "2026-01-01T00:00:00.000Z",
+      },
+    },
+  });
+
+  expect(rawCacheData(cache)).toEqual({
+    ROOT_QUERY: { __typename: "Query", event: { __ref: "Event:1" } },
+    "Event:1": {
+      __typename: "Event",
+      id: "1",
+      startTime: new Date("2026-01-01T00:00:00.000Z"),
+    },
+  });
+
+  expect(cache.readQuery({ query })).toEqual({
+    event: {
+      __typename: "Event",
+      id: "1",
+      startTime: new Date("2026-01-01T00:00:00.000Z"),
+    },
+  });
+
+  expect(read).not.toHaveBeenCalled();
+  expect(merge).not.toHaveBeenCalled();
+  expect(console.warn).toHaveBeenCalledTimes(2);
+  expect(console.warn).toHaveBeenCalledWith(
+    WARNINGS.SCALAR_FIELD_CONFIG,
+    "Event.startTime",
+    "DateTime",
+    "read"
+  );
+  expect(console.warn).toHaveBeenCalledWith(
+    WARNINGS.SCALAR_FIELD_CONFIG,
+    "Event.startTime",
+    "DateTime",
+    "merge"
+  );
+});
+
+test("ignores a read function added by policies.addTypePolicies with the field policy shorthand for a field that already has a scalar", () => {
+  using _ = spyOnConsole("warn");
+  const read = jest.fn(() => new Date("2020-06-15T14:30:00.000Z"));
+
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Event: {
+        fields: {
+          startTime: { scalar: "DateTime" },
+        },
+      },
+    },
+  });
+
+  cache.policies.addTypePolicies({
+    Event: {
+      fields: {
+        startTime: read,
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      event {
+        id
+        startTime
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startTime: "2026-01-01T00:00:00.000Z",
+      },
+    },
+  });
+
+  expect(cache.readQuery({ query })).toEqual({
+    event: {
+      __typename: "Event",
+      id: "1",
+      startTime: new Date("2026-01-01T00:00:00.000Z"),
+    },
+  });
+
+  expect(read).not.toHaveBeenCalled();
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    WARNINGS.SCALAR_FIELD_CONFIG,
+    "Event.startTime",
+    "DateTime",
+    "read"
+  );
+});
+
 test("deep merges scalar option with policies.addTypePolices", () => {
+  using _ = spyOnConsole("warn");
+  const endDateMerge = jest.fn(
+    (_existing: unknown, incoming: unknown) => incoming
+  );
+
   const cache = new InMemoryCache({
     scalars: {
       DateTime: dateTimeScalar,
@@ -3818,7 +4457,7 @@ test("deep merges scalar option with policies.addTypePolices", () => {
       Conference: {
         fields: {
           startDate: { scalar: "DateTime" },
-          endDate: { merge: (_, incoming) => incoming },
+          endDate: { merge: endDateMerge },
         },
       },
       Schedule: {
@@ -3979,6 +4618,15 @@ test("deep merges scalar option with policies.addTypePolices", () => {
       ],
     },
   });
+
+  expect(endDateMerge).not.toHaveBeenCalled();
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    WARNINGS.SCALAR_FIELD_CONFIG,
+    "Conference.endDate",
+    "DateTime",
+    "merge"
+  );
 });
 
 test("preserves an existing scalar option when policies.addTypePolicies updates another field option", () => {
@@ -3999,7 +4647,7 @@ test("preserves an existing scalar option when policies.addTypePolicies updates 
     Event: {
       fields: {
         startTime: {
-          merge: (_, incoming) => incoming,
+          keyArgs: ["timezone"],
         },
       },
     },
@@ -4009,7 +4657,7 @@ test("preserves an existing scalar option when policies.addTypePolicies updates 
     query {
       event {
         id
-        startTime
+        startTime(timezone: "UTC")
       }
     }
   `;
@@ -4033,7 +4681,7 @@ test("preserves an existing scalar option when policies.addTypePolicies updates 
     "Event:1": {
       __typename: "Event",
       id: "1",
-      startTime: new Date("2026-01-01T00:00:00.000Z"),
+      'startTime:{"timezone":"UTC"}': new Date("2026-01-01T00:00:00.000Z"),
     },
   });
 });

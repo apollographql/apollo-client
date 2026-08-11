@@ -26,7 +26,6 @@ import {
   wrapQueryRef,
 } from "@apollo/client/react/internal";
 import type {
-  DocumentationTypes as UtilityDocumentationTypes,
   NoInfer,
   OptionWithFallback,
   Prettify,
@@ -101,8 +100,10 @@ export declare namespace useBackgroundQuery {
     namespace useBackgroundQuery {
       export interface Options<
         TVariables extends OperationVariables = OperationVariables,
-      > extends Omit<Base.Options, "variables">,
-          UtilityDocumentationTypes.VariableOptions<TVariables> {}
+      > extends Base.Options {
+        /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
+        variables?: TVariables;
+      }
     }
   }
 

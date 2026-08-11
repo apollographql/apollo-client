@@ -129,8 +129,10 @@ export declare namespace useQuery {
       export interface Options<
         TData = unknown,
         TVariables extends OperationVariables = OperationVariables,
-      > extends Omit<Base.Options<TData, TVariables>, "variables">,
-          UtilityDocumentationTypes.VariableOptions<TVariables> {}
+      > extends Base.Options<TData, TVariables> {
+        /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
+        variables?: TVariables;
+      }
     }
   }
 

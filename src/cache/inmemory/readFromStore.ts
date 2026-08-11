@@ -356,19 +356,7 @@ export class StoreReader {
     // partial defer boundaries. The "deferPartial" data state tells us that the
     // only part of the result that contributed to its partiality is data inside
     // a defer boundary.
-    if (
-      returnIncremental &&
-      (execResult.dataState === "deferPartial" ||
-        execResult.dataState === "streamPartial" ||
-        // If the last cache write repaired a partial @stream array to a
-        // complete array, the stream array might contain stale entries after
-        // the last written value. We only want to deliver the results up to
-        // the index the network wrote so we need to prune it too.
-        context.streamInfo ||
-        // The network hasn't delivered these @defer boundaries yet, so prune
-        // the (possibly complete) cached data sitting at them.
-        context.deferInfo)
-    ) {
+    if (returnIncremental && shouldPrune(execResult, context)) {
       const pruned = this.prunePartialBoundaries({
         selectionSet: getMainDefinition(query).selectionSet,
         data: execResult.result,
@@ -1098,6 +1086,29 @@ class PartialBoundaries {
 
     return this;
   }
+}
+
+function shouldPrune({ dataState }: ExecResult<any>, context: ReadContext) {
+  if (dataState === "deferPartial" || dataState === "streamPartial") {
+    return true;
+  }
+
+  if (dataState === "complete" || dataState === "streaming") {
+    return !!(
+      // If the last cache write repaired a partial @stream array to a
+      // complete array, the stream array might contain stale entries after
+      // the last written value. We only want to deliver the results up to
+      // the index the network wrote so we need to prune it too.
+      (
+        context.streamInfo ||
+        // The network hasn't delivered these @defer boundaries yet, so prune
+        // the (possibly complete) cached data sitting at them.
+        context.deferInfo
+      )
+    );
+  }
+
+  return false;
 }
 
 // Describes the data state transitions that change the running state when it's

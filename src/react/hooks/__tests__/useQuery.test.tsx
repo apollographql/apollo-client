@@ -6560,6 +6560,10 @@ describe("useQuery Hook", () => {
   });
 
   it("delivers the full network response when a merge function returns an incomplete result", async () => {
+    // Silence expected warning about partial cache result because of merge
+    // function
+    using _ = spyOnConsole("warn");
+
     const query = gql`
       query {
         author {
@@ -6657,9 +6661,35 @@ describe("useQuery Hook", () => {
     }
 
     await expect(takeSnapshot).not.toRerender();
+
+    expect(console.warn).toHaveBeenCalledWith(
+      expect.stringContaining("partial result"),
+      "(anonymous)",
+      {
+        author: {
+          post: {
+            id: expect.stringContaining("Can't find field 'id'"),
+            title: expect.stringContaining("Can't find field 'title'"),
+          },
+        },
+      },
+      {
+        author: {
+          __typename: "Author",
+          id: 1,
+          name: "Author Lee",
+          post: { __typename: "Post", id: 1, title: "Title" },
+        },
+      },
+      { author: { __typename: "Author", id: 1, name: "Author Lee", post: {} } }
+    );
   });
 
   it("triggers a network request and rerenders with the new result when a mutation causes a partial cache update due to an incomplete merge function result", async () => {
+    // Silence expected warning about partial cache result because of merge
+    // function
+    using _ = spyOnConsole("warn");
+
     const query = gql`
       query {
         author {
@@ -9058,7 +9088,7 @@ describe("useQuery Hook", () => {
 
   describe("Missing Fields", () => {
     it("should log debug messages about MissingFieldErrors from the cache", async () => {
-      using consoleSpy = spyOnConsole("error");
+      using consoleSpy = spyOnConsole("error", "warn");
 
       const carQuery: DocumentNode = gql`
         query cars($id: Int) {

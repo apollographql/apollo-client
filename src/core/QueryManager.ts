@@ -1053,11 +1053,13 @@ export class QueryManager {
       cacheWriteBehavior,
       observableQuery,
       exposeExtensions,
+      prunePendingDeferFragments,
     }: {
       queryInfo: QueryInfo<TData, TVariables>;
       cacheWriteBehavior: CacheWriteBehavior;
       observableQuery: ObservableQuery<TData, TVariables> | undefined;
       exposeExtensions?: boolean;
+      prunePendingDeferFragments: boolean;
     }
   ): Observable<ObservableQuery.Result<TData>> {
     const { errorPolicy } = options;
@@ -1082,6 +1084,7 @@ export class QueryManager {
           document: linkDocument,
           cacheWriteBehavior,
           returnPartialData: options.returnPartialData,
+          prunePendingDeferFragments,
         });
         const hasErrors = graphQLResultHasError(result);
 
@@ -1689,7 +1692,11 @@ export class QueryManager {
       return fromData(data || undefined);
     };
 
-    const resultsFromLink = () =>
+    const resultsFromLink = ({
+      prunePendingDeferFragments = true,
+    }: {
+      prunePendingDeferFragments?: boolean;
+    } = {}) =>
       this.getResultsFromLink<TData, TVariables>(
         {
           query,
@@ -1705,6 +1712,7 @@ export class QueryManager {
           queryInfo,
           observableQuery,
           exposeExtensions,
+          prunePendingDeferFragments,
         }
       ).pipe(
         validateDidEmitValue(),
@@ -1754,7 +1762,7 @@ export class QueryManager {
             fromLink: true,
             observable: concat(
               resultsFromCache(diff, NetworkStatus.loading),
-              resultsFromLink()
+              resultsFromLink({ prunePendingDeferFragments: false })
             ),
           };
         }
@@ -1771,7 +1779,12 @@ export class QueryManager {
         };
 
       case "network-only":
-        return { fromLink: true, observable: resultsFromLink() };
+        return {
+          fromLink: true,
+          observable: resultsFromLink({
+            prunePendingDeferFragments: networkStatus !== NetworkStatus.refetch,
+          }),
+        };
 
       case "no-cache":
         return { fromLink: true, observable: resultsFromLink() };

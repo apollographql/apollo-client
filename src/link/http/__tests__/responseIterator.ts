@@ -1,5 +1,5 @@
 import { Readable } from "stream";
-import { TextDecoder } from "util";
+import { TextDecoder, TextEncoder } from "util";
 
 import { gql } from "graphql-tag";
 import { ReadableStream } from "web-streams-polyfill";
@@ -160,6 +160,59 @@ describe("multipart responses", () => {
     const observableStream = new ObservableStream(observable);
 
     for (const result of results) {
+      await expect(observableStream).toEmitTypedValue(result);
+    }
+
+    await expect(observableStream).toComplete();
+  });
+
+  it("preserves UTF-8 code points split across byte chunks", async () => {
+    const unicodeResults = [
+      results[0],
+      {
+        incremental: [
+          {
+            data: {
+              name: "云主机😀",
+            },
+            path: ["stub"],
+          },
+        ],
+        hasNext: false,
+      },
+    ];
+    const body = [
+      `--${BOUNDARY}`,
+      "Content-Type: application/json; charset=utf-8",
+      "",
+      JSON.stringify(unicodeResults[0]),
+      `--${BOUNDARY}`,
+      "Content-Type: application/json; charset=utf-8",
+      "",
+      JSON.stringify(unicodeResults[1]),
+      `--${BOUNDARY}--`,
+    ].join("\r\n");
+    const bytes = new TextEncoder().encode(body);
+    const stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        for (const byte of bytes) {
+          controller.enqueue(Uint8Array.of(byte));
+        }
+        controller.close();
+      },
+    });
+    const fetch = jest.fn(async () => ({
+      status: 200,
+      body: stream,
+      headers: new Headers({
+        "content-type": `multipart/mixed; boundary=${BOUNDARY}`,
+      }),
+    }));
+    const link = new HttpLink({ fetch: fetch as any });
+    const observable = execute(link, { query: sampleDeferredQuery });
+    const observableStream = new ObservableStream(observable);
+
+    for (const result of unicodeResults) {
       await expect(observableStream).toEmitTypedValue(result);
     }
 

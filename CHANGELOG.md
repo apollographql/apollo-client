@@ -1,5 +1,13 @@
 # @apollo/client
 
+## 4.2.11
+
+### Patch Changes
+
+- [#13398](https://github.com/apollographql/apollo-client/pull/13398) [`3dd3e9a`](https://github.com/apollographql/apollo-client/commit/3dd3e9a6f195ea5dd27a973f153a0538ccdffd20) Thanks [@phryneas](https://github.com/phryneas)! - Fix type signature of some `DocumentationTypes` to fix their display in our documentation.
+
+- [#13392](https://github.com/apollographql/apollo-client/pull/13392) [`d4f0771`](https://github.com/apollographql/apollo-client/commit/d4f0771976766b54e0a95a3d51b708b64eb3cfe0) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add a development-only warning when a network result is written to the cache but reading the query back from the cache returns a partial result. This usually points at a `merge` or `read` function that did not repair missing fields in the cache, which prevents Apollo Client from applying the cache result to the data received by the network.
+
 ## 4.2.10
 
 ### Patch Changes

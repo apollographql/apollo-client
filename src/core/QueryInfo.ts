@@ -789,7 +789,7 @@ function warnAboutPartialCacheResult(
   invariant.warn(
     `The network result for query %s was written to the cache, but reading it back returned a partial result.
 
-A \`read\` or \`merge\` function left missing fields after this write. Because the cache result is incomplete, Apollo Client cannot apply it to the network result. The raw network result was returned instead, and doesn't include any transformed values returned from \`read\` functions.
+A \`read\` or \`merge\` function left missing fields after this write. Because the cache result is incomplete, Apollo Client cannot apply it to the network result. The raw network result was returned instead, and doesn't include any transformed values returned from \`read\` functions or custom scalars.
 
 To address this problem (which is not a bug in Apollo Client), check the \`read\` and \`merge\` functions for the fields in this query. A \`read\` or \`merge\` function that leaves missing fields leaves the cache unable to fulfill the query's data requirements.
 

@@ -1,6 +1,6 @@
 import { Kind } from "graphql";
 
-import type { CatchTo, DocumentNode } from "@apollo/client";
+import type { CatchToDefault, DocumentNode } from "@apollo/client";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import { invariant } from "@apollo/client/utilities/invariant";
 
@@ -12,8 +12,8 @@ import { memoize } from "./memoize.js";
 export const getDefaultCatchTo = memoize(
   function getDefaultCatchTo(
     document: DocumentNode,
-    fallbackCatchTo: CatchTo = "NULL"
-  ): CatchTo {
+    fallbackCatchTo: CatchToDefault = "NULL"
+  ): CatchToDefault {
     const directive = getMainDefinition(document)?.directives?.find(
       (d) => d.name.value === "catchByDefault"
     );
@@ -31,13 +31,13 @@ export const getDefaultCatchTo = memoize(
 
     if (__DEV__) {
       invariant(
-        catchTo === "NULL" || catchTo === "THROW" || catchTo === "RESULT",
+        catchTo === "NULL" || catchTo === "THROW",
         "Unsupported @catchByDefault(to:) value: '%s'",
         catchTo
       );
     }
 
-    return catchTo as CatchTo;
+    return catchTo as CatchToDefault;
   },
   {
     max: cacheSizes["getCatchTo"] || defaultCacheSizes["getCatchTo"],

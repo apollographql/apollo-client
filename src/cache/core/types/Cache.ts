@@ -1,7 +1,7 @@
 import type { GraphQLFormattedError } from "graphql";
 
 import type {
-  CatchTo,
+  CatchToDefault,
   DataValue,
   DocumentNode,
   OperationVariables,
@@ -78,7 +78,7 @@ export declare namespace Cache {
      * with the client. Prefer annotating the query with `@catchByDefault`
      * instead which has higher precedence than this option.
      */
-    catchByDefault?: CatchTo;
+    catchByDefault?: CatchToDefault;
   }
 
   export interface WriteOptions<

@@ -33,6 +33,7 @@ export type {
 export { NetworkStatus } from "./networkStatus.js";
 export type {
   CatchTo,
+  CatchToDefault,
   DataState,
   DataValue,
   DefaultContext,

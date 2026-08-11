@@ -227,6 +227,7 @@ export interface ErrorLike {
 }
 
 export type CatchTo = "NULL" | "RESULT" | "THROW";
+export type CatchToDefault = Exclude<CatchTo, "RESULT">;
 
 export type OnQueryUpdated<TResult> = (
   observableQuery: ObservableQuery<any>,

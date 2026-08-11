@@ -389,7 +389,7 @@ export class QueryInfo<
           fetchPolicy === "network-only" &&
           networkStatus !== NetworkStatus.refetch;
 
-        const diff = this.getDiff(
+        const { dataState, result: diffResult } = this.getDiff(
           {
             ...diffOptions,
             // Never deliver partial data for network-only requests
@@ -398,14 +398,12 @@ export class QueryInfo<
           this.getIncrementalInfo(result, { isNetworkOnly })
         );
 
-        const { dataState } = diff;
-
         if (
           dataState === "complete" ||
           (returnPartialData && dataState === "partial" && shouldWrite) ||
           (this.hasNext && dataState === "streaming")
         ) {
-          result = { ...result, data: diff.result, dataState };
+          result = { ...result, data: diffResult, dataState };
         } else if (
           __DEV__ &&
           written &&
@@ -413,7 +411,12 @@ export class QueryInfo<
           // incomplete until the remaining chunks arrive.
           !this.hasNext
         ) {
-          warnAboutPartialCacheResult(query, result.data, diff);
+          warnAboutPartialCacheResult(
+            query,
+            result.data,
+            // Always show the partial result for debugging
+            cache.diff({ ...diffOptions, returnPartialData: true })
+          );
         }
       },
     });

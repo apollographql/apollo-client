@@ -449,7 +449,9 @@ export class QueryInfo<
       for (const item of pending) {
         if (item.type === "defer" && !item.delivered) {
           incrementalInfo.deferInfo ||= new Trie(true, () => true);
-          incrementalInfo.deferInfo.lookupArray(item.path as any[]);
+          incrementalInfo.deferInfo.lookupArray(
+            item.path.concat(item.label || [])
+          );
         } else if (streamInfo && item.type === "stream") {
           streamInfo.lookupArray(item.path as any[]).state.truncate = true;
         }

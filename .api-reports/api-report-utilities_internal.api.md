@@ -19,6 +19,7 @@ import type { GraphQLFormattedError } from 'graphql';
 import type { HKT } from '@apollo/client/utilities';
 import type { Incremental } from '@apollo/client/incremental';
 import type { InlineFragmentNode } from 'graphql';
+import { Kind } from 'graphql';
 import type { MaybeMasked } from '@apollo/client';
 import type { NetworkStatus } from '@apollo/client';
 import { Observable } from 'rxjs';
@@ -37,6 +38,9 @@ import type { Trie } from '@wry/trie';
 import type { TypeNode } from 'graphql';
 import type { TypeOverrides } from '@apollo/client';
 import { WeakCache } from '@wry/caches';
+
+// @public (undocumented)
+export function addDeferFragmentLabels(document: DocumentNode): DocumentNode;
 
 // @internal @deprecated (undocumented)
 export type ApplyHKT<fn extends HKT, arg1, arg2 = never, arg3 = never, arg4 = never> = (fn & {
@@ -293,6 +297,9 @@ export const getApolloClientMemoryInternals: (() => {
 
 // @internal @deprecated (undocumented)
 export function getDefaultValues(definition: OperationDefinitionNode | undefined): Record<string, any>;
+
+// @internal @deprecated (undocumented)
+export function getDirectiveArgValue(directive: DirectiveNode, name: string, kind: typeof Kind.STRING): string | undefined;
 
 // @internal @deprecated (undocumented)
 export function getFragmentDefinition(doc: DocumentNode): FragmentDefinitionNode;

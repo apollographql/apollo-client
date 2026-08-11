@@ -3908,6 +3908,215 @@ test("does not surface incomplete cached fields inside a `@defer` boundary on st
   await expect(stream).not.toEmitAnything();
 });
 
+test("prunes each streamed list item's sibling `@defer` boundaries independently by label", async () => {
+  const mock = mockDeferStreamGraphQL17Alpha9();
+
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 1) {
+        id
+        ... on Friend @defer {
+          name
+        }
+        ... on Friend @defer {
+          email
+        }
+      }
+    }
+  `;
+
+  const cache = new InMemoryCache();
+
+  cache.writeQuery({
+    query,
+    data: {
+      friendList: [
+        {
+          __typename: "Friend",
+          id: "1",
+          name: "Cached Luke",
+          email: "cached-luke@example.com",
+        },
+        {
+          __typename: "Friend",
+          id: "2",
+          name: "Cached Han",
+          email: "cached-han@example.com",
+        },
+      ],
+    },
+  });
+
+  const client = new ApolloClient({
+    cache,
+    link: mock.httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({ query, fetchPolicy: "network-only" })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  mock.enqueueInitialChunk({
+    data: { friendList: [{ __typename: "Friend", id: "1" }] },
+    pending: [
+      { id: "0", path: ["friendList", 0], label: "ac_0" },
+      { id: "1", path: ["friendList", 0], label: "ac_1" },
+      // The `@stream` boundary doesn't get a label
+      { id: "2", path: ["friendList"] },
+    ],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [{ __typename: "Friend", id: "1" }],
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  mock.enqueueSubsequentChunk({
+    incremental: [{ data: { __typename: "Friend", name: "Luke" }, id: "0" }],
+    completed: [{ id: "0" }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  mock.enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: { __typename: "Friend", email: "luke@example.com" },
+        id: "1",
+      },
+    ],
+    completed: [{ id: "1" }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        {
+          __typename: "Friend",
+          id: "1",
+          name: "Luke",
+          email: "luke@example.com",
+        },
+      ],
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  mock.enqueueSubsequentChunk({
+    incremental: [
+      { items: [{ __typename: "Friend", id: "2" }] as any, id: "2" },
+    ],
+    pending: [
+      { id: "3", path: ["friendList", 1], label: "ac_0" },
+      { id: "4", path: ["friendList", 1], label: "ac_1" },
+    ],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [
+        {
+          __typename: "Friend",
+          id: "1",
+          name: "Luke",
+          email: "luke@example.com",
+        },
+        { __typename: "Friend", id: "2" },
+      ],
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  mock.enqueueSubsequentChunk({
+    incremental: [
+      { data: { __typename: "Friend", email: "han@example.com" }, id: "4" },
+    ],
+    completed: [{ id: "4" }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [
+        {
+          __typename: "Friend",
+          id: "1",
+          name: "Luke",
+          email: "luke@example.com",
+        },
+        { __typename: "Friend", id: "2", email: "han@example.com" },
+      ],
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  mock.enqueueSubsequentChunk({
+    incremental: [{ data: { __typename: "Friend", name: "Han" }, id: "3" }],
+    completed: [{ id: "2" }, { id: "3" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        {
+          __typename: "Friend",
+          id: "1",
+          name: "Luke",
+          email: "luke@example.com",
+        },
+        {
+          __typename: "Friend",
+          id: "2",
+          name: "Han",
+          email: "han@example.com",
+        },
+      ],
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
 test("applies field read functions to streamed list items on intermediate and final results", async () => {
   const { subject, stream: iterableStream } = asyncIterableSubject<Friend>();
 

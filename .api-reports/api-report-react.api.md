@@ -312,7 +312,8 @@ export namespace useBackgroundQuery {
         // (undocumented)
         export namespace useBackgroundQuery {
             // (undocumented)
-            export interface Options<TVariables extends OperationVariables = OperationVariables> extends Omit<Base.Options, "variables">, DocumentationTypes.VariableOptions<TVariables> {
+            export interface Options<TVariables extends OperationVariables = OperationVariables> extends Base.Options {
+                variables?: TVariables;
             }
         }
     }
@@ -1147,7 +1148,8 @@ export namespace useQuery {
         // (undocumented)
         export namespace useQuery {
             // (undocumented)
-            export interface Options<TData = unknown, TVariables extends OperationVariables = OperationVariables> extends Omit<Base.Options<TData, TVariables>, "variables">, DocumentationTypes.VariableOptions<TVariables> {
+            export interface Options<TData = unknown, TVariables extends OperationVariables = OperationVariables> extends Base.Options<TData, TVariables> {
+                variables?: TVariables;
             }
         }
     }
@@ -1542,7 +1544,8 @@ export namespace useSuspenseQuery {
         // (undocumented)
         export namespace useSuspenseQuery {
             // (undocumented)
-            export interface Options<TVariables extends OperationVariables = OperationVariables> extends Omit<Base.Options<TVariables>, "variables">, DocumentationTypes.VariableOptions<TVariables> {
+            export interface Options<TVariables extends OperationVariables = OperationVariables> extends Base.Options<TVariables> {
+                variables?: TVariables;
             }
         }
     }

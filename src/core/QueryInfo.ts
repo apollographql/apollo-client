@@ -12,6 +12,7 @@ import type { Incremental } from "@apollo/client/incremental";
 import type { ApolloLink } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
 import type { DeepPartial } from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
 import type { ExtensionsWithStreamInfo } from "@apollo/client/utilities/internal";
 import {
   getOperationName,
@@ -314,6 +315,8 @@ export class QueryInfo<
       return result;
     }
 
+    let written = false;
+
     // Using a transaction here so we have a chance to read the result
     // back from the cache before the watch callback fires as a result
     // of writeQuery, so we can store the new diff quietly and ignore
@@ -379,13 +382,14 @@ export class QueryInfo<
             variables,
             dmCount: destructiveMethodCounts.get(this.cache),
           };
+          written = true;
         }
 
         const isNetworkOnly =
           fetchPolicy === "network-only" &&
           networkStatus !== NetworkStatus.refetch;
 
-        const { dataState, result: diffResult } = this.getDiff(
+        const diff = this.getDiff(
           {
             ...diffOptions,
             // Never deliver partial data for network-only requests
@@ -394,12 +398,22 @@ export class QueryInfo<
           this.getIncrementalInfo(result, { isNetworkOnly })
         );
 
+        const { dataState } = diff;
+
         if (
           dataState === "complete" ||
           (returnPartialData && dataState === "partial" && shouldWrite) ||
           (this.hasNext && dataState === "streaming")
         ) {
-          result = { ...result, data: diffResult, dataState };
+          result = { ...result, data: diff.result, dataState };
+        } else if (
+          __DEV__ &&
+          written &&
+          // A result that is still streaming is expected to read back
+          // incomplete until the remaining chunks arrive.
+          !this.hasNext
+        ) {
+          warnAboutPartialCacheResult(query, result.data, diff);
         }
       },
     });
@@ -750,6 +764,33 @@ export class QueryInfo<
       this.queryManager.broadcastQueries();
     }
   }
+}
+
+function warnAboutPartialCacheResult(
+  query: DocumentNode,
+  networkResult: unknown,
+  diff: Cache.DiffResult<unknown>
+) {
+  invariant.warn(
+    `The network result for query %s was written to the cache, but reading it back returned a partial result.
+
+A \`read\` or \`merge\` function left missing fields after this write. Because the cache result is incomplete, Apollo Client cannot apply it to the network result. The raw network result was returned instead, and doesn't include any transformed values returned from \`read\` functions.
+
+To address this problem (which is not a bug in Apollo Client), check the \`read\` and \`merge\` functions for the fields in this query. A \`read\` or \`merge\` function that leaves missing fields leaves the cache unable to fulfill the query's data requirements.
+
+  missing fields: %o
+  network result: %o
+  cache result: %o
+
+For more information, please refer to the documentation:
+
+  * Customizing cache field behavior: https://go.apollo.dev/c/cache-field-behavior
+`,
+    getOperationName(query, "(anonymous)"),
+    diff.missing?.missing,
+    networkResult,
+    diff.result
+  );
 }
 
 function shouldWriteResult<T>(

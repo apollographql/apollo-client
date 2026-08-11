@@ -108,8 +108,10 @@ export declare namespace useSuspenseQuery {
     namespace useSuspenseQuery {
       export interface Options<
         TVariables extends OperationVariables = OperationVariables,
-      > extends Omit<Base.Options<TVariables>, "variables">,
-          UtilityDocumentationTypes.VariableOptions<TVariables> {}
+      > extends Base.Options<TVariables> {
+        /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
+        variables?: TVariables;
+      }
     }
   }
 

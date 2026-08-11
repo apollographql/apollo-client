@@ -16,6 +16,8 @@ const IS_GRAPHQL_17 = graphqlVersion.startsWith("17");
 const WARNINGS = {
   SCALAR_FIELD_CONFIG:
     "The field policy for '%s' is configured with the '%s' scalar, so its '%s' function is ignored. Scalar configuration cannot be used with custom read or merge functions.",
+  NON_SCALAR_FIELD:
+    "The field policy for '%s' is configured with the '%s' scalar, but the field is not a scalar field because it contains a selection set. The field value remains unchanged.",
 };
 
 test("creates a scalar from a GraphQLScalarType", () => {
@@ -3828,7 +3830,7 @@ test("ignores scalar and emits a dev warning when a scalar option is set on a fi
 
   expect(console.warn).toHaveBeenCalledTimes(1);
   expect(console.warn).toHaveBeenCalledWith(
-    "The field policy for '%s' is configured as a '%s' scalar, but the field is not a scalar field because it contains a selection set. The field value remains unchanged.",
+    WARNINGS.NON_SCALAR_FIELD,
     "Query.event",
     "DateTime"
   );

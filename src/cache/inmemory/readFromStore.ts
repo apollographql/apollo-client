@@ -584,7 +584,7 @@ export class StoreReader {
 
               if (policy?.scalar) {
                 invariant.warn(
-                  "The field policy for '%s' is configured as a '%s' scalar, but the field is not a scalar field because it contains a selection set. The field value remains unchanged.",
+                  "The field policy for '%s' is configured with the '%s' scalar, but the field is not a scalar field because it contains a selection set. The field value remains unchanged.",
                   `${typename}.${fieldName}`,
                   policy.scalar
                 );

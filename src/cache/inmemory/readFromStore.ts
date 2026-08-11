@@ -358,6 +358,8 @@ export class StoreReader {
     // a defer boundary.
     if (
       returnIncremental &&
+      execResult.dataState !== "partial" &&
+      execResult.dataState !== "empty" &&
       (execResult.dataState === "deferPartial" ||
         execResult.dataState === "streamPartial" ||
         // If the last cache write repaired a partial @stream array to a

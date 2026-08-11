@@ -10045,6 +10045,172 @@ test("keeps fields shared with a delivered @defer boundary while pruning a pendi
   });
 });
 
+test('returns dataState "partial" when a non-deferred field is missing and deferInfo marks a boundary as pending with returnPartialData: true', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+          }
+        }
+      }
+      hero {
+        id
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query: gql`
+      query {
+        greeting {
+          message
+        }
+      }
+    `,
+    data: {
+      greeting: { __typename: "Greeting", message: "Hello world" },
+    },
+  });
+
+  const missingObject = { __typename: "Greeting", message: "Hello world" };
+  const missingRoot = { __ref: "ROOT_QUERY" };
+
+  const deferInfo: DeferInfoTrie = new Trie();
+  deferInfo.lookup("greeting");
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: true,
+      [handleIncrementalSymbol]: { deferInfo },
+    })
+  ).toStrictEqualTyped({
+    result: {
+      greeting: { __typename: "Greeting", message: "Hello world" },
+    },
+    dataState: "partial",
+    complete: false,
+    missing: new MissingFieldError(
+      getMissingMessage("recipient", missingObject),
+      {
+        greeting: {
+          recipient: getMissingMessage("recipient", missingObject),
+        },
+        hero: getMissingMessage("hero", missingRoot),
+      },
+      query,
+      {}
+    ),
+  });
+});
+
+test('returns dataState "empty" when a non-deferred field is missing and deferInfo marks a boundary as pending with returnPartialData: false', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+          }
+        }
+      }
+      hero {
+        id
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query: gql`
+      query {
+        greeting {
+          message
+        }
+      }
+    `,
+    data: {
+      greeting: { __typename: "Greeting", message: "Hello world" },
+    },
+  });
+
+  const missingObject = { __typename: "Greeting", message: "Hello world" };
+  const missingRoot = { __ref: "ROOT_QUERY" };
+
+  const deferInfo: DeferInfoTrie = new Trie();
+  deferInfo.lookup("greeting");
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: { deferInfo },
+    })
+  ).toStrictEqualTyped({
+    result: null,
+    dataState: "empty",
+    complete: false,
+    missing: new MissingFieldError(
+      getMissingMessage("recipient", missingObject),
+      {
+        greeting: {
+          recipient: getMissingMessage("recipient", missingObject),
+        },
+        hero: getMissingMessage("hero", missingRoot),
+      },
+      query,
+      {}
+    ),
+  });
+});
+
+test('returns dataState "empty" when the cache is empty and deferInfo marks a boundary as pending', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+          }
+        }
+      }
+    }
+  `;
+
+  const missingRoot = { __ref: "ROOT_QUERY" };
+
+  const deferInfo: DeferInfoTrie = new Trie();
+  deferInfo.lookup("greeting");
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: true,
+      [handleIncrementalSymbol]: { deferInfo },
+    })
+  ).toStrictEqualTyped({
+    result: null,
+    dataState: "empty",
+    complete: false,
+    missing: new MissingFieldError(
+      getMissingMessage("greeting", missingRoot),
+      { greeting: getMissingMessage("greeting", missingRoot) },
+      query,
+      {}
+    ),
+  });
+});
+
 function getMissingMessage(fieldName: string, obj: Record<string, unknown>) {
   return `Can't find field '${fieldName}' on ${
     isReference(obj) ?

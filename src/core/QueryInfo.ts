@@ -414,7 +414,9 @@ export class QueryInfo<
           warnAboutPartialCacheResult(
             query,
             result.data,
-            // Always show the partial result for debugging
+            // Always show the partial result for debugging, otherwise the user
+            // sees `null` when `returnPartialData` is false which isn't helpful
+            // for figuring out where the problem is.
             cache.diff({ ...diffOptions, returnPartialData: true })
           );
         }

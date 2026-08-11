@@ -9645,6 +9645,57 @@ test("strips both a partial pending @defer boundary and a complete pending sibli
   });
 });
 
+test("keeps fields shared with a delivered @defer boundary while pruning a pending boundary at a nested path", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      ... @defer {
+        hero {
+          name
+        }
+      }
+      hero {
+        id
+        ... @defer {
+          name
+          homePlanet
+        }
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      hero: {
+        __typename: "Hero",
+        id: "1",
+        name: "Luke",
+        homePlanet: "Tatooine",
+      },
+    },
+  });
+
+  const deferInfo: DeferInfoTrie = new Trie();
+  deferInfo.lookup("hero");
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: { deferInfo },
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      hero: { __typename: "Hero", id: "1", name: "Luke" },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
 function getMissingMessage(fieldName: string, obj: Record<string, unknown>) {
   return `Can't find field '${fieldName}' on ${
     isReference(obj) ?

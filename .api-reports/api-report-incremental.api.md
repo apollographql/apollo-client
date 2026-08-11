@@ -10,6 +10,7 @@ import type { DocumentNode } from 'graphql';
 import type { FormattedExecutionResult } from 'graphql';
 import type { GraphQLFormattedError } from 'graphql';
 import type { HKT } from '@apollo/client/utilities';
+import { StreamInfoTrie } from '@apollo/client/utilities/internal';
 
 // @public (undocumented)
 namespace Defer20220824Handler {
@@ -196,17 +197,28 @@ export namespace Incremental {
     }
     // (undocumented)
     export interface IncrementalRequest<Chunk extends Record<string, unknown>, TData> {
-        // (undocumented)
-        getPendingType?: (id: string) => "defer" | "stream";
+        // @internal @deprecated (undocumented)
+        getPendingWithInfo?: () => Array<PendingItemWithInfo>;
         // (undocumented)
         handle: (cacheData: TData | DeepPartial<TData> | undefined | null, chunk: Chunk) => FormattedExecutionResult<TData>;
         // (undocumented)
         hasNext: boolean;
-        // (undocumented)
-        pending?: Array<Incremental.PendingResult>;
+        // @internal @deprecated (undocumented)
+        readonly streamInfo?: StreamInfoTrie;
     }
     // (undocumented)
     export type Path = ReadonlyArray<string | number>;
+    // @internal @deprecated (undocumented)
+    export interface PendingDeferResultWithInfo {
+        // (undocumented)
+        delivered: boolean;
+        // (undocumented)
+        path: Incremental.Path;
+        // (undocumented)
+        type: "defer";
+    }
+    // @internal @deprecated (undocumented)
+    export type PendingItemWithInfo = PendingDeferResultWithInfo | PendingStreamResultWithInfo;
     // (undocumented)
     export interface PendingResult {
         // (undocumented)
@@ -215,6 +227,13 @@ export namespace Incremental {
         label?: string;
         // (undocumented)
         path: Incremental.Path;
+    }
+    // @internal @deprecated (undocumented)
+    export interface PendingStreamResultWithInfo {
+        // (undocumented)
+        path: Incremental.Path;
+        // (undocumented)
+        type: "stream";
     }
     // @internal @deprecated (undocumented)
     export interface StartRequestOptions {
@@ -232,14 +251,22 @@ export namespace Incremental {
 
 // @public (undocumented)
 class IncrementalRequest<TData> implements Incremental.IncrementalRequest<GraphQL17Alpha9Handler.Chunk<TData>, TData> {
-    // (undocumented)
-    getPendingType(id: string): "defer" | "stream";
+    // @internal @deprecated (undocumented)
+    getPendingWithInfo(): ({
+        type: "stream";
+        path: Incremental.Path;
+        delivered?: undefined;
+    } | {
+        type: "defer";
+        delivered: boolean;
+        path: Incremental.Path;
+    })[];
     // (undocumented)
     handle(cacheData: TData | DeepPartial<TData> | null | undefined, chunk: GraphQL17Alpha9Handler.Chunk<TData>): FormattedExecutionResult<TData>;
     // (undocumented)
     hasNext: boolean;
-    // (undocumented)
-    get pending(): GraphQL17Alpha9Handler.PendingResult[];
+    // @internal @deprecated (undocumented)
+    get streamInfo(): StreamInfoTrie | undefined;
 }
 
 // @public (undocumented)

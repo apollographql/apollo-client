@@ -87,7 +87,11 @@ class IncrementalRequest<TData>
   private errors: GraphQLFormattedError[] = [];
   private extensions: Record<string, any> = {};
   private pendingMap = new Map<string, GraphQL17Alpha9Handler.PendingResult>();
-  private streamInfo = makeStreamInfoTrie();
+  private completedMap = new Map<
+    /* pendingId */ string,
+    /* delivered */ boolean
+  >();
+  private _streamInfo = makeStreamInfoTrie();
   // `streamPositions` maps `pending.id` to the index that should be set by the
   // next `incremental` stream chunk to ensure the streamed array item is placed
   // at the correct point in the data array. `this.data` contains cached
@@ -97,12 +101,24 @@ class IncrementalRequest<TData>
   // of future stream items from already merged stream items.
   private streamPositions: Record<string, number> = {};
 
-  get pending() {
-    return Array.from(this.pendingMap.values());
+  /** @internal */
+  get streamInfo() {
+    return this._streamInfo["strong"] ? this._streamInfo : undefined;
   }
 
-  getPendingType(id: string): "defer" | "stream" {
-    return id in this.streamPositions ? "stream" : "defer";
+  /** @internal */
+  getPendingWithInfo() {
+    return Array.from(this.pendingMap.values()).map((pending) => {
+      if (pending.id in this.streamPositions) {
+        return { type: "stream" as const, path: pending.path };
+      }
+
+      return {
+        type: "defer" as const,
+        delivered: !!this.completedMap.get(pending.id),
+        path: pending.path,
+      };
+    });
   }
 
   handle(
@@ -124,7 +140,7 @@ class IncrementalRequest<TData>
 
           if (Array.isArray(dataAtPath)) {
             this.streamPositions[pending.id] = dataAtPath.length;
-            const entry = this.streamInfo.lookupArray(pending.path as any[]);
+            const entry = this._streamInfo.lookupArray(pending.path as any[]);
             entry.current = {
               isFirstChunk: true,
               isLastChunk: false,
@@ -159,7 +175,7 @@ class IncrementalRequest<TData>
           }
 
           this.streamPositions[pending.id] += items.length;
-          const entry = this.streamInfo.lookupArray(path);
+          const entry = this._streamInfo.lookupArray(path);
           entry.current = {
             isFirstChunk: false,
             isLastChunk: false,
@@ -211,6 +227,7 @@ class IncrementalRequest<TData>
       for (const completed of chunk.completed) {
         const { path } = this.pendingMap.get(completed.id)!;
         const streamPosition = this.streamPositions[completed.id];
+        this.completedMap.set(completed.id, !completed.errors);
 
         // Truncate any stream arrays in case the chunk only contains `hasNext`
         // and `completed`.
@@ -224,7 +241,7 @@ class IncrementalRequest<TData>
         }
 
         // peek instead of lookup to avoid creating an entry for non-array values
-        const details = this.streamInfo.peekArray(path as any[]);
+        const details = this._streamInfo.peekArray(path as any[]);
         if (details) {
           details.current = {
             isFirstChunk: false,
@@ -232,7 +249,6 @@ class IncrementalRequest<TData>
           };
           details.state.streamPosition = streamPosition;
         }
-        this.pendingMap.delete(completed.id);
 
         if (completed.errors) {
           this.errors.push(...completed.errors);
@@ -250,7 +266,7 @@ class IncrementalRequest<TData>
       result.extensions = this.extensions;
     }
 
-    if (this.streamInfo["strong"]) {
+    if (this._streamInfo["strong"]) {
       result.extensions = {
         ...result.extensions,
         // Create a new object so we can check for === in QueryInfo to trigger a
@@ -258,7 +274,7 @@ class IncrementalRequest<TData>
         // We create a `WeakRef`, not a plain object to avoid retaining memory
         // in case the `result` or `extensions` stays around longer than the handler
         // itself.
-        [streamInfoSymbol]: new WeakRef(this.streamInfo),
+        [streamInfoSymbol]: new WeakRef(this._streamInfo),
       } satisfies ExtensionsWithStreamInfo;
     }
 

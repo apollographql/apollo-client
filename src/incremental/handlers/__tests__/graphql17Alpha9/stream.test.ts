@@ -2829,6 +2829,81 @@ test("properly merges streamed data into list with more items", async () => {
   }
 });
 
+test("truncates cache data to the streamed items when the stream completes with errors", async () => {
+  const query = gql`
+    query {
+      nonNullFriendList @stream(initialCount: 1) {
+        name
+        id
+      }
+    }
+  `;
+
+  const handler = new GraphQL17Alpha9Handler();
+  const request = handler.startRequest({ query });
+
+  const incoming = run(query, {
+    nonNullFriendList: () => [friends[0], null, friends[1]],
+  });
+
+  {
+    const { value: chunk, done } = await incoming.next();
+
+    assert(!done);
+    assert(handler.isIncrementalResult(chunk));
+    expect(
+      request.handle(
+        {
+          nonNullFriendList: [
+            { name: "Luke Cached", id: "1" },
+            { name: "Han Cached", id: "2" },
+            { name: "Leia Cached", id: "3" },
+          ],
+        },
+        chunk
+      )
+    ).toStrictEqualTyped({
+      data: {
+        nonNullFriendList: [{ name: "Luke", id: "1" }],
+      },
+      extensions: extensionsWithStreamDetails,
+    });
+    expect(request.hasNext).toBe(true);
+  }
+
+  {
+    const { value: chunk, done } = await incoming.next();
+
+    assert(!done);
+    assert(handler.isIncrementalResult(chunk));
+    expect(
+      request.handle(
+        {
+          nonNullFriendList: [
+            { name: "Luke", id: "1" },
+            { name: "Han Cached", id: "2" },
+            { name: "Leia Cached", id: "3" },
+          ],
+        },
+        chunk
+      )
+    ).toStrictEqualTyped({
+      data: {
+        nonNullFriendList: [{ name: "Luke", id: "1" }],
+      },
+      errors: [
+        {
+          message:
+            "Cannot return null for non-nullable field Query.nonNullFriendList.",
+          path: ["nonNullFriendList", 1],
+        },
+      ],
+      extensions: extensionsWithStreamDetails,
+    });
+    expect(request.hasNext).toBe(false);
+  }
+});
+
 test("properly merges cache data when list is included in deferred chunk", async () => {
   const { promise: slowFieldPromise, resolve: resolveSlowField } =
     promiseWithResolvers();

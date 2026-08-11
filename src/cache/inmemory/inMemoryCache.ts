@@ -226,10 +226,10 @@ export class InMemoryCache extends ApolloCache {
   }
 
   /** Get a scalar instance for a field in a type */
-  public getScalarForField(
+  public getScalarForField<TSerialized = unknown, TParsed = unknown>(
     typename: string,
     fieldName: string
-  ): Scalar<unknown, unknown> | undefined {
+  ): Scalar<TSerialized, TParsed> | undefined {
     return this.policies.getScalarForField(typename, fieldName);
   }
 

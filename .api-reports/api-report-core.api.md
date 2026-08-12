@@ -933,7 +933,7 @@ export class ObservableQuery<TData = unknown, TVariables extends OperationVariab
     // @internal @deprecated (undocumented)
     getCacheDiff({ optimistic }?: {
         optimistic?: boolean | undefined;
-    }): Cache_2.DiffResult<TData>;
+    }): Cache_2.InternalDiffResultWithDataState<TData>;
     // (undocumented)
     getCurrentResult(): ObservableQuery.Result<MaybeMasked<TData>>;
     // (undocumented)
@@ -1407,7 +1407,7 @@ export const windowFocusSource: RefetchEventManager.EventSource<Event>;
 // Warnings were encountered during analysis:
 //
 // src/core/ApolloClient.ts:673:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:376:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:378:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:196:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)

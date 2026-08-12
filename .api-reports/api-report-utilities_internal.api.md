@@ -7,6 +7,7 @@
 import type { ApolloCache } from '@apollo/client';
 import type { ApolloClient } from '@apollo/client';
 import type { ASTNode } from 'graphql';
+import type { Cache as Cache_2 } from '@apollo/client/cache';
 import type { DataValue } from '@apollo/client';
 import type { DirectiveNode } from 'graphql';
 import type { DocumentNode } from 'graphql';
@@ -569,6 +570,9 @@ export type StreamInfoTrie = Trie<{
 
 // @internal @deprecated (undocumented)
 export function stringifyForDisplay(value: any, space?: number): string;
+
+// @public (undocumented)
+export function toDiffWithDataState<TData>(diff: Cache_2.DiffResult<TData> | Cache_2.InternalDiffResultWithDataState<TData>): Cache_2.InternalDiffResultWithDataState<TData>;
 
 // @internal @deprecated (undocumented)
 export function toQueryResult<TData = unknown>(value: ObservableQuery.Result<TData>): {

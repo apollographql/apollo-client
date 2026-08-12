@@ -462,7 +462,7 @@ test("delivers cache updates written while a deferred response is still streamin
   expect(outgoingRequestSpy).toHaveBeenCalledTimes(1);
 });
 
-test.only("delivers cache updates written while a deferred response is still streaming with `returnPartialData: true`", async () => {
+test("delivers cache updates written while a deferred response is still streaming with `returnPartialData: true`", async () => {
   const query = gql`
     query PostQuery {
       post {
@@ -523,9 +523,6 @@ test.only("delivers cache updates written while a deferred response is still str
     partial: true,
   });
 
-  // `returnPartialData` means the partial cache result delivered by
-  // `reobserveCacheFirst` reaches the subscriber, so each write arrives twice:
-  // once as the partial cache read, then again as the streaming result.
   client.writeFragment({
     fragment: titleFragment,
     from: { __typename: "Post", id: "1" },
@@ -533,10 +530,10 @@ test.only("delivers cache updates written while a deferred response is still str
   });
 
   await expect(stream).toEmitTypedValue({
-    data: {
+    data: markAsStreaming({
       post: { __typename: "Post", id: "1", title: "title from write 1" },
-    },
-    dataState: "partial",
+    }),
+    dataState: "streaming",
     loading: true,
     networkStatus: NetworkStatus.loading,
     partial: true,
@@ -559,10 +556,10 @@ test.only("delivers cache updates written while a deferred response is still str
   });
 
   await expect(stream).toEmitTypedValue({
-    data: {
+    data: markAsStreaming({
       post: { __typename: "Post", id: "1", title: "title from write 2" },
-    },
-    dataState: "partial",
+    }),
+    dataState: "streaming",
     loading: true,
     networkStatus: NetworkStatus.loading,
     partial: true,

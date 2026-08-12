@@ -1534,13 +1534,13 @@ test('returns partial non-deferred cached data with a "cache-first" fetch policy
   );
 
   await expect(stream).toEmitTypedValue({
-    data: {
+    data: markAsStreaming({
       greeting: {
         __typename: "Greeting",
         message: "Cached hello",
       },
-    },
-    dataState: "partial",
+    }),
+    dataState: "streaming",
     loading: true,
     networkStatus: NetworkStatus.loading,
     partial: true,
@@ -9778,13 +9778,13 @@ test("applies field read functions to partial non-deferred cached data before an
   );
 
   await expect(stream).toEmitTypedValue({
-    data: {
+    data: markAsStreaming({
       greeting: {
         __typename: "Greeting",
         message: "CACHED HELLO",
       },
-    },
-    dataState: "partial",
+    }),
+    dataState: "streaming",
     loading: true,
     networkStatus: NetworkStatus.loading,
     partial: true,
@@ -10419,9 +10419,6 @@ test("delivers cache updates written while a deferred response is still streamin
     partial: true,
   });
 
-  // `returnPartialData` means the partial cache result delivered by
-  // `reobserveCacheFirst` reaches the subscriber, so each write arrives twice:
-  // once as the partial cache read, then again as the streaming result.
   client.writeFragment({
     fragment: titleFragment,
     from: { __typename: "Post", id: "1" },
@@ -10429,10 +10426,10 @@ test("delivers cache updates written while a deferred response is still streamin
   });
 
   await expect(stream).toEmitTypedValue({
-    data: {
+    data: markAsStreaming({
       post: { __typename: "Post", id: "1", title: "title from write 1" },
-    },
-    dataState: "partial",
+    }),
+    dataState: "streaming",
     loading: true,
     networkStatus: NetworkStatus.loading,
     partial: true,
@@ -10455,10 +10452,10 @@ test("delivers cache updates written while a deferred response is still streamin
   });
 
   await expect(stream).toEmitTypedValue({
-    data: {
+    data: markAsStreaming({
       post: { __typename: "Post", id: "1", title: "title from write 2" },
-    },
-    dataState: "partial",
+    }),
+    dataState: "streaming",
     loading: true,
     networkStatus: NetworkStatus.loading,
     partial: true,

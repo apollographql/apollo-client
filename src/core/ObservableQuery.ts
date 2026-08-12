@@ -1883,8 +1883,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           // options considered, returning early and stopping the
           // reobserveCacheFirst cycle seems to be the least damaging place to
           // break the cycle because it allows read functions/custom scalars to
-          // be applied to the feuding query while while avoiding the endless
-          // cycle of requests.
+          // be applied to the feuding query while avoiding the endless cycle of
+          // requests.
           return;
         }
 

@@ -10495,3 +10495,81 @@ test("delivers cache updates written while a deferred response is still streamin
   await expect(stream).not.toEmitAnything();
   expect(outgoingRequestSpy).toHaveBeenCalledTimes(1);
 });
+
+test("reports dataState streaming when a forced resolver runs and the only holes are deferred fields with returnPartialData with a cache-only query", async () => {
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+          }
+        }
+      }
+      isLoggedIn @client(always: true)
+    }
+  `;
+
+  const cache = new InMemoryCache();
+
+  // We are intentionally writing partial data to the cache. Suppress console
+  // warnings to avoid unnecessary noise in the test.
+  {
+    using _consoleSpy = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          message: "Cached hello",
+        },
+      },
+    });
+  }
+
+  const client = new ApolloClient({
+    cache,
+    link: ApolloLink.empty(),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+    localState: new LocalState({
+      resolvers: {
+        Query: {
+          isLoggedIn: () => true,
+        },
+      },
+    }),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({
+      query,
+      fetchPolicy: "cache-only",
+      returnPartialData: true,
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Cached hello",
+      },
+      isLoggedIn: true,
+    }),
+    dataState: "streaming",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: true,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});

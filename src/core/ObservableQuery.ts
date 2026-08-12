@@ -1874,7 +1874,13 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
             missing: diff.missing?.missing,
             dmCount: destructiveMethodCounts.get(this.cache),
           };
-        } else {
+        } else if (
+          // cache-only calls reobserve and never fetches from the network, so
+          // we are ok allowing it to flow through the standard workflow. This
+          // also prevents the "stopped refetching" warning which would be
+          // confusing for a cache-only query anyways.
+          this.options.fetchPolicy !== "cache-only"
+        ) {
           const current = this.getCurrentResult();
 
           // Because we track the missing fields in `lastMissingResult`, its

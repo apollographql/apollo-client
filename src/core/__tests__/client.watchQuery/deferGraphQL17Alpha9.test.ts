@@ -10,6 +10,7 @@ import {
 import { InMemoryCache } from "@apollo/client/cache";
 import { GraphQL17Alpha9Handler } from "@apollo/client/incremental";
 import { ApolloLink } from "@apollo/client/link";
+import { LocalState } from "@apollo/client/local-state";
 import {
   executeSchemaGraphQL17Alpha9,
   friendListSchemaGraphQL17Alpha9,
@@ -1594,6 +1595,61 @@ test('returns partial non-deferred cached data with a "cache-first" fetch policy
   });
 
   await expect(stream).not.toEmitAnything();
+});
+
+test("reports dataState streaming from getCurrentResult when only deferred fields are missing with returnPartialData", async () => {
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+          }
+        }
+      }
+    }
+  `;
+
+  const cache = new InMemoryCache();
+
+  // We are intentionally writing partial data to the cache. Suppress console
+  // warnings to avoid unnecessary noise in the test.
+  {
+    using _consoleSpy = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          message: "Cached hello",
+        },
+      },
+    });
+  }
+
+  const client = new ApolloClient({
+    cache,
+    link: ApolloLink.empty(),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const observable = client.watchQuery({ query, returnPartialData: true });
+
+  // Called before subscribe so this goes through getInitialResult, not the
+  // fetchQueryByPolicy cache read.
+  expect(observable.getCurrentResult()).toStrictEqualTyped({
+    data: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Cached hello",
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
 });
 
 test('returns partial deferred cached data as "partial" while streaming with a "cache-first" fetch policy and returnPartialData', async () => {

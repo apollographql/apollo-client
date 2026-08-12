@@ -1,9 +1,7 @@
-import { equal } from "@wry/equality";
 import { Trie } from "@wry/trie";
 import type { DocumentNode, FormattedExecutionResult } from "graphql";
 
 import type {
-  ApolloCache,
   Cache,
   DiffIncrementalInfo,
   IgnoreModifier,
@@ -57,15 +55,6 @@ export const enum CacheWriteBehavior {
   MERGE,
 }
 
-interface LastWrite {
-  result: FormattedExecutionResult<any, ExtensionsWithStreamInfo>;
-  variables: ApolloClient.WatchQueryOptions["variables"];
-  dmCount: number | undefined;
-  hasNext: boolean;
-}
-
-const destructiveMethodCounts = new WeakMap<ApolloCache, number>();
-
 interface OperationInfo<
   TData,
   TVariables extends OperationVariables,
@@ -81,28 +70,6 @@ interface OperationInfo<
 interface MarkQueryResult<TData, TExtensions>
   extends FormattedExecutionResult<TData, TExtensions> {
   dataState: "empty" | "partial" | "streaming" | "complete";
-}
-
-function wrapDestructiveCacheMethod(
-  cache: ApolloCache,
-  methodName: "evict" | "modify" | "reset"
-) {
-  const original = cache[methodName];
-  if (typeof original === "function") {
-    // @ts-expect-error this is just too generic to be typed correctly
-    cache[methodName] = function () {
-      destructiveMethodCounts.set(
-        cache,
-        // The %1e15 allows the count to wrap around to 0 safely every
-        // quadrillion evictions, so there's no risk of overflow. To be
-        // clear, this is more of a pedantic principle than something
-        // that matters in any conceivable practical scenario.
-        (destructiveMethodCounts.get(cache)! + 1) % 1e15
-      );
-      // @ts-expect-error this is just too generic to be typed correctly
-      return original.apply(this, arguments);
-    };
-  }
 }
 
 const queryInfoIds = new WeakMap<QueryManager, number>();
@@ -137,67 +104,12 @@ export class QueryInfo<
     queryManager: QueryManager,
     observableQuery?: ObservableQuery<any, any>
   ) {
-    const cache = (this.cache = queryManager.cache as TCache);
+    this.cache = queryManager.cache as TCache;
     const id = (queryInfoIds.get(queryManager) || 0) + 1;
     queryInfoIds.set(queryManager, id);
     this.id = id + "";
     this.observableQuery = observableQuery;
     this.queryManager = queryManager;
-
-    // Track how often cache.evict is called, since we want eviction to
-    // override the write-skipping logic in `shouldWrite`, by causing it to
-    // return true. Wrapping the cache.evict method is a bit of a hack, but it
-    // saves us from having to make eviction counting an official part of the
-    // ApolloCache API.
-    if (!destructiveMethodCounts.has(cache)) {
-      destructiveMethodCounts.set(cache, 0);
-      wrapDestructiveCacheMethod(cache, "evict");
-      wrapDestructiveCacheMethod(cache, "modify");
-      wrapDestructiveCacheMethod(cache, "reset");
-    }
-  }
-
-  /**
-   * @internal
-   * Tracks the last result written to the cache so that `shouldWrite` can skip
-   * an identical write. Since a `QueryInfo` only ever represents a single
-   * network request, this is shared by all `QueryInfo` instances of an
-   * `ObservableQuery`. A standalone `QueryInfo` keeps a local version.
-   *
-   * A network result that was explicitly asked for always takes precedence over
-   * what is already cached, so `ObservableQuery.refetch` and polling clear this
-   * value before starting their request.
-   */
-  public _lastWrite?: LastWrite;
-  private get lastWrite(): LastWrite | undefined {
-    return (this.observableQuery || this)._lastWrite as LastWrite | undefined;
-  }
-  private set lastWrite(value: LastWrite | undefined) {
-    (this.observableQuery || this)._lastWrite = value;
-  }
-
-  public resetLastWrite() {
-    this.lastWrite = void 0;
-  }
-
-  private shouldWrite(
-    result: FormattedExecutionResult<any, ExtensionsWithStreamInfo>,
-    variables: ApolloClient.WatchQueryOptions["variables"]
-  ) {
-    const { lastWrite } = this;
-    return (
-      !lastWrite ||
-      // If cache.evict has been called since the last time we wrote this
-      // data into the cache, there's a chance writing this result into
-      // the cache will repair what was evicted.
-      lastWrite.dmCount !== destructiveMethodCounts.get(this.cache) ||
-      !equal(variables, lastWrite.variables) ||
-      !equal(result.data, lastWrite.result.data) ||
-      // We have to compare these values because its possible the final chunk
-      // emitted in the incremental result is just `hasNext: false`. This
-      // ensures we trigger a cache write when we get `isLastChunk: true`.
-      lastWrite.hasNext !== this.hasNext
-    );
   }
 
   get hasNext() {
@@ -320,16 +232,9 @@ export class QueryInfo<
       result.dataState = "streaming";
     }
 
-    if (skipCache) {
+    if (skipCache || !shouldWriteResult(result, errorPolicy)) {
       return result;
     }
-
-    if (!shouldWriteResult(result, errorPolicy)) {
-      this.lastWrite = void 0;
-      return result;
-    }
-
-    let written = false;
 
     // Using a transaction here so we have a chance to read the result
     // back from the cache before the watch callback fires as a result
@@ -348,57 +253,13 @@ export class QueryInfo<
         }
       },
       update: (cache) => {
-        const shouldWrite = this.shouldWrite(result, variables);
-
-        // If result is the same as the last result we received from
-        // the network (and the variables match too), avoid writing
-        // result into the cache again. The wisdom of skipping this
-        // cache write is far from obvious, since any cache write
-        // could be the one that puts the cache back into a desired
-        // state, fixing corruption or missing data. However, if we
-        // always write every network result into the cache, we enable
-        // feuds between queries competing to update the same data in
-        // incompatible ways, which can lead to an endless cycle of
-        // cache broadcasts and useless network requests. As with any
-        // feud, eventually one side must step back from the brink,
-        // letting the other side(s) have the last word(s). There may
-        // be other points where we could break this cycle, such as
-        // silencing the broadcast for cache.writeQuery (not a good
-        // idea, since it just delays the feud a bit) or somehow
-        // avoiding the network request that just happened (also bad,
-        // because the server could return useful new data). All
-        // options considered, skipping this cache write seems to be
-        // the least damaging place to break the cycle, because it
-        // reflects the intuition that we recently wrote this exact
-        // result into the cache, so the cache *should* already/still
-        // contain this data. If some other query has clobbered that
-        // data in the meantime, that's too bad, but there will be no
-        // winners if every query blindly reverts to its own version
-        // of the data. This approach also gives the network a chance
-        // to return new data, which will be written into the cache as
-        // usual, notifying only those queries that are directly
-        // affected by the cache updates, as usual. In the future, an
-        // even more sophisticated cache could perhaps prevent or
-        // mitigate the clobbering somehow, but that would make this
-        // particular cache write even less important, and thus
-        // skipping it would be even safer than it is today.
-        if (shouldWrite) {
-          cache.writeQuery({
-            query,
-            data: result.data as Unmasked<any>,
-            variables,
-            overwrite: cacheWriteBehavior === CacheWriteBehavior.OVERWRITE,
-            extensions: result.extensions,
-          });
-
-          this.lastWrite = {
-            result,
-            variables,
-            dmCount: destructiveMethodCounts.get(this.cache),
-            hasNext: this.hasNext,
-          };
-          written = true;
-        }
+        cache.writeQuery({
+          query,
+          data: result.data as Unmasked<any>,
+          variables,
+          overwrite: cacheWriteBehavior === CacheWriteBehavior.OVERWRITE,
+          extensions: result.extensions,
+        });
 
         const { dataState, result: diffResult } = this.getDiff(
           {
@@ -415,12 +276,11 @@ export class QueryInfo<
         if (
           dataState === "complete" ||
           dataState === "streaming" ||
-          (returnPartialData && dataState === "partial" && shouldWrite)
+          (returnPartialData && dataState === "partial")
         ) {
           result = { ...result, data: diffResult, dataState };
         } else if (
           __DEV__ &&
-          written &&
           // A result that is still streaming is expected to read back
           // incomplete until the remaining chunks arrive.
           !this.hasNext

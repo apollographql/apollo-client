@@ -94,6 +94,30 @@ const empty: ObservableQuery.Result<any> = {
   partial: true,
 };
 
+const destructiveMethodCounts = new WeakMap<Cache.Implementation, number>();
+
+function wrapDestructiveCacheMethod(
+  cache: Cache.Implementation,
+  methodName: "evict" | "modify" | "reset"
+) {
+  const original = cache[methodName];
+  if (typeof original === "function") {
+    // @ts-expect-error this is just too generic to be typed correctly
+    cache[methodName] = function () {
+      destructiveMethodCounts.set(
+        cache,
+        // The %1e15 allows the count to wrap around to 0 safely every
+        // quadrillion evictions, so there's no risk of overflow. To be
+        // clear, this is more of a pedantic principle than something
+        // that matters in any conceivable practical scenario.
+        (destructiveMethodCounts.get(cache)! + 1) % 1e15
+      );
+      // @ts-expect-error this is just too generic to be typed correctly
+      return original.apply(this, arguments);
+    };
+  }
+}
+
 const enum EmitBehavior {
   /**
    * Emit will be calculated by the normal rules. (`undefined` will be treated the same as this)
@@ -309,8 +333,11 @@ export class ObservableQuery<
   public readonly queryName?: string;
   private variablesUnknown: boolean = false;
 
-  /** @internal will be read and written from `QueryInfo` */
-  public _lastWrite?: unknown;
+  private lastIncompleteResult?: {
+    result: unknown;
+    variables: TVariables;
+    dmCount: number | undefined;
+  };
 
   // The `query` computed property will always reflect the document transformed
   // by the last run query. `this.options.query` will always reflect the raw
@@ -381,6 +408,19 @@ export class ObservableQuery<
     queryId?: string;
   }) {
     this.queryManager = queryManager;
+
+    // Track how often destructive cache methods are called, since we want
+    // eviction to override the feud-stopping logic in `shouldAutoRefetch`,
+    // by causing it to return true. Wrapping these cache methods is a bit of a
+    // hack, but it saves us from having to make eviction counting an official
+    // part of the ApolloCache API.
+    const { cache } = queryManager;
+    if (!destructiveMethodCounts.has(cache)) {
+      destructiveMethodCounts.set(cache, 0);
+      wrapDestructiveCacheMethod(cache, "evict");
+      wrapDestructiveCacheMethod(cache, "modify");
+      wrapDestructiveCacheMethod(cache, "reset");
+    }
 
     // active state
     this.waitForNetworkResult = options.fetchPolicy === "network-only";
@@ -819,7 +859,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         this.getVariablesWithDefaults({ ...this.variables, ...variables });
     }
 
-    this._lastWrite = undefined;
+    this.lastIncompleteResult = undefined;
     return this._reobserve(reobserveOptions, {
       newNetworkStatus: NetworkStatus.refetch,
     });
@@ -1485,7 +1525,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           !isNetworkRequestInFlight(this.networkStatus) &&
           !this.options.skipPollAttempt?.()
         ) {
-          this._lastWrite = undefined;
+          this.lastIncompleteResult = undefined;
           this._reobserve(
             {
               // Most fetchPolicy options don't make sense to use in a polling context, as
@@ -1538,6 +1578,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   ): ObservableQuery.ResultPromise<
     ApolloClient.QueryResult<MaybeMasked<TData>>
   > {
+    this.lastIncompleteResult = undefined;
     return this._reobserve(newOptions);
   }
   private _reobserve(
@@ -1730,7 +1771,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     this.queryManager.obsQueries.delete(this);
     this.isTornDown = true;
     this.abortActiveOperations();
-    this._lastWrite = undefined;
+    this.lastIncompleteResult = undefined;
   }
 
   private transformDocument(document: DocumentNode) {
@@ -1752,6 +1793,23 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   private dirty: boolean = false;
 
   private notifyTimeout?: ReturnType<typeof setTimeout>;
+
+  /** @internal */
+  private shouldAutoRefetch(result: unknown) {
+    const { lastIncompleteResult } = this;
+
+    return (
+      !lastIncompleteResult ||
+      // If a destructive cache method has been called since the last recorded
+      // incomplete result, there's a chance fetching this data again will
+      // restore what was evicted, even though the cache result looks the same
+      // as before.
+      lastIncompleteResult.dmCount !==
+        destructiveMethodCounts.get(this.cache) ||
+      !equal(lastIncompleteResult.variables, this.variables) ||
+      !equal(lastIncompleteResult.result, result)
+    );
+  }
 
   /** @internal */
   private resetNotifications() {
@@ -1799,6 +1857,37 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         // code path, so we need to check it this way
         equal(diff.result, this.getCacheDiff({ optimistic: false }).result)
       ) {
+        if (diff.complete) {
+          this.lastIncompleteResult = undefined;
+        } else if (this.shouldAutoRefetch(diff.result)) {
+          this.lastIncompleteResult = {
+            variables: this.variables,
+            result: diff.result,
+            dmCount: destructiveMethodCounts.get(this.cache),
+          };
+        } else {
+          // If the (partial) result is the same as the last partial result
+          // we recorded from a previous broadcast (and the variables match
+          // too), avoid calling reobserveCacheFirst to refetch this query
+          // again. If we allow refetching anytime this result becomes partial,
+          // we risk feuds between queries competing to update the same data in
+          // incompatible ways, which can lead to an endless cycle of cache
+          // broadcasts and useless network requests. As with any
+          // feud, eventually one side must step back from the brink,
+          // letting the other side(s) have the last word(s). There may
+          // be other points where we could break this cycle, such as
+          // silencing the broadcast for cache.writeQuery (not a good
+          // idea, since it just delays the feud a bit) or somehow
+          // avoiding the network request that just happened (also bad,
+          // because the server could return useful new data). All
+          // options considered, returning early and stopping the
+          // reobserveCacheFirst cycle seems to be the least damaging place to
+          // break the cycle because it allows read functions/custom scalars to
+          // be applied to the feuding query while while avoiding the endless
+          // cycle of requests.
+          return;
+        }
+
         //If this diff did not come from an optimistic transaction
         // make the ObservableQuery "reobserve" the latest data
         // using a temporary fetch policy of "cache-first", so complete cache
@@ -1815,6 +1904,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         // reobservation, since oq.reobserveCacheFirst might make a network
         // request, and we never want to trigger network requests in the
         // middle of optimistic updates.
+        this.lastIncompleteResult = undefined;
         this.input.next({
           kind: "N",
           value: {
@@ -1909,6 +1999,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // exception for cache-only queries - we reset them into a "ready" state
     // as we won't trigger a refetch for them
     const resetToEmpty = this.options.fetchPolicy === "cache-only";
+    this.lastIncompleteResult = undefined;
     this.setResult(resetToEmpty ? empty : uninitialized, {
       shouldEmit: resetToEmpty ? EmitBehavior.force : EmitBehavior.never,
     });
@@ -2083,7 +2174,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const { fetchPolicy, nextFetchPolicy } = this.options;
 
     if (fetchPolicy === "cache-and-network" || fetchPolicy === "network-only") {
-      this.reobserve({
+      // Calls `_reobserve` rather than `reobserve` so that a refetch initiated
+      // by the cache update does not clear `lastIncompleteResult`, which
+      // only user-initiated reobservations should do.
+      this._reobserve({
         fetchPolicy: "cache-first",
         // Use a temporary nextFetchPolicy function that replaces itself with the
         // previous nextFetchPolicy value and returns the original fetchPolicy.
@@ -2105,7 +2199,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         },
       });
     } else {
-      this.reobserve();
+      this._reobserve();
     }
   }
 

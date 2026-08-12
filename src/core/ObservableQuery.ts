@@ -334,19 +334,19 @@ export class ObservableQuery<
   private variablesUnknown: boolean = false;
 
   private didWarnOnFeud = false;
-  private _lastIncompleteResult?: {
-    result: unknown;
+  private _lastMissingResult?: {
+    missing: MissingTree | undefined;
     variables: TVariables;
     dmCount: number | undefined;
   };
 
-  private get lastIncompleteResult() {
-    return this._lastIncompleteResult;
+  private get lastMissingResult() {
+    return this._lastMissingResult;
   }
 
-  private set lastIncompleteResult(newValue) {
+  private set lastMissingResult(newValue) {
     this.didWarnOnFeud = false;
-    this._lastIncompleteResult = newValue;
+    this._lastMissingResult = newValue;
   }
 
   // The `query` computed property will always reflect the document transformed
@@ -869,7 +869,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         this.getVariablesWithDefaults({ ...this.variables, ...variables });
     }
 
-    this.lastIncompleteResult = undefined;
+    this.lastMissingResult = undefined;
     return this._reobserve(reobserveOptions, {
       newNetworkStatus: NetworkStatus.refetch,
     });
@@ -1535,7 +1535,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           !isNetworkRequestInFlight(this.networkStatus) &&
           !this.options.skipPollAttempt?.()
         ) {
-          this.lastIncompleteResult = undefined;
+          this.lastMissingResult = undefined;
           this._reobserve(
             {
               // Most fetchPolicy options don't make sense to use in a polling context, as
@@ -1588,7 +1588,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   ): ObservableQuery.ResultPromise<
     ApolloClient.QueryResult<MaybeMasked<TData>>
   > {
-    this.lastIncompleteResult = undefined;
+    this.lastMissingResult = undefined;
     return this._reobserve(newOptions);
   }
   private _reobserve(
@@ -1781,7 +1781,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     this.queryManager.obsQueries.delete(this);
     this.isTornDown = true;
     this.abortActiveOperations();
-    this.lastIncompleteResult = undefined;
+    this.lastMissingResult = undefined;
   }
 
   private transformDocument(document: DocumentNode) {
@@ -1805,19 +1805,18 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   private notifyTimeout?: ReturnType<typeof setTimeout>;
 
   /** @internal */
-  private shouldAutoRefetch(result: unknown) {
-    const { lastIncompleteResult } = this;
+  private shouldAutoRefetch(diff: Cache.DiffResult<any>) {
+    const { lastMissingResult } = this;
 
     return (
-      !lastIncompleteResult ||
+      !lastMissingResult ||
       // If a destructive cache method has been called since the last recorded
       // incomplete result, there's a chance fetching this data again will
       // restore what was evicted, even though the cache result looks the same
       // as before.
-      lastIncompleteResult.dmCount !==
-        destructiveMethodCounts.get(this.cache) ||
-      !equal(lastIncompleteResult.variables, this.variables) ||
-      !equal(lastIncompleteResult.result, result)
+      lastMissingResult.dmCount !== destructiveMethodCounts.get(this.cache) ||
+      !equal(lastMissingResult.variables, this.variables) ||
+      !equal(lastMissingResult.missing, diff.missing?.missing)
     );
   }
 
@@ -1868,14 +1867,41 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         equal(diff.result, this.getCacheDiff({ optimistic: false }).result)
       ) {
         if (diff.complete) {
-          this.lastIncompleteResult = undefined;
-        } else if (this.shouldAutoRefetch(diff.result)) {
-          this.lastIncompleteResult = {
+          this.lastMissingResult = undefined;
+        } else if (this.shouldAutoRefetch(diff)) {
+          this.lastMissingResult = {
             variables: this.variables,
-            result: diff.result,
+            missing: diff.missing?.missing,
             dmCount: destructiveMethodCounts.get(this.cache),
           };
         } else {
+          const current = this.getCurrentResult();
+
+          // Because we track the missing fields in `lastMissingResult`, its
+          // possible data might have changed from a cache write. We want to
+          // prevent refetches to avoid feuds, but we are ok delivering the
+          // cache result only if the previous result was also partial. We NEVER
+          // want to downgrade a complete result to a partial result.
+          if (
+            !equal(current.data, diff.result) &&
+            current.dataState === "partial"
+          ) {
+            this.input.next({
+              kind: "N",
+              value: {
+                data: diff.result,
+                dataState: diff.result ? "partial" : "empty",
+                networkStatus: current.networkStatus,
+                loading: current.loading,
+                error: undefined,
+                partial: true,
+              } as ObservableQuery.Result<TData>,
+              source: "cache",
+              query: this.query,
+              variables: this.variables,
+              meta: {},
+            });
+          }
           // If the (partial) result is the same as the last partial result
           // we recorded from a previous broadcast (and the variables match
           // too), avoid calling reobserveCacheFirst to refetch this query
@@ -1936,7 +1962,7 @@ For more information about these options, please refer to the documentation:
         // reobservation, since oq.reobserveCacheFirst might make a network
         // request, and we never want to trigger network requests in the
         // middle of optimistic updates.
-        this.lastIncompleteResult = undefined;
+        this.lastMissingResult = undefined;
         this.input.next({
           kind: "N",
           value: {
@@ -2031,7 +2057,7 @@ For more information about these options, please refer to the documentation:
     // exception for cache-only queries - we reset them into a "ready" state
     // as we won't trigger a refetch for them
     const resetToEmpty = this.options.fetchPolicy === "cache-only";
-    this.lastIncompleteResult = undefined;
+    this.lastMissingResult = undefined;
     this.setResult(resetToEmpty ? empty : uninitialized, {
       shouldEmit: resetToEmpty ? EmitBehavior.force : EmitBehavior.never,
     });

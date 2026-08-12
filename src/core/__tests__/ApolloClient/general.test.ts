@@ -3701,6 +3701,207 @@ describe("ApolloClient", () => {
     });
   });
 
+  it("delivers repeated cache updates to a cache-only query kept partial by a read function", async () => {
+    const query = gql`
+      query A {
+        user {
+          id
+          name
+          age
+        }
+      }
+    `;
+
+    const fragment = gql`
+      fragment UserName on User {
+        name
+      }
+    `;
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache({
+        typePolicies: {
+          User: {
+            fields: {
+              age: { read: () => undefined },
+            },
+          },
+        },
+      }),
+      link: ApolloLink.empty(),
+    });
+
+    client.writeQuery({
+      query,
+      data: { user: { __typename: "User", id: "1", name: "Alice", age: 30 } },
+    });
+
+    using stream = new ObservableStream(
+      client.watchQuery({
+        query,
+        fetchPolicy: "cache-only",
+        returnPartialData: true,
+      })
+    );
+
+    await expect(stream).toEmitTypedValue({
+      data: { user: { __typename: "User", id: "1", name: "Alice" } },
+      dataState: "partial",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: true,
+    });
+
+    client.writeFragment({
+      fragment: fragment,
+      from: { __typename: "User", id: "1" },
+      data: { __typename: "User", id: "1", name: "Alice Smith" },
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: { user: { __typename: "User", id: "1", name: "Alice Smith" } },
+      dataState: "partial",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: true,
+    });
+
+    // The same field changes a second time. `age` is still the only missing
+    // field, but the data this query can read changed again, so it still needs
+    // to deliver it.
+    client.writeFragment({
+      fragment: fragment,
+      from: { __typename: "User", id: "1" },
+      data: { __typename: "User", id: "1", name: "Alice Jones" },
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: { user: { __typename: "User", id: "1", name: "Alice Jones" } },
+      dataState: "partial",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: true,
+    });
+
+    await expect(stream).not.toEmitAnything();
+  });
+
+  it("delivers repeated cache updates to a cache-first query kept partial by a read function", async () => {
+    using _ = spyOnConsole("warn");
+
+    const query = gql`
+      query A {
+        user {
+          id
+          name
+          age
+        }
+      }
+    `;
+
+    const fragment = gql`
+      fragment UserName on User {
+        name
+      }
+    `;
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache({
+        typePolicies: {
+          User: {
+            fields: {
+              age: { read: () => undefined },
+            },
+          },
+        },
+      }),
+      link: new MockLink([
+        {
+          request: { query },
+          result: {
+            data: {
+              user: { __typename: "User", id: "1", name: "Alice", age: 30 },
+            },
+          },
+          delay: 20,
+        },
+        {
+          request: { query },
+          result: {
+            data: {
+              user: {
+                __typename: "User",
+                id: "1",
+                name: "Alice Smith",
+                age: 30,
+              },
+            },
+          },
+          delay: 20,
+        },
+      ]),
+    });
+
+    using stream = new ObservableStream(
+      client.watchQuery({ query, returnPartialData: true })
+    );
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+    await expect(stream).toEmitTypedValue({
+      data: { user: { __typename: "User", id: "1", name: "Alice" } },
+      dataState: "partial",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: true,
+    });
+
+    client.writeFragment({
+      fragment,
+      from: { __typename: "User", id: "1" },
+      data: { __typename: "User", id: "1", name: "Alice Smith" },
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: { user: { __typename: "User", id: "1", name: "Alice Smith" } },
+      dataState: "partial",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+    await expect(stream).toEmitTypedValue({
+      data: { user: { __typename: "User", id: "1", name: "Alice Smith" } },
+      dataState: "partial",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: true,
+    });
+
+    // The same field changes a second time. `age` is still the only missing
+    // field, but the data this query can read changed again, so it still needs
+    // to deliver it.
+    client.writeFragment({
+      fragment,
+      from: { __typename: "User", id: "1" },
+      data: { __typename: "User", id: "1", name: "Alice Jones" },
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: { user: { __typename: "User", id: "1", name: "Alice Jones" } },
+      dataState: "partial",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: true,
+    });
+
+    await expect(stream).not.toEmitAnything();
+  });
+
   it("writes the latest polled result over a clobbered cache value when polled result equals last polled result", async () => {
     const query = gql`
       query {

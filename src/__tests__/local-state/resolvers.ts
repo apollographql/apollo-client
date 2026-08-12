@@ -1435,6 +1435,65 @@ describe("Force local resolvers", () => {
 
     await expect(stream).not.toEmitAnything();
   });
+
+  test("reports dataState when a forced client field is unresolved and server fields are complete", async () => {
+    const query = gql`
+      query {
+        greeting {
+          message
+        }
+        isLoggedIn @client(always: true)
+      }
+    `;
+
+    const cache = new InMemoryCache();
+    cache.writeQuery({
+      query: gql`
+        query {
+          greeting {
+            message
+          }
+        }
+      `,
+      data: {
+        greeting: { __typename: "Greeting", message: "Hello" },
+      },
+    });
+
+    const client = new ApolloClient({
+      cache,
+      link: ApolloLink.empty(),
+      localState: new LocalState(),
+    });
+
+    const stream = new ObservableStream(
+      client.watchQuery({
+        query,
+        fetchPolicy: "cache-only",
+        returnPartialData: true,
+      })
+    );
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        greeting: { __typename: "Greeting", message: "Hello" },
+      },
+      dataState: "partial",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: true,
+    });
+
+    await expect(stream).not.toEmitAnything();
+  });
 });
 
 describe("Async resolvers", () => {

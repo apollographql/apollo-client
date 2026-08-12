@@ -57,7 +57,6 @@ import {
   getOperationDefinition,
   getOperationName,
   graphQLResultHasError,
-  handleIncrementalSymbol,
   hasDirectives,
   hasForcedResolvers,
   isDocumentNode,
@@ -1583,25 +1582,12 @@ export class QueryManager {
     }
   ): ObservableAndInfo<TData> {
     const readCache = () => {
-      const diff = this.cache.diff<any>({
+      return queryInfo.getDiff({
         query,
         variables,
         returnPartialData: true,
         optimistic: true,
-        [handleIncrementalSymbol]: undefined,
       });
-
-      if ("dataState" in diff) {
-        return diff;
-      }
-
-      return {
-        ...diff,
-        dataState:
-          diff.complete ? "complete"
-          : diff.result === null ? "empty"
-          : "partial",
-      } as Cache.InternalDiffResultWithDataState<TData>;
     };
 
     const resultsFromCache = (

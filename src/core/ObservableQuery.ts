@@ -1998,7 +1998,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       result = notification.value;
       if (
         result.networkStatus === NetworkStatus.ready &&
-        result.partial &&
+        result.dataState === "partial" &&
         (!this.options.returnPartialData ||
           previous.result.networkStatus === NetworkStatus.error) &&
         this.options.fetchPolicy !== "cache-only"

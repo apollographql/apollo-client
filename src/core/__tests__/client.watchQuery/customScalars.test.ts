@@ -20,6 +20,7 @@ import {
   mockDefer20220824,
   mockDeferStreamGraphQL17Alpha9,
   ObservableStream,
+  spyOnConsole,
 } from "@apollo/client/testing/internal";
 
 test("serializes scalar variables used in field arguments", async () => {
@@ -1979,6 +1980,8 @@ test("parses custom scalar fields across `@stream` payloads (graphql17Alpha9)", 
 });
 
 test("parses custom scalar fields when feud-stopping skips refetches", async () => {
+  using _ = spyOnConsole("warn");
+
   const createdAtQuery = gql`
     query {
       post {
@@ -2141,6 +2144,8 @@ test("parses custom scalar fields when feud-stopping skips refetches", async () 
 });
 
 test("parses custom scalar fields when feud-stopping skips refetches with overlapping fields", async () => {
+  using _ = spyOnConsole("warn");
+
   const updatedAtQuery = gql`
     query UpdatedAtQuery {
       post {

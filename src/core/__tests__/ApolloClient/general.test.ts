@@ -2877,6 +2877,9 @@ describe("ApolloClient", () => {
   });
 
   it("stops repeated refetches when queries feud over non-normalized data", async () => {
+    // Silence the feud-stop warning; warn content is covered in dedicated tests.
+    using _ = spyOnConsole("warn");
+
     const cache = new InMemoryCache({
       typePolicies: {
         Query: {
@@ -3031,6 +3034,195 @@ describe("ApolloClient", () => {
     // the network again.
     await expect(aStream).not.toEmitAnything();
     await expect(bStream).not.toEmitAnything();
+  });
+
+  it("warns when feud-stopping skips a refetch", async () => {
+    using _ = spyOnConsole("warn");
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              info: {
+                merge: false,
+              },
+            },
+          },
+        },
+      }),
+      link: new ApolloLink(
+        (operation) =>
+          new Observable((observer) => {
+            setTimeout(() => {
+              switch (operation.operationName) {
+                case "A":
+                  observer.next({ data: { info: { a: "ay" } } });
+                  break;
+                case "B":
+                  observer.next({ data: { info: { b: "bee" } } });
+                  break;
+              }
+              observer.complete!();
+            });
+          })
+      ),
+    });
+
+    const queryA = gql`
+      query A {
+        info {
+          a
+        }
+      }
+    `;
+    const queryB = gql`
+      query B {
+        info {
+          b
+        }
+      }
+    `;
+
+    using aStream = new ObservableStream(
+      client.watchQuery({
+        query: queryA,
+        returnPartialData: true,
+      })
+    );
+    using bStream = new ObservableStream(
+      client.watchQuery({
+        query: queryB,
+        returnPartialData: true,
+      })
+    );
+
+    // initial loading
+    await aStream.takeNext();
+    await bStream.takeNext();
+    // initial complete results
+    await aStream.takeNext();
+    await bStream.takeNext();
+    // A auto-refetches after B overwrites it
+    await aStream.takeNext();
+    await aStream.takeNext();
+    // B auto-refetches after A overwrites it
+    await bStream.takeNext();
+    await bStream.takeNext();
+    // A stops rather than restarting the feud
+    await expect(aStream).not.toEmitAnything();
+    await expect(bStream).not.toEmitAnything();
+
+    expect(console.warn).toHaveBeenCalledTimes(1);
+    expect(console.warn).toHaveBeenCalledWith(
+      expect.stringContaining("Apollo Client stopped refetching '%s'"),
+      "A",
+      {
+        info: {
+          a: expect.stringContaining("Can't find field 'a'"),
+        },
+      }
+    );
+  });
+
+  it("warns once until feud stopping is reset", async () => {
+    using consoleSpy = spyOnConsole("warn");
+
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            info: {
+              merge: false,
+            },
+          },
+        },
+      },
+    });
+
+    const client = new ApolloClient({
+      cache,
+      link: new ApolloLink(
+        (operation) =>
+          new Observable((observer) => {
+            setTimeout(() => {
+              switch (operation.operationName) {
+                case "A":
+                  observer.next({ data: { info: { a: "ay" } } });
+                  break;
+                case "B":
+                  observer.next({ data: { info: { b: "bee" } } });
+                  break;
+              }
+              observer.complete!();
+            });
+          })
+      ),
+    });
+
+    const queryA = gql`
+      query A {
+        info {
+          a
+        }
+      }
+    `;
+    const queryB = gql`
+      query B {
+        info {
+          b
+        }
+      }
+    `;
+
+    using aStream = new ObservableStream(
+      client.watchQuery({
+        query: queryA,
+        returnPartialData: true,
+      })
+    );
+    using bStream = new ObservableStream(
+      client.watchQuery({
+        query: queryB,
+        returnPartialData: true,
+      })
+    );
+
+    // Drive the feud until A stops auto-refetching.
+    await aStream.takeNext();
+    await bStream.takeNext();
+    await aStream.takeNext();
+    await bStream.takeNext();
+    await aStream.takeNext();
+    await aStream.takeNext();
+    await bStream.takeNext();
+    await bStream.takeNext();
+    await expect(aStream).not.toEmitAnything();
+    await expect(bStream).not.toEmitAnything();
+
+    expect(console.warn).toHaveBeenCalledTimes(1);
+    consoleSpy.warn.mockClear();
+
+    // Another overwrite that leaves A incomplete the same way shouldn't warn
+    // again
+    cache.writeQuery({
+      query: queryB,
+      data: { info: { b: "bee again" } },
+    });
+    await expect(aStream).not.toEmitAnything();
+    await expect(bStream).toEmitTypedValue({
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      data: {
+        info: {
+          b: "bee again",
+        },
+      },
+      dataState: "complete",
+      partial: false,
+    });
+
+    expect(console.warn).not.toHaveBeenCalled();
   });
 
   it("fetches a clobbered value again after reading a complete result in between", async () => {

@@ -333,11 +333,21 @@ export class ObservableQuery<
   public readonly queryName?: string;
   private variablesUnknown: boolean = false;
 
-  private lastIncompleteResult?: {
+  private didWarnOnFeud = false;
+  private _lastIncompleteResult?: {
     result: unknown;
     variables: TVariables;
     dmCount: number | undefined;
   };
+
+  private get lastIncompleteResult() {
+    return this._lastIncompleteResult;
+  }
+
+  private set lastIncompleteResult(newValue) {
+    this.didWarnOnFeud = false;
+    this._lastIncompleteResult = newValue;
+  }
 
   // The `query` computed property will always reflect the document transformed
   // by the last run query. `this.options.query` will always reflect the raw
@@ -1885,7 +1895,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           // break the cycle because it allows read functions/custom scalars to
           // be applied to the feuding query while avoiding the endless cycle of
           // requests.
-          if (__DEV__) {
+          if (__DEV__ && !this.didWarnOnFeud) {
+            this.didWarnOnFeud = true;
             invariant.warn(
               `Apollo Client stopped refetching '%s' because the same incomplete cache result was already refetched. Automatic refetching was halted to prevent an endless cycle of network requests.
 

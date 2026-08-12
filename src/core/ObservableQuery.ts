@@ -1875,19 +1875,22 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
             dmCount: destructiveMethodCounts.get(this.cache),
           };
         } else if (
-          // cache-only calls reobserve and never fetches from the network, so
-          // we are ok allowing it to flow through the standard workflow. This
-          // also prevents the "stopped refetching" warning which would be
+          // reobserveCacheFirst with cache-only fetch policy only calls
+          // reobserve which never fetches from the network so we are ok
+          // allowing cache-only queries to fallthrough to reobserveCacheFirst.
+          // This prevents the "stopped refetching" warning which would be
           // confusing for a cache-only query anyways.
           this.options.fetchPolicy !== "cache-only"
         ) {
           const current = this.getCurrentResult();
 
-          // Because we track the missing fields in `lastMissingResult`, its
-          // possible data might have changed from a cache write. We want to
-          // prevent refetches to avoid feuds, but we are ok delivering the
-          // cache result only if the previous result was also partial. We NEVER
-          // want to downgrade a complete result to a partial result.
+          // If we've fallen through to this case, a cache emit has returned the
+          // same missing fields which means fields we've already delivered for
+          // this query have changed. We are ok delivering the updated value in
+          // this case to keep the result as fresh as possible. We NEVER want to
+          // downgrade this query from a complete query to a partial query
+          // though, so we also make sure we only deliver if the previous result
+          // was also partial.
           if (
             !equal(current.data, diff.result) &&
             current.dataState === "partial"

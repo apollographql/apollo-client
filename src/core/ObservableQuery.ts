@@ -1819,10 +1819,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           kind: "N",
           value: {
             data: diff.result,
-            dataState:
-              diff.complete ? "complete"
-              : diff.result ? "partial"
-              : "empty",
+            dataState: diff.dataState,
             networkStatus: NetworkStatus.ready,
             loading: false,
             error: undefined,

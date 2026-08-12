@@ -10413,6 +10413,135 @@ test("delivers cache updates written while a deferred response is still streamin
   expect(outgoingRequestSpy).toHaveBeenCalledTimes(1);
 });
 
+test("keeps dataState streaming for an optimistic cache write while a deferred response is still streaming", async () => {
+  const query = gql`
+    query PostQuery {
+      post {
+        id
+        title
+        ... @defer {
+          body
+        }
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  using stream = new ObservableStream(
+    client.watchQuery({
+      query,
+      fetchPolicy: "cache-and-network",
+      returnPartialData: true,
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: { post: { __typename: "Post", id: "1", title: "title from server" } },
+    pending: [{ id: "0", path: ["post"] }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      post: { __typename: "Post", id: "1", title: "title from server" },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  {
+    using _consoleSpy = spyOnConsole("error");
+    client.cache.recordOptimisticTransaction((cache) => {
+      cache.writeQuery({
+        query,
+        data: {
+          post: {
+            __typename: "Post",
+            id: "1",
+            title: "title from optimistic write",
+          },
+        },
+      });
+    }, "optimistic");
+  }
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      post: {
+        __typename: "Post",
+        id: "1",
+        title: "title from optimistic write",
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  client.cache.removeOptimistic("optimistic");
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      post: { __typename: "Post", id: "1", title: "title from server" },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      post: { __typename: "Post", id: "1", title: "title from server" },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [{ data: { body: "body from server" }, id: "0" }],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      post: {
+        __typename: "Post",
+        id: "1",
+        title: "title from server",
+        body: "body from server",
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
 test("delivers cache updates written while a deferred response is still streaming with `returnPartialData: true`", async () => {
   const query = gql`
     query PostQuery {

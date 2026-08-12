@@ -1892,9 +1892,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           // though, so we also make sure we only deliver if the previous result
           // was also partial.
           if (
-            !equal(current.data, diff.result) &&
-            (current.dataState === "partial" ||
-              current.dataState === "streaming")
+            current.dataState === "partial" ||
+            current.dataState === "streaming"
           ) {
             this.input.next({
               kind: "N",

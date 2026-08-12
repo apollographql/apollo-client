@@ -1383,6 +1383,58 @@ describe("Force local resolvers", () => {
 
     expect(isLoggedInCount).toBe(2);
   });
+
+  test("reports dataState partial when a forced resolver fills an empty cache result with returnPartialData", async () => {
+    const query = gql`
+      query {
+        greeting {
+          message
+        }
+        isLoggedIn @client(always: true)
+      }
+    `;
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+      localState: new LocalState({
+        resolvers: {
+          Query: {
+            isLoggedIn: () => true,
+          },
+        },
+      }),
+    });
+
+    const stream = new ObservableStream(
+      client.watchQuery({
+        query,
+        fetchPolicy: "cache-only",
+        returnPartialData: true,
+      })
+    );
+
+    // Forced resolvers run asynchronously, so the first emit is the empty
+    // loading state. The next emit must stay "partial": the cache diff is
+    // empty, but the resolver added a field.
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: { isLoggedIn: true },
+      dataState: "partial",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: true,
+    });
+
+    await expect(stream).not.toEmitAnything();
+  });
 });
 
 describe("Async resolvers", () => {

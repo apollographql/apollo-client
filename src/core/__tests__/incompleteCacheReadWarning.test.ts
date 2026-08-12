@@ -389,7 +389,7 @@ test("does not warn while a deferred result is still streaming", async () => {
   expect(console.warn).not.toHaveBeenCalled();
 });
 
-test("does not warn again when the cache write is skipped because the identical result was already written", async () => {
+test("warns again when a refetched network result reads back from the cache as partial", async () => {
   using _ = spyOnConsole("warn");
 
   const query = gql`
@@ -453,7 +453,7 @@ test("does not warn again when the cache write is skipped because the identical 
   // result
   await stream.takeNext();
 
-  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledTimes(2);
 });
 
 // https://github.com/apollographql/apollo-client/issues/9293

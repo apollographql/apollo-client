@@ -464,7 +464,7 @@ export class QueryInfo<
     return incrementalInfo;
   }
 
-  private getDiff(
+  getDiff(
     options: Cache.DiffOptions<TData>,
     incrementalInfo?: DiffIncrementalInfo
   ): Cache.InternalDiffResultWithDataState<TData> {

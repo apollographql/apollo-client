@@ -2095,7 +2095,7 @@ test("parses custom scalar fields when feud-stopping skips refetches", async () 
     partial: false,
   });
 
-  expect(client.cache.extract()).toStrictEqualTyped({
+  expect(client.extract()).toStrictEqualTyped({
     ROOT_QUERY: {
       __typename: "Query",
       post: { __typename: "Post", createdAt: "2026-01-01" },
@@ -2117,7 +2117,7 @@ test("parses custom scalar fields when feud-stopping skips refetches", async () 
     partial: false,
   });
 
-  expect(client.cache.extract()).toStrictEqualTyped({
+  expect(client.extract()).toStrictEqualTyped({
     ROOT_QUERY: {
       __typename: "Query",
       post: { __typename: "Post", updatedAt: "2026-02-02" },
@@ -2264,7 +2264,7 @@ test("parses custom scalar fields when feud-stopping skips refetches with overla
     partial: false,
   });
 
-  expect(client.cache.extract()).toStrictEqualTyped({
+  expect(client.extract()).toStrictEqualTyped({
     ROOT_QUERY: {
       __typename: "Query",
       post: {
@@ -2302,7 +2302,7 @@ test("parses custom scalar fields when feud-stopping skips refetches with overla
     partial: false,
   });
 
-  expect(client.cache.extract()).toStrictEqualTyped({
+  expect(client.extract()).toStrictEqualTyped({
     ROOT_QUERY: {
       __typename: "Query",
       post: {
@@ -2340,7 +2340,7 @@ test("parses custom scalar fields when feud-stopping skips refetches with overla
     partial: false,
   });
 
-  expect(client.cache.extract()).toStrictEqualTyped({
+  expect(client.extract()).toStrictEqualTyped({
     ROOT_QUERY: {
       __typename: "Query",
       post: {

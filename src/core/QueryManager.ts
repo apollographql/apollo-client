@@ -1581,16 +1581,17 @@ export class QueryManager {
       exposeExtensions?: boolean;
     }
   ): ObservableAndInfo<TData> {
-    const readCache = () =>
-      this.cache.diff<any>({
+    const readCache = () => {
+      return queryInfo.getDiff({
         query,
         variables,
         returnPartialData: true,
         optimistic: true,
       });
+    };
 
     const resultsFromCache = (
-      diff: Cache.DiffResult<TData>,
+      diff: Cache.InternalDiffResultWithDataState<TData>,
       networkStatus: NetworkStatus
     ): Observable<QueryNotification.FromCache<TData>> => {
       const data = diff.result;
@@ -1600,7 +1601,8 @@ export class QueryManager {
       }
 
       const toResult = (
-        data: TData | DeepPartial<TData> | undefined
+        data: TData | DeepPartial<TData> | undefined,
+        dataState = diff.dataState
       ): ObservableQuery.Result<TData> => {
         // TODO: Eventually we should move this handling into
         // queryInfo.getDiff() directly. Since getDiff is updated to return null
@@ -1608,15 +1610,13 @@ export class QueryManager {
         // of having to patch it elsewhere.
         if (!diff.complete && !returnPartialData) {
           data = undefined;
+          dataState = "empty";
         }
 
         return {
           // TODO: Handle partial data
           data: data as TData | undefined,
-          dataState:
-            diff.complete ? "complete"
-            : data ? "partial"
-            : "empty",
+          dataState,
           loading: isNetworkRequestInFlight(networkStatus),
           networkStatus,
           partial: !diff.complete,
@@ -1666,7 +1666,12 @@ export class QueryManager {
           }).then(
             (resolved): QueryNotification.FromCache<TData> => ({
               kind: "N",
-              value: toResult(resolved.data || void 0),
+              value: toResult(
+                resolved.data || void 0,
+                diff.complete ? "complete"
+                : resolved.data ? "partial"
+                : "empty"
+              ),
               // Always attach the variables used for this fetch so @export
               // resolution can update ObservableQuery.options.variables and
               // resubscribe the cache watch under the correct variable set.

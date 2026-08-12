@@ -77,6 +77,7 @@ export { shouldInclude } from "./shouldInclude.js";
 export { storeKeyNameFromField } from "./storeKeyNameFromField.js";
 export { StreamArrayState } from "./StreamArrayState.js";
 export { stringifyForDisplay } from "./stringifyForDisplay.js";
+export { toDiffWithDataState } from "./toDiffWithDataState.js";
 export { toQueryResult } from "./toQueryResult.js";
 export { filterMap } from "./filterMap.js";
 export { equalByQuery } from "./equalByQuery.js";

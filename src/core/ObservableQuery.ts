@@ -27,7 +27,9 @@ import {
   getOperationDefinition,
   getOperationName,
   getQueryDefinition,
+  handleIncrementalSymbol,
   preventUnhandledRejection,
+  toDiffWithDataState,
   toQueryResult,
   variablesUnknownSymbol,
 } from "@apollo/client/utilities/internal";
@@ -579,12 +581,15 @@ export class ObservableQuery<
    * @internal
    */
   public getCacheDiff({ optimistic = true } = {}) {
-    return this.cache.diff<TData>({
-      query: this.query,
-      variables: this.variables,
-      returnPartialData: true,
-      optimistic,
-    });
+    return toDiffWithDataState(
+      this.cache.diff<TData>({
+        query: this.query,
+        variables: this.variables,
+        returnPartialData: true,
+        optimistic,
+        [handleIncrementalSymbol]: undefined,
+      })
+    );
   }
 
   private getInitialResult(
@@ -600,6 +605,7 @@ export class ObservableQuery<
 
     const cacheResult = (): ObservableQuery.Result<TData> => {
       const diff = this.getCacheDiff();
+      let { dataState } = diff;
       // TODO: queryInfo.getDiff should handle this since cache.diff returns a
       // null when returnPartialData is false
       const data =
@@ -607,12 +613,13 @@ export class ObservableQuery<
           (diff.result as TData) ?? undefined
         : undefined;
 
+      if (data === undefined) {
+        dataState = "empty";
+      }
+
       return this.maskResult({
         data,
-        dataState:
-          diff.complete ? "complete"
-          : data === undefined ? "empty"
-          : "partial",
+        dataState,
         loading: !diff.complete,
         networkStatus:
           diff.complete ? NetworkStatus.ready : NetworkStatus.loading,
@@ -1812,10 +1819,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           kind: "N",
           value: {
             data: diff.result,
-            dataState:
-              diff.complete ? "complete"
-              : diff.result ? "partial"
-              : "empty",
+            dataState: diff.dataState,
             networkStatus: NetworkStatus.ready,
             loading: false,
             error: undefined,
@@ -1994,7 +1998,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       result = notification.value;
       if (
         result.networkStatus === NetworkStatus.ready &&
-        result.partial &&
+        result.dataState === "partial" &&
         (!this.options.returnPartialData ||
           previous.result.networkStatus === NetworkStatus.error) &&
         this.options.fetchPolicy !== "cache-only"

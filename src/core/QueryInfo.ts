@@ -19,6 +19,7 @@ import {
   graphQLResultHasError,
   handleIncrementalSymbol,
   hasDirectives,
+  toDiffWithDataState,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
@@ -464,26 +465,16 @@ export class QueryInfo<
     return incrementalInfo;
   }
 
-  private getDiff(
+  getDiff(
     options: Cache.DiffOptions<TData>,
     incrementalInfo?: DiffIncrementalInfo
-  ): Cache.InternalDiffResultWithDataState<TData> {
-    const diff = this.cache.diff({
-      ...options,
-      [handleIncrementalSymbol]: incrementalInfo,
-    });
-
-    if ("dataState" in diff) {
-      return diff;
-    }
-
-    return {
-      ...diff,
-      dataState:
-        diff.complete ? "complete"
-        : diff.result === null ? "empty"
-        : "partial",
-    } as Cache.InternalDiffResultWithDataState<TData>;
+  ) {
+    return toDiffWithDataState(
+      this.cache.diff({
+        ...options,
+        [handleIncrementalSymbol]: incrementalInfo,
+      })
+    );
   }
 
   public markMutationResult(

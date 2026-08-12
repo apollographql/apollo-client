@@ -1896,7 +1896,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
               kind: "N",
               value: {
                 data: diff.result,
-                dataState: diff.result ? "partial" : "empty",
+                dataState: "partial",
                 networkStatus: current.networkStatus,
                 loading: current.loading,
                 error: undefined,

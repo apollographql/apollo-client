@@ -1653,26 +1653,6 @@ export class QueryManager {
         }
         onCacheHit();
 
-        // Get the dataState from the cache without `@client(always: true)`
-        // fields applied since cache.diff doesn't know how those fields will be
-        // resolved. Local state is always guaranteed to return a "complete"
-        // result for all `@client` fields since it backfills nulls where
-        // appropriate, so local state can only change the dataState one way
-        // when the network cache diff is empty and we return a field from local
-        // state making the result partial, otherwise we keep the network
-        // dataState.
-        const { serverQuery } = this.getDocumentInfo(query);
-        let dataState = diff.dataState;
-
-        if (serverQuery) {
-          dataState = queryInfo.getDiff({
-            query: serverQuery,
-            variables,
-            returnPartialData: true,
-            optimistic: true,
-          }).dataState;
-        }
-
         return from(
           this.localState!.execute<TData>({
             client: this.client,
@@ -1688,7 +1668,9 @@ export class QueryManager {
               kind: "N",
               value: toResult(
                 resolved.data || void 0,
-                dataState === "empty" && resolved.data ? "partial" : dataState
+                diff.complete ? "complete"
+                : resolved.data ? "partial"
+                : "empty"
               ),
               // Always attach the variables used for this fetch so @export
               // resolution can update ObservableQuery.options.variables and

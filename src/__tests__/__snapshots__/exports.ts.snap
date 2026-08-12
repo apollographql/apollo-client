@@ -504,6 +504,7 @@ Array [
   "storeKeyNameFromField",
   "streamInfoSymbol",
   "stringifyForDisplay",
+  "toDiffWithDataState",
   "toQueryResult",
   "variablesUnknownSymbol",
 ]

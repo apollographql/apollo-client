@@ -571,7 +571,7 @@ export type StreamInfoTrie = Trie<{
 // @internal @deprecated (undocumented)
 export function stringifyForDisplay(value: any, space?: number): string;
 
-// @public (undocumented)
+// @internal @deprecated (undocumented)
 export function toDiffWithDataState<TData>(diff: Cache_2.DiffResult<TData> | Cache_2.InternalDiffResultWithDataState<TData>): Cache_2.InternalDiffResultWithDataState<TData>;
 
 // @internal @deprecated (undocumented)

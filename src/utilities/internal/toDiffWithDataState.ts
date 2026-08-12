@@ -1,5 +1,6 @@
 import type { Cache } from "@apollo/client/cache";
 
+/** @internal */
 export function toDiffWithDataState<TData>(
   diff: Cache.DiffResult<TData> | Cache.InternalDiffResultWithDataState<TData>
 ): Cache.InternalDiffResultWithDataState<TData> {

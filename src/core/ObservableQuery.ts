@@ -1893,13 +1893,14 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           // was also partial.
           if (
             !equal(current.data, diff.result) &&
-            current.dataState === "partial"
+            (current.dataState === "partial" ||
+              current.dataState === "streaming")
           ) {
             this.input.next({
               kind: "N",
               value: {
                 data: diff.result,
-                dataState: "partial",
+                dataState: current.dataState,
                 networkStatus: current.networkStatus,
                 loading: current.loading,
                 error: undefined,

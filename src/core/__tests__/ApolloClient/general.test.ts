@@ -2876,7 +2876,7 @@ describe("ApolloClient", () => {
     });
   });
 
-  it("should not write unchanged network results to cache", async () => {
+  it("stops repeated refetches when queries feud over non-normalized data", async () => {
     const cache = new InMemoryCache({
       typePolicies: {
         Query: {
@@ -2978,6 +2978,8 @@ describe("ApolloClient", () => {
       partial: false,
     });
 
+    // B overwrites A's non-normalized data, so it refetches to fulfill its
+    // data requirements.
     await expect(aStream).toEmitTypedValue({
       loading: true,
       networkStatus: NetworkStatus.loading,
@@ -3000,8 +3002,234 @@ describe("ApolloClient", () => {
       partial: false,
     });
 
+    // A's refetch leaves B incomplete, so it refetches to fulfill its data
+    // requirements.
+    await expect(bStream).toEmitTypedValue({
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      data: {
+        info: {},
+      },
+      dataState: "partial",
+      partial: true,
+    });
+
+    await expect(bStream).toEmitTypedValue({
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      data: {
+        info: {
+          b: "bee",
+        },
+      },
+      dataState: "complete",
+      partial: false,
+    });
+
+    // B's refetch leaves A incomplete in exactly the way it already tried to
+    // fix with the initial refetch, so A stops rather than sending B back to
+    // the network again.
     await expect(aStream).not.toEmitAnything();
     await expect(bStream).not.toEmitAnything();
+  });
+
+  it("fetches a clobbered value again after reading a complete result in between", async () => {
+    const query = gql`
+      query A {
+        info {
+          a
+        }
+      }
+    `;
+
+    const clobberQuery = gql`
+      query Clobber {
+        info {
+          b
+        }
+      }
+    `;
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              info: {
+                merge: false,
+              },
+            },
+          },
+        },
+      }),
+      link: new MockLink([
+        {
+          request: { query },
+          result: { data: { info: { __typename: "Info", a: "ay" } } },
+          delay: 20,
+          maxUsageCount: Number.POSITIVE_INFINITY,
+        },
+      ]),
+    });
+
+    using stream = new ObservableStream(client.watchQuery({ query }));
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+    await expect(stream).toEmitTypedValue({
+      data: { info: { __typename: "Info", a: "ay" } },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    client.writeQuery({
+      query: clobberQuery,
+      data: { info: { __typename: "Info", b: "bee" } },
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: { info: { __typename: "Info", a: "ay" } },
+      dataState: "complete",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: false,
+    });
+    await expect(stream).toEmitTypedValue({
+      data: { info: { __typename: "Info", a: "ay" } },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    // Writing a complete result allows the query to refetch again when a future
+    // cache write causes the query to go incomplete
+    client.writeQuery({
+      query,
+      data: { info: { __typename: "Info", a: "restored" } },
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: { info: { __typename: "Info", a: "restored" } },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    client.writeQuery({
+      query: clobberQuery,
+      data: { info: { __typename: "Info", b: "bee" } },
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: { info: { __typename: "Info", a: "restored" } },
+      dataState: "complete",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: false,
+    });
+    await expect(stream).toEmitTypedValue({
+      data: { info: { __typename: "Info", a: "ay" } },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    await expect(stream).not.toEmitAnything();
+  });
+
+  it("should deliver a cache-only result again after an optimistic update is rolled back", async () => {
+    const query = gql`
+      query {
+        config {
+          a
+          b
+        }
+      }
+    `;
+
+    const partialQuery = gql`
+      query {
+        config {
+          a
+        }
+      }
+    `;
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+    });
+
+    client.writeQuery({
+      query: partialQuery,
+      data: { config: { __typename: "Config", a: "one" } },
+    });
+
+    using stream = new ObservableStream(
+      client.watchQuery({
+        query,
+        fetchPolicy: "cache-only",
+        // returnPartialData is needed to reproduce the behavior. Complete cache
+        // results are always delivered
+        returnPartialData: true,
+      })
+    );
+
+    await expect(stream).toEmitTypedValue({
+      data: { config: { __typename: "Config", a: "one" } },
+      dataState: "partial",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: true,
+    });
+
+    client.writeQuery({
+      query: partialQuery,
+      data: { config: { __typename: "Config", a: "two" } },
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: { config: { __typename: "Config", a: "two" } },
+      dataState: "partial",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: true,
+    });
+
+    client.cache.recordOptimisticTransaction((cache) => {
+      cache.writeQuery({
+        query: partialQuery,
+        data: { config: { __typename: "Config", a: "optimistic" } },
+      });
+    }, "optimistic");
+
+    await expect(stream).toEmitTypedValue({
+      data: { config: { __typename: "Config", a: "optimistic" } },
+      dataState: "partial",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: true,
+    });
+
+    client.cache.removeOptimistic("optimistic");
+
+    await expect(stream).toEmitTypedValue({
+      data: { config: { __typename: "Config", a: "two" } },
+      dataState: "partial",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: true,
+    });
   });
 
   it("should disable feud-stopping logic after evict or modify", async () => {
@@ -3116,6 +3344,169 @@ describe("ApolloClient", () => {
     });
 
     await expect(stream).not.toEmitAnything();
+  });
+
+  it("applies read functions when feud-stopping skips refetches", async () => {
+    using _ = spyOnConsole("warn");
+
+    const queryA = gql`
+      query A {
+        info {
+          a
+        }
+      }
+    `;
+
+    const queryB = gql`
+      query B {
+        info {
+          b
+        }
+      }
+    `;
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              info: {
+                merge: false,
+              },
+            },
+          },
+          Info: {
+            fields: {
+              a: {
+                read: (existing: string | undefined) => existing?.toUpperCase(),
+              },
+              b: {
+                read: (existing: string | undefined) => existing?.toUpperCase(),
+              },
+            },
+          },
+        },
+      }),
+      link: new MockLink([
+        {
+          request: { query: queryA },
+          result: { data: { info: { __typename: "Info", a: "ay" } } },
+          delay: 20,
+          maxUsageCount: Number.POSITIVE_INFINITY,
+        },
+        {
+          request: { query: queryB },
+          result: { data: { info: { __typename: "Info", b: "bee" } } },
+          delay: 20,
+          maxUsageCount: Number.POSITIVE_INFINITY,
+        },
+      ]),
+    });
+
+    const obsA = client.watchQuery({ query: queryA });
+    using aStream = new ObservableStream(obsA);
+
+    await expect(aStream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+    await expect(aStream).toEmitTypedValue({
+      data: { info: { __typename: "Info", a: "AY" } },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    const obsB = client.watchQuery({ query: queryB });
+    using bStream = new ObservableStream(obsB);
+
+    await expect(bStream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+    await expect(bStream).toEmitTypedValue({
+      data: { info: { __typename: "Info", b: "BEE" } },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    expect(client.cache.extract()).toStrictEqualTyped({
+      ROOT_QUERY: {
+        __typename: "Query",
+        info: { __typename: "Info", b: "bee" },
+      },
+    });
+
+    await expect(aStream).toEmitTypedValue({
+      data: { info: { __typename: "Info", a: "AY" } },
+      dataState: "complete",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: false,
+    });
+    await expect(aStream).toEmitTypedValue({
+      data: { info: { __typename: "Info", a: "AY" } },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    expect(client.cache.extract()).toStrictEqualTyped({
+      ROOT_QUERY: {
+        __typename: "Query",
+        info: { __typename: "Info", a: "ay" },
+      },
+    });
+
+    await expect(bStream).toEmitTypedValue({
+      data: { info: { __typename: "Info", b: "BEE" } },
+      dataState: "complete",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: false,
+    });
+    await expect(bStream).toEmitTypedValue({
+      data: { info: { __typename: "Info", b: "BEE" } },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    expect(client.cache.extract()).toStrictEqualTyped({
+      ROOT_QUERY: {
+        __typename: "Query",
+        info: { __typename: "Info", b: "bee" },
+      },
+    });
+
+    await expect(aStream).not.toEmitAnything();
+    await expect(bStream).not.toEmitAnything();
+
+    expect(obsA.getCurrentResult()).toStrictEqualTyped({
+      data: { info: { __typename: "Info", a: "AY" } },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+    expect(obsB.getCurrentResult()).toStrictEqualTyped({
+      data: { info: { __typename: "Info", b: "BEE" } },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
   });
 
   it("writes the latest polled result over a clobbered cache value when polled result equals last polled result", async () => {

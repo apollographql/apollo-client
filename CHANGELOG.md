@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 4.2.12
+
+### Patch Changes
+
+- [#13400](https://github.com/apollographql/apollo-client/pull/13400) [`56ca81b`](https://github.com/apollographql/apollo-client/commit/56ca81b40962d1aeef3d753e562672dfed042ea2) Thanks [@QiRaining](https://github.com/QiRaining)! - Preserve multi-byte UTF-8 characters split across multipart response chunks.
+
 ## 4.2.11
 
 ### Patch Changes

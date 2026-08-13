@@ -233,6 +233,10 @@ export class InMemoryCache extends ApolloCache {
     return this.policies.getScalarForField(typename, fieldName);
   }
 
+  public configuresScalars(): boolean {
+    return !!this.config.scalars;
+  }
+
   /**
    * {@inheritDoc @apollo/client/cache!ApolloCache#serializeVariables:member(1)}
    */

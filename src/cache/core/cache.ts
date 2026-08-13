@@ -291,6 +291,19 @@ export abstract class ApolloCache {
   }
 
   /**
+   * Determines whether the cache configures custom scalars or not. This allows
+   * Apollo Client to skip processing results unnecessarily when there is
+   * nothing to transform into a scalar value.
+   *
+   * @remarks
+   * 3rd party caches should override this method if they have the ability to
+   * configure scalar implementations.
+   */
+  public configuresScalars() {
+    return false;
+  }
+
+  /**
    * Serializes scalar values in the variables object
    */
   public serializeVariables<

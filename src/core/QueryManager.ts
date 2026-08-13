@@ -1797,7 +1797,8 @@ export class QueryManager {
             map((notification) => {
               if (
                 notification.kind === "N" &&
-                notification.value.data != null
+                notification.value.data != null &&
+                this.cache.configuresScalars()
               ) {
                 notification.value.data = coerceScalarFieldsToParsed(
                   notification.value.data,

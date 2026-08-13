@@ -53,10 +53,14 @@ jobs:
       - image: cimg/node:23.9.0
     steps:
       - checkout
+      - attach_workspace:
+          at: /tmp/workspace
       - run: npm version
       - npm_ci
       - run: npm run docmodel
-      - run: npm run build
+      - run:
+          name: Restore built dist
+          command: rm -rf ./dist && mv /tmp/workspace/dist ./dist
       - run: npm run lint
 
   Formatting:
@@ -265,7 +269,9 @@ workflows:
             - BuildTarball
       - Attest
       - Formatting
-      - Lint
+      - Lint:
+          requires:
+            - BuildTarball
       - Typecheck:
           requires:
             - BuildTarball

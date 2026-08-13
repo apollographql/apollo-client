@@ -1875,10 +1875,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     if (diff.complete) {
       this.lastMissingResult = undefined;
-    } else if (
-      current.dataState === "streaming" ||
-      diff.dataState === "streaming"
-    ) {
+    } else if (current.networkStatus === NetworkStatus.streaming) {
       this.deliverCacheResult({
         data: diff.result,
         dataState: "streaming",

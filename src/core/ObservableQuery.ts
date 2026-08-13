@@ -1876,6 +1876,12 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     if (diff.complete) {
       this.lastMissingResult = undefined;
     } else if (current.networkStatus === NetworkStatus.streaming) {
+      // If we get a cache update in the middle of streaming (possible with
+      // cache-and-network fetch policy), just deliver the cache value without
+      // going through the full reobserve which would otherwise trigger another
+      // request (deduplication should kick in, but doing so replays any
+      // previous emits from the link chain, which get rewritten into the cache
+      // and might clobber this cache update)
       this.deliverCacheResult({
         data: diff.result,
         dataState: diff.dataState,

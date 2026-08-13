@@ -445,6 +445,7 @@ Array [
   "bindCacheKey",
   "canUseDOM",
   "canonicalStringify",
+  "capitalize",
   "checkDocument",
   "cloneDeep",
   "coerceScalarFieldsToParsed",

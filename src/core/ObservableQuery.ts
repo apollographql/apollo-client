@@ -1863,6 +1863,17 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       const diff = this.getCacheDiff();
       const current = this.getCurrentResult();
 
+      const deliverCacheResult = (result: ObservableQuery.Result<any>) => {
+        this.input.next({
+          kind: "N",
+          value: result,
+          source: "cache",
+          query: this.query,
+          variables: this.variables,
+          meta: {},
+        });
+      };
+
       if (
         // `fromOptimisticTransaction` is not available through the `cache.diff`
         // code path, so we need to check it this way
@@ -1874,20 +1885,13 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           current.dataState === "streaming" ||
           diff.dataState === "streaming"
         ) {
-          this.input.next({
-            kind: "N",
-            value: {
-              data: diff.result,
-              dataState: "streaming",
-              networkStatus: current.networkStatus,
-              loading: current.loading,
-              error: undefined,
-              partial: true,
-            } as ObservableQuery.Result<TData>,
-            source: "cache",
-            query: this.query,
-            variables: this.variables,
-            meta: {},
+          deliverCacheResult({
+            data: diff.result,
+            dataState: "streaming",
+            networkStatus: current.networkStatus,
+            loading: current.loading,
+            error: undefined,
+            partial: true,
           });
           return;
         } else if (this.shouldAutoRefetch(diff)) {
@@ -1912,20 +1916,13 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           // though, so we also make sure we only deliver if the previous result
           // was also partial.
           if (current.dataState === "partial") {
-            this.input.next({
-              kind: "N",
-              value: {
-                data: diff.result,
-                dataState: current.dataState,
-                networkStatus: current.networkStatus,
-                loading: current.loading,
-                error: undefined,
-                partial: true,
-              } as ObservableQuery.Result<TData>,
-              source: "cache",
-              query: this.query,
-              variables: this.variables,
-              meta: {},
+            deliverCacheResult({
+              data: diff.result,
+              dataState: current.dataState,
+              networkStatus: current.networkStatus,
+              loading: current.loading,
+              error: undefined,
+              partial: true,
             });
           }
           // If the (partial) result is the same as the last partial result
@@ -1989,21 +1986,14 @@ For more information about these options, please refer to the documentation:
         // request, and we never want to trigger network requests in the
         // middle of optimistic updates.
         this.lastMissingResult = undefined;
-        this.input.next({
-          kind: "N",
-          value: {
-            data: diff.result,
-            dataState: diff.dataState,
-            networkStatus: current.networkStatus,
-            loading: current.loading,
-            error: undefined,
-            partial: !diff.complete,
-          } as ObservableQuery.Result<TData>,
-          source: "cache",
-          query: this.query,
-          variables: this.variables,
-          meta: {},
-        });
+        deliverCacheResult({
+          data: diff.result,
+          dataState: diff.dataState,
+          networkStatus: current.networkStatus,
+          loading: current.loading,
+          error: undefined,
+          partial: !diff.complete,
+        } as ObservableQuery.Result<TData>);
       }
     }
   }

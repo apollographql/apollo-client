@@ -1805,22 +1805,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   private notifyTimeout?: ReturnType<typeof setTimeout>;
 
   /** @internal */
-  private shouldAutoRefetch(diff: Cache.DiffResult<any>) {
-    const { lastMissingResult } = this;
-
-    return (
-      !lastMissingResult ||
-      // If a destructive cache method has been called since the last recorded
-      // incomplete result, there's a chance fetching this data again will
-      // restore what was evicted, even though the cache result looks the same
-      // as before.
-      lastMissingResult.dmCount !== destructiveMethodCounts.get(this.cache) ||
-      !equal(lastMissingResult.variables, this.variables) ||
-      !equal(lastMissingResult.missing, diff.missing?.missing)
-    );
-  }
-
-  /** @internal */
   private resetNotifications() {
     if (this.notifyTimeout) {
       clearTimeout(this.notifyTimeout);
@@ -1851,7 +1835,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       }
     }
 
-    const { dirty } = this;
+    const { dirty, lastMissingResult } = this;
     const { fetchPolicy } = this.options;
     this.resetNotifications();
 
@@ -1904,7 +1888,16 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         partial: true,
       });
       return;
-    } else if (this.shouldAutoRefetch(diff)) {
+    } else if (
+      !lastMissingResult ||
+      // If a destructive cache method has been called since the last recorded
+      // incomplete result, there's a chance fetching this data again will
+      // restore what was evicted, even though the cache result looks the same
+      // as before.
+      lastMissingResult.dmCount !== destructiveMethodCounts.get(this.cache) ||
+      !equal(lastMissingResult.variables, this.variables) ||
+      !equal(lastMissingResult.missing, diff.missing?.missing)
+    ) {
       this.lastMissingResult = {
         variables: this.variables,
         missing: diff.missing?.missing,

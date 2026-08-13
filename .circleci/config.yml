@@ -1,5 +1,20 @@
 version: 2.1
 
+commands:
+  npm_ci:
+    steps:
+      - restore_cache:
+          keys:
+            - npm-v1-{{ checksum "package-lock.json" }}
+            - npm-v1-
+      - run:
+          name: Install npm packages
+          command: npm ci
+      - save_cache:
+          key: npm-v1-{{ checksum "package-lock.json" }}
+          paths:
+            - ~/.npm
+
 jobs:
   # Filesize:
   #   docker:
@@ -16,7 +31,7 @@ jobs:
     steps:
       - checkout
       - run: npm version
-      - run: npm ci
+      - npm_ci
       - run: npm run madge
 
   Publint:
@@ -24,9 +39,13 @@ jobs:
       - image: cimg/node:23.7.0
     steps:
       - checkout
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: Restore built dist
+          command: mv /tmp/workspace/dist ./dist
       - run: npm version
-      - run: npm ci
-      - run: npm run build
+      - npm_ci
       - run: npm run publint
 
   Lint:
@@ -34,10 +53,14 @@ jobs:
       - image: cimg/node:23.9.0
     steps:
       - checkout
+      - attach_workspace:
+          at: /tmp/workspace
       - run: npm version
-      - run: npm ci
+      - npm_ci
       - run: npm run docmodel
-      - run: npm run build
+      - run:
+          name: Restore built dist
+          command: rm -rf ./dist && mv /tmp/workspace/dist ./dist
       - run: npm run lint:docs
       - run: npm run lint:src
 
@@ -46,7 +69,7 @@ jobs:
       - image: cimg/node:23.9.0
     steps:
       - checkout
-      - run: npm ci
+      - npm_ci
       - run: npm run check:format
 
   Codegen:
@@ -65,7 +88,7 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - run: npm version
-      - run: npm ci
+      - npm_ci
       - run: pnpm version
       - run:
           command: pnpm pkg set "pnpm.overrides[@apollo/client-graphql-codegen]=/tmp/workspace/apollo-client-graphql-codegen.tgz"
@@ -90,14 +113,17 @@ jobs:
         type: string
     steps:
       - checkout
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: Restore built dist
+          command: mv /tmp/workspace/dist ./dist
       - run: npm run ci:precheck
       - run: npm version
-      - run: npm ci
-      - run: npm run build
-      - run: npm run typecheck
-      - run: if test "<< parameters.project >>" = "Core Tests"; then npm run test:memory; fi
+      - npm_ci
+      - run: if test "<< parameters.project >>" = "Core Tests"; then npm run test:memory:only; fi
       - run:
-          name: Jest suite with coverage
+          name: Jest suite
           command: npm run test:ci -- --selectProjects "<< parameters.project >>"
           environment:
             JEST_JUNIT_OUTPUT_FILE: "reports/junit/js-test-results-<< parameters.project >>.xml"
@@ -105,12 +131,26 @@ jobs:
           path: reports/junit
       - store_artifacts:
           path: reports/junit
+  Typecheck:
+    docker:
+      - image: cimg/node:23.9.0
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: Restore built dist
+          command: mv /tmp/workspace/dist ./dist
+      - run: npm version
+      - npm_ci
+      - run: npm run typecheck
+
   Attest:
     docker:
       - image: cimg/node:23.9.0
     steps:
       - checkout
-      - run: npm ci
+      - npm_ci
       - run: npm run test:type-benches
 
   BuildTarball:
@@ -120,12 +160,16 @@ jobs:
       - checkout
       - run: npm run ci:precheck
       - run: npm version
-      - run: npm ci
+      - npm_ci
       - run: npm run build && cd dist && mv "$(npm pack --json | jq --raw-output '.[0].filename')" apollo-client.tgz
       - persist_to_workspace:
           root: dist
           paths:
             - apollo-client.tgz
+      - persist_to_workspace:
+          root: .
+          paths:
+            - dist
 
   BuildCodegenTarball:
     docker:
@@ -134,7 +178,7 @@ jobs:
       - checkout
       - run: npm run ci:precheck
       - run: npm version
-      - run: npm ci
+      - npm_ci
       - run: npm run build -w @apollo/client-graphql-codegen && cd codegen && mv "dist/$(npm pack --ignore-scripts --pack-destination dist --json | jq --raw-output '.[0].filename')" dist/apollo-client-graphql-codegen.tgz
       - persist_to_workspace:
           root: codegen/dist
@@ -207,6 +251,8 @@ workflows:
     jobs:
       # - Filesize
       - Tests:
+          requires:
+            - BuildTarball
           matrix:
             parameters:
               project:
@@ -220,10 +266,17 @@ workflows:
                   "GraphQL Codegen Plugins",
                 ]
       - Circularity
-      - Publint
+      - Publint:
+          requires:
+            - BuildTarball
       - Attest
       - Formatting
-      - Lint
+      - Lint:
+          requires:
+            - BuildTarball
+      - Typecheck:
+          requires:
+            - BuildTarball
       - BuildTarball
       - BuildCodegenTarball
       - Codegen:

@@ -1867,17 +1867,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const diff = this.getCacheDiff();
     const current = this.getCurrentResult();
 
-    const deliverCacheResult = (result: ObservableQuery.Result<any>) => {
-      this.input.next({
-        kind: "N",
-        value: result,
-        source: "cache",
-        query: this.query,
-        variables: this.variables,
-        meta: {},
-      });
-    };
-
     // `fromOptimisticTransaction` is not available through the `cache.diff`
     // code path, so we need to check whether the cache result is an optimistic
     // result this way
@@ -1888,7 +1877,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       // request, and we never want to trigger network requests in the
       // middle of optimistic updates.
       this.lastMissingResult = undefined;
-      deliverCacheResult({
+      this.deliverCacheResult({
         data: diff.result,
         dataState: diff.dataState,
         networkStatus: current.networkStatus,
@@ -1906,7 +1895,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       current.dataState === "streaming" ||
       diff.dataState === "streaming"
     ) {
-      deliverCacheResult({
+      this.deliverCacheResult({
         data: diff.result,
         dataState: "streaming",
         networkStatus: current.networkStatus,
@@ -1937,7 +1926,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       // though, so we also make sure we only deliver if the previous result
       // was also partial.
       if (current.dataState === "partial") {
-        deliverCacheResult({
+        this.deliverCacheResult({
           data: diff.result,
           dataState: current.dataState,
           networkStatus: current.networkStatus,
@@ -2000,6 +1989,17 @@ For more information about these options, please refer to the documentation:
     // reobservation is spurious, distinctUntilChanged still has a
     // chance to catch it before delivery to ObservableQuery subscribers.
     this.reobserveCacheFirst();
+  }
+
+  private deliverCacheResult(result: ObservableQuery.Result<any>) {
+    this.input.next({
+      kind: "N",
+      value: result,
+      source: "cache",
+      query: this.query,
+      variables: this.variables,
+      meta: {},
+    });
   }
 
   private activeOperations = new Set<TrackedOperation>();

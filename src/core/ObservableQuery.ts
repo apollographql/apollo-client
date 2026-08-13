@@ -1897,17 +1897,17 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       // reobserveCacheFirst with cache-only fetch policy only calls
       // reobserve which never fetches from the network so we are ok
       // allowing cache-only queries to fallthrough to reobserveCacheFirst.
-      // This prevents the "stopped refetching" warning which would be
-      // confusing for a cache-only query anyways.
+      // This also prevents the feud warning which would be confusing for a
+      // cache-only query anyways.
       fetchPolicy !== "cache-only"
     ) {
       // If we've fallen through to this case, a cache emit has returned the
-      // same missing fields which means fields we've already delivered for
-      // this query have changed. We are ok delivering the updated value in
-      // this case to keep the result as fresh as possible. We NEVER want to
-      // downgrade this query from a complete query to a partial query
-      // though, so we also make sure we only deliver if the previous result
-      // was also partial.
+      // same missing fields which means at least one value on the fields we've
+      // already delivered have changed. We are ok delivering the updated
+      // partial result in this case to keep the result as fresh as possible. We
+      // NEVER want to downgrade this query from a complete query to a partial
+      // query though, so we also make sure we only deliver if the previous
+      // result was also partial.
       if (current.dataState === "partial") {
         this.deliverCacheDiff(diff);
       }

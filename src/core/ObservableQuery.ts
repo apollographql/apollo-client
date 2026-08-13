@@ -1842,34 +1842,37 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     }
 
     const diff = this.getCacheDiff();
-
+    const current = this.getCurrentResult();
     // `fromOptimisticTransaction` is not available through the `cache.diff`
     // code path, so we need to check whether the cache result is an optimistic
-    // result this way
-    if (!equal(diff.result, this.getCacheDiff({ optimistic: false }).result)) {
-      // If this diff came from an optimistic transaction, deliver the
+    // result this way.
+    const isOptimistic = !equal(
+      diff.result,
+      this.getCacheDiff({ optimistic: false }).result
+    );
+
+    if (
+      // When this diff came from an optimistic transaction, deliver the
       // current cache data to the ObservableQuery, but don't perform a
       // reobservation, since oq.reobserveCacheFirst might make a network
       // request, and we never want to trigger network requests in the
       // middle of optimistic updates.
-      this.deliverCacheDiff(diff);
-
-      return;
-    }
-
-    const current = this.getCurrentResult();
-
-    if (diff.complete) {
-      this.lastMissing = undefined;
-    } else if (current.networkStatus === NetworkStatus.streaming) {
+      isOptimistic ||
       // If we get a cache update in the middle of streaming (possible with
       // cache-and-network fetch policy), just deliver the cache value without
       // going through the full reobserve which would otherwise trigger another
       // request (deduplication should kick in, but doing so replays any
       // previous emits from the link chain, which get rewritten into the cache
       // and might clobber this cache update)
+      (!diff.complete && current.networkStatus === NetworkStatus.streaming)
+    ) {
       this.deliverCacheDiff(diff);
+
       return;
+    }
+
+    if (diff.complete) {
+      this.lastMissing = undefined;
     } else if (
       !lastMissing ||
       // If a destructive cache method has been called since the last recorded

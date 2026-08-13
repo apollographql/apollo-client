@@ -1852,12 +1852,13 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     }
 
     const { dirty } = this;
+    const { fetchPolicy } = this.options;
     this.resetNotifications();
 
     if (
       dirty &&
-      (this.options.fetchPolicy === "cache-only" ||
-        this.options.fetchPolicy === "cache-and-network" ||
+      (fetchPolicy === "cache-only" ||
+        fetchPolicy === "cache-and-network" ||
         !this.activeOperations.size)
     ) {
       const diff = this.getCacheDiff();
@@ -1906,7 +1907,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           // allowing cache-only queries to fallthrough to reobserveCacheFirst.
           // This prevents the "stopped refetching" warning which would be
           // confusing for a cache-only query anyways.
-          this.options.fetchPolicy !== "cache-only"
+          fetchPolicy !== "cache-only"
         ) {
           // If we've fallen through to this case, a cache emit has returned the
           // same missing fields which means fields we've already delivered for

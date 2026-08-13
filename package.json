@@ -103,7 +103,7 @@
     "test:codegen": "npm run build -w codegen && cd integration-tests/codegen && npm run codegen",
     "test:watch": "jest --config ./config/jest.config.ts --watch",
     "test:memory": "npm i && npm run build && npm run test:memory:only",
-    "test:memory:only": "cd scripts/memory && npm i && npm test",
+    "test:memory:only": "cd scripts/memory && npm ci && npm test",
     "test:coverage": "npm run coverage -- --ci --runInBand --reporters=default --reporters=jest-junit",
     "coverage": "node --experimental-import-meta-resolve --no-compilation-cache --expose-gc --max_old_space_size=4096 node_modules/.bin/jest --config ./config/jest.config.ts --logHeapUsage --coverage --watchAll=false",
     "bundlesize": "npm run build && node ./config/bundlesize.ts",

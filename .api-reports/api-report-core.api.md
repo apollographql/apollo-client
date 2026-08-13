@@ -1405,7 +1405,7 @@ export const windowFocusSource: RefetchEventManager.EventSource<Event>;
 // Warnings were encountered during analysis:
 //
 // src/core/ApolloClient.ts:673:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:415:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:406:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:196:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)

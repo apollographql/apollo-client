@@ -97,7 +97,7 @@ jobs:
       - run: npm run ci:precheck
       - run: npm version
       - run: npm ci
-      - run: if test "<< parameters.project >>" = "Core Tests"; then npm run test:memory; fi
+      - run: if test "<< parameters.project >>" = "Core Tests"; then npm run test:memory:only; fi
       - run:
           name: Jest suite with coverage
           command: npm run test:ci -- --selectProjects "<< parameters.project >>"

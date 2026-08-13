@@ -10492,21 +10492,11 @@ test("keeps dataState streaming for an optimistic cache write while a deferred r
     }),
     dataState: "streaming",
     loading: true,
-    networkStatus: NetworkStatus.loading,
+    networkStatus: NetworkStatus.streaming,
     partial: true,
   });
 
   client.cache.removeOptimistic("optimistic");
-
-  await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
-      post: { __typename: "Post", id: "1", title: "title from server" },
-    }),
-    dataState: "streaming",
-    loading: true,
-    networkStatus: NetworkStatus.loading,
-    partial: true,
-  });
 
   await expect(stream).toEmitTypedValue({
     data: markAsStreaming({
@@ -10617,7 +10607,7 @@ test("delivers an optimistic cache write while a deferred response is still stre
     }),
     dataState: "streaming",
     loading: true,
-    networkStatus: NetworkStatus.loading,
+    networkStatus: NetworkStatus.streaming,
     partial: true,
   });
 
@@ -10731,16 +10721,6 @@ test("delivers cache updates written while a deferred response is still streamin
     }),
     dataState: "streaming",
     loading: true,
-    networkStatus: NetworkStatus.loading,
-    partial: true,
-  });
-
-  await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
-      post: { __typename: "Post", id: "1", title: "title from write 1" },
-    }),
-    dataState: "streaming",
-    loading: true,
     networkStatus: NetworkStatus.streaming,
     partial: true,
   });
@@ -10749,16 +10729,6 @@ test("delivers cache updates written while a deferred response is still streamin
     fragment: titleFragment,
     from: { __typename: "Post", id: "1" },
     data: { __typename: "Post", id: "1", title: "title from write 2" },
-  });
-
-  await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
-      post: { __typename: "Post", id: "1", title: "title from write 2" },
-    }),
-    dataState: "streaming",
-    loading: true,
-    networkStatus: NetworkStatus.loading,
-    partial: true,
   });
 
   await expect(stream).toEmitTypedValue({

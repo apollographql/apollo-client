@@ -1089,7 +1089,6 @@ export class QueryManager {
         const hasErrors = graphQLResultHasError(result);
 
         if (hasErrors && errorPolicy === "none") {
-          queryInfo.resetLastWrite();
           observableQuery?.["resetNotifications"]();
           const error = new CombinedGraphQLErrors(
             removeStreamDetailsFromExtensions(result)
@@ -1134,7 +1133,6 @@ export class QueryManager {
       }),
       catchError((error) => {
         if (errorPolicy === "none") {
-          queryInfo.resetLastWrite();
           observableQuery?.["resetNotifications"]();
           throw error;
         }

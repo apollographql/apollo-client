@@ -13,12 +13,14 @@ import {
   Defer20220824Handler,
   GraphQL17Alpha9Handler,
 } from "@apollo/client/incremental";
+import { MockLink } from "@apollo/client/testing";
 import {
   dateScalar,
   markAsStreaming,
   mockDefer20220824,
   mockDeferStreamGraphQL17Alpha9,
   ObservableStream,
+  spyOnConsole,
 } from "@apollo/client/testing/internal";
 
 test("serializes scalar variables used in field arguments", async () => {
@@ -1975,4 +1977,407 @@ test("parses custom scalar fields across `@stream` payloads (graphql17Alpha9)", 
   });
 
   await expect(stream).not.toEmitAnything();
+});
+
+test("parses custom scalar fields when feud-stopping skips refetches", async () => {
+  using _ = spyOnConsole("warn");
+
+  const createdAtQuery = gql`
+    query {
+      post {
+        createdAt
+      }
+    }
+  `;
+
+  const updatedAtQuery = gql`
+    query {
+      post {
+        updatedAt
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Query: {
+          fields: {
+            post: {
+              merge: false,
+            },
+          },
+        },
+        Post: {
+          fields: {
+            createdAt: { scalar: "Date" },
+            updatedAt: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: new MockLink([
+      {
+        request: { query: createdAtQuery },
+        result: {
+          data: { post: { __typename: "Post", createdAt: "2026-01-01" } },
+        },
+        delay: 20,
+        maxUsageCount: Number.POSITIVE_INFINITY,
+      },
+      {
+        request: { query: updatedAtQuery },
+        result: {
+          data: { post: { __typename: "Post", updatedAt: "2026-02-02" } },
+        },
+        delay: 20,
+        maxUsageCount: Number.POSITIVE_INFINITY,
+      },
+    ]),
+  });
+
+  const createdAtObservable = client.watchQuery({ query: createdAtQuery });
+  using createdAtStream = new ObservableStream(createdAtObservable);
+
+  await expect(createdAtStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+  await expect(createdAtStream).toEmitTypedValue({
+    data: { post: { __typename: "Post", createdAt: new Date(2026, 0, 1) } },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  const updatedAtObservable = client.watchQuery({ query: updatedAtQuery });
+  using updatedAtStream = new ObservableStream(updatedAtObservable);
+
+  await expect(updatedAtStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+  await expect(updatedAtStream).toEmitTypedValue({
+    data: { post: { __typename: "Post", updatedAt: new Date(2026, 1, 2) } },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  expect(client.extract()).toStrictEqualTyped({
+    ROOT_QUERY: {
+      __typename: "Query",
+      post: { __typename: "Post", updatedAt: "2026-02-02" },
+    },
+  });
+
+  await expect(createdAtStream).toEmitTypedValue({
+    data: { post: { __typename: "Post", createdAt: new Date(2026, 0, 1) } },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: false,
+  });
+  await expect(createdAtStream).toEmitTypedValue({
+    data: { post: { __typename: "Post", createdAt: new Date(2026, 0, 1) } },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  expect(client.extract()).toStrictEqualTyped({
+    ROOT_QUERY: {
+      __typename: "Query",
+      post: { __typename: "Post", createdAt: "2026-01-01" },
+    },
+  });
+
+  await expect(updatedAtStream).toEmitTypedValue({
+    data: { post: { __typename: "Post", updatedAt: new Date(2026, 1, 2) } },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: false,
+  });
+  await expect(updatedAtStream).toEmitTypedValue({
+    data: { post: { __typename: "Post", updatedAt: new Date(2026, 1, 2) } },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  expect(client.extract()).toStrictEqualTyped({
+    ROOT_QUERY: {
+      __typename: "Query",
+      post: { __typename: "Post", updatedAt: "2026-02-02" },
+    },
+  });
+
+  await expect(createdAtStream).not.toEmitAnything();
+  await expect(updatedAtStream).not.toEmitAnything();
+
+  expect(createdAtObservable.getCurrentResult()).toStrictEqualTyped({
+    data: { post: { __typename: "Post", createdAt: new Date(2026, 0, 1) } },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+  expect(updatedAtObservable.getCurrentResult()).toStrictEqualTyped({
+    data: { post: { __typename: "Post", updatedAt: new Date(2026, 1, 2) } },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+});
+
+test("parses custom scalar fields when feud-stopping skips refetches with overlapping fields", async () => {
+  using _ = spyOnConsole("warn");
+
+  const updatedAtQuery = gql`
+    query UpdatedAtQuery {
+      post {
+        createdAt
+        updatedAt
+      }
+    }
+  `;
+
+  const publishedAtQuery = gql`
+    query PublishedAtQuery {
+      post {
+        createdAt
+        publishedAt
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Query: {
+          fields: {
+            post: {
+              merge: false,
+            },
+          },
+        },
+        Post: {
+          fields: {
+            createdAt: { scalar: "Date" },
+            updatedAt: { scalar: "Date" },
+            publishedAt: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: new MockLink([
+      {
+        request: { query: updatedAtQuery },
+        result: {
+          data: {
+            post: {
+              __typename: "Post",
+              createdAt: "2026-01-01",
+              updatedAt: "2026-02-02",
+            },
+          },
+        },
+        delay: 20,
+        maxUsageCount: Number.POSITIVE_INFINITY,
+      },
+      {
+        request: { query: publishedAtQuery },
+        result: {
+          data: {
+            post: {
+              __typename: "Post",
+              createdAt: "2026-01-01",
+              publishedAt: "2026-03-03",
+            },
+          },
+        },
+        delay: 20,
+        maxUsageCount: Number.POSITIVE_INFINITY,
+      },
+    ]),
+  });
+
+  const updatedAtObservable = client.watchQuery({ query: updatedAtQuery });
+  using updatedAtStream = new ObservableStream(updatedAtObservable);
+
+  await expect(updatedAtStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+  await expect(updatedAtStream).toEmitTypedValue({
+    data: {
+      post: {
+        __typename: "Post",
+        createdAt: new Date(2026, 0, 1),
+        updatedAt: new Date(2026, 1, 2),
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  const publishedAtObservable = client.watchQuery({ query: publishedAtQuery });
+  using publishedAtStream = new ObservableStream(publishedAtObservable);
+
+  await expect(publishedAtStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+  await expect(publishedAtStream).toEmitTypedValue({
+    data: {
+      post: {
+        __typename: "Post",
+        createdAt: new Date(2026, 0, 1),
+        publishedAt: new Date(2026, 2, 3),
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  expect(client.extract()).toStrictEqualTyped({
+    ROOT_QUERY: {
+      __typename: "Query",
+      post: {
+        __typename: "Post",
+        createdAt: "2026-01-01",
+        publishedAt: "2026-03-03",
+      },
+    },
+  });
+
+  await expect(updatedAtStream).toEmitTypedValue({
+    data: {
+      post: {
+        __typename: "Post",
+        createdAt: new Date(2026, 0, 1),
+        updatedAt: new Date(2026, 1, 2),
+      },
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: false,
+  });
+  await expect(updatedAtStream).toEmitTypedValue({
+    data: {
+      post: {
+        __typename: "Post",
+        createdAt: new Date(2026, 0, 1),
+        updatedAt: new Date(2026, 1, 2),
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  expect(client.extract()).toStrictEqualTyped({
+    ROOT_QUERY: {
+      __typename: "Query",
+      post: {
+        __typename: "Post",
+        createdAt: "2026-01-01",
+        updatedAt: "2026-02-02",
+      },
+    },
+  });
+
+  await expect(publishedAtStream).toEmitTypedValue({
+    data: {
+      post: {
+        __typename: "Post",
+        createdAt: new Date(2026, 0, 1),
+        publishedAt: new Date(2026, 2, 3),
+      },
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: false,
+  });
+  await expect(publishedAtStream).toEmitTypedValue({
+    data: {
+      post: {
+        __typename: "Post",
+        createdAt: new Date(2026, 0, 1),
+        publishedAt: new Date(2026, 2, 3),
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  expect(client.extract()).toStrictEqualTyped({
+    ROOT_QUERY: {
+      __typename: "Query",
+      post: {
+        __typename: "Post",
+        createdAt: "2026-01-01",
+        publishedAt: "2026-03-03",
+      },
+    },
+  });
+
+  await expect(updatedAtStream).not.toEmitAnything();
+  await expect(publishedAtStream).not.toEmitAnything();
+
+  expect(updatedAtObservable.getCurrentResult()).toStrictEqualTyped({
+    data: {
+      post: {
+        __typename: "Post",
+        createdAt: new Date(2026, 0, 1),
+        updatedAt: new Date(2026, 1, 2),
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+  expect(publishedAtObservable.getCurrentResult()).toStrictEqualTyped({
+    data: {
+      post: {
+        __typename: "Post",
+        createdAt: new Date(2026, 0, 1),
+        publishedAt: new Date(2026, 2, 3),
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
 });

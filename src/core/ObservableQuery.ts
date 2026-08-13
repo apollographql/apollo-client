@@ -94,6 +94,30 @@ const empty: ObservableQuery.Result<any> = {
   partial: true,
 };
 
+const destructiveMethodCounts = new WeakMap<Cache.Implementation, number>();
+
+function wrapDestructiveCacheMethod(
+  cache: Cache.Implementation,
+  methodName: "evict" | "modify" | "reset"
+) {
+  const original = cache[methodName];
+  if (typeof original === "function") {
+    // @ts-expect-error this is just too generic to be typed correctly
+    cache[methodName] = function () {
+      destructiveMethodCounts.set(
+        cache,
+        // The %1e15 allows the count to wrap around to 0 safely every
+        // quadrillion evictions, so there's no risk of overflow. To be
+        // clear, this is more of a pedantic principle than something
+        // that matters in any conceivable practical scenario.
+        (destructiveMethodCounts.get(cache)! + 1) % 1e15
+      );
+      // @ts-expect-error this is just too generic to be typed correctly
+      return original.apply(this, arguments);
+    };
+  }
+}
+
 const enum EmitBehavior {
   /**
    * Emit will be calculated by the normal rules. (`undefined` will be treated the same as this)
@@ -309,8 +333,12 @@ export class ObservableQuery<
   public readonly queryName?: string;
   private variablesUnknown: boolean = false;
 
-  /** @internal will be read and written from `QueryInfo` */
-  public _lastWrite?: unknown;
+  private didWarnOnFeud = false;
+  private lastMissing?: {
+    missing: MissingTree | undefined;
+    variables: TVariables;
+    dmCount: number | undefined;
+  };
 
   // The `query` computed property will always reflect the document transformed
   // by the last run query. `this.options.query` will always reflect the raw
@@ -381,6 +409,19 @@ export class ObservableQuery<
     queryId?: string;
   }) {
     this.queryManager = queryManager;
+
+    // Track how often destructive cache methods are called, since we want
+    // eviction to override the feud-stopping logic in `shouldAutoRefetch`,
+    // by causing it to return true. Wrapping these cache methods is a bit of a
+    // hack, but it saves us from having to make eviction counting an official
+    // part of the ApolloCache API.
+    const { cache } = queryManager;
+    if (!destructiveMethodCounts.has(cache)) {
+      destructiveMethodCounts.set(cache, 0);
+      wrapDestructiveCacheMethod(cache, "evict");
+      wrapDestructiveCacheMethod(cache, "modify");
+      wrapDestructiveCacheMethod(cache, "reset");
+    }
 
     // active state
     this.waitForNetworkResult = options.fetchPolicy === "network-only";
@@ -819,7 +860,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         this.getVariablesWithDefaults({ ...this.variables, ...variables });
     }
 
-    this._lastWrite = undefined;
     return this._reobserve(reobserveOptions, {
       newNetworkStatus: NetworkStatus.refetch,
     });
@@ -1485,7 +1525,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           !isNetworkRequestInFlight(this.networkStatus) &&
           !this.options.skipPollAttempt?.()
         ) {
-          this._lastWrite = undefined;
           this._reobserve(
             {
               // Most fetchPolicy options don't make sense to use in a polling context, as
@@ -1544,12 +1583,17 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     newOptions?: Partial<ObservableQuery.Options<TData, TVariables>>,
     internalOptions?: {
       newNetworkStatus?: NetworkStatus;
+      keepLastMissing?: boolean;
     }
   ): ObservableQuery.ResultPromise<
     ApolloClient.QueryResult<MaybeMasked<TData>>
   > {
     this.isTornDown = false;
-    let { newNetworkStatus } = internalOptions || {};
+    let { newNetworkStatus, keepLastMissing } = internalOptions || {};
+
+    if (!keepLastMissing) {
+      this.lastMissing = undefined;
+    }
 
     this.queryManager.obsQueries.add(this);
 
@@ -1730,7 +1774,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     this.queryManager.obsQueries.delete(this);
     this.isTornDown = true;
     this.abortActiveOperations();
-    this._lastWrite = undefined;
+    this.lastMissing = undefined;
   }
 
   private transformDocument(document: DocumentNode) {
@@ -1784,54 +1828,141 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       }
     }
 
-    const { dirty } = this;
+    const { dirty, lastMissing } = this;
+    const { fetchPolicy } = this.options;
     this.resetNotifications();
 
     if (
-      dirty &&
-      (this.options.fetchPolicy === "cache-only" ||
-        this.options.fetchPolicy === "cache-and-network" ||
-        !this.activeOperations.size)
+      !dirty ||
+      (fetchPolicy !== "cache-only" &&
+        fetchPolicy !== "cache-and-network" &&
+        this.activeOperations.size)
     ) {
-      const diff = this.getCacheDiff();
-      if (
-        // `fromOptimisticTransaction` is not available through the `cache.diff`
-        // code path, so we need to check it this way
-        equal(diff.result, this.getCacheDiff({ optimistic: false }).result)
-      ) {
-        //If this diff did not come from an optimistic transaction
-        // make the ObservableQuery "reobserve" the latest data
-        // using a temporary fetch policy of "cache-first", so complete cache
-        // results have a chance to be delivered without triggering additional
-        // network requests, even when options.fetchPolicy is "network-only"
-        // or "cache-and-network". All other fetch policies are preserved by
-        // this method, and are handled by calling oq.reobserve(). If this
-        // reobservation is spurious, distinctUntilChanged still has a
-        // chance to catch it before delivery to ObservableQuery subscribers.
-        this.reobserveCacheFirst();
-      } else {
-        // If this diff came from an optimistic transaction, deliver the
-        // current cache data to the ObservableQuery, but don't perform a
-        // reobservation, since oq.reobserveCacheFirst might make a network
-        // request, and we never want to trigger network requests in the
-        // middle of optimistic updates.
-        this.input.next({
-          kind: "N",
-          value: {
-            data: diff.result,
-            dataState: diff.dataState,
-            networkStatus: NetworkStatus.ready,
-            loading: false,
-            error: undefined,
-            partial: !diff.complete,
-          } as ObservableQuery.Result<TData>,
-          source: "cache",
-          query: this.query,
-          variables: this.variables,
-          meta: {},
-        });
-      }
+      return;
     }
+
+    const diff = this.getCacheDiff();
+    const current = this.getCurrentResult();
+    // `fromOptimisticTransaction` is not available through the `cache.diff`
+    // code path, so we need to check whether the cache result is an optimistic
+    // result this way.
+    const isOptimistic = !equal(
+      diff.result,
+      this.getCacheDiff({ optimistic: false }).result
+    );
+
+    if (
+      // When this diff came from an optimistic transaction, deliver the
+      // current cache data to the ObservableQuery, but don't perform a
+      // reobservation, since oq.reobserveCacheFirst might make a network
+      // request, and we never want to trigger network requests in the
+      // middle of optimistic updates.
+      isOptimistic ||
+      // If we get a cache update in the middle of streaming (possible with
+      // cache-and-network fetch policy), just deliver the cache value without
+      // going through the full reobserve which would otherwise trigger another
+      // request (deduplication should kick in, but doing so replays any
+      // previous emits from the link chain, which get rewritten into the cache
+      // and might clobber this cache update)
+      (!diff.complete && current.networkStatus === NetworkStatus.streaming)
+    ) {
+      this.deliverCacheDiff(diff);
+
+      return;
+    }
+
+    if (diff.complete) {
+      this.lastMissing = undefined;
+    } else if (
+      !lastMissing ||
+      // If a destructive cache method has been called since the last recorded
+      // incomplete result, there's a chance fetching this data again will
+      // restore what was evicted, even though the cache result looks the same
+      // as before.
+      lastMissing.dmCount !== destructiveMethodCounts.get(this.cache) ||
+      !equal(lastMissing.variables, this.variables) ||
+      !equal(lastMissing.missing, diff.missing?.missing)
+    ) {
+      this.didWarnOnFeud = false;
+      this.lastMissing = {
+        variables: this.variables,
+        missing: diff.missing?.missing,
+        dmCount: destructiveMethodCounts.get(this.cache),
+      };
+    } else if (
+      // reobserveCacheFirst with cache-only fetch policy only calls
+      // reobserve which never fetches from the network so we are ok
+      // allowing cache-only queries to fallthrough to reobserveCacheFirst.
+      // This also prevents the feud warning which would be confusing for a
+      // cache-only query anyways.
+      fetchPolicy !== "cache-only"
+    ) {
+      // If we've fallen through to this case, a cache emit has returned the
+      // same missing fields which means at least one value on the fields we've
+      // already delivered have changed. We are ok delivering the updated
+      // partial result in this case to keep the result as fresh as possible. We
+      // NEVER want to downgrade this query from a complete query to a partial
+      // query though, so we also make sure we only deliver if the previous
+      // result was also partial.
+      if (current.dataState === "partial") {
+        this.deliverCacheDiff(diff);
+      }
+      // If the (partial) result is the same as the last partial result
+      // we recorded from a previous broadcast (and the variables match
+      // too), avoid calling reobserveCacheFirst to refetch this query
+      // again. If we allow refetching anytime this result becomes partial,
+      // we risk feuds between queries competing to update the same data in
+      // incompatible ways, which can lead to an endless cycle of cache
+      // broadcasts and useless network requests. As with any
+      // feud, eventually one side must step back from the brink,
+      // letting the other side(s) have the last word(s). There may
+      // be other points where we could break this cycle, such as
+      // silencing the broadcast for cache.writeQuery (not a good
+      // idea, since it just delays the feud a bit) or somehow
+      // avoiding the network request that just happened (also bad,
+      // because the server could return useful new data). All
+      // options considered, returning early and stopping the
+      // reobserveCacheFirst cycle seems to be the least damaging place to
+      // break the cycle because it allows read functions/custom scalars to
+      // be applied to the feuding query while avoiding the endless cycle of
+      // requests.
+      if (__DEV__ && !this.didWarnOnFeud) {
+        this.didWarnOnFeud = true;
+        warnOnFeud(this.query, diff);
+      }
+      return;
+    }
+
+    //If this diff did not come from an optimistic transaction
+    // make the ObservableQuery "reobserve" the latest data
+    // using a temporary fetch policy of "cache-first", so complete cache
+    // results have a chance to be delivered without triggering additional
+    // network requests, even when options.fetchPolicy is "network-only"
+    // or "cache-and-network". All other fetch policies are preserved by
+    // this method, and are handled by calling oq.reobserve(). If this
+    // reobservation is spurious, distinctUntilChanged still has a
+    // chance to catch it before delivery to ObservableQuery subscribers.
+    this.reobserveCacheFirst();
+  }
+
+  private deliverCacheDiff(diff: Cache.InternalDiffResultWithDataState<TData>) {
+    const current = this.getCurrentResult();
+
+    this.input.next({
+      kind: "N",
+      value: {
+        data: diff.result,
+        dataState: diff.dataState,
+        networkStatus: current.networkStatus,
+        loading: current.loading,
+        error: undefined,
+        partial: !diff.complete,
+      } as ObservableQuery.Result<TData>,
+      source: "cache",
+      query: this.query,
+      variables: this.variables,
+      meta: {},
+    });
   }
 
   private activeOperations = new Set<TrackedOperation>();
@@ -1909,6 +2040,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // exception for cache-only queries - we reset them into a "ready" state
     // as we won't trigger a refetch for them
     const resetToEmpty = this.options.fetchPolicy === "cache-only";
+    this.lastMissing = undefined;
     this.setResult(resetToEmpty ? empty : uninitialized, {
       shouldEmit: resetToEmpty ? EmitBehavior.force : EmitBehavior.never,
     });
@@ -2083,29 +2215,35 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const { fetchPolicy, nextFetchPolicy } = this.options;
 
     if (fetchPolicy === "cache-and-network" || fetchPolicy === "network-only") {
-      this.reobserve({
-        fetchPolicy: "cache-first",
-        // Use a temporary nextFetchPolicy function that replaces itself with the
-        // previous nextFetchPolicy value and returns the original fetchPolicy.
-        nextFetchPolicy(
-          this: ApolloClient.WatchQueryOptions<TData, TVariables>,
-          currentFetchPolicy: WatchQueryFetchPolicy,
-          context: NextFetchPolicyContext<TData, TVariables>
-        ) {
-          // Replace this nextFetchPolicy function in the options object with the
-          // original this.options.nextFetchPolicy value.
-          this.nextFetchPolicy = nextFetchPolicy;
-          // If the original nextFetchPolicy value was a function, give it a
-          // chance to decide what happens here.
-          if (typeof this.nextFetchPolicy === "function") {
-            return this.nextFetchPolicy(currentFetchPolicy, context);
-          }
-          // Otherwise go back to the original this.options.fetchPolicy.
-          return fetchPolicy!;
+      // Preserve this.lastMissing so a cache update that triggers this
+      // reobserve doesn't reset feud detection. All user-initiated calls to
+      // reobserve (refetch/poll/reobserve, etc) should clear it.
+      this._reobserve(
+        {
+          fetchPolicy: "cache-first",
+          // Use a temporary nextFetchPolicy function that replaces itself with the
+          // previous nextFetchPolicy value and returns the original fetchPolicy.
+          nextFetchPolicy(
+            this: ApolloClient.WatchQueryOptions<TData, TVariables>,
+            currentFetchPolicy: WatchQueryFetchPolicy,
+            context: NextFetchPolicyContext<TData, TVariables>
+          ) {
+            // Replace this nextFetchPolicy function in the options object with the
+            // original this.options.nextFetchPolicy value.
+            this.nextFetchPolicy = nextFetchPolicy;
+            // If the original nextFetchPolicy value was a function, give it a
+            // chance to decide what happens here.
+            if (typeof this.nextFetchPolicy === "function") {
+              return this.nextFetchPolicy(currentFetchPolicy, context);
+            }
+            // Otherwise go back to the original this.options.fetchPolicy.
+            return fetchPolicy!;
+          },
         },
-      });
+        { keepLastMissing: true }
+      );
     } else {
-      this.reobserve();
+      this._reobserve(undefined, { keepLastMissing: true });
     }
   }
 
@@ -2174,4 +2312,26 @@ function getTrackingOperatorPromise<TData>(
       },
     });
   return { promise, operator };
+}
+
+function warnOnFeud(query: DocumentNode, diff: Cache.DiffResult<any>) {
+  invariant.warn(
+    `Apollo Client stopped refetching '%s' because the same incomplete cache result was already refetched. Automatic refetching was halted to prevent an endless cycle of network requests.
+
+This often means another query is overwriting non-normalized data selected by this query. Common fixes:
+
+  * Select an \`id\` or \`_id\` field in each query that writes the object
+  * Set custom \`keyFields\` if the object uses a different identity
+  * Add a field \`merge\` function so partial writes combine instead of replace
+
+  missing fields: %o
+
+For more information about these options, please refer to the documentation:
+
+  * Ensuring entity objects have IDs: https://go.apollo.dev/c/generating-unique-identifiers
+  * Defining custom merge functions: https://go.apollo.dev/c/merging-non-normalized-objects
+`,
+    getOperationName(query, "(anonymous)"),
+    diff.missing?.missing
+  );
 }

@@ -266,7 +266,7 @@ export abstract class ApolloCache {
   }
 
   /**
-   * Get the root \_\_typename string for an operation type.
+   * Get the root typename value for an operation type.
    *
    * @defaultValue Query, Mutation, or Subscription
    */

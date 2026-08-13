@@ -96,6 +96,7 @@ export abstract class ApolloCache {
     // (undocumented)
     readonly assumeImmutableResults: boolean;
     batch<U>(options: Cache_2.BatchOptions<this, U>): U;
+    configuresScalars(): boolean;
     abstract diff<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: Cache_2.DiffOptions<TData, TVariables> & {
         [handleIncrementalSymbol]: DiffIncrementalInfo | undefined;
     }): Cache_2.InternalDiffResultWithDataState<TData> | Cache_2.DiffResult<TData>;
@@ -110,11 +111,10 @@ export abstract class ApolloCache {
     gc(): string[];
     // @internal @deprecated
     getMemoryInternals?: typeof getApolloCacheMemoryInternals;
-    // (undocumented)
-    getRootTypename(operation: OperationTypeNode): string | undefined;
+    getRootTypename(operation: OperationTypeNode): string;
     // (undocumented)
     getScalar<TKey extends keyof ApolloCache.Scalars>(key: TKey): ApolloCache.GetScalarType<TKey> | undefined;
-    getScalarForField(typename: string, fieldName: string): Scalar<unknown, unknown> | undefined;
+    getScalarForField<TSerialized = unknown, TParsed = unknown>(typename: string, fieldName: string): Scalar<TSerialized, TParsed> | undefined;
     // (undocumented)
     identify(object: StoreObject | Reference): string | undefined;
     // (undocumented)
@@ -650,6 +650,8 @@ export class InMemoryCache extends ApolloCache {
     // (undocumented)
     protected config: InMemoryCacheConfig;
     // (undocumented)
+    configuresScalars(): boolean;
+    // (undocumented)
     diff<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: Cache_2.DiffOptions<TData, TVariables> & {
         [handleIncrementalSymbol]: DiffIncrementalInfo | undefined;
     }): Cache_2.InternalDiffResultWithDataState<TData>;
@@ -671,7 +673,7 @@ export class InMemoryCache extends ApolloCache {
     getRootTypename(operation: OperationTypeNode): string;
     // (undocumented)
     getScalar<TKey extends keyof ApolloCache.Scalars>(key: TKey): ApolloCache.GetScalarType<TKey> extends (Scalar<infer TSerialized, infer TParsed>) ? IsLooselyEqual<TSerialized, TParsed> extends true ? ApolloCache.GetScalarType<TKey> | undefined : ApolloCache.GetScalarType<TKey> : never;
-    getScalarForField(typename: string, fieldName: string): Scalar<unknown, unknown> | undefined;
+    getScalarForField<TSerialized = unknown, TParsed = unknown>(typename: string, fieldName: string): Scalar<TSerialized, TParsed> | undefined;
     // (undocumented)
     identify(object: StoreObject | Reference): string | undefined;
     // (undocumented)
@@ -1161,8 +1163,8 @@ interface WriteContext extends ReadMergeModifyContext {
 
 // Warnings were encountered during analysis:
 //
-// src/cache/core/cache.ts:205:7 - (ae-incompatible-release-tags) The symbol "[handleIncrementalSymbol]" is marked as @public, but its signature references "DiffIncrementalInfo" which is marked as @internal
-// src/cache/inmemory/inMemoryCache.ts:469:7 - (ae-incompatible-release-tags) The symbol "[handleIncrementalSymbol]" is marked as @public, but its signature references "DiffIncrementalInfo" which is marked as @internal
+// src/cache/core/cache.ts:206:7 - (ae-incompatible-release-tags) The symbol "[handleIncrementalSymbol]" is marked as @public, but its signature references "DiffIncrementalInfo" which is marked as @internal
+// src/cache/inmemory/inMemoryCache.ts:473:7 - (ae-incompatible-release-tags) The symbol "[handleIncrementalSymbol]" is marked as @public, but its signature references "DiffIncrementalInfo" which is marked as @internal
 // src/cache/inmemory/policies.ts:176:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:179:3 - (ae-forgotten-export) The symbol "ScalarNames" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:147:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts

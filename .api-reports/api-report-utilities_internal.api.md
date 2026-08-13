@@ -83,6 +83,9 @@ export const canonicalStringify: ((value: any) => string) & {
 // @internal @deprecated (undocumented)
 export const canUseDOM: boolean;
 
+// @internal @deprecated (undocumented)
+export function capitalize(str: string): string;
+
 // @internal @deprecated
 export const checkDocument: (doc: DocumentNode, expectedType?: OperationTypeNode) => void;
 

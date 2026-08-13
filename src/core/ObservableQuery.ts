@@ -1994,8 +1994,8 @@ For more information about these options, please refer to the documentation:
           value: {
             data: diff.result,
             dataState: diff.dataState,
-            networkStatus: NetworkStatus.ready,
-            loading: false,
+            networkStatus: current.networkStatus,
+            loading: current.loading,
             error: undefined,
             partial: !diff.complete,
           } as ObservableQuery.Result<TData>,

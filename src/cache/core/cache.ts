@@ -37,6 +37,7 @@ import type {
 } from "@apollo/client/utilities/internal";
 import {
   bindCacheKey,
+  capitalize,
   combineLatestBatched,
   equalByQuery,
   getApolloCacheMemoryInternals,
@@ -264,8 +265,13 @@ export abstract class ApolloCache {
     return null;
   }
 
+  /**
+   * Get the root \_\_typename string for an operation type.
+   *
+   * @defaultValue Query, Mutation, or Subscription
+   */
   public getRootTypename(operation: OperationTypeNode): string {
-    return operation.at(0)!.toUpperCase() + operation.slice(1);
+    return capitalize(operation);
   }
 
   // Custom scalars API

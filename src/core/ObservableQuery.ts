@@ -1861,6 +1861,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         !this.activeOperations.size)
     ) {
       const diff = this.getCacheDiff();
+      const current = this.getCurrentResult();
+
       if (
         // `fromOptimisticTransaction` is not available through the `cache.diff`
         // code path, so we need to check it this way
@@ -1868,6 +1870,26 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       ) {
         if (diff.complete) {
           this.lastMissingResult = undefined;
+        } else if (
+          current.dataState === "streaming" ||
+          diff.dataState === "streaming"
+        ) {
+          this.input.next({
+            kind: "N",
+            value: {
+              data: diff.result,
+              dataState: "streaming",
+              networkStatus: current.networkStatus,
+              loading: current.loading,
+              error: undefined,
+              partial: true,
+            } as ObservableQuery.Result<TData>,
+            source: "cache",
+            query: this.query,
+            variables: this.variables,
+            meta: {},
+          });
+          return;
         } else if (this.shouldAutoRefetch(diff)) {
           this.lastMissingResult = {
             variables: this.variables,
@@ -1882,8 +1904,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           // confusing for a cache-only query anyways.
           this.options.fetchPolicy !== "cache-only"
         ) {
-          const current = this.getCurrentResult();
-
           // If we've fallen through to this case, a cache emit has returned the
           // same missing fields which means fields we've already delivered for
           // this query have changed. We are ok delivering the updated value in
@@ -1891,10 +1911,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           // downgrade this query from a complete query to a partial query
           // though, so we also make sure we only deliver if the previous result
           // was also partial.
-          if (
-            current.dataState === "partial" ||
-            current.dataState === "streaming"
-          ) {
+          if (current.dataState === "partial") {
             this.input.next({
               kind: "N",
               value: {

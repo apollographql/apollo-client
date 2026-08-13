@@ -1878,12 +1878,12 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     } else if (current.networkStatus === NetworkStatus.streaming) {
       this.deliverCacheResult({
         data: diff.result,
-        dataState: "streaming",
+        dataState: diff.dataState,
         networkStatus: current.networkStatus,
         loading: current.loading,
         error: undefined,
         partial: true,
-      });
+      } as ObservableQuery.Result<TData>);
       return;
     } else if (
       !lastMissingResult ||

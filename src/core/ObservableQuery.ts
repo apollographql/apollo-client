@@ -2215,9 +2215,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const { fetchPolicy, nextFetchPolicy } = this.options;
 
     if (fetchPolicy === "cache-and-network" || fetchPolicy === "network-only") {
-      // Preserve lastMissingResult so a cache-driven reobserve does not
-      // reset feud detection. User-initiated reobserve/refetch/poll clear it
-      // in `_reobserve` by default.
+      // Preserve this.lastMissing so a cache update that triggers this
+      // reobserve doesn't reset feud detection. All user-initiated calls to
+      // reobserve (refetch/poll/reobserve, etc) should clear it.
       this._reobserve(
         {
           fetchPolicy: "cache-first",

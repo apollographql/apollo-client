@@ -1,5 +1,17 @@
 # @apollo/client
 
+## 4.3.0-alpha.7
+
+### Minor Changes
+
+- [#13406](https://github.com/apollographql/apollo-client/pull/13406) [`bd74ccb`](https://github.com/apollographql/apollo-client/commit/bd74ccb2f75bc434afc4f5172311b551266f8196) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Emit a development-only warning when a feud is detected between queries that overwrite each other's data. This should make it easier to detect when you need to select a key field or add a `merge` function to a field policy.
+
+- [#13406](https://github.com/apollographql/apollo-client/pull/13406) [`bd74ccb`](https://github.com/apollographql/apollo-client/commit/bd74ccb2f75bc434afc4f5172311b551266f8196) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fixes an issue where cache feuds between queries selecting incompatible non-normalized data could return untransformed network values.
+
+  Apollo Client now always writes network results to the cache before delivering them, ensuring custom scalars and field `read` functions are applied. To prevent repeated refetches when competing queries repeatedly make each other's cache results incomplete, Apollo Client stops automatically refetching a query after it sees the same incomplete result again.
+
+  This may add one network request in these cache-feud scenarios.
+
 ## 4.3.0-alpha.6
 
 ### Minor Changes

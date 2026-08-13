@@ -1849,7 +1849,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     }
 
     const diff = this.getCacheDiff();
-    const current = this.getCurrentResult();
 
     // `fromOptimisticTransaction` is not available through the `cache.diff`
     // code path, so we need to check whether the cache result is an optimistic
@@ -1865,6 +1864,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
       return;
     }
+
+    const current = this.getCurrentResult();
 
     if (diff.complete) {
       this.lastMissingResult = undefined;

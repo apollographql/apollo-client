@@ -93,7 +93,6 @@ jobs:
       - run: npm version
       - run: npm ci
       - run: npm run build
-      - run: npm run typecheck
       - run: if test "<< parameters.project >>" = "Core Tests"; then npm run test:memory; fi
       - run:
           name: Jest suite with coverage
@@ -104,6 +103,16 @@ jobs:
           path: reports/junit
       - store_artifacts:
           path: reports/junit
+  Typecheck:
+    docker:
+      - image: cimg/node:23.9.0
+    steps:
+      - checkout
+      - run: npm version
+      - run: npm ci
+      - run: npm run build
+      - run: npm run typecheck
+
   Attest:
     docker:
       - image: cimg/node:23.9.0
@@ -222,6 +231,7 @@ workflows:
       - Attest
       - Formatting
       - Lint
+      - Typecheck
       - BuildTarball
       - BuildCodegenTarball
       - Codegen:

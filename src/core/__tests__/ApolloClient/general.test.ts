@@ -3463,7 +3463,7 @@ describe("ApolloClient", () => {
       returnPartialData: true,
     });
 
-    const stream = new ObservableStream(obs);
+    using stream = new ObservableStream(obs);
 
     await expect(stream).toEmitTypedValue({
       loading: true,

@@ -1952,25 +1952,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       // requests.
       if (__DEV__ && !this.didWarnOnFeud) {
         this.didWarnOnFeud = true;
-        invariant.warn(
-          `Apollo Client stopped refetching '%s' because the same incomplete cache result was already refetched. Automatic refetching was halted to prevent an endless cycle of network requests.
-
-This often means another query is overwriting non-normalized data selected by this query. Common fixes:
-
-  * Select an \`id\` or \`_id\` field in each query that writes the object
-  * Set custom \`keyFields\` if the object uses a different identity
-  * Add a field \`merge\` function so partial writes combine instead of replace
-
-  missing fields: %o
-
-For more information about these options, please refer to the documentation:
-
-  * Ensuring entity objects have IDs: https://go.apollo.dev/c/generating-unique-identifiers
-  * Defining custom merge functions: https://go.apollo.dev/c/merging-non-normalized-objects
-`,
-          getOperationName(this.query, "(anonymous)"),
-          diff.missing?.missing
-        );
+        warnOnFeud(this.query, diff);
       }
       return;
     }
@@ -2342,4 +2324,26 @@ function getTrackingOperatorPromise<TData>(
       },
     });
   return { promise, operator };
+}
+
+function warnOnFeud(query: DocumentNode, diff: Cache.DiffResult<any>) {
+  invariant.warn(
+    `Apollo Client stopped refetching '%s' because the same incomplete cache result was already refetched. Automatic refetching was halted to prevent an endless cycle of network requests.
+
+This often means another query is overwriting non-normalized data selected by this query. Common fixes:
+
+  * Select an \`id\` or \`_id\` field in each query that writes the object
+  * Set custom \`keyFields\` if the object uses a different identity
+  * Add a field \`merge\` function so partial writes combine instead of replace
+
+  missing fields: %o
+
+For more information about these options, please refer to the documentation:
+
+  * Ensuring entity objects have IDs: https://go.apollo.dev/c/generating-unique-identifiers
+  * Defining custom merge functions: https://go.apollo.dev/c/merging-non-normalized-objects
+`,
+    getOperationName(query, "(anonymous)"),
+    diff.missing?.missing
+  );
 }

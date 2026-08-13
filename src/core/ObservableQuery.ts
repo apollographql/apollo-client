@@ -334,20 +334,11 @@ export class ObservableQuery<
   private variablesUnknown: boolean = false;
 
   private didWarnOnFeud = false;
-  private _lastMissingResult?: {
+  private lastMissing?: {
     missing: MissingTree | undefined;
     variables: TVariables;
     dmCount: number | undefined;
   };
-
-  private get lastMissingResult() {
-    return this._lastMissingResult;
-  }
-
-  private set lastMissingResult(newValue) {
-    this.didWarnOnFeud = false;
-    this._lastMissingResult = newValue;
-  }
 
   // The `query` computed property will always reflect the document transformed
   // by the last run query. `this.options.query` will always reflect the raw
@@ -869,7 +860,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         this.getVariablesWithDefaults({ ...this.variables, ...variables });
     }
 
-    this.lastMissingResult = undefined;
     return this._reobserve(reobserveOptions, {
       newNetworkStatus: NetworkStatus.refetch,
     });
@@ -1535,7 +1525,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           !isNetworkRequestInFlight(this.networkStatus) &&
           !this.options.skipPollAttempt?.()
         ) {
-          this.lastMissingResult = undefined;
           this._reobserve(
             {
               // Most fetchPolicy options don't make sense to use in a polling context, as
@@ -1588,19 +1577,23 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   ): ObservableQuery.ResultPromise<
     ApolloClient.QueryResult<MaybeMasked<TData>>
   > {
-    this.lastMissingResult = undefined;
     return this._reobserve(newOptions);
   }
   private _reobserve(
     newOptions?: Partial<ObservableQuery.Options<TData, TVariables>>,
     internalOptions?: {
       newNetworkStatus?: NetworkStatus;
+      keepLastMissing?: boolean;
     }
   ): ObservableQuery.ResultPromise<
     ApolloClient.QueryResult<MaybeMasked<TData>>
   > {
     this.isTornDown = false;
-    let { newNetworkStatus } = internalOptions || {};
+    let { newNetworkStatus, keepLastMissing } = internalOptions || {};
+
+    if (!keepLastMissing) {
+      this.lastMissing = undefined;
+    }
 
     this.queryManager.obsQueries.add(this);
 
@@ -1781,7 +1774,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     this.queryManager.obsQueries.delete(this);
     this.isTornDown = true;
     this.abortActiveOperations();
-    this.lastMissingResult = undefined;
+    this.lastMissing = undefined;
   }
 
   private transformDocument(document: DocumentNode) {
@@ -1835,7 +1828,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       }
     }
 
-    const { dirty, lastMissingResult } = this;
+    const { dirty, lastMissing } = this;
     const { fetchPolicy } = this.options;
     this.resetNotifications();
 
@@ -1859,7 +1852,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       // reobservation, since oq.reobserveCacheFirst might make a network
       // request, and we never want to trigger network requests in the
       // middle of optimistic updates.
-      this.lastMissingResult = undefined;
       this.deliverCacheDiff(diff);
 
       return;
@@ -1868,7 +1860,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const current = this.getCurrentResult();
 
     if (diff.complete) {
-      this.lastMissingResult = undefined;
+      this.lastMissing = undefined;
     } else if (current.networkStatus === NetworkStatus.streaming) {
       // If we get a cache update in the middle of streaming (possible with
       // cache-and-network fetch policy), just deliver the cache value without
@@ -1879,16 +1871,17 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       this.deliverCacheDiff(diff);
       return;
     } else if (
-      !lastMissingResult ||
+      !lastMissing ||
       // If a destructive cache method has been called since the last recorded
       // incomplete result, there's a chance fetching this data again will
       // restore what was evicted, even though the cache result looks the same
       // as before.
-      lastMissingResult.dmCount !== destructiveMethodCounts.get(this.cache) ||
-      !equal(lastMissingResult.variables, this.variables) ||
-      !equal(lastMissingResult.missing, diff.missing?.missing)
+      lastMissing.dmCount !== destructiveMethodCounts.get(this.cache) ||
+      !equal(lastMissing.variables, this.variables) ||
+      !equal(lastMissing.missing, diff.missing?.missing)
     ) {
-      this.lastMissingResult = {
+      this.didWarnOnFeud = false;
+      this.lastMissing = {
         variables: this.variables,
         missing: diff.missing?.missing,
         dmCount: destructiveMethodCounts.get(this.cache),
@@ -2044,7 +2037,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // exception for cache-only queries - we reset them into a "ready" state
     // as we won't trigger a refetch for them
     const resetToEmpty = this.options.fetchPolicy === "cache-only";
-    this.lastMissingResult = undefined;
+    this.lastMissing = undefined;
     this.setResult(resetToEmpty ? empty : uninitialized, {
       shouldEmit: resetToEmpty ? EmitBehavior.force : EmitBehavior.never,
     });
@@ -2219,32 +2212,35 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const { fetchPolicy, nextFetchPolicy } = this.options;
 
     if (fetchPolicy === "cache-and-network" || fetchPolicy === "network-only") {
-      // Calls `_reobserve` rather than `reobserve` so that a refetch initiated
-      // by the cache update does not clear `lastIncompleteResult`, which
-      // only user-initiated reobservations should do.
-      this._reobserve({
-        fetchPolicy: "cache-first",
-        // Use a temporary nextFetchPolicy function that replaces itself with the
-        // previous nextFetchPolicy value and returns the original fetchPolicy.
-        nextFetchPolicy(
-          this: ApolloClient.WatchQueryOptions<TData, TVariables>,
-          currentFetchPolicy: WatchQueryFetchPolicy,
-          context: NextFetchPolicyContext<TData, TVariables>
-        ) {
-          // Replace this nextFetchPolicy function in the options object with the
-          // original this.options.nextFetchPolicy value.
-          this.nextFetchPolicy = nextFetchPolicy;
-          // If the original nextFetchPolicy value was a function, give it a
-          // chance to decide what happens here.
-          if (typeof this.nextFetchPolicy === "function") {
-            return this.nextFetchPolicy(currentFetchPolicy, context);
-          }
-          // Otherwise go back to the original this.options.fetchPolicy.
-          return fetchPolicy!;
+      // Preserve lastMissingResult so a cache-driven reobserve does not
+      // reset feud detection. User-initiated reobserve/refetch/poll clear it
+      // in `_reobserve` by default.
+      this._reobserve(
+        {
+          fetchPolicy: "cache-first",
+          // Use a temporary nextFetchPolicy function that replaces itself with the
+          // previous nextFetchPolicy value and returns the original fetchPolicy.
+          nextFetchPolicy(
+            this: ApolloClient.WatchQueryOptions<TData, TVariables>,
+            currentFetchPolicy: WatchQueryFetchPolicy,
+            context: NextFetchPolicyContext<TData, TVariables>
+          ) {
+            // Replace this nextFetchPolicy function in the options object with the
+            // original this.options.nextFetchPolicy value.
+            this.nextFetchPolicy = nextFetchPolicy;
+            // If the original nextFetchPolicy value was a function, give it a
+            // chance to decide what happens here.
+            if (typeof this.nextFetchPolicy === "function") {
+              return this.nextFetchPolicy(currentFetchPolicy, context);
+            }
+            // Otherwise go back to the original this.options.fetchPolicy.
+            return fetchPolicy!;
+          },
         },
-      });
+        { keepLastMissing: true }
+      );
     } else {
-      this._reobserve();
+      this._reobserve(undefined, { keepLastMissing: true });
     }
   }
 

@@ -39,9 +39,13 @@ jobs:
       - image: cimg/node:23.7.0
     steps:
       - checkout
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: Restore built dist
+          command: mv /tmp/workspace/dist ./dist
       - run: npm version
       - npm_ci
-      - run: npm run build
       - run: npm run publint
 
   Lint:
@@ -256,7 +260,9 @@ workflows:
                   "ReactDOM 19",
                 ]
       - Circularity
-      - Publint
+      - Publint:
+          requires:
+            - BuildTarball
       - Attest
       - Formatting
       - Lint

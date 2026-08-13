@@ -1861,14 +1861,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       // request, and we never want to trigger network requests in the
       // middle of optimistic updates.
       this.lastMissingResult = undefined;
-      this.deliverCacheResult({
-        data: diff.result,
-        dataState: diff.dataState,
-        networkStatus: current.networkStatus,
-        loading: current.loading,
-        error: undefined,
-        partial: !diff.complete,
-      } as ObservableQuery.Result<TData>);
+      this.deliverCacheDiff(diff);
 
       return;
     }
@@ -1882,14 +1875,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       // request (deduplication should kick in, but doing so replays any
       // previous emits from the link chain, which get rewritten into the cache
       // and might clobber this cache update)
-      this.deliverCacheResult({
-        data: diff.result,
-        dataState: diff.dataState,
-        networkStatus: current.networkStatus,
-        loading: current.loading,
-        error: undefined,
-        partial: true,
-      } as ObservableQuery.Result<TData>);
+      this.deliverCacheDiff(diff);
       return;
     } else if (
       !lastMissingResult ||
@@ -1922,14 +1908,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       // though, so we also make sure we only deliver if the previous result
       // was also partial.
       if (current.dataState === "partial") {
-        this.deliverCacheResult({
-          data: diff.result,
-          dataState: current.dataState,
-          networkStatus: current.networkStatus,
-          loading: current.loading,
-          error: undefined,
-          partial: true,
-        });
+        this.deliverCacheDiff(diff);
       }
       // If the (partial) result is the same as the last partial result
       // we recorded from a previous broadcast (and the variables match
@@ -1969,10 +1948,19 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     this.reobserveCacheFirst();
   }
 
-  private deliverCacheResult(result: ObservableQuery.Result<any>) {
+  private deliverCacheDiff(diff: Cache.InternalDiffResultWithDataState<TData>) {
+    const current = this.getCurrentResult();
+
     this.input.next({
       kind: "N",
-      value: result,
+      value: {
+        data: diff.result,
+        dataState: diff.dataState,
+        networkStatus: current.networkStatus,
+        loading: current.loading,
+        error: undefined,
+        partial: !diff.complete,
+      } as ObservableQuery.Result<TData>,
       source: "cache",
       query: this.query,
       variables: this.variables,

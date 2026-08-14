@@ -67,7 +67,3 @@ expect.addEqualityTesters([
   areMissingFieldErrorsEqual,
   areWeakRefsEqual,
 ]);
-
-// not available in JSDOM 🙄
-global.ReadableStream ||= require("stream/web").ReadableStream;
-global.TransformStream ||= require("stream/web").TransformStream;

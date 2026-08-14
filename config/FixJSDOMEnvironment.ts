@@ -1,3 +1,4 @@
+import { ReadableStream, TransformStream } from "node:stream/web";
 import { TextDecoder, TextEncoder } from "node:util";
 
 import JSDOMEnvironment from "jest-environment-jsdom";
@@ -14,6 +15,9 @@ export default class FixJSDOMEnvironment extends JSDOMEnvironment {
 
     this.global.TextDecoder = TextDecoder;
     this.global.TextEncoder = TextEncoder;
+
+    this.global.ReadableStream = ReadableStream;
+    this.global.TransformStream = TransformStream;
 
     this.global.structuredClone = structuredClone;
 

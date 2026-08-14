@@ -1,17 +1,8 @@
 {
   "name": "integration-tests",
   "license": "UNLICENSED",
-  "pnpm": {
-    "overrides": {
-      "@playwright/test": "1.43.1",
-      "playwright": "1.43.1",
-      "serve": "^14.2.0",
-      "@apollo/client": "link:../",
-      "@apollo/client-graphql-codegen": "link:../codegen"
-    }
-  },
   "devDependencies": {
     "@types/lodash": "^4.14.195",
-    "playwright": "1.43.1"
+    "playwright": "1.62.1"
   }
 }

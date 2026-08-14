@@ -16,18 +16,9 @@ commands:
             - ~/.npm
 
 jobs:
-  # Filesize:
-  #   docker:
-  #     - image: cimg/node:20.2.0
-  #   steps:
-  #     - checkout
-  #     - run: npm version
-  #     - run: npm ci
-  #     - run: npm run bundlesize
-
   Circularity:
     docker:
-      - image: cimg/node:23.7.0
+      - image: cimg/node:24.19.0
     steps:
       - checkout
       - run: npm version
@@ -36,7 +27,7 @@ jobs:
 
   Publint:
     docker:
-      - image: cimg/node:23.7.0
+      - image: cimg/node:24.19.0
     steps:
       - checkout
       - attach_workspace:
@@ -50,7 +41,7 @@ jobs:
 
   Lint:
     docker:
-      - image: cimg/node:23.9.0
+      - image: cimg/node:24.19.0
     steps:
       - checkout
       - attach_workspace:
@@ -65,7 +56,7 @@ jobs:
 
   Formatting:
     docker:
-      - image: cimg/node:23.9.0
+      - image: cimg/node:24.19.0
     steps:
       - checkout
       - npm_ci
@@ -73,7 +64,7 @@ jobs:
 
   Codegen:
     docker:
-      - image: cimg/node:23.9.0
+      - image: cimg/node:24.19.0
     parameters:
       codegenDeps:
         type: string
@@ -88,10 +79,16 @@ jobs:
           at: /tmp/workspace
       - run: npm version
       - npm_ci
-      - run: pnpm version
       - run:
-          command: pnpm pkg set "pnpm.overrides[@apollo/client-graphql-codegen]=/tmp/workspace/apollo-client-graphql-codegen.tgz"
+          command: pnpm --version
           working_directory: integration-tests
+      - run:
+          name: Point codegen at the built tarball
+          working_directory: integration-tests
+          command: |
+            pnpm config set --location=project --json overrides '{
+              "@apollo/client-graphql-codegen": "/tmp/workspace/apollo-client-graphql-codegen.tgz"
+            }'
       - run:
           name: Install codegen runner with peer deps under test
           command: pnpm --filter codegen add -D << parameters.codegenDeps >>
@@ -106,7 +103,7 @@ jobs:
 
   Tests:
     docker:
-      - image: cimg/node:23.9.0
+      - image: cimg/node:24.19.0
     parameters:
       project:
         type: string
@@ -132,7 +129,7 @@ jobs:
           path: reports/junit
   Typecheck:
     docker:
-      - image: cimg/node:23.9.0
+      - image: cimg/node:24.19.0
     steps:
       - checkout
       - attach_workspace:
@@ -146,7 +143,7 @@ jobs:
 
   Attest:
     docker:
-      - image: cimg/node:23.9.0
+      - image: cimg/node:24.19.0
     steps:
       - checkout
       - npm_ci
@@ -154,7 +151,7 @@ jobs:
 
   BuildTarball:
     docker:
-      - image: cimg/node:23.9.0
+      - image: cimg/node:24.19.0
     steps:
       - checkout
       - run: npm run ci:precheck
@@ -172,7 +169,7 @@ jobs:
 
   BuildCodegenTarball:
     docker:
-      - image: cimg/node:23.9.0
+      - image: cimg/node:24.19.0
     steps:
       - checkout
       - run: npm run ci:precheck
@@ -191,25 +188,32 @@ jobs:
       react:
         type: string
     docker:
-      - image: cimg/node:23.9.0-browsers
+      - image: cimg/node:24.19.0-browsers
     steps:
       - checkout
       - attach_workspace:
           at: /tmp/workspace
-      - run: pnpm version
       - run:
-          command: pnpm pkg set "pnpm.overrides[@apollo/client]=/tmp/workspace/apollo-client.tgz"
+          command: pnpm --version
           working_directory: integration-tests
       - run:
+          name: Override Apollo Client tarball and React version
+          working_directory: integration-tests
           command: |
-            export VERSION=$(pnpm view react@<< parameters.react >> version)
-            pnpm pkg set "pnpm.overrides[react]=${VERSION}" "pnpm.overrides[react-dom]=${VERSION}"
+            VERSION=$(pnpm view react@<< parameters.react >> version)
+            pnpm config set --location=project --json overrides '{
+              "@playwright/test": "1.62.1",
+              "playwright": "1.62.1",
+              "serve": "^14.2.0",
+              "@apollo/client": "/tmp/workspace/apollo-client.tgz",
+              "react": "'"$VERSION"'",
+              "react-dom": "'"$VERSION"'"
+            }'
+      - run:
+          command: pnpm install --no-frozen-lockfile
           working_directory: integration-tests
       - run:
           command: pnpm run --if-present --filter << parameters.framework >> ci-preparations
-          working_directory: integration-tests
-      - run:
-          command: pnpm install --no-frozen-lockfile
           working_directory: integration-tests
       - run:
           command: cat pnpm-lock.yaml
@@ -232,7 +236,7 @@ jobs:
       externalPackage:
         type: string
     docker:
-      - image: cimg/node:23.9.0
+      - image: cimg/node:24.19.0
     steps:
       - checkout
       - attach_workspace:

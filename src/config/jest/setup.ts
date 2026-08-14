@@ -71,15 +71,3 @@ expect.addEqualityTesters([
 // not available in JSDOM 🙄
 global.ReadableStream ||= require("stream/web").ReadableStream;
 global.TransformStream ||= require("stream/web").TransformStream;
-
-AbortSignal.timeout = (ms) => {
-  const controller = new AbortController();
-  setTimeout(
-    () =>
-      controller.abort(
-        new DOMException("The operation timed out.", "TimeoutError")
-      ),
-    ms
-  );
-  return controller.signal;
-};

@@ -1,4 +1,4 @@
-import type { MatcherFunction } from "expect";
+import type { MatcherFunction } from "@jest/expect";
 
 export const toBeOneOf: MatcherFunction<[values: unknown[]]> = function (
   actual,

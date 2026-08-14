@@ -1,6 +1,6 @@
+import type { MatcherFunction } from "@jest/expect";
 import { iterableEquality } from "@jest/expect-utils";
 import type { Trie } from "@wry/trie";
-import type { MatcherFunction } from "expect";
 
 import type {
   ApolloClient,

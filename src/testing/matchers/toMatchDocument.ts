@@ -1,4 +1,4 @@
-import type { MatcherFunction } from "expect";
+import type { MatcherFunction } from "@jest/expect";
 
 import type { DocumentNode } from "@apollo/client";
 import { print } from "@apollo/client/utilities";

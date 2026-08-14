@@ -1,4 +1,4 @@
-import type { MatcherFunction } from "expect";
+import type { MatcherFunction } from "@jest/expect";
 
 import type { QueryRef } from "@apollo/client/react";
 import {

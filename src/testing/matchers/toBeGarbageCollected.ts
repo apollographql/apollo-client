@@ -1,4 +1,4 @@
-import type { MatcherFunction } from "expect";
+import type { MatcherFunction } from "@jest/expect";
 
 // this is necessary because this file is picked up by `tsc` (it's not a test),
 // but our main `tsconfig.json` doesn't include `"ES2021.WeakRef"` on purpose

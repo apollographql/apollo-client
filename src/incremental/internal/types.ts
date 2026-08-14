@@ -4,7 +4,6 @@ import type {
   IsNeverish,
   Prettify,
   Primitive,
-  RemoveIndexSignature,
 } from "@apollo/client/utilities/internal";
 
 type CustomScalarTypes = {
@@ -23,13 +22,10 @@ type ScalarType =
 type Exact<in out T> = (x: T) => T;
 
 type HasNeverishField<T> =
-  [T] extends [never] ? false
-  : true extends (
+  true extends (
     {
-      [K in keyof RemoveIndexSignature<T> & string]-?: IsNeverish<
-        RemoveIndexSignature<T>[K]
-      >;
-    }[keyof RemoveIndexSignature<T> & string]
+      [K in keyof T & string]-?: IsNeverish<T[K]>;
+    }[keyof T & string]
   ) ?
     true
   : false;
@@ -40,12 +36,19 @@ export type ContainsNeverishFields<TData, Seen = never> = true extends (
   false
 : TData extends ScalarType ? false
 : TData extends ReadonlyArray<infer TItem> ?
-  ContainsNeverishFields<TItem, Seen | Exact<TItem>>
+  [TItem] extends [ScalarType] ?
+    false
+  : ContainsNeverishFields<TItem, Seen>
 : TData extends object ?
-  Exact<TData> extends Seen ? false
-  : [HasNeverishField<TData>] extends [true] ? true
-  : ContainsNeverishFields<TData[keyof TData], Seen | Exact<TData>>
+  string extends keyof TData ? false
+  : [Seen] extends [never] ? ContainsNeverishFieldsInObject<TData, Exact<TData>>
+  : Exact<TData> extends Seen ? false
+  : ContainsNeverishFieldsInObject<TData, Seen | Exact<TData>>
 : false;
+
+type ContainsNeverishFieldsInObject<TData, Seen> =
+  [HasNeverishField<TData>] extends [true] ? true
+  : ContainsNeverishFields<TData[keyof TData], Seen>;
 
 export type RemoveNeverishFields<TData> =
   true extends IsAny<TData> ? TData

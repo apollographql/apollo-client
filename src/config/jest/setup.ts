@@ -1,13 +1,9 @@
 //@ts-ignore
 globalThis.__DEV__ = true;
 
-import { TextDecoder, TextEncoder } from "util";
-
 import gql from "graphql-tag";
 
-global.TextEncoder ??= TextEncoder;
 // @ts-ignore
-global.TextDecoder ??= TextDecoder;
 import "@testing-library/jest-dom";
 // eslint-disable-next-line local-rules/import-from-inside-other-export
 import "../../testing/matchers/index.js";

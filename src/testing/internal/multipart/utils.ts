@@ -36,6 +36,10 @@ export function mockMultipartStream<Chunks>({
   }
 
   function createStream() {
+    // Reset per response. Do not reset in close() — Node 24+ TransformStream
+    // can flush the last chunk after close(), which would re-prefix `\r\n---\r\n`
+    // and break multipart parsing (`ServerParseError: Unexpected end of JSON input`).
+    sentInitialChunk = false;
     return new NodeReadableStream<Chunks & { [hasNextSymbol]: boolean }>({
       start(c) {
         streamController = c;
@@ -84,7 +88,6 @@ export function mockMultipartStream<Chunks>({
     queueNext(CLOSE);
 
     streamController = null;
-    sentInitialChunk = false;
   }
 
   function enqueue(chunk: Chunks, hasNext: boolean) {

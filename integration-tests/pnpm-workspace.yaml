@@ -9,3 +9,19 @@ packages:
   - wrapping-library
   - shared
   - type-tests
+
+# pnpm 11 blocks lifecycle scripts unless listed here.
+allowBuilds:
+  "@swc/core": true
+  core-js: true
+  core-js-pure: true
+  esbuild: true
+  sharp: true
+
+# pnpm 11+ reads overrides from this file, not package.json.
+overrides:
+  "@playwright/test": "1.62.1"
+  playwright: "1.62.1"
+  serve: "^14.2.0"
+  "@apollo/client": "link:../"
+  "@apollo/client-graphql-codegen": "link:../codegen"

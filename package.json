@@ -190,7 +190,7 @@
     "@types/jest": "30.0.0",
     "@types/jsesc": "^3.0.3",
     "@types/lodash": "4.17.24",
-    "@types/node": "^22.10.7",
+    "@types/node": "^24.13.3",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
     "@types/relay-runtime": "14.1.24",

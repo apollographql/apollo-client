@@ -46,17 +46,6 @@ function fail(reason = "fail was called in a test.") {
 // @ts-ignore
 globalThis.fail = fail;
 
-if (!Symbol.dispose) {
-  Object.defineProperty(Symbol, "dispose", {
-    value: Symbol("dispose"),
-  });
-}
-if (!Symbol.asyncDispose) {
-  Object.defineProperty(Symbol, "asyncDispose", {
-    value: Symbol("asyncDispose"),
-  });
-}
-
 // @ts-ignore
 expect.addEqualityTesters([
   areServerErrorsEqual,

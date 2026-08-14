@@ -1,3 +1,4 @@
+import { ReadableStream } from "node:stream/web";
 import { TextDecoder, TextEncoder } from "util";
 
 import { gql } from "graphql-tag";

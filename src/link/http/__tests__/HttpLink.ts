@@ -32,9 +32,6 @@ import {
 
 import { voidFetchDuringEachTest } from "./helpers.js";
 
-// Work around an inconsistency between `web-streams-polyfill` and `undici` typings
-const Response = globalThis.Response as typeof globalThis.Response;
-
 const ReadableStream =
   globalThis.ReadableStream as typeof globalThis.ReadableStream & {
     from<R>(

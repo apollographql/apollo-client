@@ -42,7 +42,7 @@ test("assembles inline single-field @defer", (prefix) => {
 
   bench(prefix + "instantiations", () => {
     return {} as GraphQLCodegenIncremental.Complete<Source>;
-  }).types([7, "instantiations"]);
+  }).types([6, "instantiations"]);
 
   bench(prefix + "functionality", () => {
     expectTypeOf<GraphQLCodegenIncremental.Complete<Source>>().toEqualTypeOf<{
@@ -73,7 +73,7 @@ test("assembles named fragment @defer", (prefix) => {
 
   bench(prefix + "instantiations", () => {
     return {} as GraphQLCodegenIncremental.Complete<Source>;
-  }).types([7, "instantiations"]);
+  }).types([6, "instantiations"]);
 
   bench(prefix + "functionality", () => {
     expectTypeOf<GraphQLCodegenIncremental.Complete<Source>>().toEqualTypeOf<{
@@ -120,7 +120,7 @@ test("assembles inline multi-field @defer split per field", (prefix) => {
 
   bench(prefix + "instantiations", () => {
     return {} as GraphQLCodegenIncremental.Complete<Source>;
-  }).types([7, "instantiations"]);
+  }).types([6, "instantiations"]);
 
   bench(prefix + "functionality", () => {
     expectTypeOf<GraphQLCodegenIncremental.Complete<Source>>().toEqualTypeOf<{
@@ -174,7 +174,7 @@ test("assembles multiple independent @defer fragments", (prefix) => {
 
   bench(prefix + "instantiations", () => {
     return {} as GraphQLCodegenIncremental.Complete<Source>;
-  }).types([7, "instantiations"]);
+  }).types([6, "instantiations"]);
 
   bench(prefix + "functionality", () => {
     expectTypeOf<GraphQLCodegenIncremental.Complete<Source>>().toEqualTypeOf<{
@@ -216,7 +216,7 @@ test("assembles @defer nested inside arrays", (prefix) => {
 
   bench(prefix + "instantiations", () => {
     return {} as GraphQLCodegenIncremental.Complete<Source>;
-  }).types([7, "instantiations"]);
+  }).types([6, "instantiations"]);
 
   bench(prefix + "functionality", () => {
     expectTypeOf<GraphQLCodegenIncremental.Complete<Source>>().toEqualTypeOf<{
@@ -266,7 +266,7 @@ test("assembles @defer nested inside nullable and optional arrays", (prefix) => 
 
   bench(prefix + "instantiations", () => {
     return {} as GraphQLCodegenIncremental.Complete<Source>;
-  }).types([7, "instantiations"]);
+  }).types([6, "instantiations"]);
 
   bench(prefix + "functionality", () => {
     expectTypeOf<GraphQLCodegenIncremental.Complete<Source>>().toEqualTypeOf<{
@@ -307,7 +307,7 @@ test("assembles @defer inside ReadonlyArray", (prefix) => {
 
   bench(prefix + "instantiations", () => {
     return {} as GraphQLCodegenIncremental.Complete<Source>;
-  }).types([7, "instantiations"]);
+  }).types([6, "instantiations"]);
 
   bench(prefix + "functionality", () => {
     expectTypeOf<GraphQLCodegenIncremental.Complete<Source>>().toEqualTypeOf<{
@@ -333,7 +333,7 @@ test("leaves @skip/@include optionals in place", (prefix) => {
 
   bench(prefix + "instantiations", () => {
     return {} as GraphQLCodegenIncremental.Complete<Source>;
-  }).types([7, "instantiations"]);
+  }).types([6, "instantiations"]);
 
   bench(prefix + "functionality", () => {
     expectTypeOf<
@@ -364,7 +364,7 @@ test("does not treat GraphQL interface/union result unions as incremental", (pre
 
   bench(prefix + "instantiations", () => {
     return {} as GraphQLCodegenIncremental.Complete<Source>;
-  }).types([7, "instantiations"]);
+  }).types([6, "instantiations"]);
 
   bench(prefix + "functionality", () => {
     expectTypeOf<
@@ -400,7 +400,7 @@ test("assembles @defer on one member of a GraphQL union", (prefix) => {
 
   bench(prefix + "instantiations", () => {
     return {} as GraphQLCodegenIncremental.Complete<Source>;
-  }).types([7, "instantiations"]);
+  }).types([6, "instantiations"]);
 
   bench(prefix + "functionality", () => {
     expectTypeOf<GraphQLCodegenIncremental.Complete<Source>>().toEqualTypeOf<{
@@ -452,7 +452,7 @@ test("collapses Incremental<T> on masked deferred fragment refs", (prefix) => {
 
   bench(prefix + "instantiations", () => {
     return {} as GraphQLCodegenIncremental.Complete<Source>;
-  }).types([7, "instantiations"]);
+  }).types([6, "instantiations"]);
 
   bench(prefix + "functionality", () => {
     expectTypeOf<GraphQLCodegenIncremental.Complete<Source>>().toEqualTypeOf<{
@@ -519,7 +519,7 @@ test("assembles deeply nested mixed @defer", (prefix) => {
 
   bench(prefix + "instantiations", () => {
     return {} as GraphQLCodegenIncremental.Complete<Source>;
-  }).types([7, "instantiations"]);
+  }).types([6, "instantiations"]);
 
   bench(prefix + "functionality", () => {
     expectTypeOf<GraphQLCodegenIncremental.Complete<Source>>().toEqualTypeOf<{
@@ -555,7 +555,7 @@ test("is an identity for operations without @defer", (prefix) => {
 
   bench(prefix + "instantiations", () => {
     return {} as GraphQLCodegenIncremental.Complete<Source>;
-  }).types([7, "instantiations"]);
+  }).types([6, "instantiations"]);
 
   bench(prefix + "functionality", () => {
     type NoDefer = { __typename: "User"; id: string; name: string };
@@ -578,7 +578,7 @@ test("is an identity for operations without @defer", (prefix) => {
 test("Complete handles odd types", (prefix) => {
   bench(prefix + "empty type instantiations", () => {
     attest<{}, GraphQLCodegenIncremental.Complete<{}>>();
-  }).types([122, "instantiations"]);
+  }).types([131, "instantiations"]);
 
   bench(prefix + "empty type functionality", () => {
     expectTypeOf<GraphQLCodegenIncremental.Complete<{}>>().toEqualTypeOf<{}>();
@@ -589,7 +589,7 @@ test("Complete handles odd types", (prefix) => {
       Record<string, any>,
       GraphQLCodegenIncremental.Complete<Record<string, any>>
     >();
-  }).types([130, "instantiations"]);
+  }).types([140, "instantiations"]);
 
   bench(prefix + "generic record type functionality", () => {
     expectTypeOf<
@@ -599,7 +599,7 @@ test("Complete handles odd types", (prefix) => {
 
   bench(prefix + "unknown instantiations", () => {
     attest<unknown, GraphQLCodegenIncremental.Complete<unknown>>();
-  }).types([49, "instantiations"]);
+  }).types([48, "instantiations"]);
 
   bench(prefix + "unknown functionality", () => {
     expectTypeOf<GraphQLCodegenIncremental.Complete<unknown>>().toBeUnknown();
@@ -607,7 +607,7 @@ test("Complete handles odd types", (prefix) => {
 
   bench(prefix + "any instantiations", () => {
     attest<any, GraphQLCodegenIncremental.Complete<any>>();
-  }).types([50, "instantiations"]);
+  }).types([49, "instantiations"]);
 
   bench(prefix + "any functionality", () => {
     expectTypeOf<GraphQLCodegenIncremental.Complete<any>>().toBeAny();
@@ -617,7 +617,7 @@ test("Complete handles odd types", (prefix) => {
     return {} as GraphQLCodegenIncremental.Complete<{
       coords: [long: number, lat: number];
     }>;
-  }).types([133, "instantiations"]);
+  }).types([198, "instantiations"]);
 
   bench(prefix + "tuple functionality", () => {
     expectTypeOf<
@@ -670,7 +670,7 @@ test("distributed members on Complete", (prefix) => {
         [GraphQLCodegenIncremental.Complete<T> | null | undefined],
         [GraphQLCodegenIncremental.Complete<T | null | undefined>]
       >();
-    }).types([55, "instantiations"]);
+    }).types([53, "instantiations"]);
   })();
 
   (function unresolvedGenerics<T, V>() {
@@ -682,6 +682,6 @@ test("distributed members on Complete", (prefix) => {
         ],
         [GraphQLCodegenIncremental.Complete<T | V>]
       >();
-    }).types([62, "instantiations"]);
+    }).types([59, "instantiations"]);
   })();
 });

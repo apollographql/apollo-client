@@ -1,4 +1,10 @@
-import type { HKT } from "@apollo/client/utilities";
+import type { DeepPartial, HKT } from "@apollo/client/utilities";
+import type { IsAny } from "@apollo/client/utilities/internal";
+
+import type {
+  ContainsNeverishFields,
+  RemoveNeverishFields,
+} from "./internal/types.js";
 
 export declare namespace GraphQLCodegenIncremental {
   export interface TypeOverrides {
@@ -35,8 +41,15 @@ export declare namespace GraphQLCodegenIncremental {
    *
    * Operations without `@defer` are returned unchanged.
    */
-  export type Complete<TData> = TData;
-
+  export type Complete<TData> =
+    TData extends any ?
+      true extends IsAny<TData> ? TData
+      : TData extends object ?
+        true extends ContainsNeverishFields<TData> ?
+          RemoveNeverishFields<TData>
+        : TData
+      : TData
+    : never;
   /**
    * Returns the streaming representation of `TData` when `dataState` is
    * `"streaming"`.

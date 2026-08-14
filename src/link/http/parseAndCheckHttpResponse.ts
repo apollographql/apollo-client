@@ -66,7 +66,10 @@ async function* consumeMultipartBody(
   try {
     while (!done) {
       ({ value, done } = await reader.read());
-      const chunk = typeof value === "string" ? value : decoder.decode(value);
+      const chunk =
+        typeof value === "string" ? value : (
+          decoder.decode(value, { stream: !done })
+        );
       const searchFrom = buffer.length - boundary.length + 1;
       buffer += chunk;
       let bi = buffer.indexOf(boundary, searchFrom);

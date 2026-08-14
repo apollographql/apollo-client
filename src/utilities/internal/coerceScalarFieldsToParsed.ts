@@ -11,6 +11,7 @@ import { getOperationDefinition } from "./getOperationDefinition.js";
 import { isField } from "./isField.js";
 import { resultKeyNameFromField } from "./resultKeyNameFromField.js";
 
+/** @internal */
 export function coerceScalarFieldsToParsed(
   result: Record<string, any>,
   query: DocumentNode,

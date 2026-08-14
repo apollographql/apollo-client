@@ -95,7 +95,7 @@ export type ClassicSignature = SignatureStyle extends "classic" ? unknown : neve
 // @internal @deprecated
 export function cloneDeep<T>(value: T): T;
 
-// @public (undocumented)
+// @internal @deprecated (undocumented)
 export function coerceScalarFieldsToParsed(result: Record<string, any>, query: DocumentNode, cache: ApolloCache): Record<string, any>;
 
 // @public

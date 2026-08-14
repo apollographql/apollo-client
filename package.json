@@ -209,7 +209,7 @@
     "eslint-plugin-mdx": "^3.6.2",
     "eslint-plugin-react-hooks": "7.0.1",
     "eslint-plugin-testing-library": "7.1.1",
-    "expect": "29.7.0",
+    "expect": "30.4.1",
     "expect-type": "1.1.0",
     "fetch-mock": "9.11.0",
     "globals": "15.14.0",

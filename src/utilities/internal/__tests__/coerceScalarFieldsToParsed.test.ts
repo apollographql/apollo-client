@@ -839,6 +839,52 @@ test("ignores fields from inline fragments that don't match the returned type", 
   });
 });
 
+test("does not coerce an overlapping alias using a non-matching fragment field", () => {
+  const cache = new InMemoryCache({
+    scalars: { Date: dateScalar, Price: priceScalar },
+    typePolicies: {
+      Dog: {
+        fields: {
+          lastWalkedAt: { scalar: "Date" },
+          lastFedAt: { scalar: "Price" },
+        },
+      },
+      Cat: {
+        fields: {
+          lastFedAt: { scalar: "Date" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query Pet {
+      pet {
+        ... on Dog {
+          when: lastWalkedAt
+        }
+        ... on Cat {
+          when: lastFedAt
+        }
+      }
+    }
+  `;
+
+  const result = {
+    pet: {
+      __typename: "Dog",
+      when: "2026-01-01",
+    },
+  };
+
+  expect(coerceScalarFieldsToParsed(result, query, cache)).toStrictEqualTyped({
+    pet: {
+      __typename: "Dog",
+      when: new Date(2026, 0, 1),
+    },
+  });
+});
+
 test("does not parse values that are already parsed", () => {
   const cache = new InMemoryCache({
     scalars: { Date: dateScalar },

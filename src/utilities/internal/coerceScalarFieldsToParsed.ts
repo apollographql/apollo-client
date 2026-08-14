@@ -79,10 +79,11 @@ export function coerceScalarFieldsToParsed(
         changed ||= coerced !== fieldValue;
         result[resultName] = coerced;
       } else {
-        getFragmentFromSelection(
-          selection,
-          fragmentMap
-        )?.selectionSet.selections.forEach((s) => workSet.add(s));
+        const fragment = getFragmentFromSelection(selection, fragmentMap);
+
+        if (fragment && typename && cache.fragmentMatches(fragment, typename)) {
+          fragment.selectionSet.selections.forEach((s) => workSet.add(s));
+        }
       }
     });
 

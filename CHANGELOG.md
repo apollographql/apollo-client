@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 4.3.0-alpha.8
+
+### Minor Changes
+
+- [#13372](https://github.com/apollographql/apollo-client/pull/13372) [`e4cde69`](https://github.com/apollographql/apollo-client/commit/e4cde6999e64e81d8fbef42326a7b2e83d90aa10) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Parse scalar fields for `no-cache` queries.
+
 ## 4.3.0-alpha.7
 
 ### Minor Changes

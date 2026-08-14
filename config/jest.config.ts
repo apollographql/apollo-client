@@ -5,7 +5,7 @@ const defaults = {
   rootDir: "src",
   preset: "ts-jest",
   testEnvironment: fileURLToPath(
-    import.meta.resolve("./FixJSDOMEnvironment.ts")
+    import.meta.resolve("./FixJSDOMEnvironment.js")
   ),
   setupFilesAfterEnv: ["<rootDir>/config/jest/setup.ts"],
   testEnvironmentOptions: {

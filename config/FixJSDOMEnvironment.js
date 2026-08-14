@@ -1,7 +1,10 @@
-const { default: JSDOMEnvironment } = require("jest-environment-jsdom");
+import { ReadableStream, TransformStream } from "node:stream/web";
+import { TextDecoder, TextEncoder } from "node:util";
+
+import JSDOMEnvironment from "jest-environment-jsdom";
 
 // https://github.com/facebook/jest/blob/v29.4.3/website/versioned_docs/version-29.4/Configuration.md#testenvironment-string
-class FixJSDOMEnvironment extends JSDOMEnvironment {
+export default class FixJSDOMEnvironment extends JSDOMEnvironment {
   constructor(...args) {
     super(...args);
 
@@ -10,12 +13,16 @@ class FixJSDOMEnvironment extends JSDOMEnvironment {
     this.global.Request = Request;
     this.global.Response = Response;
 
+    this.global.TextDecoder = TextDecoder;
+    this.global.TextEncoder = TextEncoder;
+
+    this.global.ReadableStream = ReadableStream;
+    this.global.TransformStream = TransformStream;
+
+    this.global.structuredClone = structuredClone;
+
     // FIXME: setting a global fetch breaks HttpLink tests
-    // and setting AbortController breaks PersistedQueryLink tests, which may
-    // indicate a memory leak
     // this.global.fetch = fetch;
     this.global.AbortController = AbortController;
   }
 }
-
-module.exports = FixJSDOMEnvironment;

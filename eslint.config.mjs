@@ -154,7 +154,7 @@ export default defineConfig([
     },
 
     languageOptions: {
-      ecmaVersion: 5,
+      ecmaVersion: "latest",
       sourceType: "script",
 
       parserOptions: {
@@ -228,7 +228,7 @@ export default defineConfig([
 
     plugins: tsPlugins,
     languageOptions: {
-      ecmaVersion: 5,
+      ecmaVersion: "latest",
       sourceType: "script",
 
       parserOptions: {

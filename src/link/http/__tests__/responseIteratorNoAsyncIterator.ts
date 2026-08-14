@@ -1,7 +1,6 @@
 import { TextDecoder, TextEncoder } from "util";
 
 import { gql } from "graphql-tag";
-import { ReadableStream } from "web-streams-polyfill";
 
 import { HttpLink } from "@apollo/client/link/http";
 import {

@@ -51,6 +51,7 @@ import type { ExtensionsWithStreamInfo } from "@apollo/client/utilities/internal
 import {
   AutoCleanedWeakCache,
   checkDocument,
+  coerceScalarFieldsToParsed,
   extensionsSymbol,
   filterMap,
   getDefaultValues,
@@ -1790,7 +1791,26 @@ export class QueryManager {
         };
 
       case "no-cache":
-        return { fromLink: true, observable: resultsFromLink() };
+        return {
+          fromLink: true,
+          observable: resultsFromLink().pipe(
+            map((notification) => {
+              if (
+                notification.kind === "N" &&
+                notification.value.data != null &&
+                this.cache.configuresScalars()
+              ) {
+                notification.value.data = coerceScalarFieldsToParsed(
+                  notification.value.data,
+                  query,
+                  this.cache
+                ) as TData;
+              }
+
+              return notification;
+            })
+          ),
+        };
 
       case "standby":
         return { fromLink: false, observable: EMPTY };

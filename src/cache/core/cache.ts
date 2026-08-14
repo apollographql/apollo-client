@@ -5,6 +5,7 @@ import type {
   DocumentNode,
   FragmentDefinitionNode,
   InlineFragmentNode,
+  OperationTypeNode,
 } from "graphql";
 import { wrap } from "optimism";
 import {
@@ -36,6 +37,7 @@ import type {
 } from "@apollo/client/utilities/internal";
 import {
   bindCacheKey,
+  capitalize,
   combineLatestBatched,
   equalByQuery,
   getApolloCacheMemoryInternals,
@@ -263,12 +265,42 @@ export abstract class ApolloCache {
     return null;
   }
 
+  /**
+   * Get the root typename value for an operation type.
+   *
+   * @defaultValue Query, Mutation, or Subscription
+   */
+  public getRootTypename(operation: OperationTypeNode): string {
+    return capitalize(operation);
+  }
+
   // Custom scalars API
 
   public getScalar<TKey extends keyof ApolloCache.Scalars>(
     key: TKey
   ): ApolloCache.GetScalarType<TKey> | undefined {
     return;
+  }
+
+  /** Get a scalar instance for a field in a type */
+  public getScalarForField<TSerialized = unknown, TParsed = unknown>(
+    typename: string,
+    fieldName: string
+  ): Scalar<TSerialized, TParsed> | undefined {
+    return;
+  }
+
+  /**
+   * Determines whether the cache configures custom scalars or not. This allows
+   * Apollo Client to skip processing results unnecessarily when there is
+   * nothing to transform into a scalar value.
+   *
+   * @remarks
+   * 3rd party caches should override this method if they have the ability to
+   * configure scalar implementations.
+   */
+  public configuresScalars() {
+    return false;
   }
 
   /**

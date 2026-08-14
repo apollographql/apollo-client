@@ -1,5 +1,3 @@
-import { ReadableStream } from "node:stream/web";
-
 import type { Tester } from "@jest/expect-utils";
 import { equals, iterableEquality } from "@jest/expect-utils";
 import * as matcherUtils from "jest-matcher-utils";

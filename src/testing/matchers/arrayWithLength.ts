@@ -1,4 +1,4 @@
-import type { MatcherFunction } from "@jest/expect";
+import type { MatcherFunction } from "expect";
 
 export const arrayWithLength: MatcherFunction<[length: number]> = function (
   actual,

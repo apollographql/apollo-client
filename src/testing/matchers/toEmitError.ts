@@ -1,4 +1,4 @@
-import type { MatcherContext, MatcherFunction } from "@jest/expect";
+import type { MatcherContext, MatcherFunction } from "expect";
 
 import type { ObservableStream } from "@apollo/client/testing/internal";
 

@@ -1,5 +1,5 @@
-import type { MatcherFunction } from "@jest/expect";
 import { iterableEquality } from "@jest/expect-utils";
+import type { MatcherFunction } from "expect";
 import type { MatcherHintOptions } from "jest-matcher-utils";
 
 import { isSameClient } from "./isSameClient.js";

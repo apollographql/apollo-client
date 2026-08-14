@@ -1,4 +1,4 @@
-import type { MatcherFunction } from "@jest/expect";
+import type { MatcherFunction } from "expect";
 import type { DocumentNode } from "graphql";
 
 import type { OperationVariables } from "@apollo/client";

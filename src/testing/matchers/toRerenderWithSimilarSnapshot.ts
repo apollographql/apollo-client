@@ -1,10 +1,11 @@
-import type { MatcherContext, MatcherFunction } from "@jest/expect";
 import type {
   NextRenderOptions,
   RenderStream,
   SnapshotStream,
 } from "@testing-library/react-render-stream";
 import { WaitForRenderTimeoutError } from "@testing-library/react-render-stream";
+import type { MatcherContext } from "expect";
+import type { MatcherFunction } from "expect";
 
 import { getSerializableProperties } from "./utils/getSerializableProperties.js";
 

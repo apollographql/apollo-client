@@ -22,8 +22,6 @@ export default class FixJSDOMEnvironment extends JSDOMEnvironment {
     this.global.structuredClone = structuredClone;
 
     // FIXME: setting a global fetch breaks HttpLink tests
-    // and setting AbortController breaks PersistedQueryLink tests, which may
-    // indicate a memory leak
     // this.global.fetch = fetch;
     this.global.AbortController = AbortController;
   }

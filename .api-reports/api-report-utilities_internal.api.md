@@ -224,7 +224,7 @@ export namespace DocumentationTypes {
 }
 
 // @public (undocumented)
-export function equalByQuery(query: DocumentNode, { data: aData, ...aRest }: Partial<ObservableQuery.Result<unknown>>, { data: bData, ...bRest }: Partial<ObservableQuery.Result<unknown>>, variables?: OperationVariables): boolean;
+export function equalByQuery(query: DocumentNode, input: Partial<ObservableQuery.Result<unknown>>, input2: Partial<ObservableQuery.Result<unknown>>, variables?: OperationVariables): boolean;
 
 // @public (undocumented)
 export type Exact<in out T> = (x: T) => T;
@@ -542,7 +542,7 @@ type ReplaceUndefinedWithDefault<Value, Default> = Value extends any ? Value ext
 export function resultKeyNameFromField(field: FieldNode): string;
 
 // @internal @deprecated (undocumented)
-export function shouldInclude({ directives }: SelectionNode, variables?: Record<string, any>): boolean;
+export function shouldInclude(input: SelectionNode, variables?: Record<string, any>): boolean;
 
 // @public
 export type SignatureStyle = TypeOverrides extends ({

@@ -126,11 +126,11 @@ export abstract class ApolloCache {
     abstract performTransaction(transaction: Transaction, optimisticId?: string | null): void;
     // (undocumented)
     abstract read<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: Cache_2.ReadOptions<TData, TVariables>): Unmasked<TData> | null;
-    readFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ fragment, variables, fragmentName, id, from, optimistic, returnPartialData, }: Cache_2.ReadFragmentOptions<TData, TVariables>): Unmasked<TData> | null;
+    readFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(input: Cache_2.ReadFragmentOptions<TData, TVariables>): Unmasked<TData> | null;
     // (undocumented)
     readFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: Cache_2.ReadFragmentOptions<TData, TVariables>,
     optimistic: boolean): Unmasked<TData> | null;
-    readQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ query, variables, id, optimistic, returnPartialData, }: Cache_2.ReadQueryOptions<TData, TVariables>): Unmasked<TData> | null;
+    readQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(input: Cache_2.ReadQueryOptions<TData, TVariables>): Unmasked<TData> | null;
     readQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: Cache_2.ReadQueryOptions<TData, TVariables>,
     optimistic: boolean): Unmasked<TData> | null;
     // (undocumented)
@@ -177,8 +177,8 @@ export abstract class ApolloCache {
     watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloCache.WatchFragmentOptions<TData, TVariables>): ApolloCache.ObservableFragment<Unmasked<TData> | null>;
     // (undocumented)
     abstract write<TData = unknown, TVariables extends OperationVariables = OperationVariables>(write: Cache_2.WriteOptions<TData, TVariables>): Reference | undefined;
-    writeFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ data, fragment, fragmentName, variables, overwrite, id, from, broadcast, }: Cache_2.WriteFragmentOptions<TData, TVariables>): Reference | undefined;
-    writeQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ data, query, variables, overwrite, id, broadcast, }: Cache_2.WriteQueryOptions<TData, TVariables>): Reference | undefined;
+    writeFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(input: Cache_2.WriteFragmentOptions<TData, TVariables>): Reference | undefined;
+    writeQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(input: Cache_2.WriteQueryOptions<TData, TVariables>): Reference | undefined;
 }
 
 // @public (undocumented)
@@ -396,7 +396,7 @@ export function createFragmentRegistry(...fragments: DocumentNode[]): FragmentRe
 // Warning: (ae-forgotten-export) The symbol "KeyFieldsContext" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-export function defaultDataIdFromObject({ __typename, id, _id }: Readonly<StoreObject>, context?: KeyFieldsContext): string | undefined;
+export function defaultDataIdFromObject(input: Readonly<StoreObject>, context?: KeyFieldsContext): string | undefined;
 
 // @public (undocumented)
 interface DeleteModifier {
@@ -959,7 +959,7 @@ export class Policies {
     // (undocumented)
     readonly rootTypenamesById: Record<string, string>;
     // (undocumented)
-    runMergeFunction(existing: StoreValue, incoming: StoreValue, { field, typename, merge, path }: MergeInfo, context: WriteContext, storage?: StorageType): any;
+    runMergeFunction(existing: StoreValue, incoming: StoreValue, input: MergeInfo, context: WriteContext, storage?: StorageType): any;
     // (undocumented)
     readonly usingPossibleTypes = false;
 }
@@ -1026,7 +1026,7 @@ export { Reference }
 
 // @public (undocumented)
 class Root extends EntityStore {
-    constructor({ policies, resultCaching, seed, }: {
+    constructor(input: {
         policies: Policies;
         resultCaching?: boolean;
         seed?: NormalizedCacheObject;

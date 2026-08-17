@@ -119,11 +119,11 @@ export abstract class ApolloCache {
     abstract performTransaction(transaction: Transaction, optimisticId?: string | null): void;
     // (undocumented)
     abstract read<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: Cache_2.ReadOptions<TData, TVariables>): Unmasked<TData> | null;
-    readFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ fragment, variables, fragmentName, id, from, optimistic, returnPartialData, }: Cache_2.ReadFragmentOptions<TData, TVariables>): Unmasked<TData> | null;
+    readFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(input: Cache_2.ReadFragmentOptions<TData, TVariables>): Unmasked<TData> | null;
     // (undocumented)
     readFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: Cache_2.ReadFragmentOptions<TData, TVariables>,
     optimistic: boolean): Unmasked<TData> | null;
-    readQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ query, variables, id, optimistic, returnPartialData, }: Cache_2.ReadQueryOptions<TData, TVariables>): Unmasked<TData> | null;
+    readQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(input: Cache_2.ReadQueryOptions<TData, TVariables>): Unmasked<TData> | null;
     readQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: Cache_2.ReadQueryOptions<TData, TVariables>,
     optimistic: boolean): Unmasked<TData> | null;
     // (undocumented)
@@ -170,13 +170,13 @@ export abstract class ApolloCache {
     watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloCache.WatchFragmentOptions<TData, TVariables>): ApolloCache.ObservableFragment<Unmasked<TData> | null>;
     // (undocumented)
     abstract write<TData = unknown, TVariables extends OperationVariables = OperationVariables>(write: Cache_2.WriteOptions<TData, TVariables>): Reference | undefined;
-    writeFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ data, fragment, fragmentName, variables, overwrite, id, from, broadcast, }: Cache_2.WriteFragmentOptions<TData, TVariables>): Reference | undefined;
-    writeQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ data, query, variables, overwrite, id, broadcast, }: Cache_2.WriteQueryOptions<TData, TVariables>): Reference | undefined;
+    writeFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(input: Cache_2.WriteFragmentOptions<TData, TVariables>): Reference | undefined;
+    writeQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(input: Cache_2.WriteQueryOptions<TData, TVariables>): Reference | undefined;
 }
 
 // @public (undocumented)
 export namespace ApolloClient {
-    export type { DeclareDefaultOptions, DefaultOptions };
+    export export type { DeclareDefaultOptions, DefaultOptions };
     // (undocumented)
     export namespace Base {
         // (undocumented)
@@ -344,7 +344,7 @@ export namespace ApolloClient {
     //
     // (undocumented)
     export type MutateOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables, TCache extends Cache_2.Implementation = Cache_2.Implementation> = {
-        optimisticResponse?: Unmasked<NoInfer<TData>> | ((vars: TVariables, { IGNORE }: {
+        optimisticResponse?: Unmasked<NoInfer<TData>> | ((vars: TVariables, input: {
             IGNORE: IgnoreModifier;
         }) => Unmasked<NoInfer<TData>> | IgnoreModifier);
         updateQueries?: MutationQueryReducersMap<TData>;
@@ -1152,7 +1152,7 @@ export interface DefaultContext extends Record<string, any> {
 // Warning: (ae-forgotten-export) The symbol "KeyFieldsContext" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-export function defaultDataIdFromObject({ __typename, id, _id }: Readonly<StoreObject>, context?: KeyFieldsContext): string | undefined;
+export function defaultDataIdFromObject(input: Readonly<StoreObject>, context?: KeyFieldsContext): string | undefined;
 
 // @public @deprecated (undocumented)
 export type DefaultOptions = ApolloClient.DefaultOptions;
@@ -1850,7 +1850,7 @@ export type InternalRefetchQueryDescriptor = RefetchQueryDescriptor | ApolloClie
 
 // @internal @deprecated (undocumented)
 export namespace InternalTypes {
-    export type { DefaultOptionsParentObject, NextFetchPolicyContext, PossibleDefaultOptions, QueryManager, };
+    export export type { DefaultOptionsParentObject, NextFetchPolicyContext, PossibleDefaultOptions, QueryManager, };
 }
 
 // @public (undocumented)
@@ -2005,7 +2005,7 @@ namespace LocalState {
 //
 // @public
 class LocalState<TResolvers extends LocalState.Resolvers = LocalState.Resolvers<DefaultContext>, TContext = InferContextValueFromResolvers<TResolvers>> {
-    constructor(...[options]: {} extends TResolvers ? [
+    constructor(...input: {} extends TResolvers ? [
     options?: LocalState.Options<TResolvers, NoInfer_2<TContext>>
     ] : [
     options: LocalState.Options<TResolvers, NoInfer_2<TContext>> & {
@@ -2014,7 +2014,7 @@ class LocalState<TResolvers extends LocalState.Resolvers = LocalState.Resolvers<
     ]);
     addResolvers(resolvers: TResolvers): void;
     // (undocumented)
-    execute<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ document, client, context, remoteResult, variables, onlyRunForcedResolvers, returnPartialData, fetchPolicy, }: {
+    execute<TData = unknown, TVariables extends OperationVariables = OperationVariables>(input: {
         document: DocumentNode | TypedDocumentNode<TData, TVariables>;
         client: ApolloClient;
         context: DefaultContext | undefined;
@@ -2025,7 +2025,7 @@ class LocalState<TResolvers extends LocalState.Resolvers = LocalState.Resolvers<
         fetchPolicy: WatchQueryFetchPolicy;
     }): Promise<FormattedExecutionResult<TData>>;
     // (undocumented)
-    getExportedVariables<TVariables extends OperationVariables = OperationVariables>({ document, client, context, variables, }: {
+    getExportedVariables<TVariables extends OperationVariables = OperationVariables>(input: {
         document: DocumentNode | TypedDocumentNode<any, TVariables>;
         client: ApolloClient;
         context: DefaultContext | undefined;
@@ -2391,7 +2391,7 @@ export class ObservableQuery<TData = unknown, TVariables extends OperationVariab
     ["@@observable"]: () => Subscribable<ObservableQuery.Result<MaybeMasked<TData>>>;
     // (undocumented)
     [Symbol.observable]: () => Subscribable<ObservableQuery.Result<MaybeMasked<TData>>>;
-    constructor({ queryManager, options, transformedQuery, }: {
+    constructor(input: {
         queryManager: QueryManager;
         options: ApolloClient.WatchQueryOptions<TData, TVariables>;
         transformedQuery?: DocumentNode | TypedDocumentNode<TData, TVariables>;
@@ -2403,7 +2403,7 @@ export class ObservableQuery<TData = unknown, TVariables extends OperationVariab
         errorPolicy?: TErrorPolicy;
     }): Promise<ApolloClient.QueryResult<TFetchData, TErrorPolicy>>;
     // @internal @deprecated (undocumented)
-    getCacheDiff({ optimistic }?: {
+    getCacheDiff(input?: {
         optimistic?: boolean | undefined;
     }): Cache_2.InternalDiffResultWithDataState<TData>;
     // (undocumented)
@@ -2539,7 +2539,7 @@ class Policies {
     // (undocumented)
     readonly rootTypenamesById: Record<string, string>;
     // (undocumented)
-    runMergeFunction(existing: StoreValue, incoming: StoreValue, { field, typename, merge, path }: MergeInfo, context: WriteContext, storage?: StorageType): any;
+    runMergeFunction(existing: StoreValue, incoming: StoreValue, input: MergeInfo, context: WriteContext, storage?: StorageType): any;
     // (undocumented)
     readonly usingPossibleTypes = false;
 }
@@ -2638,7 +2638,7 @@ class QueryManager {
     // Warning: (ae-forgotten-export) The symbol "ObservableAndInfo" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    fetchObservableWithInfo<TData, TVariables extends OperationVariables>(options: ApolloClient.WatchQueryOptions<TData, TVariables>, { networkStatus, query, fetchQueryOperator, onCacheHit, observableQuery, exposeExtensions, }: {
+    fetchObservableWithInfo<TData, TVariables extends OperationVariables>(options: ApolloClient.WatchQueryOptions<TData, TVariables>, input: {
         networkStatus?: NetworkStatus;
         query?: DocumentNode;
         fetchQueryOperator?: <T>(source: Observable<T>) => Observable<T>;
@@ -2676,7 +2676,7 @@ class QueryManager {
     // (undocumented)
     maskOperation<TData = unknown>(options: MaskOperationOptions<TData>): MaybeMasked<TData>;
     // (undocumented)
-    mutate<TData, TVariables extends OperationVariables, TCache extends Cache_2.Implementation>({ mutation, variables, optimisticResponse, updateQueries, refetchQueries, awaitRefetchQueries, update: updateWithProxyFn, onQueryUpdated, fetchPolicy, errorPolicy, keepRootFields, context, }: ApolloClient.MutateOptions<TData, TVariables, TCache> & {
+    mutate<TData, TVariables extends OperationVariables, TCache extends Cache_2.Implementation>(input: ApolloClient.MutateOptions<TData, TVariables, TCache> & {
         errorPolicy: ErrorPolicy;
         fetchPolicy: MutationFetchPolicy;
     }): Promise<ApolloClient.MutateResult<MaybeMasked<TData>>>;
@@ -2691,7 +2691,7 @@ class QueryManager {
     // (undocumented)
     refetchObservableQueries(includeStandby?: boolean): Promise<ApolloClient.QueryResult<any>[]>;
     // (undocumented)
-    refetchQueries<TResult>({ updateCache, include, optimistic, removeOptimistic, onQueryUpdated, }: InternalRefetchQueriesOptions<Cache_2.Implementation, TResult>): InternalRefetchQueriesMap<TResult>;
+    refetchQueries<TResult>(input: InternalRefetchQueriesOptions<Cache_2.Implementation, TResult>): InternalRefetchQueriesMap<TResult>;
     // (undocumented)
     readonly ssrMode: boolean;
     // (undocumented)
@@ -2932,7 +2932,7 @@ export function rewriteURIForGET(chosenURI: string, body: BaseHttpLink.Body): {
 
 // @public (undocumented)
 class Root extends EntityStore {
-    constructor({ policies, resultCaching, seed, }: {
+    constructor(input: {
         policies: Policies;
         resultCaching?: boolean;
         seed?: NormalizedCacheObject;

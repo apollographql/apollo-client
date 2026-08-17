@@ -83,7 +83,7 @@ export namespace LocalState {
 //
 // @public
 export class LocalState<TResolvers extends LocalState.Resolvers = LocalState.Resolvers<DefaultContext>, TContext = InferContextValueFromResolvers<TResolvers>> {
-    constructor(...[options]: {} extends TResolvers ? [
+    constructor(...input: {} extends TResolvers ? [
     options?: LocalState.Options<TResolvers, NoInfer_2<TContext>>
     ] : [
     options: LocalState.Options<TResolvers, NoInfer_2<TContext>> & {
@@ -92,7 +92,7 @@ export class LocalState<TResolvers extends LocalState.Resolvers = LocalState.Res
     ]);
     addResolvers(resolvers: TResolvers): void;
     // (undocumented)
-    execute<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ document, client, context, remoteResult, variables, onlyRunForcedResolvers, returnPartialData, fetchPolicy, }: {
+    execute<TData = unknown, TVariables extends OperationVariables = OperationVariables>(input: {
         document: DocumentNode | TypedDocumentNode<TData, TVariables>;
         client: ApolloClient;
         context: DefaultContext | undefined;
@@ -103,7 +103,7 @@ export class LocalState<TResolvers extends LocalState.Resolvers = LocalState.Res
         fetchPolicy: WatchQueryFetchPolicy;
     }): Promise<FormattedExecutionResult<TData>>;
     // (undocumented)
-    getExportedVariables<TVariables extends OperationVariables = OperationVariables>({ document, client, context, variables, }: {
+    getExportedVariables<TVariables extends OperationVariables = OperationVariables>(input: {
         document: DocumentNode | TypedDocumentNode<any, TVariables>;
         client: ApolloClient;
         context: DefaultContext | undefined;

@@ -123,7 +123,7 @@ export class MockSubscriptionLink extends ApolloLink {
 }
 
 // @public (undocumented)
-export function realisticDelay({ min, max, }?: {
+export function realisticDelay(input?: {
     min?: number;
     max?: number;
 }): MockLink.DelayFunction;

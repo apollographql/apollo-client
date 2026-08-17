@@ -256,7 +256,7 @@
     "ts-jest": "29.4.12",
     "tsx": "4.19.2",
     "typedoc": "0.25.0",
-    "typescript": "5.7.3",
+    "typescript": "5.9.3",
     "zx": "8.8.5"
   },
   "publishConfig": {

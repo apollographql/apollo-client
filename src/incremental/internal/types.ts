@@ -24,7 +24,7 @@ type Exact<in out T> = (x: T) => T;
 type HasNeverishField<T> =
   true extends (
     {
-      [K in keyof T & string]-?: IsNeverish<T[K]>;
+      [K in keyof T & string]: IsNeverish<T[K]>;
     }[keyof T & string]
   ) ?
     true

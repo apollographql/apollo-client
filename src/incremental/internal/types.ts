@@ -50,9 +50,10 @@ type IsScalarType<TData> =
 export type RemoveNeverishFields<TData> =
   true extends IsAny<TData> ? TData
   : true extends IsScalarType<TData> ? TData
-  : TData extends Array<infer TItem> ? Array<RemoveNeverishFields<TItem>>
   : TData extends ReadonlyArray<infer TItem> ?
-    ReadonlyArray<RemoveNeverishFields<TItem>>
+    TData extends Array<infer TItem> ?
+      Array<RemoveNeverishFields<TItem>>
+    : ReadonlyArray<RemoveNeverishFields<TItem>>
   : // Leave TData alone if it is Record<string, any> and not a specific shape
   string extends keyof TData ? TData
   : // short-circuit on empty object

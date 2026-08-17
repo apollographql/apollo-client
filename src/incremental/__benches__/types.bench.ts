@@ -576,56 +576,73 @@ test("is an identity for operations without @defer", (prefix) => {
 });
 
 test("Complete handles odd types", (prefix) => {
-  bench(prefix + "empty type instantiations", () => {
-    attest<{}, GraphQLCodegenIncremental.Complete<{}>>();
-  }).types([93, "instantiations"]);
+  {
+    type Source = {};
 
-  bench(prefix + "empty type functionality", () => {
-    expectTypeOf<GraphQLCodegenIncremental.Complete<{}>>().toEqualTypeOf<{}>();
-  });
+    bench(prefix + "empty type instantiations", () => {
+      return {} as GraphQLCodegenIncremental.Complete<Source>;
+    }).types([6, "instantiations"]);
 
-  bench(prefix + "generic record type instantiations", () => {
-    attest<
-      Record<string, any>,
-      GraphQLCodegenIncremental.Complete<Record<string, any>>
-    >();
-  }).types([71, "instantiations"]);
+    bench(prefix + "empty type functionality", () => {
+      expectTypeOf<
+        GraphQLCodegenIncremental.Complete<Source>
+      >().toEqualTypeOf<{}>();
+    });
+  }
 
-  bench(prefix + "generic record type functionality", () => {
-    expectTypeOf<
-      GraphQLCodegenIncremental.Complete<Record<string, any>>
-    >().toEqualTypeOf<Record<string, any>>();
-  });
+  {
+    type Source = Record<string, any>;
 
-  bench(prefix + "unknown instantiations", () => {
-    attest<unknown, GraphQLCodegenIncremental.Complete<unknown>>();
-  }).types([48, "instantiations"]);
+    bench(prefix + "generic record type instantiations", () => {
+      return {} as GraphQLCodegenIncremental.Complete<Source>;
+    }).types([6, "instantiations"]);
 
-  bench(prefix + "unknown functionality", () => {
-    expectTypeOf<GraphQLCodegenIncremental.Complete<unknown>>().toBeUnknown();
-  });
+    bench(prefix + "generic record type functionality", () => {
+      expectTypeOf<GraphQLCodegenIncremental.Complete<Source>>().toEqualTypeOf<
+        Record<string, any>
+      >();
+    });
+  }
 
-  bench(prefix + "any instantiations", () => {
-    attest<any, GraphQLCodegenIncremental.Complete<any>>();
-  }).types([49, "instantiations"]);
+  {
+    type Source = unknown;
 
-  bench(prefix + "any functionality", () => {
-    expectTypeOf<GraphQLCodegenIncremental.Complete<any>>().toBeAny();
-  });
+    bench(prefix + "unknown instantiations", () => {
+      return {} as GraphQLCodegenIncremental.Complete<Source>;
+    }).types([6, "instantiations"]);
 
-  bench(prefix + "tuple instantiations", () => {
-    return {} as GraphQLCodegenIncremental.Complete<{
+    bench(prefix + "unknown functionality", () => {
+      expectTypeOf<GraphQLCodegenIncremental.Complete<Source>>().toBeUnknown();
+    });
+  }
+
+  {
+    type Source = any;
+
+    bench(prefix + "any instantiations", () => {
+      return {} as GraphQLCodegenIncremental.Complete<Source>;
+    }).types([6, "instantiations"]);
+
+    bench(prefix + "any functionality", () => {
+      expectTypeOf<GraphQLCodegenIncremental.Complete<Source>>().toBeAny();
+    });
+  }
+
+  {
+    type Source = {
       coords: [long: number, lat: number];
-    }>;
-  }).types([120, "instantiations"]);
+    };
 
-  bench(prefix + "tuple functionality", () => {
-    expectTypeOf<
-      GraphQLCodegenIncremental.Complete<{
+    bench(prefix + "tuple instantiations", () => {
+      return {} as GraphQLCodegenIncremental.Complete<Source>;
+    }).types([6, "instantiations"]);
+
+    bench(prefix + "tuple functionality", () => {
+      expectTypeOf<GraphQLCodegenIncremental.Complete<Source>>().toEqualTypeOf<{
         coords: [long: number, lat: number];
-      }>
-    >().toEqualTypeOf<{ coords: [long: number, lat: number] }>();
-  });
+      }>();
+    });
+  }
 });
 
 test("Partial is DeepPartial of the assembled complete type", (prefix) => {

@@ -682,23 +682,46 @@ test("distributed members on Complete", (prefix) => {
   // Not a specific operation. Complete<T | U> must distribute to Complete<T> | Complete<U>
   // so hook result unions like TData | null stay intact.
   (function unresolvedGeneric<T>() {
-    bench(prefix + "one unresolved generic mixed with null|undefined", () => {
-      attest<
-        [GraphQLCodegenIncremental.Complete<T> | null | undefined],
-        [GraphQLCodegenIncremental.Complete<T | null | undefined>]
-      >();
-    }).types([53, "instantiations"]);
+    bench(
+      prefix +
+        "one unresolved generic mixed with null|undefined instantiations",
+      () => {
+        return {} as GraphQLCodegenIncremental.Complete<T | null | undefined>;
+      }
+    ).types([2, "instantiations"]);
+
+    bench(
+      prefix + "one unresolved generic mixed with null|undefined functionality",
+      () => {
+        attest<
+          [GraphQLCodegenIncremental.Complete<T> | null | undefined],
+          [GraphQLCodegenIncremental.Complete<T | null | undefined>]
+        >();
+      }
+    );
   })();
 
   (function unresolvedGenerics<T, V>() {
-    bench(prefix + "two unresolved generics distribute", () => {
-      attest<
-        [
-          | GraphQLCodegenIncremental.Complete<T>
-          | GraphQLCodegenIncremental.Complete<V>,
-        ],
-        [GraphQLCodegenIncremental.Complete<T | V>]
-      >();
-    }).types([59, "instantiations"]);
+    bench(
+      prefix +
+        "two unresolved generics distribute instantiations instantiations",
+      () => {
+        return {} as GraphQLCodegenIncremental.Complete<T | V>;
+      }
+    ).types([2, "instantiations"]);
+
+    bench(
+      prefix +
+        "two unresolved generics distribute instantiations functionality",
+      () => {
+        attest<
+          [
+            | GraphQLCodegenIncremental.Complete<T>
+            | GraphQLCodegenIncremental.Complete<V>,
+          ],
+          [GraphQLCodegenIncremental.Complete<T | V>]
+        >();
+      }
+    );
   })();
 });

@@ -8,6 +8,7 @@ import type { ApolloCache } from '@apollo/client';
 import type { ApplyHKTImplementationWithDefault } from '@apollo/client/utilities/internal';
 import type { DocumentNode } from '@apollo/client';
 import type { DocumentTypeDecoration } from '@graphql-typed-document-node/core';
+import type { Exact } from '@apollo/client/utilities/internal';
 import type { HKT } from '@apollo/client/utilities';
 import type { IsAny } from '@apollo/client/utilities/internal';
 import type { Prettify } from '@apollo/client/utilities/internal';
@@ -35,8 +36,6 @@ type CombineIntersection<T> = Exclude<T, {
     __typename?: string;
 }>>;
 
-// Warning: (ae-forgotten-export) The symbol "Exact" needs to be exported by the entry point index.d.ts
-//
 // @public (undocumented)
 type ContainsFragmentsRefs<TData, Seen = never> = true extends (IsAny<TData>) ? false : TData extends object ? Exact<TData> extends Seen ? false : " $fragmentRefs" extends keyof RemoveIndexSignature<TData> ? true : ContainsFragmentsRefs<TData[keyof TData], Seen | Exact<TData>> : false;
 
@@ -50,9 +49,6 @@ export const disableWarningsSlot: {
 
 // @public (undocumented)
 type DistributedRequiredExclude<T, U> = T extends any ? Required<T> extends Required<U> ? Required<U> extends Required<T> ? never : T : T : T;
-
-// @public (undocumented)
-type Exact<in out T> = (x: T) => T;
 
 // @public
 type ExtractByMatchingTypeNames<Union extends {

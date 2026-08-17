@@ -226,6 +226,9 @@ export namespace DocumentationTypes {
 // @public (undocumented)
 export function equalByQuery(query: DocumentNode, { data: aData, ...aRest }: Partial<ObservableQuery.Result<unknown>>, { data: bData, ...bRest }: Partial<ObservableQuery.Result<unknown>>, variables?: OperationVariables): boolean;
 
+// @public (undocumented)
+export type Exact<in out T> = (x: T) => T;
+
 // @internal @deprecated
 export const extensionsSymbol: unique symbol;
 
@@ -409,6 +412,11 @@ A
 ] extends [B] ? [
 B
 ] extends [A] ? true : false : false;
+
+// @public (undocumented)
+export type IsNeverish<V> = [
+Exclude<V, undefined>
+] extends [never] ? true : false;
 
 // @internal @deprecated (undocumented)
 export function isNonEmptyArray<T>(value: ArrayLike<T> | null | undefined): value is Array<T>;

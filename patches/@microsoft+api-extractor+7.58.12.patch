@@ -1,0 +1,42 @@
+diff --git a/node_modules/@microsoft/api-extractor/lib-commonjs/analyzer/AstSymbolTable.js b/node_modules/@microsoft/api-extractor/lib-commonjs/analyzer/AstSymbolTable.js
+index 37d5bae..ad34bd1 100644
+--- a/node_modules/@microsoft/api-extractor/lib-commonjs/analyzer/AstSymbolTable.js
++++ b/node_modules/@microsoft/api-extractor/lib-commonjs/analyzer/AstSymbolTable.js
+@@ -537,10 +537,13 @@ class AstSymbolTable {
+             }
+         }
+         if (options.isExternal !== astSymbol.isExternal) {
+-            throw new node_core_library_1.InternalError(`Cannot assign isExternal=${options.isExternal} for` +
+-                ` the symbol ${astSymbol.localName} because it was previously registered` +
+-                ` with isExternal=${astSymbol.isExternal}`);
++            astSymbol.isExternal = false
+         }
++        // if (options.isExternal !== astSymbol.isExternal) {
++        //     throw new node_core_library_1.InternalError(`Cannot assign isExternal=${options.isExternal} for` +
++        //         ` the symbol ${astSymbol.localName} because it was previously registered` +
++        //         ` with isExternal=${astSymbol.isExternal}`);
++        // }
+         return astSymbol;
+     }
+     /**
+diff --git a/node_modules/@microsoft/api-extractor/lib-esm/analyzer/AstSymbolTable.js b/node_modules/@microsoft/api-extractor/lib-esm/analyzer/AstSymbolTable.js
+index 978908f..443e340 100644
+--- a/node_modules/@microsoft/api-extractor/lib-esm/analyzer/AstSymbolTable.js
++++ b/node_modules/@microsoft/api-extractor/lib-esm/analyzer/AstSymbolTable.js
+@@ -501,10 +501,13 @@ export class AstSymbolTable {
+             }
+         }
+         if (options.isExternal !== astSymbol.isExternal) {
+-            throw new InternalError(`Cannot assign isExternal=${options.isExternal} for` +
+-                ` the symbol ${astSymbol.localName} because it was previously registered` +
+-                ` with isExternal=${astSymbol.isExternal}`);
++            astSymbol.isExternal = false
+         }
++        // if (options.isExternal !== astSymbol.isExternal) {
++        //     throw new InternalError(`Cannot assign isExternal=${options.isExternal} for` +
++        //         ` the symbol ${astSymbol.localName} because it was previously registered` +
++        //         ` with isExternal=${astSymbol.isExternal}`);
++        // }
+         return astSymbol;
+     }
+     /**

@@ -1,5 +1,4 @@
-import { attest, bench } from "@ark/attest";
-import { setup } from "@ark/attest";
+import { attest, bench, setup } from "@ark/attest";
 import { expectTypeOf } from "expect-type";
 
 import type { GraphQLCodegenIncremental } from "@apollo/client/incremental";

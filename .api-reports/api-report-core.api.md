@@ -119,7 +119,7 @@ export { ApolloCache }
 
 // @public (undocumented)
 export namespace ApolloClient {
-    export type { DeclareDefaultOptions, DefaultOptions };
+    export export type { DeclareDefaultOptions, DefaultOptions };
     // (undocumented)
     export namespace Base {
         // (undocumented)
@@ -280,7 +280,7 @@ export namespace ApolloClient {
     }
     // (undocumented)
     export type MutateOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables, TCache extends Cache_2.Implementation = Cache_2.Implementation> = {
-        optimisticResponse?: Unmasked<NoInfer<TData>> | ((vars: TVariables, { IGNORE }: {
+        optimisticResponse?: Unmasked<NoInfer<TData>> | ((vars: TVariables, input: {
             IGNORE: IgnoreModifier;
         }) => Unmasked<NoInfer<TData>> | IgnoreModifier);
         updateQueries?: MutationQueryReducersMap<TData>;
@@ -718,7 +718,7 @@ export type InternalRefetchQueryDescriptor = RefetchQueryDescriptor | ApolloClie
 
 // @internal @deprecated (undocumented)
 export namespace InternalTypes {
-    export type { DefaultOptionsParentObject, NextFetchPolicyContext, PossibleDefaultOptions, QueryManager, };
+    export export type { DefaultOptionsParentObject, NextFetchPolicyContext, PossibleDefaultOptions, QueryManager, };
 }
 
 export { isNetworkRequestSettled }
@@ -919,7 +919,7 @@ export class ObservableQuery<TData = unknown, TVariables extends OperationVariab
     ["@@observable"]: () => Subscribable<ObservableQuery.Result<MaybeMasked<TData>>>;
     // (undocumented)
     [Symbol.observable]: () => Subscribable<ObservableQuery.Result<MaybeMasked<TData>>>;
-    constructor({ queryManager, options, transformedQuery, }: {
+    constructor(input: {
         queryManager: QueryManager;
         options: ApolloClient.WatchQueryOptions<TData, TVariables>;
         transformedQuery?: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
@@ -931,7 +931,7 @@ export class ObservableQuery<TData = unknown, TVariables extends OperationVariab
         errorPolicy?: TErrorPolicy;
     }): Promise<ApolloClient.QueryResult<TFetchData, TErrorPolicy>>;
     // @internal @deprecated (undocumented)
-    getCacheDiff({ optimistic }?: {
+    getCacheDiff(input?: {
         optimistic?: boolean | undefined;
     }): Cache_2.InternalDiffResultWithDataState<TData>;
     // (undocumented)
@@ -1054,7 +1054,7 @@ class QueryManager {
     // Warning: (ae-forgotten-export) The symbol "ObservableAndInfo" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    fetchObservableWithInfo<TData, TVariables extends OperationVariables>(options: ApolloClient.WatchQueryOptions<TData, TVariables>, { networkStatus, query, fetchQueryOperator, onCacheHit, observableQuery, exposeExtensions, }: {
+    fetchObservableWithInfo<TData, TVariables extends OperationVariables>(options: ApolloClient.WatchQueryOptions<TData, TVariables>, input: {
         networkStatus?: NetworkStatus;
         query?: DocumentNode_2;
         fetchQueryOperator?: <T>(source: Observable_2<T>) => Observable_2<T>;
@@ -1092,7 +1092,7 @@ class QueryManager {
     // (undocumented)
     maskOperation<TData = unknown>(options: MaskOperationOptions<TData>): MaybeMasked<TData>;
     // (undocumented)
-    mutate<TData, TVariables extends OperationVariables, TCache extends Cache_2.Implementation>({ mutation, variables, optimisticResponse, updateQueries, refetchQueries, awaitRefetchQueries, update: updateWithProxyFn, onQueryUpdated, fetchPolicy, errorPolicy, keepRootFields, context, }: ApolloClient.MutateOptions<TData, TVariables, TCache> & {
+    mutate<TData, TVariables extends OperationVariables, TCache extends Cache_2.Implementation>(input: ApolloClient.MutateOptions<TData, TVariables, TCache> & {
         errorPolicy: ErrorPolicy;
         fetchPolicy: MutationFetchPolicy;
     }): Promise<ApolloClient.MutateResult<MaybeMasked<TData>>>;
@@ -1107,7 +1107,7 @@ class QueryManager {
     // (undocumented)
     refetchObservableQueries(includeStandby?: boolean): Promise<ApolloClient.QueryResult<any>[]>;
     // (undocumented)
-    refetchQueries<TResult>({ updateCache, include, optimistic, removeOptimistic, onQueryUpdated, }: InternalRefetchQueriesOptions<Cache_2.Implementation, TResult>): InternalRefetchQueriesMap<TResult>;
+    refetchQueries<TResult>(input: InternalRefetchQueriesOptions<Cache_2.Implementation, TResult>): InternalRefetchQueriesMap<TResult>;
     // (undocumented)
     readonly ssrMode: boolean;
     // (undocumented)

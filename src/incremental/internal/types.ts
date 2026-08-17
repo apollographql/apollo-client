@@ -1,5 +1,6 @@
 import type { ApolloCache } from "@apollo/client/cache";
 import type {
+  Exact,
   IsAny,
   IsNeverish,
   Prettify,
@@ -18,8 +19,6 @@ type ScalarType =
     : unknown extends CustomScalarTypes ? Primitive
     : Primitive | CustomScalarTypes
   : never;
-
-type Exact<in out T> = (x: T) => T;
 
 type HasNeverishField<T> =
   true extends { [K in keyof T]: IsNeverish<T[K]> }[keyof T] ? true : false;

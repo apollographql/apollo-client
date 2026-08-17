@@ -28,11 +28,12 @@ export type ContainsNeverishFields<TData, Seen = never> = true extends (
   IsAny<TData>
 ) ?
   false
-: TData extends ScalarType ? false
+: true extends IsScalarType<TData> ? false
 : TData extends ReadonlyArray<infer TItem> ?
-  [TItem] extends [ScalarType] ?
+  true extends IsScalarType<TItem> ?
     false
   : ContainsNeverishFields<TItem, Seen>
+: keyof TData extends never ? TData
 : TData extends object ?
   string extends keyof TData ? false
   : [Seen] extends [never] ? ContainsNeverishFieldsInObject<TData, Exact<TData>>
@@ -44,9 +45,12 @@ type ContainsNeverishFieldsInObject<TData, Seen> =
   HasNeverishField<TData> extends true ? true
   : ContainsNeverishFields<TData[keyof TData], Seen>;
 
+type IsScalarType<TData> =
+  Exact<TData> extends Exact<Extract<ScalarType, TData>> ? true : false;
+
 export type RemoveNeverishFields<TData> =
   true extends IsAny<TData> ? TData
-  : TData extends ScalarType ? TData
+  : true extends IsScalarType<TData> ? TData
   : TData extends Array<infer TItem> ? Array<RemoveNeverishFields<TItem>>
   : TData extends ReadonlyArray<infer TItem> ?
     ReadonlyArray<RemoveNeverishFields<TItem>>

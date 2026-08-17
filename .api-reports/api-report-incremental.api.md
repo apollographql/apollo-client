@@ -23,7 +23,7 @@ import { StreamInfoTrie } from '@apollo/client/utilities/internal';
 // Warning: (ae-forgotten-export) The symbol "ContainsNeverishFieldsInObject" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-type ContainsNeverishFields<TData, Seen = never> = true extends (IsAny<TData>) ? false : true extends IsScalarType<TData> ? false : TData extends ReadonlyArray<infer TItem> ? true extends IsScalarType<TItem> ? false : ContainsNeverishFields<TItem, Seen> : keyof TData extends never ? TData : TData extends object ? string extends keyof TData ? false : [Seen] extends [never] ? ContainsNeverishFieldsInObject<TData, Exact<TData>> : Exact<TData> extends Seen ? false : ContainsNeverishFieldsInObject<TData, Seen | Exact<TData>> : false;
+type ContainsNeverishFields<TData, Seen = never> = true extends (IsAny<TData>) ? false : true extends IsScalarType<TData> ? false : TData extends ReadonlyArray<infer TItem> ? true extends IsScalarType<TItem> ? false : ContainsNeverishFields<TItem, Seen> : keyof TData extends never ? false : TData extends object ? string extends keyof TData ? false : [Seen] extends [never] ? ContainsNeverishFieldsInObject<TData, Exact<TData>> : Exact<TData> extends Seen ? false : ContainsNeverishFieldsInObject<TData, Seen | Exact<TData>> : false;
 
 // Warning: (ae-forgotten-export) The symbol "HasNeverishField" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "ContainsNeverishFields" needs to be exported by the entry point index.d.ts

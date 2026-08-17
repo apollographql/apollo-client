@@ -32,7 +32,7 @@ export type ContainsNeverishFields<TData, Seen = never> = true extends (
   true extends IsScalarType<TItem> ?
     false
   : ContainsNeverishFields<TItem, Seen>
-: keyof TData extends never ? TData
+: keyof TData extends never ? false
 : TData extends object ?
   string extends keyof TData ? false
   : [Seen] extends [never] ? ContainsNeverishFieldsInObject<TData, Exact<TData>>

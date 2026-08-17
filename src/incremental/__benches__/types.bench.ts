@@ -694,8 +694,8 @@ test("distributed members on Complete", (prefix) => {
       prefix + "one unresolved generic mixed with null|undefined functionality",
       () => {
         attest<
-          [GraphQLCodegenIncremental.Complete<T> | null | undefined],
-          [GraphQLCodegenIncremental.Complete<T | null | undefined>]
+          [GraphQLCodegenIncremental.Complete<T | null | undefined>],
+          [GraphQLCodegenIncremental.Complete<T> | null | undefined]
         >();
       }
     );
@@ -715,11 +715,11 @@ test("distributed members on Complete", (prefix) => {
         "two unresolved generics distribute instantiations functionality",
       () => {
         attest<
+          [GraphQLCodegenIncremental.Complete<T | V>],
           [
             | GraphQLCodegenIncremental.Complete<T>
             | GraphQLCodegenIncremental.Complete<V>,
-          ],
-          [GraphQLCodegenIncremental.Complete<T | V>]
+          ]
         >();
       }
     );

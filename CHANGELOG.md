@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 4.3.0-alpha.9
+
+### Minor Changes
+
+- [#13416](https://github.com/apollographql/apollo-client/pull/13416) [`f2d5d5a`](https://github.com/apollographql/apollo-client/commit/f2d5d5ac26f0ad19f1aaa315f92b19f268bd0509) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add `GraphQLCodegenIncremental` type overrides that assemble GraphQL Codegen `@defer` operation types when `dataState` is `"complete"`.
+
 ## 4.3.0-alpha.8
 
 ### Minor Changes

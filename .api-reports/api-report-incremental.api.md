@@ -383,7 +383,7 @@ export class NotImplementedHandler implements Incremental.Handler<never> {
 }
 
 // @public (undocumented)
-type RemoveNeverishFields<TData> = true extends IsAny<TData> ? TData : true extends IsScalarType<TData> ? TData : TData extends Array<infer TItem> ? Array<RemoveNeverishFields<TItem>> : TData extends ReadonlyArray<infer TItem> ? ReadonlyArray<RemoveNeverishFields<TItem>> : string extends keyof TData ? TData : keyof TData extends never ? TData : TData extends object ? HasNeverishField<TData> extends true ? never : Prettify<{
+type RemoveNeverishFields<TData> = true extends IsAny<TData> ? TData : true extends IsScalarType<TData> ? TData : TData extends ReadonlyArray<infer TItem> ? TItem[] extends (TData) ? TData extends Array<infer TItem> ? Array<RemoveNeverishFields<TItem>> : ReadonlyArray<RemoveNeverishFields<TItem>> : TData : string extends keyof TData ? TData : keyof TData extends never ? TData : TData extends object ? HasNeverishField<TData> extends true ? never : Prettify<{
     [K in keyof TData]: RemoveNeverishFields<TData[K]>;
 }> : TData;
 

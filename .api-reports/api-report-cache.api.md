@@ -5,6 +5,7 @@
 ```ts
 
 import type { ApolloCache as ApolloCache_2 } from '@apollo/client';
+import type { ApplyHKTImplementationWithDefault } from '@apollo/client/utilities/internal';
 import type { AsStoreObject } from '@apollo/client/utilities';
 import { canonicalStringify } from '@apollo/client/utilities';
 import type { DataValue } from '@apollo/client';
@@ -17,7 +18,6 @@ import type { FieldNode } from 'graphql';
 import type { FragmentDefinitionNode } from 'graphql';
 import type { FragmentMap } from '@apollo/client/utilities/internal';
 import type { FragmentMapFunction } from '@apollo/client/utilities/internal';
-import type { FragmentType } from '@apollo/client/masking';
 import { getApolloCacheMemoryInternals } from '@apollo/client/utilities/internal';
 import type { GetDataState } from '@apollo/client';
 import { getInMemoryCacheMemoryInternals } from '@apollo/client/utilities/internal';
@@ -25,6 +25,7 @@ import type { GraphQLScalarType } from 'graphql';
 import type { handleIncrementalSymbol } from '@apollo/client/utilities/internal';
 import type { Incremental } from '@apollo/client/incremental';
 import type { InlineFragmentNode } from 'graphql';
+import type { InternalTypes } from '@apollo/client';
 import type { IsAny } from '@apollo/client/utilities/internal';
 import type { IsLooselyEqual } from '@apollo/client/utilities/internal';
 import { isReference } from '@apollo/client/utilities';
@@ -51,7 +52,7 @@ type AllFieldsModifier<Entity extends Record<string, any>> = Modifier<Entity[key
 
 // @public (undocumented)
 export namespace ApolloCache {
-    export type FromOptionValue<TData> = StoreObject | Reference | FragmentType<NoInfer_2<TData>> | string;
+    export type FromOptionValue<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "FromOptionValue", InternalTypes.OverridableTypes.Defaults, TData>;
     // (undocumented)
     export type GetScalarType<TKey extends keyof ApolloCache.Scalars> = ApolloCache.Scalars[TKey] extends ({
         serialized: infer TSerialized;
@@ -1163,7 +1164,7 @@ interface WriteContext extends ReadMergeModifyContext {
 
 // Warnings were encountered during analysis:
 //
-// src/cache/core/cache.ts:206:7 - (ae-incompatible-release-tags) The symbol "[handleIncrementalSymbol]" is marked as @public, but its signature references "DiffIncrementalInfo" which is marked as @internal
+// src/cache/core/cache.ts:254:7 - (ae-incompatible-release-tags) The symbol "[handleIncrementalSymbol]" is marked as @public, but its signature references "DiffIncrementalInfo" which is marked as @internal
 // src/cache/inmemory/inMemoryCache.ts:473:7 - (ae-incompatible-release-tags) The symbol "[handleIncrementalSymbol]" is marked as @public, but its signature references "DiffIncrementalInfo" which is marked as @internal
 // src/cache/inmemory/policies.ts:176:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:179:3 - (ae-forgotten-export) The symbol "ScalarNames" needs to be exported by the entry point index.d.ts

@@ -22,12 +22,13 @@ import {
 import type {
   DataValue,
   GetDataState,
+  InternalTypes,
   OperationVariables,
   TypedDocumentNode,
   TypeOverrides,
 } from "@apollo/client";
-import type { FragmentType, Unmasked } from "@apollo/client/masking";
-import type { HKT, Reference, StoreObject } from "@apollo/client/utilities";
+import type { Unmasked } from "@apollo/client/masking";
+import type { Reference, StoreObject } from "@apollo/client/utilities";
 import { cacheSizes, canonicalStringify } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
@@ -58,21 +59,6 @@ import type { MissingTree } from "./types/common.js";
 
 export type Transaction = (c: ApolloCache) => void;
 
-declare namespace CacheIdentifierTypes {
-  export interface Defaults {
-    CacheIdentifier: CacheIdentifier;
-  }
-
-  interface CacheIdentifier extends HKT {
-    arg1: unknown; // TData
-    return:
-      | StoreObject
-      | Reference
-      | FragmentType<NoInfer<this["arg1"]>>
-      | string;
-  }
-}
-
 export declare namespace ApolloCache {
   /**
    * Acceptable values provided to the `from` option of `useFragment`,
@@ -82,7 +68,7 @@ export declare namespace ApolloCache {
    * `StoreObject | Reference | FragmentType<TData> | string`
    *
    * @remarks
-   * This type is overridable via the `CacheIdentifier` key of the
+   * This type is overridable via the `FromOptionValue` key of the
    * `TypeOverrides` interface. Overriding it only affects the `from` input of
    * the fragment APIs - `StoreObject` and cache-mutation APIs such as
    * `cache.identify`, `cache.modify` and optimistic writes are left untouched.
@@ -116,15 +102,15 @@ export declare namespace ApolloCache {
    *
    * declare module "@apollo/client" {
    *   export interface TypeOverrides {
-   *     CacheIdentifier: StrictFromHKT;
+   *     FromOptionValue: StrictFromHKT;
    *   }
    * }
    * ```
    */
   export type FromOptionValue<TData> = ApplyHKTImplementationWithDefault<
     TypeOverrides,
-    "CacheIdentifier",
-    CacheIdentifierTypes.Defaults,
+    "FromOptionValue",
+    InternalTypes.OverridableTypes.Defaults,
     TData
   >;
 

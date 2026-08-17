@@ -7,11 +7,17 @@ import type {
 
 import type { Cache } from "@apollo/client/cache";
 import type { ClientAwarenessLink } from "@apollo/client/link/client-awareness";
-import type { Unmasked } from "@apollo/client/masking";
-import type { DeepPartial, HKT } from "@apollo/client/utilities";
+import type { FragmentType, Unmasked } from "@apollo/client/masking";
+import type {
+  DeepPartial,
+  HKT,
+  Reference,
+  StoreObject,
+} from "@apollo/client/utilities";
 import type {
   ApplyHKTImplementationWithDefault,
   IsAny,
+  NoInfer,
 } from "@apollo/client/utilities/internal";
 
 import type { ApolloClient } from "./ApolloClient.js";
@@ -21,11 +27,12 @@ export type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
 export interface TypeOverrides {}
 
-declare namespace OverridableTypes {
+export declare namespace OverridableTypes {
   export interface Defaults {
     Complete: Complete;
     Streaming: Streaming;
     Partial: Partial;
+    FromOptionValue: FromOptionValue;
   }
 
   interface Complete extends HKT {
@@ -41,6 +48,15 @@ declare namespace OverridableTypes {
   interface Partial extends HKT {
     arg1: unknown; // TData
     return: DeepPartial<this["arg1"]>;
+  }
+
+  interface FromOptionValue extends HKT {
+    arg1: unknown; // TData
+    return:
+      | StoreObject
+      | Reference
+      | FragmentType<NoInfer<this["arg1"]>>
+      | string;
   }
 }
 

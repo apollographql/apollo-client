@@ -69,6 +69,7 @@ import { MergeInfo } from '@apollo/client/cache';
 import { MergeTree } from '@apollo/client/cache';
 import { MissingFieldError } from '@apollo/client/cache';
 import type { NextNotification } from 'rxjs';
+import type { NoInfer as NoInfer_2 } from '@apollo/client/utilities/internal';
 import { NormalizedCache } from '@apollo/client/cache';
 import { NormalizedCacheObject } from '@apollo/client/cache';
 import { Observable } from '@apollo/client/utilities';
@@ -718,7 +719,7 @@ export type InternalRefetchQueryDescriptor = RefetchQueryDescriptor | ApolloClie
 
 // @internal @deprecated (undocumented)
 export namespace InternalTypes {
-    export export type { DefaultOptionsParentObject, NextFetchPolicyContext, PossibleDefaultOptions, QueryManager, };
+    export export type { DefaultOptionsParentObject, NextFetchPolicyContext, OverridableTypes, PossibleDefaultOptions, QueryManager, };
 }
 
 export { isNetworkRequestSettled }
@@ -992,11 +993,22 @@ namespace OverridableTypes {
         // Warning: (ae-forgotten-export) The symbol "OverridableTypes" needs to be exported by the entry point index.d.ts
         //
         // (undocumented)
+        FromOptionValue: FromOptionValue;
+        // Warning: (ae-forgotten-export) The symbol "OverridableTypes" needs to be exported by the entry point index.d.ts
+        //
+        // (undocumented)
         Partial: Partial;
         // Warning: (ae-forgotten-export) The symbol "OverridableTypes" needs to be exported by the entry point index.d.ts
         //
         // (undocumented)
         Streaming: Streaming;
+    }
+    // (undocumented)
+    interface FromOptionValue extends HKT {
+        // (undocumented)
+        arg1: unknown;
+        // (undocumented)
+        return: StoreObject | Reference | FragmentType<NoInfer_2<this["arg1"]>> | string;
     }
     // (undocumented)
     interface Partial extends HKT {

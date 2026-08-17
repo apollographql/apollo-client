@@ -2,7 +2,7 @@
 "@apollo/client": minor
 ---
 
-Allow overriding the `from` input of `useFragment`, `useSuspenseFragment`, `readFragment`, `writeFragment` and related fragment APIs via a new `CacheIdentifier` key on the `TypeOverrides` interface.
+Allow overriding the `from` input of `useFragment`, `useSuspenseFragment`, `readFragment`, `writeFragment` and related fragment APIs via a new `FromOptionValue` key on the `TypeOverrides` interface.
 
 By default, `from` continues to accept `StoreObject | Reference | FragmentType<TData> | string`. Apps can now supply a stricter policy (for example, requiring `__typename` and disallowing nullish identifier values) without affecting `StoreObject`, `cache.identify`, `cache.modify` or optimistic writes.
 
@@ -29,7 +29,7 @@ interface StrictFromHKT extends HKT {
 
 declare module "@apollo/client" {
   export interface TypeOverrides {
-    CacheIdentifier: StrictFromHKT;
+    FromOptionValue: StrictFromHKT;
   }
 }
 ```

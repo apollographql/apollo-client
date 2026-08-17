@@ -644,6 +644,45 @@ test("Complete handles odd types", (prefix) => {
   }
 });
 
+test("preserves tuple fields when a sibling field is deferred", (prefix) => {
+  // query {
+  //   user {
+  //     id
+  //     coords
+  //     ... @defer {
+  //       name
+  //     }
+  //   }
+  // }
+  type Source = {
+    user:
+      | ({
+          __typename: "User";
+          id: string;
+          coords: [long: number, lat: number];
+        } & (
+          | { __typename: "User"; name: string }
+          | { __typename: "User"; name?: never }
+        ))
+      | null;
+  };
+
+  bench(prefix + "instantiations", () => {
+    return {} as GraphQLCodegenIncremental.Complete<Source>;
+  }).types([6, "instantiations"]);
+
+  bench(prefix + "functionality", () => {
+    expectTypeOf<GraphQLCodegenIncremental.Complete<Source>>().toEqualTypeOf<{
+      user: {
+        __typename: "User";
+        id: string;
+        coords: [long: number, lat: number];
+        name: string;
+      } | null;
+    }>();
+  });
+});
+
 test("Partial is DeepPartial of the assembled complete type", (prefix) => {
   // query {
   //   user {

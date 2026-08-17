@@ -178,7 +178,7 @@
     "@mdx-js/language-service": "^0.7.1",
     "@microsoft/api-extractor": "7.58.12",
     "@microsoft/api-extractor-model": "7.33.10",
-    "@microsoft/tsdoc": "0.15.1",
+    "@microsoft/tsdoc": "0.16.0",
     "@size-limit/esbuild-why": "11.1.4",
     "@size-limit/preset-small-lib": "11.1.4",
     "@testing-library/dom": "10.4.1",

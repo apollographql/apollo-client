@@ -578,7 +578,7 @@ test("is an identity for operations without @defer", (prefix) => {
 test("Complete handles odd types", (prefix) => {
   bench(prefix + "empty type instantiations", () => {
     attest<{}, GraphQLCodegenIncremental.Complete<{}>>();
-  }).types([97, "instantiations"]);
+  }).types([93, "instantiations"]);
 
   bench(prefix + "empty type functionality", () => {
     expectTypeOf<GraphQLCodegenIncremental.Complete<{}>>().toEqualTypeOf<{}>();
@@ -617,7 +617,7 @@ test("Complete handles odd types", (prefix) => {
     return {} as GraphQLCodegenIncremental.Complete<{
       coords: [long: number, lat: number];
     }>;
-  }).types([126, "instantiations"]);
+  }).types([120, "instantiations"]);
 
   bench(prefix + "tuple functionality", () => {
     expectTypeOf<

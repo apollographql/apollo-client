@@ -22,13 +22,7 @@ type ScalarType =
 type Exact<in out T> = (x: T) => T;
 
 type HasNeverishField<T> =
-  true extends (
-    {
-      [K in keyof T & string]: IsNeverish<T[K]>;
-    }[keyof T & string]
-  ) ?
-    true
-  : false;
+  true extends { [K in keyof T]: IsNeverish<T[K]> }[keyof T] ? true : false;
 
 export type ContainsNeverishFields<TData, Seen = never> = true extends (
   IsAny<TData>
@@ -47,7 +41,7 @@ export type ContainsNeverishFields<TData, Seen = never> = true extends (
 : false;
 
 type ContainsNeverishFieldsInObject<TData, Seen> =
-  [HasNeverishField<TData>] extends [true] ? true
+  HasNeverishField<TData> extends true ? true
   : ContainsNeverishFields<TData[keyof TData], Seen>;
 
 export type RemoveNeverishFields<TData> =

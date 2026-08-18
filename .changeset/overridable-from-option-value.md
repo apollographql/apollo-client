@@ -11,9 +11,10 @@ By default, `from` continues to accept `StoreObject | Reference | FragmentType<T
 import "@apollo/client";
 import type { HKT, StoreValue } from "@apollo/client/utilities";
 
-type StrictFrom =
+type StrictFrom<TData extends { __typename: string }> =
   | {
-      __typename: string;
+      // the `__typename` has to match the one of the fragment type
+      __typename: TData["__typename"];
       // `& {}` forces values to be "defined" so an explicit `undefined`
       // (as well as `null`) is rejected.
       [key: string]: Exclude<StoreValue, null | undefined> & {};
@@ -23,8 +24,8 @@ type StrictFrom =
   | null;
 
 interface StrictFromHKT extends HKT {
-  arg1: unknown; // TData (unused)
-  return: StrictFrom;
+  arg1: { __typename: string }; // TData
+  return: StrictFrom<this["arg1"]>;
 }
 
 declare module "@apollo/client" {

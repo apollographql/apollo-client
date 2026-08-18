@@ -4,9 +4,10 @@ import { expectTypeOf } from "expect-type";
 
 declare function test(name: string, fn: () => void): void;
 
-type StrictFrom =
+type StrictFrom<TData extends { __typename: string }> =
   | {
-      __typename: string;
+      // the `__typename` has to match the one of the fragment type
+      __typename: TData["__typename"];
       // `& {}` forces values to be "defined" so an explicit `undefined`
       // (as well as `null`) is rejected - an index signature alone does not
       // reject explicitly-`undefined` values.
@@ -17,8 +18,8 @@ type StrictFrom =
   | null;
 
 interface StrictFromHKT extends HKT {
-  arg1: unknown; // TData (unused)
-  return: StrictFrom;
+  arg1: { __typename: string }; // TData
+  return: StrictFrom<this["arg1"]>;
 }
 
 declare module "@apollo/client" {
@@ -36,7 +37,7 @@ interface ItemFragment {
 test("resolves to the overridden type", () => {
   type Result = ApolloCache.FromOptionValue<ItemFragment>;
 
-  expectTypeOf<Result>().toEqualTypeOf<StrictFrom>();
+  expectTypeOf<Result>().toEqualTypeOf<StrictFrom<ItemFragment>>();
 });
 
 test("rejects values disallowed by the override", () => {
@@ -44,6 +45,8 @@ test("rejects values disallowed by the override", () => {
 
   // @ts-expect-error __typename is required
   const _missingTypename: Result = { id: "1" };
+  // @ts-expect-error __typename must match the fragment type
+  const _wrongTypename: Result = { __typename: "WrongItem", id: "1" };
   // @ts-expect-error id may not be null
   const _nullValue: Result = { __typename: "Item", id: null };
   // @ts-expect-error id may not be undefined
@@ -55,8 +58,6 @@ test("rejects values disallowed by the override", () => {
     __typename: "Item";
     id: string | undefined;
   }>().not.toMatchTypeOf<Result>();
-
-  void [_missingTypename, _nullValue, _undefinedValue];
 });
 
 test("accepts values allowed by the override", () => {
@@ -67,13 +68,9 @@ test("accepts values allowed by the override", () => {
   const _validRef: Result = { __ref: "Item:1" };
   const _validString: Result = "1";
   const _validNull: Result = null;
-
-  void [_validObject, _validCustomKey, _validRef, _validString, _validNull];
 });
 
 test("cache.identify is unaffected by the override", () => {
   const _identifyArg: Parameters<ApolloCache["identify"]>[0] =
     {} as StoreObject;
-
-  void _identifyArg;
 });

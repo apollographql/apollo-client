@@ -75,17 +75,18 @@ export declare namespace ApolloCache {
    *
    * @example
    * You can globally tighten the identifier-object variant of `from` so that
-   * `__typename` is required and identifier values may not be `null` or
-   * `undefined`:
+   * `__typename` is required, matches the `__typename` of `TData` and
+   * identifier values may not be `null` or `undefined`:
    *
    * ```ts
    * // apollo.d.ts
    * import "@apollo/client";
    * import type { HKT, StoreValue } from "@apollo/client/utilities";
    *
-   * type StrictFrom =
+   * type StrictFrom<TData extends { __typename: string }> =
    *   | {
-   *       __typename: string;
+   *       // The `__typename` has to match the one of the fragment type.
+   *       __typename: TData["__typename"];
    *       // The `& {}` forces identifier values to be "defined" so that an
    *       // explicit `undefined` (as well as `null`) is rejected - an index
    *       // signature alone does not reject explicitly-`undefined` values.
@@ -96,8 +97,8 @@ export declare namespace ApolloCache {
    *   | null;
    *
    * interface StrictFromHKT extends HKT {
-   *   arg1: unknown; // TData (unused)
-   *   return: StrictFrom;
+   *   arg1: { __typename: string }; // TData
+   *   return: StrictFrom<this["arg1"]>;
    * }
    *
    * declare module "@apollo/client" {

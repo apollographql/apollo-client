@@ -113,6 +113,12 @@
     },
     {
       "path": "./signatures/classic/tsconfig.json"
+    },
+    {
+      "path": "./fromOptionValue/defaults/tsconfig.json"
+    },
+    {
+      "path": "./fromOptionValue/override/tsconfig.json"
     }
   ],
   "include": [],

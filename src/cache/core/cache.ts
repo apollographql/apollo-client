@@ -22,14 +22,17 @@ import {
 import type {
   DataValue,
   GetDataState,
+  InternalTypes,
   OperationVariables,
   TypedDocumentNode,
+  TypeOverrides,
 } from "@apollo/client";
-import type { FragmentType, Unmasked } from "@apollo/client/masking";
+import type { Unmasked } from "@apollo/client/masking";
 import type { Reference, StoreObject } from "@apollo/client/utilities";
 import { cacheSizes, canonicalStringify } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
+  ApplyHKTImplementationWithDefault,
   handleIncrementalSymbol,
   IsAny,
   NoInfer,
@@ -58,13 +61,59 @@ export type Transaction = (c: ApolloCache) => void;
 
 export declare namespace ApolloCache {
   /**
-   * Acceptable values provided to the `from` option.
+   * Acceptable values provided to the `from` option of `useFragment`,
+   * `useSuspenseFragment`, `readFragment`, `writeFragment` and related APIs.
+   *
+   * @defaultValue
+   * `StoreObject | Reference | FragmentType<TData> | string`
+   *
+   * @remarks
+   * This type is overridable via the `FromOptionValue` key of the
+   * `TypeOverrides` interface. Overriding it only affects the `from` input of
+   * the fragment APIs - `StoreObject` and cache-mutation APIs such as
+   * `cache.identify`, `cache.modify` and optimistic writes are left untouched.
+   *
+   * @example
+   * You can globally tighten the identifier-object variant of `from` so that
+   * `__typename` is required, matches the `__typename` of `TData` and
+   * identifier values may not be `null` or `undefined`:
+   *
+   * ```ts
+   * // apollo.d.ts
+   * import "@apollo/client";
+   * import type { HKT, StoreValue } from "@apollo/client/utilities";
+   *
+   * type StrictFrom<TData extends { __typename: string }> =
+   *   | {
+   *       // The `__typename` has to match the one of the fragment type.
+   *       __typename: TData["__typename"];
+   *       // The `& {}` forces identifier values to be "defined" so that an
+   *       // explicit `undefined` (as well as `null`) is rejected - an index
+   *       // signature alone does not reject explicitly-`undefined` values.
+   *       [key: string]: Exclude<StoreValue, null | undefined> & {};
+   *     }
+   *   | { __ref: string }
+   *   | string
+   *   | null;
+   *
+   * interface StrictFromHKT extends HKT {
+   *   arg1: { __typename: string }; // TData
+   *   return: StrictFrom<this["arg1"]>;
+   * }
+   *
+   * declare module "@apollo/client" {
+   *   export interface TypeOverrides {
+   *     FromOptionValue: StrictFromHKT;
+   *   }
+   * }
+   * ```
    */
-  export type FromOptionValue<TData> =
-    | StoreObject
-    | Reference
-    | FragmentType<NoInfer<TData>>
-    | string;
+  export type FromOptionValue<TData> = ApplyHKTImplementationWithDefault<
+    TypeOverrides,
+    "FromOptionValue",
+    InternalTypes.OverridableTypes.Defaults,
+    TData
+  >;
 
   /**
    * Watched fragment options.

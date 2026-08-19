@@ -39,8 +39,9 @@ type AllFieldsModifier<Entity extends Record<string, any>> = Modifier<Entity[key
 
 // @public (undocumented)
 export namespace ApolloCache {
-    // Warning: (ae-forgotten-export) The symbol "NoInfer_2" needs to be exported by the entry point index.d.ts
-    export type FromOptionValue<TData> = StoreObject | Reference | FragmentType<NoInfer_2<TData>> | string;
+    // Warning: (ae-forgotten-export) The symbol "ApplyHKTImplementationWithDefault" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-incompatible-release-tags) The symbol "FromOptionValue" is marked as @public, but its signature references "InternalTypes" which is marked as @internal
+    export type FromOptionValue<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "FromOptionValue", InternalTypes.OverridableTypes.Defaults, TData>;
     // (undocumented)
     export type GetScalarType<TKey extends keyof ApolloCache.Scalars> = ApolloCache.Scalars[TKey] extends ({
         serialized: infer TSerialized;
@@ -134,6 +135,7 @@ export abstract class ApolloCache {
     abstract reset(options?: Cache_2.ResetOptions): Promise<void>;
     resolvesClientField?(typename: string, fieldName: string): boolean;
     abstract restore(serializedState: unknown): this;
+    // Warning: (ae-forgotten-export) The symbol "NoInfer_2" needs to be exported by the entry point index.d.ts
     serializeVariables<TVariables extends OperationVariables = OperationVariables>(document: DocumentNode | TypedDocumentNode<any, TVariables>, variables: NoInfer_2<TVariables>): TVariables;
     serializeVariables<TVariables extends OperationVariables = OperationVariables>(document: DocumentNode | TypedDocumentNode<any, TVariables>, variables: NoInfer_2<TVariables> | undefined): TVariables | undefined;
     // (undocumented)
@@ -629,7 +631,6 @@ export type ApolloClientOptions = ApolloClient.Options;
 
 // @public (undocumented)
 export namespace ApolloLink {
-    // Warning: (ae-forgotten-export) The symbol "ApplyHKTImplementationWithDefault" needs to be exported by the entry point index.d.ts
     // Warning: (ae-forgotten-export) The symbol "NotImplementedHandler" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -1850,7 +1851,7 @@ export type InternalRefetchQueryDescriptor = RefetchQueryDescriptor | ApolloClie
 
 // @internal @deprecated (undocumented)
 export namespace InternalTypes {
-    export export type { DefaultOptionsParentObject, NextFetchPolicyContext, PossibleDefaultOptions, QueryManager, };
+    export export type { DefaultOptionsParentObject, NextFetchPolicyContext, OverridableTypes, PossibleDefaultOptions, QueryManager, };
 }
 
 // @public (undocumented)
@@ -2475,11 +2476,22 @@ namespace OverridableTypes {
         // Warning: (ae-forgotten-export) The symbol "OverridableTypes" needs to be exported by the entry point index.d.ts
         //
         // (undocumented)
+        FromOptionValue: FromOptionValue;
+        // Warning: (ae-forgotten-export) The symbol "OverridableTypes" needs to be exported by the entry point index.d.ts
+        //
+        // (undocumented)
         Partial: Partial;
         // Warning: (ae-forgotten-export) The symbol "OverridableTypes" needs to be exported by the entry point index.d.ts
         //
         // (undocumented)
         Streaming: Streaming;
+    }
+    // (undocumented)
+    interface FromOptionValue extends HKT {
+        // (undocumented)
+        arg1: unknown;
+        // (undocumented)
+        return: StoreObject | Reference | FragmentType<NoInfer_2<this["arg1"]>> | string;
     }
     // (undocumented)
     interface Partial extends HKT {
@@ -3315,8 +3327,8 @@ interface WriteContext extends ReadMergeModifyContext {
 
 // Warnings were encountered during analysis:
 //
-// src/cache/core/cache.ts:131:11 - (ae-forgotten-export) The symbol "MissingTree" needs to be exported by the entry point index.d.ts
-// src/cache/core/cache.ts:206:7 - (ae-forgotten-export) The symbol "DiffIncrementalInfo" needs to be exported by the entry point index.d.ts
+// src/cache/core/cache.ts:180:11 - (ae-forgotten-export) The symbol "MissingTree" needs to be exported by the entry point index.d.ts
+// src/cache/core/cache.ts:255:7 - (ae-forgotten-export) The symbol "DiffIncrementalInfo" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:104:3 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:176:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:176:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts

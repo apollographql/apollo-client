@@ -21,7 +21,6 @@ import type {
 import type { Cache, IgnoreModifier } from "@apollo/client/cache";
 import type {
   LazyType,
-  NoInfer,
   OptionWithFallback,
   Prettify,
   SignatureStyle,

@@ -17,7 +17,6 @@ import type {
 import type {
   ApplyHKTImplementationWithDefault,
   IsAny,
-  NoInfer,
 } from "@apollo/client/utilities/internal";
 
 import type { ApolloClient } from "./ApolloClient.js";

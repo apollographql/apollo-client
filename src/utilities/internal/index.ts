@@ -8,7 +8,6 @@ export type { FulfilledPromise } from "./types/FulfilledPromise.js";
 export type { IsAny } from "./types/IsAny.js";
 export type { IsLooselyEqual } from "./types/IsLooselyEqual.js";
 export type { IsNeverish } from "./types/IsNeverish.js";
-export type { NoInfer } from "./types/NoInfer.js";
 export type { PendingPromise } from "./types/PendingPromise.js";
 export type { Prettify } from "./types/Prettify.js";
 export type { Primitive } from "./types/Primitive.js";

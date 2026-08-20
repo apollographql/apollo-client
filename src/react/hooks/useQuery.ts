@@ -42,7 +42,6 @@ import type {
 import type {
   DocumentationTypes as UtilityDocumentationTypes,
   LazyType,
-  NoInfer,
   OptionWithFallback,
   Prettify,
   SignatureStyle,

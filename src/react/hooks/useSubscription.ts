@@ -13,10 +13,7 @@ import type {
 } from "@apollo/client";
 import type { MaybeMasked } from "@apollo/client/masking";
 import type { DocumentationTypes as UtilityDocumentationTypes } from "@apollo/client/utilities/internal";
-import type {
-  NoInfer,
-  VariablesOption,
-} from "@apollo/client/utilities/internal";
+import type { VariablesOption } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { useDeepMemo } from "./internal/useDeepMemo.js";

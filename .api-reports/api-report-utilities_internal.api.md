@@ -464,10 +464,6 @@ export function mergeDeepArray<T>(sources: T[]): T;
 // @internal @deprecated (undocumented)
 export function mergeOptions<TDefaultOptions extends Partial<OptionsUnion<any, any>>, TOptions extends TDefaultOptions>(defaults: TDefaultOptions | Partial<TDefaultOptions> | undefined, options: TOptions | Partial<TOptions>): TOptions & TDefaultOptions;
 
-// @public @deprecated
-type NoInfer_2<T> = [T][T extends any ? 0 : never];
-export { NoInfer_2 as NoInfer }
-
 // @internal @deprecated (undocumented)
 export function omitDeep<T, K extends string>(value: T, key: K): DeepOmit<T, K>;
 

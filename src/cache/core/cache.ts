@@ -35,7 +35,6 @@ import type {
   ApplyHKTImplementationWithDefault,
   handleIncrementalSymbol,
   IsAny,
-  NoInfer,
   Prettify,
 } from "@apollo/client/utilities/internal";
 import {

@@ -29,7 +29,6 @@ import type { InternalTypes } from '@apollo/client';
 import type { IsAny } from '@apollo/client/utilities/internal';
 import type { IsLooselyEqual } from '@apollo/client/utilities/internal';
 import { isReference } from '@apollo/client/utilities';
-import type { NoInfer as NoInfer_2 } from '@apollo/client/utilities/internal';
 import { Observable } from 'rxjs';
 import type { OperationTypeNode } from 'graphql';
 import type { OperationVariables } from '@apollo/client';
@@ -142,8 +141,8 @@ export abstract class ApolloCache {
     abstract reset(options?: Cache_2.ResetOptions): Promise<void>;
     resolvesClientField?(typename: string, fieldName: string): boolean;
     abstract restore(serializedState: unknown): this;
-    serializeVariables<TVariables extends OperationVariables = OperationVariables>(document: DocumentNode | TypedDocumentNode<any, TVariables>, variables: NoInfer_2<TVariables>): TVariables;
-    serializeVariables<TVariables extends OperationVariables = OperationVariables>(document: DocumentNode | TypedDocumentNode<any, TVariables>, variables: NoInfer_2<TVariables> | undefined): TVariables | undefined;
+    serializeVariables<TVariables extends OperationVariables = OperationVariables>(document: DocumentNode | TypedDocumentNode<any, TVariables>, variables: NoInfer<TVariables>): TVariables;
+    serializeVariables<TVariables extends OperationVariables = OperationVariables>(document: DocumentNode | TypedDocumentNode<any, TVariables>, variables: NoInfer<TVariables> | undefined): TVariables | undefined;
     // (undocumented)
     transformDocument(document: DocumentNode): DocumentNode;
     // (undocumented)
@@ -705,8 +704,8 @@ export class InMemoryCache extends ApolloCache {
     restore(data: NormalizedCacheObject): this;
     // (undocumented)
     retain(rootId: string, optimistic?: boolean): number;
-    serializeVariables<TVariables extends OperationVariables = OperationVariables>(document: DocumentNode | TypedDocumentNode<any, TVariables>, variables: NoInfer_2<TVariables>): TVariables;
-    serializeVariables<TVariables extends OperationVariables = OperationVariables>(document: DocumentNode | TypedDocumentNode<any, TVariables>, variables: NoInfer_2<TVariables> | undefined): TVariables | undefined;
+    serializeVariables<TVariables extends OperationVariables = OperationVariables>(document: DocumentNode | TypedDocumentNode<any, TVariables>, variables: NoInfer<TVariables>): TVariables;
+    serializeVariables<TVariables extends OperationVariables = OperationVariables>(document: DocumentNode | TypedDocumentNode<any, TVariables>, variables: NoInfer<TVariables> | undefined): TVariables | undefined;
     // (undocumented)
     transformDocument(document: DocumentNode): DocumentNode;
     // (undocumented)
@@ -1056,9 +1055,9 @@ export namespace Scalar {
         // (undocumented)
         is?(value: TSerialized | TParsed): boolean;
         // (undocumented)
-        parse(serializedValue: TSerialized): NoInfer_2<TParsed>;
+        parse(serializedValue: TSerialized): NoInfer<TParsed>;
         // (undocumented)
-        serialize(parsedValue: TParsed): NoInfer_2<TSerialized>;
+        serialize(parsedValue: TParsed): NoInfer<TSerialized>;
     }
 }
 
@@ -1070,7 +1069,7 @@ export class Scalar<TSerialized, TParsed> {
     // (undocumented)
     coerceToSerialized(value: TSerialized | TParsed): TSerialized;
     // (undocumented)
-    static fromGraphQLScalarType<TSerialized, TParsed>(scalarType: GraphQLScalarType<TParsed, TSerialized>, options?: Pick<Scalar.Options<NoInfer_2<TSerialized>, NoInfer_2<TParsed>>, "is">): Scalar<TSerialized, TParsed>;
+    static fromGraphQLScalarType<TSerialized, TParsed>(scalarType: GraphQLScalarType<TParsed, TSerialized>, options?: Pick<Scalar.Options<NoInfer<TSerialized>, NoInfer<TParsed>>, "is">): Scalar<TSerialized, TParsed>;
     // (undocumented)
     is(value: TSerialized | TParsed): value is TParsed;
     // (undocumented)
@@ -1164,8 +1163,8 @@ interface WriteContext extends ReadMergeModifyContext {
 
 // Warnings were encountered during analysis:
 //
-// src/cache/core/cache.ts:255:7 - (ae-incompatible-release-tags) The symbol "[handleIncrementalSymbol]" is marked as @public, but its signature references "DiffIncrementalInfo" which is marked as @internal
-// src/cache/inmemory/inMemoryCache.ts:473:7 - (ae-incompatible-release-tags) The symbol "[handleIncrementalSymbol]" is marked as @public, but its signature references "DiffIncrementalInfo" which is marked as @internal
+// src/cache/core/cache.ts:254:7 - (ae-incompatible-release-tags) The symbol "[handleIncrementalSymbol]" is marked as @public, but its signature references "DiffIncrementalInfo" which is marked as @internal
+// src/cache/inmemory/inMemoryCache.ts:472:7 - (ae-incompatible-release-tags) The symbol "[handleIncrementalSymbol]" is marked as @public, but its signature references "DiffIncrementalInfo" which is marked as @internal
 // src/cache/inmemory/policies.ts:176:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:179:3 - (ae-forgotten-export) The symbol "ScalarNames" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:147:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts

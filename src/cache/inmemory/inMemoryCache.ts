@@ -26,7 +26,6 @@ import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
   handleIncrementalSymbol,
   IsLooselyEqual,
-  NoInfer,
 } from "@apollo/client/utilities/internal";
 import {
   getInMemoryCacheMemoryInternals,

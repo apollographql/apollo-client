@@ -135,9 +135,8 @@ export abstract class ApolloCache {
     abstract reset(options?: Cache_2.ResetOptions): Promise<void>;
     resolvesClientField?(typename: string, fieldName: string): boolean;
     abstract restore(serializedState: unknown): this;
-    // Warning: (ae-forgotten-export) The symbol "NoInfer_2" needs to be exported by the entry point index.d.ts
-    serializeVariables<TVariables extends OperationVariables = OperationVariables>(document: DocumentNode | TypedDocumentNode<any, TVariables>, variables: NoInfer_2<TVariables>): TVariables;
-    serializeVariables<TVariables extends OperationVariables = OperationVariables>(document: DocumentNode | TypedDocumentNode<any, TVariables>, variables: NoInfer_2<TVariables> | undefined): TVariables | undefined;
+    serializeVariables<TVariables extends OperationVariables = OperationVariables>(document: DocumentNode | TypedDocumentNode<any, TVariables>, variables: NoInfer<TVariables>): TVariables;
+    serializeVariables<TVariables extends OperationVariables = OperationVariables>(document: DocumentNode | TypedDocumentNode<any, TVariables>, variables: NoInfer<TVariables> | undefined): TVariables | undefined;
     // (undocumented)
     transformDocument(document: DocumentNode): DocumentNode;
     // (undocumented)
@@ -1790,8 +1789,8 @@ export class InMemoryCache extends ApolloCache {
     restore(data: NormalizedCacheObject): this;
     // (undocumented)
     retain(rootId: string, optimistic?: boolean): number;
-    serializeVariables<TVariables extends OperationVariables = OperationVariables>(document: DocumentNode | TypedDocumentNode<any, TVariables>, variables: NoInfer_2<TVariables>): TVariables;
-    serializeVariables<TVariables extends OperationVariables = OperationVariables>(document: DocumentNode | TypedDocumentNode<any, TVariables>, variables: NoInfer_2<TVariables> | undefined): TVariables | undefined;
+    serializeVariables<TVariables extends OperationVariables = OperationVariables>(document: DocumentNode | TypedDocumentNode<any, TVariables>, variables: NoInfer<TVariables>): TVariables;
+    serializeVariables<TVariables extends OperationVariables = OperationVariables>(document: DocumentNode | TypedDocumentNode<any, TVariables>, variables: NoInfer<TVariables> | undefined): TVariables | undefined;
     // (undocumented)
     transformDocument(document: DocumentNode): DocumentNode;
     // (undocumented)
@@ -2007,9 +2006,9 @@ namespace LocalState {
 // @public
 class LocalState<TResolvers extends LocalState.Resolvers = LocalState.Resolvers<DefaultContext>, TContext = InferContextValueFromResolvers<TResolvers>> {
     constructor(...input: {} extends TResolvers ? [
-    options?: LocalState.Options<TResolvers, NoInfer_2<TContext>>
+    options?: LocalState.Options<TResolvers, NoInfer<TContext>>
     ] : [
-    options: LocalState.Options<TResolvers, NoInfer_2<TContext>> & {
+    options: LocalState.Options<TResolvers, NoInfer<TContext>> & {
         resolvers: TResolvers;
     }
     ]);
@@ -2030,7 +2029,7 @@ class LocalState<TResolvers extends LocalState.Resolvers = LocalState.Resolvers<
         document: DocumentNode | TypedDocumentNode<any, TVariables>;
         client: ApolloClient;
         context: DefaultContext | undefined;
-        variables: Partial<NoInfer_2<TVariables>>;
+        variables: Partial<NoInfer<TVariables>>;
     }): Promise<TVariables>;
 }
 
@@ -2223,9 +2222,6 @@ interface NextFetchPolicyContext<TData, TVariables extends OperationVariables> {
     // (undocumented)
     reason: "after-fetch" | "variables-changed";
 }
-
-// @public @deprecated
-type NoInfer_2<T> = [T][T extends any ? 0 : never];
 
 // @public
 export interface NormalizedCache {
@@ -2491,7 +2487,7 @@ namespace OverridableTypes {
         // (undocumented)
         arg1: unknown;
         // (undocumented)
-        return: StoreObject | Reference | FragmentType<NoInfer_2<this["arg1"]>> | string;
+        return: StoreObject | Reference | FragmentType<NoInfer<this["arg1"]>> | string;
     }
     // (undocumented)
     interface Partial extends HKT {
@@ -2973,9 +2969,9 @@ export namespace Scalar {
         // (undocumented)
         is?(value: TSerialized | TParsed): boolean;
         // (undocumented)
-        parse(serializedValue: TSerialized): NoInfer_2<TParsed>;
+        parse(serializedValue: TSerialized): NoInfer<TParsed>;
         // (undocumented)
-        serialize(parsedValue: TParsed): NoInfer_2<TSerialized>;
+        serialize(parsedValue: TParsed): NoInfer<TSerialized>;
     }
 }
 
@@ -2987,7 +2983,7 @@ export class Scalar<TSerialized, TParsed> {
     // (undocumented)
     coerceToSerialized(value: TSerialized | TParsed): TSerialized;
     // (undocumented)
-    static fromGraphQLScalarType<TSerialized, TParsed>(scalarType: GraphQLScalarType<TParsed, TSerialized>, options?: Pick<Scalar.Options<NoInfer_2<TSerialized>, NoInfer_2<TParsed>>, "is">): Scalar<TSerialized, TParsed>;
+    static fromGraphQLScalarType<TSerialized, TParsed>(scalarType: GraphQLScalarType<TParsed, TSerialized>, options?: Pick<Scalar.Options<NoInfer<TSerialized>, NoInfer<TParsed>>, "is">): Scalar<TSerialized, TParsed>;
     // (undocumented)
     is(value: TSerialized | TParsed): value is TParsed;
     // (undocumented)
@@ -3327,8 +3323,8 @@ interface WriteContext extends ReadMergeModifyContext {
 
 // Warnings were encountered during analysis:
 //
-// src/cache/core/cache.ts:180:11 - (ae-forgotten-export) The symbol "MissingTree" needs to be exported by the entry point index.d.ts
-// src/cache/core/cache.ts:255:7 - (ae-forgotten-export) The symbol "DiffIncrementalInfo" needs to be exported by the entry point index.d.ts
+// src/cache/core/cache.ts:179:11 - (ae-forgotten-export) The symbol "MissingTree" needs to be exported by the entry point index.d.ts
+// src/cache/core/cache.ts:254:7 - (ae-forgotten-export) The symbol "DiffIncrementalInfo" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:104:3 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:176:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:176:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
@@ -3339,9 +3335,9 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/core/ApolloClient.ts:673:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:406:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:197:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/local-state/LocalState.ts:149:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
-// src/local-state/LocalState.ts:202:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
-// src/local-state/LocalState.ts:245:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
+// src/local-state/LocalState.ts:148:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
+// src/local-state/LocalState.ts:201:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
+// src/local-state/LocalState.ts:244:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
 // src/utilities/internal/types/StreamInfoTrie.ts:10:3 - (ae-forgotten-export) The symbol "StreamArrayState" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)

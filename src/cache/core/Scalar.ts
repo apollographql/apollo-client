@@ -1,7 +1,5 @@
 import type { GraphQLScalarType } from "graphql";
 
-import type { NoInfer } from "@apollo/client/utilities/internal";
-
 export declare namespace Scalar {
   export interface Options<TSerialized, TParsed> {
     // We use method syntax to ensure the functions are bivariant. This lets

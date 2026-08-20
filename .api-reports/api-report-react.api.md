@@ -30,7 +30,6 @@ import type { MutationFetchPolicy } from '@apollo/client';
 import type { MutationQueryReducersMap } from '@apollo/client';
 import type { MutationUpdaterFunction } from '@apollo/client';
 import { NetworkStatus } from '@apollo/client';
-import type { NoInfer as NoInfer_2 } from '@apollo/client/utilities/internal';
 import type { NormalizedExecutionResult } from '@apollo/client';
 import type { ObservableQuery } from '@apollo/client';
 import type { OnQueryUpdated } from '@apollo/client';
@@ -171,7 +170,7 @@ export namespace PreloadQueryFunction {
     // (undocumented)
     export type OptionsFor<TVariables extends OperationVariables, TOptions extends {
         variables?: unknown;
-    }> = PreloadQueryOptions<NoInfer_2<TVariables>> & {
+    }> = PreloadQueryOptions<NoInfer<TVariables>> & {
         variables?: Prettify<TVariables & {
             [K in keyof TOptions["variables"]]: K extends keyof TVariables ? TVariables[K] : never;
         }>;
@@ -191,36 +190,36 @@ export namespace PreloadQueryFunction {
     export namespace Signatures {
         // (undocumented)
         export interface Classic {
-            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred">(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: PreloadQueryOptions<NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred">(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: PreloadQueryOptions<NoInfer<TVariables>> & {
                 returnPartialData: true;
                 errorPolicy: "ignore" | "all";
             }): PreloadedQueryRef_2<TData, TVariables, "complete" | "streaming" | "partial" | "empty">;
-            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred">(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: PreloadQueryOptions<NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred">(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: PreloadQueryOptions<NoInfer<TVariables>> & {
                 errorPolicy: "ignore" | "all";
             }): PreloadedQueryRef_2<TData, TVariables, "complete" | "streaming" | "empty">;
-            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred">(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: PreloadQueryOptions<NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred">(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: PreloadQueryOptions<NoInfer<TVariables>> & {
                 returnPartialData: true;
             }): PreloadedQueryRef_2<TData, TVariables, "complete" | "streaming" | "partial">;
             <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred">(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...input: {} extends TVariables ? [
-            options?: PreloadQueryOptions<NoInfer_2<TVariables>>
-            ] : [options: PreloadQueryOptions<NoInfer_2<TVariables>>]): PreloadedQueryRef_2<TData, TVariables, "complete" | "streaming">;
+            options?: PreloadQueryOptions<NoInfer<TVariables>>
+            ] : [options: PreloadQueryOptions<NoInfer<TVariables>>]): PreloadedQueryRef_2<TData, TVariables, "complete" | "streaming">;
             // @deprecated (undocumented)
-            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: PreloadQueryOptions<NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: PreloadQueryOptions<NoInfer<TVariables>> & {
                 returnPartialData: true;
                 errorPolicy: "ignore" | "all";
             }): PreloadedQueryRef_2<TData, TVariables, "complete" | "streaming" | "partial" | "empty">;
             // @deprecated (undocumented)
-            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: PreloadQueryOptions<NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: PreloadQueryOptions<NoInfer<TVariables>> & {
                 errorPolicy: "ignore" | "all";
             }): PreloadedQueryRef_2<TData, TVariables, "complete" | "streaming" | "empty">;
             // @deprecated (undocumented)
-            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: PreloadQueryOptions<NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: PreloadQueryOptions<NoInfer<TVariables>> & {
                 returnPartialData: true;
             }): PreloadedQueryRef_2<TData, TVariables, "complete" | "streaming" | "partial">;
             // @deprecated (undocumented)
             <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...input: {} extends TVariables ? [
-            options?: PreloadQueryOptions<NoInfer_2<TVariables>>
-            ] : [options: PreloadQueryOptions<NoInfer_2<TVariables>>]): PreloadedQueryRef_2<TData, TVariables, "complete" | "streaming">;
+            options?: PreloadQueryOptions<NoInfer<TVariables>>
+            ] : [options: PreloadQueryOptions<NoInfer<TVariables>>]): PreloadedQueryRef_2<TData, TVariables, "complete" | "streaming">;
         }
         // (undocumented)
         export type Evaluated = SignatureStyle extends "classic" ? Classic : Modern;
@@ -351,7 +350,7 @@ export namespace useBackgroundQuery {
     // (undocumented)
     export type OptionsFor<TVariables extends OperationVariables, TOptions extends {
         variables?: unknown;
-    }> = useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
+    }> = useBackgroundQuery.Options<NoInfer<TVariables>> & {
         variables?: Prettify<TVariables & {
             [K in keyof TOptions["variables"]]: K extends keyof TVariables ? TVariables[K] : never;
         }>;
@@ -376,7 +375,7 @@ export namespace useBackgroundQuery {
     // (undocumented)
     export namespace Signatures {
         export interface Classic {
-            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
                 returnPartialData: boolean;
                 fetchPolicy: "no-cache";
                 errorPolicy?: TErrorPolicy;
@@ -384,27 +383,27 @@ export namespace useBackgroundQuery {
             QueryRef_2<TData, TVariables, "complete" | "streaming">,
             useBackgroundQuery.Result<TData, TVariables, TErrorPolicy>
             ];
-            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
                 returnPartialData: false;
                 errorPolicy: TErrorPolicy & ("ignore" | "all");
             }): [
             QueryRef_2<TData, TVariables, "complete" | "streaming" | "empty">,
             useBackgroundQuery.Result<TData, TVariables, TErrorPolicy>
             ];
-            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
                 returnPartialData: boolean;
                 errorPolicy: TErrorPolicy & ("ignore" | "all");
             }): [
             QueryRef_2<TData, TVariables, "complete" | "streaming" | "partial" | "empty">,
             useBackgroundQuery.Result<TData, TVariables, TErrorPolicy>
             ];
-            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
                 errorPolicy: TErrorPolicy & ("ignore" | "all");
             }): [
             QueryRef_2<TData, TVariables, "complete" | "streaming" | "empty">,
             useBackgroundQuery.Result<TData, TVariables, TErrorPolicy>
             ];
-            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
                 skip: boolean;
                 returnPartialData: false;
                 errorPolicy?: TErrorPolicy;
@@ -412,7 +411,7 @@ export namespace useBackgroundQuery {
             QueryRef_2<TData, TVariables, "complete" | "streaming"> | undefined,
             useBackgroundQuery.Result<TData, TVariables, TErrorPolicy>
             ];
-            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
                 skip: boolean;
                 returnPartialData: boolean;
                 errorPolicy?: TErrorPolicy;
@@ -420,21 +419,21 @@ export namespace useBackgroundQuery {
             (QueryRef_2<TData, TVariables, "complete" | "streaming" | "partial"> | undefined),
             useBackgroundQuery.Result<TData, TVariables, TErrorPolicy>
             ];
-            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
                 returnPartialData: false;
                 errorPolicy?: TErrorPolicy;
             }): [
             QueryRef_2<TData, TVariables, "complete" | "streaming">,
             useBackgroundQuery.Result<TData, TVariables, TErrorPolicy>
             ];
-            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
                 returnPartialData: boolean;
                 errorPolicy?: TErrorPolicy;
             }): [
             QueryRef_2<TData, TVariables, "complete" | "streaming" | "partial">,
             useBackgroundQuery.Result<TData, TVariables, TErrorPolicy>
             ];
-            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
                 skip: boolean;
                 errorPolicy?: TErrorPolicy;
             }): [
@@ -442,14 +441,14 @@ export namespace useBackgroundQuery {
             useBackgroundQuery.Result<TData, TVariables, TErrorPolicy>
             ];
             <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred">(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken): [undefined, useBackgroundQuery.Result<TData, TVariables>];
-            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | (useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | (useBackgroundQuery.Options<NoInfer<TVariables>> & {
                 returnPartialData: false;
                 errorPolicy?: TErrorPolicy;
             })): [
             QueryRef_2<TData, TVariables, "complete" | "streaming"> | undefined,
             useBackgroundQuery.Result<TData, TVariables, TErrorPolicy>
             ];
-            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | (useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | (useBackgroundQuery.Options<NoInfer<TVariables>> & {
                 returnPartialData: boolean;
                 errorPolicy?: TErrorPolicy;
             })): [
@@ -457,11 +456,11 @@ export namespace useBackgroundQuery {
             useBackgroundQuery.Result<TData, TVariables, TErrorPolicy>
             ];
             <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...input: {} extends TVariables ? [
-            options?: useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
+            options?: useBackgroundQuery.Options<NoInfer<TVariables>> & {
                 errorPolicy?: TErrorPolicy;
             }
             ] : [
-            options: useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
+            options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
                 errorPolicy?: TErrorPolicy;
             }
             ]): [
@@ -469,25 +468,25 @@ export namespace useBackgroundQuery {
             useBackgroundQuery.Result<TData, TVariables, TErrorPolicy>
             ];
             <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...input: {} extends TVariables ? [
-            options?: SkipToken | (useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
+            options?: SkipToken | (useBackgroundQuery.Options<NoInfer<TVariables>> & {
                 errorPolicy?: TErrorPolicy;
             })
             ] : [
-            options: SkipToken | (useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
+            options: SkipToken | (useBackgroundQuery.Options<NoInfer<TVariables>> & {
                 errorPolicy?: TErrorPolicy;
             })
             ]): [
             QueryRef_2<TData, TVariables, "complete" | "streaming"> | undefined,
             useBackgroundQuery.Result<TData, TVariables, TErrorPolicy>
             ];
-            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | (useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | (useBackgroundQuery.Options<NoInfer<TVariables>> & {
                 errorPolicy?: TErrorPolicy;
             })): [
             QueryRef_2<TData, TVariables, "complete" | "streaming"> | undefined,
             useBackgroundQuery.Result<TData, TVariables, TErrorPolicy>
             ];
             // @deprecated (undocumented)
-            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
                 returnPartialData: boolean;
                 fetchPolicy: "no-cache";
             }): [
@@ -495,7 +494,7 @@ export namespace useBackgroundQuery {
             useBackgroundQuery.Result<TData, TVariables>
             ];
             // @deprecated (undocumented)
-            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
                 returnPartialData: false;
                 errorPolicy: "ignore" | "all";
             }): [
@@ -503,7 +502,7 @@ export namespace useBackgroundQuery {
             useBackgroundQuery.Result<TData, TVariables>
             ];
             // @deprecated (undocumented)
-            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
                 returnPartialData: boolean;
                 errorPolicy: "ignore" | "all";
             }): [
@@ -511,14 +510,14 @@ export namespace useBackgroundQuery {
             useBackgroundQuery.Result<TData, TVariables>
             ];
             // @deprecated (undocumented)
-            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
                 errorPolicy: "ignore" | "all";
             }): [
             QueryRef_2<TData, TVariables, "complete" | "streaming" | "empty">,
             useBackgroundQuery.Result<TData, TVariables>
             ];
             // @deprecated (undocumented)
-            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
                 skip: boolean;
                 returnPartialData: false;
             }): [
@@ -526,7 +525,7 @@ export namespace useBackgroundQuery {
             useBackgroundQuery.Result<TData, TVariables>
             ];
             // @deprecated (undocumented)
-            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
                 skip: boolean;
                 returnPartialData: boolean;
             }): [
@@ -534,21 +533,21 @@ export namespace useBackgroundQuery {
             useBackgroundQuery.Result<TData, TVariables>
             ];
             // @deprecated (undocumented)
-            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
                 returnPartialData: false;
             }): [
             QueryRef_2<TData, TVariables, "complete" | "streaming">,
             useBackgroundQuery.Result<TData, TVariables>
             ];
             // @deprecated (undocumented)
-            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
                 returnPartialData: boolean;
             }): [
             QueryRef_2<TData, TVariables, "complete" | "streaming" | "partial">,
             useBackgroundQuery.Result<TData, TVariables>
             ];
             // @deprecated (undocumented)
-            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
                 skip: boolean;
             }): [
             QueryRef_2<TData, TVariables, "complete" | "streaming"> | undefined,
@@ -557,14 +556,14 @@ export namespace useBackgroundQuery {
             // @deprecated (undocumented)
             <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken): [undefined, useBackgroundQuery.Result<TData, TVariables>];
             // @deprecated (undocumented)
-            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | (useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | (useBackgroundQuery.Options<NoInfer<TVariables>> & {
                 returnPartialData: false;
             })): [
             QueryRef_2<TData, TVariables, "complete" | "streaming"> | undefined,
             useBackgroundQuery.Result<TData, TVariables>
             ];
             // @deprecated (undocumented)
-            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | (useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | (useBackgroundQuery.Options<NoInfer<TVariables>> & {
                 returnPartialData: boolean;
             })): [
             (QueryRef_2<TData, TVariables, "complete" | "streaming" | "partial"> | undefined),
@@ -572,20 +571,20 @@ export namespace useBackgroundQuery {
             ];
             // @deprecated (undocumented)
             <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...input: {} extends TVariables ? [
-            options?: useBackgroundQuery.Options<NoInfer_2<TVariables>>
-            ] : [options: useBackgroundQuery.Options<NoInfer_2<TVariables>>]): [
+            options?: useBackgroundQuery.Options<NoInfer<TVariables>>
+            ] : [options: useBackgroundQuery.Options<NoInfer<TVariables>>]): [
             QueryRef_2<TData, TVariables, "complete" | "streaming">,
             useBackgroundQuery.Result<TData, TVariables>
             ];
             // @deprecated (undocumented)
             <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...input: {} extends TVariables ? [
-            options?: SkipToken | useBackgroundQuery.Options<NoInfer_2<TVariables>>
-            ] : [options: SkipToken | useBackgroundQuery.Options<NoInfer_2<TVariables>>]): [
+            options?: SkipToken | useBackgroundQuery.Options<NoInfer<TVariables>>
+            ] : [options: SkipToken | useBackgroundQuery.Options<NoInfer<TVariables>>]): [
             QueryRef_2<TData, TVariables, "complete" | "streaming"> | undefined,
             useBackgroundQuery.Result<TData, TVariables>
             ];
             // @deprecated (undocumented)
-            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | useBackgroundQuery.Options<NoInfer_2<TVariables>>): [
+            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | useBackgroundQuery.Options<NoInfer<TVariables>>): [
             QueryRef_2<TData, TVariables, "complete" | "streaming"> | undefined,
             useBackgroundQuery.Result<TData, TVariables>
             ];
@@ -671,7 +670,7 @@ export namespace useFragment {
         fragmentName?: string;
         from: useFragment.FromOptionValue<TData> | Array<useFragment.FromOptionValue<TData> | null> | null;
         optimistic?: boolean;
-        variables?: NoInfer_2<TVariables>;
+        variables?: NoInfer<TVariables>;
     }
     // (undocumented)
     export type Result<TData> = ({
@@ -812,33 +811,33 @@ export namespace useLazyQuery {
     // (undocumented)
     export namespace Signatures {
         export interface Classic {
-            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: useLazyQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
                 returnPartialData: true;
                 errorPolicy?: TErrorPolicy;
             }): useLazyQuery.ResultTuple<TData, TVariables, "empty" | "complete" | "streaming" | "partial", TErrorPolicy>;
-            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: useLazyQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
                 returnPartialData: boolean;
                 errorPolicy?: TErrorPolicy;
             }): useLazyQuery.ResultTuple<TData, TVariables, "empty" | "complete" | "streaming" | "partial", TErrorPolicy>;
-            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: useLazyQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
                 errorPolicy?: TErrorPolicy;
             }): useLazyQuery.ResultTuple<TData, TVariables, "empty" | "complete" | "streaming", TErrorPolicy>;
             // @deprecated (undocumented)
-            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: useLazyQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
                 returnPartialData: true;
             }): useLazyQuery.ResultTuple<TData, TVariables, "empty" | "complete" | "streaming" | "partial">;
             // @deprecated (undocumented)
-            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: useLazyQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
                 returnPartialData: boolean;
             }): useLazyQuery.ResultTuple<TData, TVariables, "empty" | "complete" | "streaming" | "partial">;
             // @deprecated (undocumented)
-            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: useLazyQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>>): useLazyQuery.ResultTuple<TData, TVariables, "empty" | "complete" | "streaming">;
+            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>>): useLazyQuery.ResultTuple<TData, TVariables, "empty" | "complete" | "streaming">;
         }
         // (undocumented)
         export type Evaluated = SignatureStyle extends "classic" ? Classic : Modern;
         export interface Modern {
             <TData, TVariables extends OperationVariables, TOptions extends never>(query: DocumentNode | TypedDocumentNode<TData, TVariables>): useLazyQuery.ResultForOptions<TData, TVariables, Record<string, never>>;
-            <TData, TVariables extends OperationVariables, TOptions extends useLazyQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>>>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: TOptions & useLazyQuery.OptionsFor<TOptions>): useLazyQuery.ResultForOptions<TData, TVariables, TOptions>;
+            <TData, TVariables extends OperationVariables, TOptions extends useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>>>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: TOptions & useLazyQuery.OptionsFor<TOptions>): useLazyQuery.ResultForOptions<TData, TVariables, TOptions>;
         }
     }
 }
@@ -1009,9 +1008,9 @@ export namespace useMutation {
         onCompleted?: (data: MaybeMasked<TData>, clientOptions?: Options<TData, TVariables, TCache>) => void;
         onError?: (error: ErrorLike, clientOptions?: Options<TData, TVariables, TCache>) => void;
         onQueryUpdated?: OnQueryUpdated<any>;
-        optimisticResponse?: Unmasked<NoInfer_2<TData>> | ((vars: TVariables, input: {
+        optimisticResponse?: Unmasked<NoInfer<TData>> | ((vars: TVariables, input: {
             IGNORE: IgnoreModifier;
-        }) => Unmasked<NoInfer_2<TData>> | IgnoreModifier);
+        }) => Unmasked<NoInfer<TData>> | IgnoreModifier);
         refetchQueries?: ((result: NormalizedExecutionResult<Unmasked<TData>>) => InternalRefetchQueriesInclude) | InternalRefetchQueriesInclude;
         update?: MutationUpdaterFunction<TData, TVariables, TCache>;
         updateQueries?: MutationQueryReducersMap<TData>;
@@ -1063,13 +1062,13 @@ export namespace useMutation {
         // (undocumented)
         export interface Classic {
             // (undocumented)
-            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TConfiguredVariables extends Partial<TVariables> = {}, TErrorPolicy extends ErrorPolicy | undefined = undefined>(mutation: DocumentNode_2 | TypedDocumentNode<TData, TVariables>, options?: useMutation.Options<NoInfer_2<TData>, NoInfer_2<TVariables>, Cache_2.Implementation, {
+            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TConfiguredVariables extends Partial<TVariables> = {}, TErrorPolicy extends ErrorPolicy | undefined = undefined>(mutation: DocumentNode_2 | TypedDocumentNode<TData, TVariables>, options?: useMutation.Options<NoInfer<TData>, NoInfer<TVariables>, Cache_2.Implementation, {
                 [K in keyof TConfiguredVariables]: K extends keyof TVariables ? TConfiguredVariables[K] : never;
             }> & {
                 errorPolicy?: TErrorPolicy;
             }): useMutation.ResultTuple<TData, MakeRequiredVariablesOptional<TVariables, TConfiguredVariables>, Cache_2.Implementation, TErrorPolicy>;
             // @deprecated (undocumented)
-            <TData, TVariables extends OperationVariables = OperationVariables, TCache extends Cache_2.Implementation = Cache_2.Implementation, TConfiguredVariables extends Partial<TVariables> = {}, TErrorPolicy extends ErrorPolicy | undefined = undefined>(mutation: DocumentNode_2 | TypedDocumentNode<TData, TVariables>, options?: useMutation.Options<NoInfer_2<TData>, NoInfer_2<TVariables>, TCache, {
+            <TData, TVariables extends OperationVariables = OperationVariables, TCache extends Cache_2.Implementation = Cache_2.Implementation, TConfiguredVariables extends Partial<TVariables> = {}, TErrorPolicy extends ErrorPolicy | undefined = undefined>(mutation: DocumentNode_2 | TypedDocumentNode<TData, TVariables>, options?: useMutation.Options<NoInfer<TData>, NoInfer<TVariables>, TCache, {
                 [K in keyof TConfiguredVariables]: K extends keyof TVariables ? TConfiguredVariables[K] : never;
             }> & (TErrorPolicy extends undefined ? {} : {
                 errorPolicy: TErrorPolicy;
@@ -1082,7 +1081,7 @@ export namespace useMutation {
             // (undocumented)
             <TData, TVariables extends OperationVariables, TOptions extends never>(mutation: DocumentNode_2 | TypedDocumentNode<TData, TVariables>): useMutation.ResultForOptions<TData, TVariables, Cache_2.Implementation, Record<string, never>>;
             // (undocumented)
-            <TData, TVariables extends OperationVariables, TOptions extends useMutation.Options<NoInfer_2<TData>, NoInfer_2<TVariables>, Cache_2.Implementation> & {
+            <TData, TVariables extends OperationVariables, TOptions extends useMutation.Options<NoInfer<TData>, NoInfer<TVariables>, Cache_2.Implementation> & {
                 variables?: {
                     [K in Exclude<keyof TOptions["variables"], keyof TVariables>]?: never;
                 };
@@ -1179,7 +1178,7 @@ export namespace useQuery {
     // (undocumented)
     export type OptionsFor<TData, TVariables extends OperationVariables, TOptions extends {
         variables?: unknown;
-    }> = useQuery.Options<TData, NoInfer_2<TVariables>> & {
+    }> = useQuery.Options<TData, NoInfer<TVariables>> & {
         variables?: Prettify<TVariables & {
             [K in keyof TOptions["variables"]]: K extends keyof TVariables ? TVariables[K] : never;
         }>;
@@ -1197,68 +1196,68 @@ export namespace useQuery {
     // (undocumented)
     export namespace Signatures {
         export interface Classic {
-            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
                 returnPartialData: true;
                 errorPolicy?: TErrorPolicy;
             }): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming" | "partial", TVariables, TErrorPolicy>;
             <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred">(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken): useQuery.Result<TData, TVariables, "empty", Record<string, never>>;
-            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | (useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | (useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
                 returnPartialData: true;
                 errorPolicy?: TErrorPolicy;
             })): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming" | "partial", Partial<TVariables>, TErrorPolicy>;
-            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
                 returnPartialData: boolean;
                 errorPolicy?: TErrorPolicy;
             }): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming" | "partial", TVariables, TErrorPolicy>;
-            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | (useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | (useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
                 returnPartialData: boolean;
                 errorPolicy?: TErrorPolicy;
             })): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming" | "partial", Partial<TVariables>, TErrorPolicy>;
             <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...input: {} extends TVariables ? [
-            options?: useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>> & {
+            options?: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
                 errorPolicy?: TErrorPolicy;
             }
             ] : [
-            options: useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>> & {
+            options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
                 errorPolicy?: TErrorPolicy;
             }
             ]): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming", TVariables, TErrorPolicy>;
             <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...input: {} extends TVariables ? [
-            options?: SkipToken | (useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>> & {
+            options?: SkipToken | (useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
                 errorPolicy?: TErrorPolicy;
             })
             ] : [
-            options: SkipToken | (useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>> & {
+            options: SkipToken | (useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
                 errorPolicy?: TErrorPolicy;
             })
             ]): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming", Partial<TVariables>, TErrorPolicy>;
             // @deprecated (undocumented)
-            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
                 returnPartialData: true;
             }): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming" | "partial">;
             // @deprecated (undocumented)
             <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken): useQuery.Result<TData, TVariables, "empty", Record<string, never>>;
             // @deprecated (undocumented)
-            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | (useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | (useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
                 returnPartialData: true;
             })): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming" | "partial", Partial<TVariables>>;
             // @deprecated (undocumented)
-            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
                 returnPartialData: boolean;
             }): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming" | "partial">;
             // @deprecated (undocumented)
-            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | (useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | (useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
                 returnPartialData: boolean;
             })): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming" | "partial", Partial<TVariables>>;
             // @deprecated (undocumented)
             <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...input: {} extends TVariables ? [
-            options?: useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>>
-            ] : [options: useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>>]): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming">;
+            options?: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>
+            ] : [options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>]): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming">;
             // @deprecated (undocumented)
             <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...input: {} extends TVariables ? [
-            options?: SkipToken | useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>>
+            options?: SkipToken | useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>
             ] : [
-            options: SkipToken | useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>>
+            options: SkipToken | useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>
             ]): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming", Partial<TVariables>>;
             // (undocumented)
             ssrDisabledResult: ObservableQuery.Result<any>;
@@ -1267,7 +1266,7 @@ export namespace useQuery {
         export type Evaluated = SignatureStyle extends "classic" ? Classic : Modern;
         export interface Modern {
             <TData, TVariables extends OperationVariables, Options extends never>(query: {} extends TVariables ? DocumentNode_2 | TypedDocumentNode_2<TData, TVariables> : never): useQuery.ResultForOptions<TData, TVariables, Record<string, never>>;
-            <TData, TVariables extends OperationVariables, TOptions extends Base.Options<TData, NoInfer_2<TVariables>>>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...input: [
+            <TData, TVariables extends OperationVariables, TOptions extends Base.Options<TData, NoInfer<TVariables>>>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...input: [
             TVariables
             ] extends [never] ? [options: never] : {} extends TVariables ? [
             options?: TOptions & useQuery.OptionsFor<TData, TVariables, TOptions>
@@ -1275,7 +1274,7 @@ export namespace useQuery {
             options: TOptions & useQuery.OptionsFor<TData, TVariables, TOptions>
             ]): useQuery.ResultForOptions<TData, TVariables, TOptions>;
             <TData, TVariables extends OperationVariables, TOptions extends SkipToken>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken): useQuery.Result<TData, TVariables, "empty", Record<string, never>>;
-            <TData, TVariables extends OperationVariables, TOptions extends Base.Options<TData, NoInfer_2<TVariables>>>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...input: [
+            <TData, TVariables extends OperationVariables, TOptions extends Base.Options<TData, NoInfer<TVariables>>>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...input: [
             TVariables
             ] extends [never] ? [options: never] : {} extends TVariables ? [
             options?: (TOptions & useQuery.OptionsFor<TData, TVariables, TOptions>) | SkipToken
@@ -1346,8 +1345,8 @@ export type UseReadQueryResult<TData = unknown> = useReadQuery.Result<TData>;
 
 // @public
 export function useSubscription<TData = unknown, TVariables extends OperationVariables = OperationVariables>(subscription: DocumentNode | TypedDocumentNode<TData, TVariables>, ...input: {} extends (TVariables) ? [
-options?: useSubscription.Options<NoInfer_2<TData>, NoInfer_2<TVariables>>
-] : [options: useSubscription.Options<NoInfer_2<TData>, NoInfer_2<TVariables>>]): useSubscription.Result<TData>;
+options?: useSubscription.Options<NoInfer<TData>, NoInfer<TVariables>>
+] : [options: useSubscription.Options<NoInfer<TData>, NoInfer<TVariables>>]): useSubscription.Result<TData>;
 
 // @public (undocumented)
 export namespace useSubscription {
@@ -1489,7 +1488,7 @@ export namespace useSuspenseFragment {
     }
     export type FromOptionValue<TData> = ApolloCache.FromOptionValue<TData>;
     // (undocumented)
-    export type Options<TData, TVariables extends OperationVariables> = Base.Options<TData, TVariables> & VariablesOption<NoInfer_2<TVariables>>;
+    export type Options<TData, TVariables extends OperationVariables> = Base.Options<TData, TVariables> & VariablesOption<NoInfer<TVariables>>;
     // (undocumented)
     export interface Result<TData> {
         // (undocumented)
@@ -1577,7 +1576,7 @@ export namespace useSuspenseQuery {
     // (undocumented)
     export type OptionsFor<TVariables extends OperationVariables, TOptions extends {
         variables?: unknown;
-    }> = useSuspenseQuery.Options<NoInfer_2<TVariables>> & {
+    }> = useSuspenseQuery.Options<NoInfer<TVariables>> & {
         variables?: Prettify<TVariables & {
             [K in keyof TOptions["variables"]]: K extends keyof TVariables ? TVariables[K] : never;
         }>;
@@ -1597,99 +1596,99 @@ export namespace useSuspenseQuery {
     // (undocumented)
     export namespace Signatures {
         export interface Classic {
-            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useSuspenseQuery.Options<NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
                 returnPartialData: true;
                 errorPolicy: TErrorPolicy & ("ignore" | "all");
             }): useSuspenseQuery.Result<TData, TVariables, "complete" | "streaming" | "partial" | "empty", TErrorPolicy>;
-            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useSuspenseQuery.Options<NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
                 errorPolicy: TErrorPolicy & ("ignore" | "all");
             }): useSuspenseQuery.Result<TData, TVariables, "complete" | "streaming" | "empty", TErrorPolicy>;
-            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useSuspenseQuery.Options<NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
                 skip: boolean;
                 returnPartialData: true;
                 errorPolicy?: TErrorPolicy;
             }): useSuspenseQuery.Result<TData, TVariables, "complete" | "empty" | "streaming" | "partial", TErrorPolicy>;
-            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useSuspenseQuery.Options<NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
                 returnPartialData: true;
                 errorPolicy?: TErrorPolicy;
             }): useSuspenseQuery.Result<TData, TVariables, "partial" | "streaming" | "complete", TErrorPolicy>;
-            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useSuspenseQuery.Options<NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
                 skip: boolean;
                 errorPolicy?: TErrorPolicy;
             }): useSuspenseQuery.Result<TData, TVariables, "complete" | "streaming" | "empty", TErrorPolicy>;
-            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | (useSuspenseQuery.Options<NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | (useSuspenseQuery.Options<NoInfer<TVariables>> & {
                 returnPartialData: true;
                 errorPolicy?: TErrorPolicy;
             })): useSuspenseQuery.Result<TData, TVariables, "empty" | "streaming" | "complete" | "partial", TErrorPolicy>;
             <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...input: {} extends TVariables ? [
-            options?: useSuspenseQuery.Options<NoInfer_2<TVariables>> & {
+            options?: useSuspenseQuery.Options<NoInfer<TVariables>> & {
                 errorPolicy?: TErrorPolicy;
             }
             ] : [
-            options: useSuspenseQuery.Options<NoInfer_2<TVariables>> & {
+            options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
                 errorPolicy?: TErrorPolicy;
             }
             ]): useSuspenseQuery.Result<TData, TVariables, "complete" | "streaming", TErrorPolicy>;
             <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...input: {} extends TVariables ? [
-            options?: SkipToken | (useSuspenseQuery.Options<NoInfer_2<TVariables>> & {
+            options?: SkipToken | (useSuspenseQuery.Options<NoInfer<TVariables>> & {
                 errorPolicy?: TErrorPolicy;
             })
             ] : [
-            options: SkipToken | (useSuspenseQuery.Options<NoInfer_2<TVariables>> & {
+            options: SkipToken | (useSuspenseQuery.Options<NoInfer<TVariables>> & {
                 errorPolicy?: TErrorPolicy;
             })
             ]): useSuspenseQuery.Result<TData, TVariables, "complete" | "streaming" | "empty", TErrorPolicy>;
-            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | (useSuspenseQuery.Options<NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | (useSuspenseQuery.Options<NoInfer<TVariables>> & {
                 errorPolicy?: TErrorPolicy;
             })): useSuspenseQuery.Result<TData, TVariables, "complete" | "streaming" | "empty", TErrorPolicy>;
             // @deprecated (undocumented)
-            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useSuspenseQuery.Options<NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
                 returnPartialData: true;
                 errorPolicy: "ignore" | "all";
             }): useSuspenseQuery.Result<TData, TVariables, "complete" | "streaming" | "partial" | "empty">;
             // @deprecated (undocumented)
-            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useSuspenseQuery.Options<NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
                 errorPolicy: "ignore" | "all";
             }): useSuspenseQuery.Result<TData, TVariables, "complete" | "streaming" | "empty">;
             // @deprecated (undocumented)
-            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useSuspenseQuery.Options<NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
                 skip: boolean;
                 returnPartialData: true;
             }): useSuspenseQuery.Result<TData, TVariables, "complete" | "empty" | "streaming" | "partial">;
             // @deprecated (undocumented)
-            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useSuspenseQuery.Options<NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
                 returnPartialData: true;
             }): useSuspenseQuery.Result<TData, TVariables, "partial" | "streaming" | "complete">;
             // @deprecated (undocumented)
-            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useSuspenseQuery.Options<NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
                 skip: boolean;
             }): useSuspenseQuery.Result<TData, TVariables, "complete" | "streaming" | "empty">;
             // @deprecated (undocumented)
-            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | (useSuspenseQuery.Options<NoInfer_2<TVariables>> & {
+            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | (useSuspenseQuery.Options<NoInfer<TVariables>> & {
                 returnPartialData: true;
             })): useSuspenseQuery.Result<TData, TVariables, "empty" | "streaming" | "complete" | "partial">;
             // @deprecated (undocumented)
             <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...input: {} extends TVariables ? [
-            options?: useSuspenseQuery.Options<NoInfer_2<TVariables>>
-            ] : [options: useSuspenseQuery.Options<NoInfer_2<TVariables>>]): useSuspenseQuery.Result<TData, TVariables, "complete" | "streaming">;
+            options?: useSuspenseQuery.Options<NoInfer<TVariables>>
+            ] : [options: useSuspenseQuery.Options<NoInfer<TVariables>>]): useSuspenseQuery.Result<TData, TVariables, "complete" | "streaming">;
             // @deprecated (undocumented)
             <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...input: {} extends TVariables ? [
-            options?: SkipToken | useSuspenseQuery.Options<NoInfer_2<TVariables>>
-            ] : [options: SkipToken | useSuspenseQuery.Options<NoInfer_2<TVariables>>]): useSuspenseQuery.Result<TData, TVariables, "complete" | "streaming" | "empty">;
+            options?: SkipToken | useSuspenseQuery.Options<NoInfer<TVariables>>
+            ] : [options: SkipToken | useSuspenseQuery.Options<NoInfer<TVariables>>]): useSuspenseQuery.Result<TData, TVariables, "complete" | "streaming" | "empty">;
             // @deprecated (undocumented)
-            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | useSuspenseQuery.Options<NoInfer_2<TVariables>>): useSuspenseQuery.Result<TData, TVariables, "complete" | "streaming" | "empty">;
+            <TData, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: SkipToken | useSuspenseQuery.Options<NoInfer<TVariables>>): useSuspenseQuery.Result<TData, TVariables, "complete" | "streaming" | "empty">;
         }
         // (undocumented)
         export type Evaluated = SignatureStyle extends "classic" ? Classic : Modern;
         export interface Modern {
             <TData, TVariables extends OperationVariables, Options extends never>(query: {} extends TVariables ? DocumentNode_2 | TypedDocumentNode_2<TData, TVariables> : never): useSuspenseQuery.ResultForOptions<TData, TVariables, Record<string, never>>;
-            <TData, TVariables extends OperationVariables, TOptions extends Base.Options<NoInfer_2<TVariables>>>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...input: {} extends TVariables ? [
+            <TData, TVariables extends OperationVariables, TOptions extends Base.Options<NoInfer<TVariables>>>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...input: {} extends TVariables ? [
             options?: TOptions & useSuspenseQuery.OptionsFor<TVariables, TOptions>
             ] : [
             options: TOptions & useSuspenseQuery.OptionsFor<TVariables, TOptions>
             ]): useSuspenseQuery.ResultForOptions<TData, TVariables, TOptions>;
             <TData, TVariables extends OperationVariables, TOptions extends never>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, skipToken: SkipToken): useSuspenseQuery.ResultForOptions<TData, TVariables, SkipToken>;
-            <TData, TVariables extends OperationVariables, TOptions extends Base.Options<NoInfer_2<TVariables>>>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...input: {} extends TVariables ? [
+            <TData, TVariables extends OperationVariables, TOptions extends Base.Options<NoInfer<TVariables>>>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...input: {} extends TVariables ? [
             options?: (TOptions & useSuspenseQuery.OptionsFor<TVariables, TOptions>) | SkipToken
             ] : [
             options: (TOptions & useSuspenseQuery.OptionsFor<TVariables, TOptions>) | SkipToken

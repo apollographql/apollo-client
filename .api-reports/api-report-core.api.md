@@ -69,7 +69,6 @@ import { MergeInfo } from '@apollo/client/cache';
 import { MergeTree } from '@apollo/client/cache';
 import { MissingFieldError } from '@apollo/client/cache';
 import type { NextNotification } from 'rxjs';
-import type { NoInfer as NoInfer_2 } from '@apollo/client/utilities/internal';
 import { NormalizedCache } from '@apollo/client/cache';
 import { NormalizedCacheObject } from '@apollo/client/cache';
 import { Observable } from '@apollo/client/utilities';
@@ -1008,7 +1007,7 @@ namespace OverridableTypes {
         // (undocumented)
         arg1: unknown;
         // (undocumented)
-        return: StoreObject | Reference | FragmentType<NoInfer_2<this["arg1"]>> | string;
+        return: StoreObject | Reference | FragmentType<NoInfer<this["arg1"]>> | string;
     }
     // (undocumented)
     interface Partial extends HKT {

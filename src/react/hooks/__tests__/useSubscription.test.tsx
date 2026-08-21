@@ -612,6 +612,94 @@ describe("useSubscription Hook", () => {
     await expect(takeSnapshot).not.toRerender();
   });
 
+  it("should flip flop skipToken from true to false to true to false", async () => {
+    const subscription = gql`
+      subscription {
+        car {
+          make
+        }
+      }
+    `;
+
+    const results = [
+      {
+        result: { data: { car: { make: "Pagani" } } },
+      },
+      {
+        result: { data: { car: { make: "Scoop" } } },
+      },
+    ];
+
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      link,
+      cache: new Cache(),
+    });
+
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
+      ({ options }) => useSubscription(subscription, options),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+        initialProps: { options: skipToken as typeof skipToken | { skip: boolean } },
+      }
+    );
+
+    // Start with skipToken (skipped)
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+      data: undefined,
+      error: undefined,
+      loading: false,
+    });
+
+    // Flip to active
+    await rerender({ options: { skip: false } });
+
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+      data: undefined,
+      error: undefined,
+      loading: true,
+    });
+
+    link.simulateResult(results[0]);
+
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+      data: results[0].result.data,
+      error: undefined,
+      loading: false,
+    });
+
+    // Flop back to skipToken
+    await rerender({ options: skipToken });
+
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+      data: undefined,
+      error: undefined,
+      loading: false,
+    });
+
+    // Flip to active again
+    await rerender({ options: { skip: false } });
+
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+      data: undefined,
+      error: undefined,
+      loading: true,
+    });
+
+    link.simulateResult(results[1]);
+
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+      data: results[1].result.data,
+      error: undefined,
+      loading: false,
+    });
+
+    await expect(takeSnapshot).not.toRerender();
+  });
+
   it("should share context set in options", async () => {
     const subscription = gql`
       subscription {
@@ -3844,5 +3932,55 @@ describe.skip("Type Tests", () => {
     });
     // @ts-expect-error skipToken does not replace the required options object
     useSubscription(subscription);
+  });
+
+  test("accepts skipToken when variables are optional (2nd arg not required)", () => {
+    const subscription: TypedDocumentNode<
+      { posts: string[] },
+      { limit?: number }
+    > = gql``;
+
+    useSubscription(subscription, skipToken);
+    useSubscription(subscription);
+    useSubscription(subscription, { variables: { limit: 10 } });
+  });
+
+  test("accepts skipToken with mixed required + optional variables", () => {
+    const subscription: TypedDocumentNode<
+      { character: string },
+      { id: string; language?: string }
+    > = gql``;
+
+    useSubscription(subscription, skipToken);
+    useSubscription(subscription, { variables: { id: "1" } });
+    useSubscription(subscription, {
+      variables: { id: "1", language: "en" },
+    });
+    // @ts-expect-error missing required variable
+    useSubscription(subscription);
+  });
+
+  test("accepts skipToken with empty variables (Record<string, never>)", () => {
+    const subscription: TypedDocumentNode<
+      { greeting: string },
+      Record<string, never>
+    > = gql``;
+
+    useSubscription(subscription, skipToken);
+    useSubscription(subscription);
+    useSubscription(subscription, { variables: {} });
+  });
+
+  test("accepts skipToken when variables type is never", () => {
+    const subscription: TypedDocumentNode<
+      { greeting: string },
+      never
+    > = gql``;
+
+    useSubscription(subscription, skipToken);
+    // @ts-expect-error
+    useSubscription(subscription);
+    // @ts-expect-error
+    useSubscription(subscription, {});
   });
 });

@@ -217,7 +217,7 @@ export function useSubscription<
   TVariables extends OperationVariables = OperationVariables,
 >(
   subscription: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  ...[options = {} as useSubscription.Options<TData, TVariables>]: {} extends (
+  ...[_options = {} as useSubscription.Options<TData, TVariables>]: {} extends (
     TVariables
   ) ?
     [
@@ -231,17 +231,14 @@ export function useSubscription<
         | useSubscription.Options<NoInfer<TData>, NoInfer<TVariables>>,
     ]
 ): useSubscription.Result<TData> {
-  const client = useApolloClient(
-    typeof options === "object" ? options.client : undefined
-  );
-
-  const normalizedOptions: useSubscription.Options<TData, TVariables> =
-    typeof options === "object" ? options : (
+  const options =
+    _options === skipToken ?
       ({ skip: true } as useSubscription.Options<TData, TVariables>)
-    );
+    : _options;
 
-  const skip = options === skipToken ? true : normalizedOptions.skip;
+  const client = useApolloClient(options.client);
 
+  const { skip } = options;
   const {
     fetchPolicy,
     errorPolicy,
@@ -249,10 +246,10 @@ export function useSubscription<
     context,
     extensions,
     ignoreResults,
-  } = normalizedOptions;
+  } = options;
   const variables = useDeepMemo(
-    () => normalizedOptions.variables,
-    [normalizedOptions.variables]
+    () => options.variables,
+    [options.variables]
   );
 
   const recreate = () =>
@@ -285,15 +282,15 @@ export function useSubscription<
       errorPolicy !== observable.__.errorPolicy ||
       !equal(variables, observable.__.variables)) &&
       (typeof shouldResubscribe === "function" ?
-        !!shouldResubscribe(normalizedOptions)
+        !!shouldResubscribe(options)
       : shouldResubscribe) !== false)
   ) {
     setObservable((observable = recreate()));
   }
 
-  const optionsRef = React.useRef(normalizedOptions);
+  const optionsRef = React.useRef(options);
   React.useEffect(() => {
-    optionsRef.current = normalizedOptions;
+    optionsRef.current = options;
   });
 
   const fallbackLoading = !skip && !ignoreResults;

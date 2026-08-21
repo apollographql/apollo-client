@@ -247,10 +247,7 @@ export function useSubscription<
     extensions,
     ignoreResults,
   } = options;
-  const variables = useDeepMemo(
-    () => options.variables,
-    [options.variables]
-  );
+  const variables = useDeepMemo(() => options.variables, [options.variables]);
 
   const recreate = () =>
     createSubscription(

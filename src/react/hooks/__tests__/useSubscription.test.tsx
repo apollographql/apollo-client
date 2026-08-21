@@ -643,7 +643,9 @@ describe("useSubscription Hook", () => {
         wrapper: ({ children }) => (
           <ApolloProvider client={client}>{children}</ApolloProvider>
         ),
-        initialProps: { options: skipToken as typeof skipToken | { skip: boolean } },
+        initialProps: {
+          options: skipToken as typeof skipToken | { skip: boolean },
+        },
       }
     );
 
@@ -3972,10 +3974,7 @@ describe.skip("Type Tests", () => {
   });
 
   test("accepts skipToken when variables type is never", () => {
-    const subscription: TypedDocumentNode<
-      { greeting: string },
-      never
-    > = gql``;
+    const subscription: TypedDocumentNode<{ greeting: string }, never> = gql``;
 
     useSubscription(subscription, skipToken);
     // @ts-expect-error

@@ -1,5 +1,24 @@
 # @apollo/client
 
+## 4.3.0-alpha.11
+
+### Minor Changes
+
+- [#13386](https://github.com/apollographql/apollo-client/pull/13386) [`0be8fd8`](https://github.com/apollographql/apollo-client/commit/0be8fd8495800389f779bd883daae2e27b96fce6) Thanks [@atharv-sys32](https://github.com/atharv-sys32)! - Support `skipToken` with `useSubscription` to provide a more type-safe way to skip subscription execution with required variables.
+
+  ```ts
+  import { skipToken, useSubscription } from "@apollo/client/react";
+
+  // Use `skipToken` in place of `skip: true` for better type safety
+  // for required variables
+  const { data } = useSubscription(
+    SUBSCRIPTION,
+    id ? { variables: { id } } : skipToken
+  );
+  ```
+
+- [#13424](https://github.com/apollographql/apollo-client/pull/13424) [`d2bca2e`](https://github.com/apollographql/apollo-client/commit/d2bca2ec0ada9205c337d685047b3e9f4ef3ad43) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove the custom `NoInfer` type utility in favor of the native `NoInfer` introduced in TypeScript 5.4.
+
 ## 4.3.0-alpha.10
 
 ### Minor Changes

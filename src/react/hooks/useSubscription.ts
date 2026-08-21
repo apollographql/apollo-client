@@ -238,8 +238,8 @@ export function useSubscription<
 
   const client = useApolloClient(options.client);
 
-  const { skip } = options;
   const {
+    skip,
     fetchPolicy,
     errorPolicy,
     shouldResubscribe,

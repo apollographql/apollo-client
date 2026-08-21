@@ -11,7 +11,7 @@ description: Apollo Client API reference
 
 For the query hooks, passing `skipToken` instead of the `options` object prevents the hook from making requests or triggering suspenseful behavior while keeping the last `data` available. Use it conditionally to start query execution when the input data is available.
 
-For `useSubscription`, passing `skipToken` prevents the subscription from being set up. The hook returns an idle result with `data: undefined` instead of keeping prior subscription data, because a skipped subscription never establishes a connection to receive results. Use it conditionally to start the subscription when the input data is available.
+For `useSubscription`, passing `skipToken` prevents the subscription from executing. The hook returns an idle result with `data: undefined` instead of keeping prior subscription data, because a skipped subscription never establishes a connection to receive results. Use it conditionally to start the subscription when the input data is available.
 
 ```js title="Recommended usage of skipToken with useQuery"
 import { skipToken, useQuery } from "@apollo/client/react";

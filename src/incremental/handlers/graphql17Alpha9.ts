@@ -1,18 +1,13 @@
-import { Trie } from "@wry/trie";
-import type {
-  DocumentNode,
-  FormattedExecutionResult,
-  GraphQLFormattedError,
-} from "graphql";
+import type { FormattedExecutionResult, GraphQLFormattedError } from "graphql";
 
 import type { ApolloLink } from "@apollo/client/link";
 import type { DeepPartial, HKT } from "@apollo/client/utilities";
-import type {
-  ExtensionsWithStreamInfo,
-  StreamInfoTrie,
-} from "@apollo/client/utilities/internal";
+import { DocumentTransform } from "@apollo/client/utilities";
+import type { ExtensionsWithStreamInfo } from "@apollo/client/utilities/internal";
 import {
+  addDeferFragmentLabels,
   DeepMerger,
+  makeStreamInfoTrie,
   streamInfoSymbol,
 } from "@apollo/client/utilities/internal";
 import {
@@ -93,10 +88,12 @@ class IncrementalRequest<TData>
   private data: any = {};
   private errors: GraphQLFormattedError[] = [];
   private extensions: Record<string, any> = {};
-  private pending = new Map<string, GraphQL17Alpha9Handler.PendingResult>();
-  private streamInfo: StreamInfoTrie = new Trie(false, () => ({
-    current: { isFirstChunk: true, isLastChunk: false },
-  }));
+  private pendingMap = new Map<string, GraphQL17Alpha9Handler.PendingResult>();
+  private completedMap = new Map<
+    /* pendingId */ string,
+    /* delivered */ boolean
+  >();
+  private _streamInfo = makeStreamInfoTrie();
   // `streamPositions` maps `pending.id` to the index that should be set by the
   // next `incremental` stream chunk to ensure the streamed array item is placed
   // at the correct point in the data array. `this.data` contains cached
@@ -105,6 +102,27 @@ class IncrementalRequest<TData>
   // updated by the cache between a streamed chunk aren't overwritten by merges
   // of future stream items from already merged stream items.
   private streamPositions: Record<string, number> = {};
+
+  /** @internal */
+  get streamInfo() {
+    return this._streamInfo["strong"] ? this._streamInfo : undefined;
+  }
+
+  /** @internal */
+  getPendingWithInfo() {
+    return Array.from(this.pendingMap.values()).map((pending) => {
+      if (pending.id in this.streamPositions) {
+        return { type: "stream" as const, path: pending.path };
+      }
+
+      return {
+        type: "defer" as const,
+        delivered: !!this.completedMap.get(pending.id),
+        path: pending.path,
+        label: pending.label,
+      };
+    });
+  }
 
   handle(
     cacheData: TData | DeepPartial<TData> | null | undefined = this.data,
@@ -115,7 +133,7 @@ class IncrementalRequest<TData>
 
     if (chunk.pending) {
       for (const pending of chunk.pending) {
-        this.pending.set(pending.id, pending);
+        this.pendingMap.set(pending.id, pending);
 
         if ("data" in chunk) {
           const dataAtPath = pending.path.reduce(
@@ -125,10 +143,12 @@ class IncrementalRequest<TData>
 
           if (Array.isArray(dataAtPath)) {
             this.streamPositions[pending.id] = dataAtPath.length;
-            this.streamInfo.lookupArray(pending.path as any[]).current = {
+            const entry = this._streamInfo.lookupArray(pending.path as any[]);
+            entry.current = {
               isFirstChunk: true,
               isLastChunk: false,
             };
+            entry.state.streamPosition = dataAtPath.length;
           }
         }
       }
@@ -136,7 +156,7 @@ class IncrementalRequest<TData>
 
     if (hasIncrementalChunks(chunk)) {
       for (const incremental of chunk.incremental) {
-        const pending = this.pending.get(incremental.id);
+        const pending = this.pendingMap.get(incremental.id);
 
         invariant(
           pending,
@@ -158,10 +178,13 @@ class IncrementalRequest<TData>
           }
 
           this.streamPositions[pending.id] += items.length;
-          this.streamInfo.lookupArray(path).current = {
+          const entry = this._streamInfo.lookupArray(path);
+          entry.current = {
             isFirstChunk: false,
             isLastChunk: false,
           };
+          entry.state.streamPosition = this.streamPositions[pending.id];
+
           data = parent;
         } else {
           data = incremental.data;
@@ -170,7 +193,7 @@ class IncrementalRequest<TData>
           // that we can update streamPositions with the initial length of the
           // array to ensure future streamed items are inserted at the right
           // starting index.
-          this.pending.forEach((pendingItem) => {
+          this.pendingMap.forEach((pendingItem) => {
             if (!(pendingItem.id in this.streamPositions)) {
               // Check if this incremental data contains array data for the pending path
               // The pending path is absolute, but incremental data is relative to the defer
@@ -205,8 +228,9 @@ class IncrementalRequest<TData>
 
     if ("completed" in chunk && chunk.completed) {
       for (const completed of chunk.completed) {
-        const { path } = this.pending.get(completed.id)!;
+        const { path } = this.pendingMap.get(completed.id)!;
         const streamPosition = this.streamPositions[completed.id];
+        this.completedMap.set(completed.id, !completed.errors);
 
         // Truncate any stream arrays in case the chunk only contains `hasNext`
         // and `completed`.
@@ -220,14 +244,14 @@ class IncrementalRequest<TData>
         }
 
         // peek instead of lookup to avoid creating an entry for non-array values
-        const details = this.streamInfo.peekArray(path as any[]);
+        const details = this._streamInfo.peekArray(path as any[]);
         if (details) {
           details.current = {
             isFirstChunk: false,
             isLastChunk: true,
           };
+          details.state.streamPosition = streamPosition;
         }
-        this.pending.delete(completed.id);
 
         if (completed.errors) {
           this.errors.push(...completed.errors);
@@ -245,7 +269,7 @@ class IncrementalRequest<TData>
       result.extensions = this.extensions;
     }
 
-    if (this.streamInfo["strong"]) {
+    if (this._streamInfo["strong"]) {
       result.extensions = {
         ...result.extensions,
         // Create a new object so we can check for === in QueryInfo to trigger a
@@ -253,7 +277,7 @@ class IncrementalRequest<TData>
         // We create a `WeakRef`, not a plain object to avoid retaining memory
         // in case the `result` or `extensions` stays around longer than the handler
         // itself.
-        [streamInfoSymbol]: new WeakRef(this.streamInfo),
+        [streamInfoSymbol]: new WeakRef(this._streamInfo),
       } satisfies ExtensionsWithStreamInfo;
     }
 
@@ -287,6 +311,8 @@ class IncrementalRequest<TData>
 export class GraphQL17Alpha9Handler
   implements Incremental.Handler<GraphQL17Alpha9Handler.Chunk<any>>
 {
+  readonly documentTransform = new DocumentTransform(addDeferFragmentLabels);
+
   /** @internal */
   isIncrementalResult(
     result: ApolloLink.Result<any>
@@ -346,7 +372,7 @@ export class GraphQL17Alpha9Handler
   }
 
   /** @internal */
-  startRequest<TData>(_: { query: DocumentNode }) {
+  startRequest<TData>(_: Incremental.StartRequestOptions) {
     return new IncrementalRequest<TData>();
   }
 }

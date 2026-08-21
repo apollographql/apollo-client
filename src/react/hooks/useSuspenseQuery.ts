@@ -27,7 +27,6 @@ import { getSuspenseCache } from "@apollo/client/react/internal";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
   DocumentationTypes as UtilityDocumentationTypes,
-  NoInfer,
   OptionWithFallback,
   Prettify,
   SignatureStyle,

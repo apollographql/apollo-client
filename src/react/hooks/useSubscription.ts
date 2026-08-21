@@ -13,12 +13,11 @@ import type {
 } from "@apollo/client";
 import type { MaybeMasked } from "@apollo/client/masking";
 import type { DocumentationTypes as UtilityDocumentationTypes } from "@apollo/client/utilities/internal";
-import type {
-  NoInfer,
-  VariablesOption,
-} from "@apollo/client/utilities/internal";
+import type { VariablesOption } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
+import type { SkipToken } from "./constants.js";
+import { skipToken } from "./constants.js";
 import { useDeepMemo } from "./internal/useDeepMemo.js";
 import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
 import { useApolloClient } from "./useApolloClient.js";
@@ -218,12 +217,25 @@ export function useSubscription<
   TVariables extends OperationVariables = OperationVariables,
 >(
   subscription: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  ...[options = {} as useSubscription.Options<TData, TVariables>]: {} extends (
+  ...[_options = {} as useSubscription.Options<TData, TVariables>]: {} extends (
     TVariables
   ) ?
-    [options?: useSubscription.Options<NoInfer<TData>, NoInfer<TVariables>>]
-  : [options: useSubscription.Options<NoInfer<TData>, NoInfer<TVariables>>]
+    [
+      options?:
+        | SkipToken
+        | useSubscription.Options<NoInfer<TData>, NoInfer<TVariables>>,
+    ]
+  : [
+      options:
+        | SkipToken
+        | useSubscription.Options<NoInfer<TData>, NoInfer<TVariables>>,
+    ]
 ): useSubscription.Result<TData> {
+  const options =
+    _options === skipToken ?
+      ({ skip: true } as useSubscription.Options<TData, TVariables>)
+    : _options;
+
   const client = useApolloClient(options.client);
 
   const {
@@ -248,9 +260,7 @@ export function useSubscription<
       extensions
     );
 
-  let [observable, setObservable] = React.useState(
-    options.skip ? null : recreate
-  );
+  let [observable, setObservable] = React.useState(skip ? null : recreate);
 
   const recreateRef = React.useRef(recreate);
   useIsomorphicLayoutEffect(() => {
@@ -269,7 +279,7 @@ export function useSubscription<
       errorPolicy !== observable.__.errorPolicy ||
       !equal(variables, observable.__.variables)) &&
       (typeof shouldResubscribe === "function" ?
-        !!shouldResubscribe(options!)
+        !!shouldResubscribe(options)
       : shouldResubscribe) !== false)
   ) {
     setObservable((observable = recreate()));

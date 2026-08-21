@@ -326,13 +326,13 @@ test("distributed members on MaybeMasked", (prefix) => {
         [MaybeMasked<T> | null | undefined],
         [MaybeMasked<T | null | undefined>]
       >();
-    }).types([49, "instantiations"]);
+    }).types([47, "instantiations"]);
   })();
 
   (function unresolvedGenerics<T, V>() {
     bench(prefix + "two unresolved generics distribute", () => {
       attest<[MaybeMasked<T> | MaybeMasked<V>], [MaybeMasked<T | V>]>();
-    }).types([50, "instantiations"]);
+    }).types([48, "instantiations"]);
   })();
 });
 

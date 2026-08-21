@@ -17,7 +17,6 @@ import {
   wrapQueryRef,
 } from "@apollo/client/react/internal";
 import type {
-  NoInfer,
   OptionWithFallback,
   Prettify,
   SignatureStyle,

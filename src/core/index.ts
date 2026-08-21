@@ -79,6 +79,8 @@ export type {
   IdGetter,
   IdGetterObj,
   InMemoryCacheConfig,
+  InputObjectConfig,
+  InputObjectsOption,
   MergeInfo,
   MergeTree,
   NormalizedCache,
@@ -104,6 +106,7 @@ export {
   InMemoryCache,
   makeVar,
   MissingFieldError,
+  Scalar,
 } from "@apollo/client/cache";
 
 /* Link */
@@ -196,12 +199,14 @@ import type {
   PossibleDefaultOptions,
 } from "./defaultOptions.js";
 import type { QueryManager } from "./QueryManager.js";
+import type { OverridableTypes } from "./types.js";
 import type { NextFetchPolicyContext } from "./watchQueryOptions.js";
 /** @internal */
 export declare namespace InternalTypes {
   export type {
     DefaultOptionsParentObject,
     NextFetchPolicyContext,
+    OverridableTypes,
     PossibleDefaultOptions,
     QueryManager,
   };

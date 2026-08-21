@@ -1,6 +1,6 @@
 {
   "name": "@apollo/client-graphql-codegen",
-  "version": "2.1.1",
+  "version": "2.2.0-rc.0",
   "description": "Apollo Client GraphQL Codegen Plugins",
   "keywords": [
     "apollo",
@@ -22,6 +22,7 @@
   },
   "homepage": "https://www.apollographql.com/docs/react/",
   "exports": {
+    "./custom-scalars": "./dist/custom-scalars/index.js",
     "./local-state": "./dist/local-state/index.js"
   },
   "files": [
@@ -35,14 +36,18 @@
     "publint": "publint run --strict ."
   },
   "devDependencies": {
-    "typescript": "^5.8.3",
+    "@graphql-codegen/core": "^6.1.0",
     "@graphql-codegen/plugin-helpers": "^7.0.1",
     "@graphql-codegen/typescript": "^6.0.2",
-    "@graphql-codegen/visitor-plugin-common": "^7.1.2"
+    "@graphql-codegen/visitor-plugin-common": "^7.1.2",
+    "@types/jest": "^30.0.0",
+    "graphql-tag": "^2.12.7",
+    "typescript": "^5.8.3"
   },
   "peerDependencies": {
     "@graphql-codegen/plugin-helpers": "^6.0.0 || ^7.0.0",
     "@graphql-codegen/typescript": "^5.0.0 || ^6.0.0",
-    "@graphql-codegen/visitor-plugin-common": "^6.0.0 || ^7.0.0"
+    "@graphql-codegen/visitor-plugin-common": "^6.0.0 || ^7.0.0",
+    "graphql": "^16.0.0 || ^17.0.0"
   }
 }

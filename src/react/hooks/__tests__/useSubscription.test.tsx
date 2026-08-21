@@ -644,7 +644,7 @@ describe("useSubscription Hook", () => {
           <ApolloProvider client={client}>{children}</ApolloProvider>
         ),
         initialProps: {
-          options: skipToken as typeof skipToken | { skip: boolean },
+          options: skipToken as typeof skipToken | undefined,
         },
       }
     );
@@ -657,7 +657,7 @@ describe("useSubscription Hook", () => {
     });
 
     // Flip to active
-    await rerender({ options: { skip: false } });
+    await rerender({ options: undefined });
 
     await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: undefined,
@@ -683,7 +683,7 @@ describe("useSubscription Hook", () => {
     });
 
     // Flip to active again
-    await rerender({ options: { skip: false } });
+    await rerender({ options: undefined });
 
     await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: undefined,

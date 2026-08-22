@@ -70,7 +70,7 @@ jobs:
         # If .changeset/pre.json exists and we are not currently cutting a
         # release after merging a Version Packages PR
         if: steps.check_files.outputs.files_exists == 'true' && !startsWith(github.event.head_commit.message, 'Version Packages')
-        uses: changesets/action@63a615b9cd06ba9a3e6d13796c7fbcb080a60a0b # v1
+        uses: changesets/action@198f833dd7d863100ea6e28967bc9a9fdefadb0a # v2.1.0
         with:
           version: npm run changeset-version
           publish: echo "This step should never publish"

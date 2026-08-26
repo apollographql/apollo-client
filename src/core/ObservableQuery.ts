@@ -783,6 +783,17 @@ export class ObservableQuery<
       pollInterval: 0,
     };
 
+    if (
+      isNetworkRequestInFlight(this.networkStatus) &&
+      this.networkStatus !== NetworkStatus.refetch
+    ) {
+      // Do not deduplicate a refetch with an older in-flight operation.
+      reobserveOptions.context = {
+        ...this.options.context,
+        queryDeduplication: false,
+      };
+    }
+
     // Unless the provided fetchPolicy always consults the network
     // (no-cache, network-only, or cache-and-network), override it with
     // network-only to force the refetch for this fetchQuery call.
@@ -1400,6 +1411,20 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       .subscribe({
         next: (value) => {
           const meta: Meta = {};
+
+          if (
+            networkStatus === NetworkStatus.refetch &&
+            value.source === "network" &&
+            (value.kind !== "N" || !value.value.loading)
+          ) {
+            // A settled refetch supersedes older requests for the same query.
+            for (const activeOperation of this.activeOperations) {
+              if (activeOperation === operation) break;
+              if (isEqualQuery(activeOperation, operation)) {
+                activeOperation.abort();
+              }
+            }
+          }
 
           if (
             forceFirstValueEmit &&

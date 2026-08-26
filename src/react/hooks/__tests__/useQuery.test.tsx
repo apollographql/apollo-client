@@ -7723,6 +7723,95 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot).not.toRerender();
     });
+
+    it("delivers a completed refetch result while the initial query is still in flight", async () => {
+      const query = gql`
+        query GetGreeting {
+          greeting
+        }
+      `;
+      const mutation = gql`
+        mutation UpdateGreeting {
+          updateGreeting
+        }
+      `;
+      const queryResolvers: Array<(data: { greeting: string }) => void> = [];
+      let resolveMutation!: () => void;
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new ApolloLink(
+          (operation) =>
+            new Observable((observer) => {
+              if (operation.operationName === "GetGreeting") {
+                queryResolvers.push((data) => {
+                  observer.next({ data });
+                  observer.complete();
+                });
+              } else if (operation.operationName === "UpdateGreeting") {
+                resolveMutation = () => {
+                  observer.next({ data: { updateGreeting: true } });
+                  observer.complete();
+                };
+              } else {
+                observer.error(new Error("Unexpected operation"));
+              }
+            })
+        ),
+      });
+      const wrapper = ({ children }: { children: ReactNode }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      );
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, unmount } = await renderHookToSnapshotStream(
+        () => useQuery(query),
+        { wrapper }
+      );
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+
+      const mutationPromise = client.mutate({
+        mutation,
+        refetchQueries: [query],
+        awaitRefetchQueries: true,
+      });
+      resolveMutation();
+
+      await waitFor(() => expect(queryResolvers).toHaveLength(2));
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: true,
+        networkStatus: NetworkStatus.refetch,
+        previousData: undefined,
+        variables: {},
+      });
+
+      queryResolvers[1]({ greeting: "Goodbye" });
+      await mutationPromise;
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { greeting: "Goodbye" },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      queryResolvers[0]({ greeting: "Hello" });
+      await expect(takeSnapshot).not.toRerender();
+
+      unmount();
+      client.stop();
+    });
   });
 
   describe("Optimistic data", () => {

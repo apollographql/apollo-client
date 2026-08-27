@@ -2194,6 +2194,41 @@ describe("ObservableQuery", () => {
       client.stop();
     });
 
+    it("does not throw when a synchronous result reentrantly refetches", async () => {
+      let observableQuery: ObservableQuery<typeof dataOne>;
+      let refetchPromise: Promise<ApolloQueryResult<typeof dataOne>> | undefined;
+      let requestCount = 0;
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new ApolloLink(
+          () =>
+            new Observable((observer) => {
+              requestCount += 1;
+              observer.next({ data: requestCount === 1 ? dataOne : dataTwo });
+              observer.complete();
+            })
+        ),
+      });
+      observableQuery = client.watchQuery({ query, variables });
+
+      const stream = new ObservableStream(observableQuery);
+      await expect(stream).toEmitTypedValue({
+        data: dataOne,
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
+
+      refetchPromise = observableQuery.refetch();
+      await expect(refetchPromise).resolves.toStrictEqualTyped({
+        data: dataTwo,
+      });
+
+      stream.unsubscribe();
+      client.stop();
+    });
+
     it("calling refetch multiple times with different variables will return only results for the most recent variables", async () => {
       const observers: Observer<ApolloLink.Result<typeof dataOne>>[] = [];
       const client = new ApolloClient({

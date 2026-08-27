@@ -1379,9 +1379,12 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     // track query and variables from the start of the operation
     const { query, variables } = this;
+    let subscription: Subscription | undefined;
+    let abortRequested = false;
     const operation: TrackedOperation = {
       abort: () => {
-        subscription.unsubscribe();
+        abortRequested = true;
+        subscription?.unsubscribe();
       },
       query,
       variables,
@@ -1392,7 +1395,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       networkStatus == NetworkStatus.refetch ||
       networkStatus == NetworkStatus.setVariables;
     observable = observable.pipe(operator, share());
-    const subscription = observable
+    const activeSubscription = observable
       .pipe(
         tap({
           next: (notification) => {
@@ -1439,8 +1442,13 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           this.input.next({ ...value, query, variables, meta });
         },
       });
+    subscription = activeSubscription;
 
-    return { fromLink, subscription, observable };
+    if (abortRequested) {
+      activeSubscription.unsubscribe();
+    }
+
+    return { fromLink, subscription: activeSubscription, observable };
   }
 
   // Turns polling on or off based on this.options.pollInterval.

@@ -2121,6 +2121,116 @@ describe("ObservableQuery", () => {
       await expect(stream).not.toEmitAnything();
     });
 
+    it("starts a new request when refetching while the initial request is still in flight", async () => {
+      const observers: Observer<ApolloLink.Result<typeof dataOne>>[] = [];
+      const operationContexts: Array<Record<string, unknown>> = [];
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new ApolloLink(
+          (operation) =>
+            new Observable((observer) => {
+              operationContexts.push(operation.getContext());
+              observers.push(observer);
+            })
+        ),
+      });
+      const observableQuery = client.watchQuery({
+        query,
+        variables,
+        context: { requestId: "initial" },
+      });
+      const stream = new ObservableStream(observableQuery);
+
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        dataState: "empty",
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+
+      const refetchPromise = observableQuery.refetch();
+
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        dataState: "empty",
+        loading: true,
+        networkStatus: NetworkStatus.refetch,
+        partial: true,
+      });
+      expect(observers).toHaveLength(2);
+      expect(operationContexts[1]).toMatchObject({
+        queryDeduplication: false,
+        requestId: "initial",
+      });
+
+      observers[1].next({ data: dataTwo });
+      observers[1].complete();
+
+      await expect(refetchPromise).resolves.toStrictEqualTyped({
+        data: dataTwo,
+      });
+      await expect(stream).toEmitTypedValue({
+        data: dataTwo,
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
+
+      observers[0].next({ data: dataOne });
+      observers[0].complete();
+
+      await expect(stream).not.toEmitAnything();
+      expect(observableQuery.getCurrentResult()).toStrictEqualTyped({
+        data: dataTwo,
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
+
+      stream.unsubscribe();
+      client.stop();
+    });
+
+    it("does not throw when a synchronous result reentrantly refetches", async () => {
+      let observableQuery: ObservableQuery<typeof dataOne>;
+      let refetchPromise:
+        | ReturnType<ObservableQuery<typeof dataOne>["refetch"]>
+        | undefined;
+      let requestCount = 0;
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new ApolloLink(
+          () =>
+            new Observable((observer) => {
+              requestCount += 1;
+              observer.next({ data: requestCount === 1 ? dataOne : dataTwo });
+              observer.complete();
+            })
+        ),
+      });
+      observableQuery = client.watchQuery({ query, variables });
+
+      const stream = new ObservableStream(observableQuery);
+      await expect(stream).toEmitTypedValue({
+        data: dataOne,
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
+
+      refetchPromise = observableQuery.refetch();
+      await expect(refetchPromise).resolves.toStrictEqualTyped({
+        data: dataTwo,
+      });
+
+      stream.unsubscribe();
+      client.stop();
+    });
+
     it("calling refetch multiple times with different variables will return only results for the most recent variables", async () => {
       const observers: Observer<ApolloLink.Result<typeof dataOne>>[] = [];
       const client = new ApolloClient({

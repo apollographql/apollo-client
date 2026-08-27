@@ -4456,6 +4456,82 @@ describe("useSuspenseQuery", () => {
     ]);
   });
 
+  it("delivers a completed refetch result while the initial query is still in flight", async () => {
+    const query = gql`
+      query GetGreeting {
+        greeting
+      }
+    `;
+    const mutation = gql`
+      mutation UpdateGreeting {
+        updateGreeting
+      }
+    `;
+    const queryResolvers: Array<(data: { greeting: string }) => void> = [];
+    let resolveMutation!: () => void;
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new ApolloLink(
+        (operation) =>
+          new Observable((observer) => {
+            if (operation.operationName === "GetGreeting") {
+              queryResolvers.push((data) => {
+                observer.next({ data });
+                observer.complete();
+              });
+            } else if (operation.operationName === "UpdateGreeting") {
+              resolveMutation = () => {
+                observer.next({ data: { updateGreeting: true } });
+                observer.complete();
+              };
+            } else {
+              observer.error(new Error("Unexpected operation"));
+            }
+          })
+      ),
+    });
+
+    const { result, renders, unmount } = await renderSuspenseHook(
+      () => useSuspenseQuery(query),
+      { client }
+    );
+
+    expect(renders.suspenseCount).toBe(1);
+
+    const mutationPromise = client.mutate({
+      mutation,
+      refetchQueries: [query],
+      awaitRefetchQueries: true,
+    });
+    await act(async () => resolveMutation());
+
+    await waitFor(() => expect(queryResolvers).toHaveLength(2));
+    await act(async () => {
+      queryResolvers[1]({ greeting: "Goodbye" });
+      await mutationPromise;
+    });
+
+    await waitFor(() =>
+      expect(result.current).toStrictEqualTyped({
+        data: { greeting: "Goodbye" },
+        dataState: "complete",
+        error: undefined,
+        networkStatus: NetworkStatus.ready,
+      })
+    );
+
+    await act(async () => queryResolvers[0]({ greeting: "Hello" }));
+    expect(result.current).toStrictEqualTyped({
+      data: { greeting: "Goodbye" },
+      dataState: "complete",
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+
+    unmount();
+    client.stop();
+  });
+
   it("properly resolves `refetch` when returning a result that is deeply equal to data in the cache", async () => {
     type Variables = {
       id: string;

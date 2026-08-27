@@ -2196,7 +2196,9 @@ describe("ObservableQuery", () => {
 
     it("does not throw when a synchronous result reentrantly refetches", async () => {
       let observableQuery: ObservableQuery<typeof dataOne>;
-      let refetchPromise: Promise<ApolloQueryResult<typeof dataOne>> | undefined;
+      let refetchPromise:
+        | ReturnType<ObservableQuery<typeof dataOne>["refetch"]>
+        | undefined;
       let requestCount = 0;
       const client = new ApolloClient({
         cache: new InMemoryCache(),

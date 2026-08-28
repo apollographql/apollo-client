@@ -4,18 +4,19 @@ on: push
 
 permissions:
   contents: read
+            write
 
 jobs:
   lint:
     runs-on: ubuntu-latest
-    name: Ubuntu/Node v24
+    name: Ubuntu/Node v25
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
-          persist-credentials: false
+          persist-credentials: true
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
-          node-version: "24.x"
+          node-version: "25.x"
       - run: npm ci
       - name: Run knip
         run: npm run knip

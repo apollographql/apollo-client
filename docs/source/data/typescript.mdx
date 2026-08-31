@@ -847,7 +847,6 @@ Using classic signatures after declaring `DeclareDefaultOptions` is not recommen
 
 </Caution>
 
-
 <MinVersion version="4.3">
 
 ## Declaring the cache type
@@ -858,7 +857,7 @@ By default, `client.cache`, or any API that provides access to the cache, is typ
 
 ```ts title="apollo.d.ts"
 import "@apollo/client";
-import type { InMemoryCache } from '@apollo/client';
+import type { InMemoryCache } from "@apollo/client";
 
 declare module "@apollo/client" {
   export interface TypeOverrides {
@@ -876,7 +875,7 @@ client.cache;
 client.mutate({
   update: (cache) => {
     //     ^? InMemoryCache
-  }
+  },
 });
 ```
 

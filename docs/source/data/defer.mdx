@@ -169,6 +169,39 @@ As chunks arrive and replace existing data, data that cannot be merged, such as 
 
 If you currently use [GraphQL Code Generator](https://www.the-guild.dev/graphql/codegen) for your codegen needs, you'll need to use the Codegen version v4.0.0 or higher.
 
+<MinVersion version="4.3">
+
+### GraphQL Codegen incremental types
+
+</MinVersion>
+
+GraphQL Codegen types deferred fields as a union of the present and absent values:
+
+```ts
+type MyQuery = {
+  field: boolean;
+} & (
+  | { deferredField: string } 
+  | { deferredField?: never }
+)
+```
+
+Apollo Client provides `GraphQLCodegenIncremental` type overrides that assemble the `@defer` types for [`dataState`](./typescript#type-narrowing-data-with-datastate). For example, when `dataState` is `"complete"`, every field in the selection set is present, so the `GraphQLCodegenIncremental` type overrides remove the `never` branches from the type. This avoids the need to check for a truthy value on each of the deferred fields to determine whether the query has completed or not.
+
+Create a TypeScript file and extend `TypeOverrides` with `GraphQLCodegenIncremental.TypeOverrides`:
+
+```ts title="apollo.d.ts"
+import "@apollo/client";
+import type { GraphQLCodegenIncremental } from "@apollo/client/incremental";
+
+declare module "@apollo/client" {
+  export interface TypeOverrides
+    extends GraphQLCodegenIncremental.TypeOverrides {}
+}
+```
+
+For more information about type overrides, see the [TypeScript guide](./typescript#overriding-type-implementations-for-built-in-types).
+
 ## Usage in React Native
 
 In order to use `@defer` in a React Native application, additional configuration is required. See the [React Native docs](../integrations/react-native#consuming-multipart-http-via-text-streaming) for more information.

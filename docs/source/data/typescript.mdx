@@ -1067,6 +1067,7 @@ The following utility types are available to override:
 - `Complete<TData>` - Type returned when `dataState` is `"complete"`
 - `Streaming<TData>` - Type returned when `dataState` is `"streaming"` (for `@defer` queries)
 - `Partial<TData>` - Type returned when `dataState` is `"partial"`
+- `FromOptionValue<TData>` - Type used by the `from` option on cache APIs to limit the types of values that can be passed to it. Useful when you want to apply a stricter policy around what value types are accepted.
 - `AdditionalApolloLinkResultTypes<TData, TExtensions>` - Additional types that can be returned from Apollo Link operations
 
 For more information about data masking types specifically, see the [data masking guide](../data/fragments#defining-your-own-masking-types-using-higher-kinded-types).

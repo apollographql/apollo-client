@@ -847,6 +847,45 @@ Using classic signatures after declaring `DeclareDefaultOptions` is not recommen
 
 </Caution>
 
+
+<MinVersion version="4.3">
+
+## Declaring the cache type
+
+</MinVersion>
+
+By default, `client.cache`, or any API that provides access to the cache, is typed as the generic `ApolloCache` regardless of what implementation you provide to `ApolloClient`. You can declare the cache implementation used by the client by overriding the `cache` property in the `TypeOverrides` interface:
+
+```ts title="apollo.d.ts"
+import "@apollo/client";
+import type { InMemoryCache } from '@apollo/client';
+
+declare module "@apollo/client" {
+  export interface TypeOverrides {
+    cache: InMemoryCache;
+  }
+}
+```
+
+Anywhere the cache is available, TypeScript uses the declared type:
+
+```ts
+client.cache;
+//     ^? InMemoryCache
+
+client.mutate({
+  update: (cache) => {
+    //     ^? InMemoryCache
+  }
+});
+```
+
+<Note>
+
+Setting a cache type also requires that cache type in the `ApolloClient` constructor.
+
+</Note>
+
 ## Declaring refetch event types
 
 Learn more about integrating TypeScript with refetch events in the [event-based refetching guide](./event-based-refetching#typescript).
@@ -1021,6 +1060,7 @@ And that's it! Now when `dataState` is `"complete"` or `"streaming"`, Apollo Cli
 
 The following utility types are available to override:
 
+- `cache` - The cache implementation used by `ApolloClient` (e.g. `InMemoryCache`)
 - `FragmentType<TFragmentData>` - Type used with fragments to ensure parent objects contain the fragment spread
 - `Unmasked<TData>` - Unwraps masked types into the full result type
 - `MaybeMasked<TData>` - Conditionally returns either masked or unmasked type

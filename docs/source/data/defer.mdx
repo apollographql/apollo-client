@@ -180,7 +180,10 @@ GraphQL Codegen types deferred fields as a union of the present and absent value
 ```ts
 type MyQuery = {
   field: boolean;
-} & ({ deferredField: string } | { deferredField?: never });
+} & (
+  | { deferredFieldA: string; deferredFieldB: number }
+  | { deferredFieldA?: never; deferredFieldB?: never }
+);
 ```
 
 Apollo Client provides `GraphQLCodegenIncremental` type overrides that assemble the `@defer` types for [`dataState`](./typescript#type-narrowing-data-with-datastate). For example, when `dataState` is `"complete"`, every field in the selection set is present, so the `GraphQLCodegenIncremental` type overrides remove the `never` branches from the type. This avoids the need to check for a truthy value on each of the deferred fields to determine whether the query has completed or not.

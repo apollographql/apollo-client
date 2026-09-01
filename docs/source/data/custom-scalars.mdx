@@ -44,17 +44,26 @@ typeof value === "object" && value !== null;
 
 ### Create a `Scalar` from a GraphQL.js `GraphQLScalarType`
 
-If you have a [`GraphQLScalarType`](https://www.graphql-js.org/api-v16/type/#graphqlscalartype) from `graphql`, you can create an Apollo Client compatible `Scalar` instance from it with `Scalar.fromGraphQLScalarType`:
+If you have a [`GraphQLScalarType`](https://graphql.org/graphql-js/type/#graphqlscalartype) instance from `graphql`, you can use it to create an Apollo Client compatible `Scalar` using `Scalar.fromGraphQLScalarType`. Apollo Client uses `parseValue` and `serialize` from the GraphQL.js scalar.
+
+Provide `is` since GraphQL.js scalars don't include an equivalent check:
 
 ```ts
-const dateTime = new GraphQLScalarType(/*...*/);
+import { GraphQLScalarType } from "graphql";
+import { Scalar } from "@apollo/client";
+
+const dateTime = new GraphQLScalarType({
+  name: "DateTime",
+  parseValue: (value) => new Date(value),
+  serialize: (value) => value.toISOString(),
+});
 
 const dateTimeScalar = Scalar.fromGraphQLScalarType(dateTime, {
   is: (value) => value instanceof Date,
 });
 ```
 
-This is most useful when you want to use scalar types from shared NPM packages such as [`graphql-scalars`](https://the-guild.dev/graphql/scalars) which provide many useful scalar implementations out of the box:
+This is most useful when you want to use scalar types from shared NPM packages such as [`graphql-scalars`](https://the-guild.dev/graphql/scalars), which provide many useful scalar implementations out of the box:
 
 ```ts
 import { GraphQLDateTimeISO } from "graphql-scalars";
@@ -66,7 +75,7 @@ const dateTimeScalar = Scalar.fromGraphQLScalarType(GraphQLDateTimeISO, {
 
 <Note>
 
-`graphql-scalars` is a package published primarily for GraphQL servers. Please check to make sure the scalars you use are compatible with your environment and provide the right transforms for your needs.
+`graphql-scalars` is a package published primarily for GraphQL servers. Check that the scalars you use are compatible with your environment and provide the transforms you need.
 
 </Note>
 

@@ -10,7 +10,7 @@ GraphQL schemas often define custom scalar types to add semantic meaning for fie
 
 This guide walks through using custom scalars in your own applications.
 
-## Define a custom scalar
+## Define a `Scalar`
 
 Define custom scalars with the `Scalar` class. A `Scalar` describes how to convert a value between the JSON serialized value and the parsed value:
 
@@ -31,11 +31,16 @@ const dateTimeScalar = new Scalar<string, Date>({
   idPrefix="scalaroptions-interface"
 />
 
-<Note>
+### The `is` function
 
-`is` provides a default implementation that returns `true` when the value is a non-null object.
+The `is` function determines whether a value is in its parsed or serialized form. Apollo Client uses this method to coerce values as needed during the lifetime of your application. When `is` returns `true`, Apollo Client treats the value as the parsed type. When `is` returns `false`, Apollo Client treats the value as the serialized type.
 
-</Note>
+If you omit `is`, Apollo Client treats any non-null object as a parsed value:
+
+```ts
+// Default `is` implementation
+typeof value === "object" && value !== null;
+```
 
 ### Create a `Scalar` from a GraphQL.js `GraphQLScalarType`
 

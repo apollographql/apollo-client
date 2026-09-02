@@ -50,7 +50,7 @@ import type {
   InMemoryCacheConfig,
   KnownScalars,
   NormalizedCacheObject,
-  ScalarNames,
+  ScalarName,
 } from "./types.js";
 import { StoreWriter } from "./writeToStore.js";
 
@@ -229,7 +229,7 @@ export class InMemoryCache extends ApolloCache {
   public getScalarTypeForField(
     typename: string,
     fieldName: string
-  ): ScalarNames | undefined {
+  ): ScalarName | undefined {
     return this.policies.getScalarTypeForField(typename, fieldName);
   }
 

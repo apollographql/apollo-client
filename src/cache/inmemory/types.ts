@@ -202,6 +202,6 @@ type NestedScalarName<T extends string> =
   | ListOf<ListOf<ListOf<ListOf<T>>>>;
 
 export type KnownScalars = RemoveIndexSignature<ApolloCache.Scalars>;
-export type ScalarNames =
+export type ScalarName =
   | NestedScalarName<keyof KnownScalars & string>
   | (string extends keyof ApolloCache.Scalars ? string & {} : never);

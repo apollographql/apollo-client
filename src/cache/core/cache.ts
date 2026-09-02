@@ -50,7 +50,7 @@ import {
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
-import type { DiffIncrementalInfo, ScalarNames } from "../inmemory/types.js";
+import type { DiffIncrementalInfo, ScalarName } from "../inmemory/types.js";
 
 import type { Scalar } from "./Scalar.js";
 import type { Cache } from "./types/Cache.js";
@@ -334,7 +334,7 @@ export abstract class ApolloCache {
   public getScalarTypeForField(
     typename: string,
     fieldName: string
-  ): ScalarNames | undefined {
+  ): ScalarName | undefined {
     return;
   }
 

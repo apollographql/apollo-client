@@ -541,7 +541,7 @@ test("handles self-referencing input objects", async () => {
   expect(inputObjects).toStrictEqual({
     TaskFilter: {
       fields: {
-        and: "TaskFilter",
+        and: "[TaskFilter]",
         not: "TaskFilter",
         dueBefore: "DateTime",
       },
@@ -991,7 +991,7 @@ test("retains input objects used on only one of multiple fields", async () => {
   });
 });
 
-test("unwraps list and non-null types for variable definitions and object fields", async () => {
+test("keeps list wrappers and strips non-null markers for input fields and object fields", async () => {
   const schema = gql`
     scalar DateTime
 
@@ -1045,10 +1045,83 @@ test("unwraps list and non-null types for variable definitions and object fields
           scalar: "DateTime",
         },
         meetingTimes: {
-          scalar: "DateTime",
+          scalar: "[DateTime]",
         },
         availabilitySlots: {
-          scalar: "DateTime",
+          scalar: "[[DateTime]]",
+        },
+      },
+    },
+  });
+});
+
+test("distinguishes array-shaped scalars from lists of scalars", async () => {
+  const schema = gql`
+    scalar DateTime
+    scalar DateTimeRange
+
+    input EventFilter {
+      dateRange: DateTimeRange
+      dates: [DateTime]
+      ranges: [DateTimeRange!]
+    }
+
+    type Query {
+      events(filter: EventFilter): [Event]
+    }
+
+    type Event {
+      id: ID!
+      dateRange: DateTimeRange
+      dates: [DateTime!]!
+      ranges: [DateTimeRange!]
+    }
+  `;
+
+  const documents = [
+    {
+      document: gql`
+        query Events(
+          $filter: EventFilter
+          $dateRange: DateTimeRange
+          $dates: [DateTime]
+        ) {
+          events(filter: $filter) {
+            id
+            dateRange
+            dates
+            ranges
+          }
+        }
+      `,
+    },
+  ];
+
+  const { inputObjects, scalarTypePolicies } = await generateConfig({
+    schema,
+    documents,
+  });
+
+  expect(inputObjects).toStrictEqual({
+    EventFilter: {
+      fields: {
+        dateRange: "DateTimeRange",
+        dates: "[DateTime]",
+        ranges: "[DateTimeRange]",
+      },
+    },
+  });
+  expect(scalarTypePolicies).toStrictEqual({
+    Event: {
+      fields: {
+        dateRange: {
+          scalar: "DateTimeRange",
+        },
+        dates: {
+          scalar: "[DateTime]",
+        },
+        ranges: {
+          scalar: "[DateTimeRange]",
         },
       },
     },

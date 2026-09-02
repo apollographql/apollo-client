@@ -82,6 +82,7 @@ export { StreamArrayState } from "./StreamArrayState.js";
 export { stringifyForDisplay } from "./stringifyForDisplay.js";
 export { toDiffWithDataState } from "./toDiffWithDataState.js";
 export { toQueryResult } from "./toQueryResult.js";
+export { unwrapScalarType } from "./unwrapScalarType.js";
 export { filterMap } from "./filterMap.js";
 export { equalByQuery } from "./equalByQuery.js";
 export { canonicalStringify } from "./canonicalStringify.js";

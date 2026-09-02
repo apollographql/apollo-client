@@ -158,7 +158,9 @@ export const plugin: PluginFunction<CustomScalarsPluginConfig, string> = async (
       }
 
       if (!usedFields || usedFields.get(type.name)?.has(fieldName)) {
-        fieldPolicies[fieldName] = { scalar: typeName };
+        fieldPolicies[fieldName] = {
+          scalar: field.type.toString().replaceAll("!", ""),
+        };
       }
     }
 

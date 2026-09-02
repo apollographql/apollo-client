@@ -63,6 +63,7 @@ export type {
   OptimisticStoreItem,
   ReadMergeModifyContext,
   ReadQueryOptions,
+  ScalarName,
   StoreObject,
   StoreValue,
 } from "./inmemory/types.js";

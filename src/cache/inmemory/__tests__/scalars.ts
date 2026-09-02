@@ -3844,7 +3844,7 @@ test("parses scalar values across a complex nested query", () => {
       },
       Schedule: {
         fields: {
-          timeSlots: { scalar: "[DateTime]" },
+          timeSlots: { scalar: "[[DateTime]]" },
         },
       },
       Speaker: {
@@ -4841,7 +4841,7 @@ test("deep merges scalar option with policies.addTypePolicies", () => {
     },
     Schedule: {
       fields: {
-        timeSlots: { scalar: "[DateTime]" },
+        timeSlots: { scalar: "[[DateTime]]" },
       },
     },
     Speaker: {

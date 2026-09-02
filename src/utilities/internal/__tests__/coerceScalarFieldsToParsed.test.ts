@@ -3,10 +3,17 @@ import { InMemoryCache } from "@apollo/client/cache";
 import {
   dateScalar,
   dateTimeRangeScalar,
+  dateTimeScalar,
   jsonObjectScalar,
   priceScalar,
+  spyOnConsole,
 } from "@apollo/client/testing/internal";
 import { coerceScalarFieldsToParsed } from "@apollo/client/utilities/internal";
+
+const WARNINGS = {
+  LIST_SCALAR_MISMATCH:
+    "Expected an array value for '%s' of type '%s', but received a non-array value. The value was coerced anyway.",
+};
 
 test("parses custom scalar fields on nested objects", () => {
   const cache = new InMemoryCache({
@@ -601,6 +608,53 @@ test("ignores non-null markers in a nested list scalar type", () => {
       ],
     },
   });
+});
+
+test("passes through a non-array value and warns when a list scalar receives an object", () => {
+  using _ = spyOnConsole("warn");
+
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Event: {
+        fields: {
+          dates: { scalar: "[DateTime]" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query Event {
+      event {
+        id
+        dates
+      }
+    }
+  `;
+
+  const result = {
+    event: {
+      __typename: "Event",
+      id: "1",
+      dates: "2026-01-01T00:00:00.000Z",
+    },
+  };
+
+  expect(coerceScalarFieldsToParsed(result, query, cache)).toStrictEqualTyped({
+    event: {
+      __typename: "Event",
+      id: "1",
+      dates: new Date("2026-01-01T00:00:00.000Z"),
+    },
+  });
+
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    WARNINGS.LIST_SCALAR_MISMATCH,
+    "Event.dates",
+    "[DateTime]"
+  );
 });
 
 test("parses custom scalar fields selected by a named fragment", () => {

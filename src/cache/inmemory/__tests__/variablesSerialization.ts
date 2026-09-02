@@ -5,7 +5,13 @@ import {
   dateTimeScalar,
   jsonObjectScalar,
   priceScalar,
+  spyOnConsole,
 } from "@apollo/client/testing/internal";
+
+const WARNINGS = {
+  LIST_SCALAR_MISMATCH:
+    "Expected an array value for '%s' of type '%s', but received a non-array value. The value was coerced anyway.",
+};
 
 test("serializes a custom scalar variable", () => {
   const cache = new InMemoryCache({
@@ -298,6 +304,35 @@ test("serializes each item when the variable type is a list of scalars", () => {
   ).toStrictEqualTyped({
     dateRange: ["2026-01-01T00:00:00.000Z", "2026-06-01T00:00:00.000Z"],
   });
+});
+
+test("passes through a non-array variable and warns when the variable type is a list", () => {
+  using _ = spyOnConsole("warn");
+
+  const cache = new InMemoryCache({
+    scalars: {
+      DateTime: dateTimeScalar,
+    },
+  });
+
+  const mutation = gql`
+    mutation CreateEvent($dates: [DateTime]) {
+      createEvent(dates: $dates) {
+        id
+      }
+    }
+  `;
+
+  const variables = { dates: new Date("2026-01-01T00:00:00.000Z") };
+  const result = cache.serializeVariables(mutation, variables);
+
+  expect(result).toStrictEqualTyped({ dates: "2026-01-01T00:00:00.000Z" });
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    WARNINGS.LIST_SCALAR_MISMATCH,
+    "dates",
+    "[DateTime]"
+  );
 });
 
 test("serializes each array-shaped scalar in a list of array-shaped scalars", () => {

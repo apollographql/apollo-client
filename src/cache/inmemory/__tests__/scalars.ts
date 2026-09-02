@@ -19,6 +19,8 @@ const WARNINGS = {
     "The field policy for '%s' is configured with the '%s' scalar, so its '%s' function is ignored. Scalar configuration cannot be used with custom read or merge functions.",
   NON_SCALAR_FIELD:
     "The field policy for '%s' is configured with the '%s' scalar, but the field is not a scalar field because it contains a selection set. The field value remains unchanged.",
+  LIST_SCALAR_MISMATCH:
+    "Expected an array value for '%s' of type '%s', but received a non-array value. The value was coerced anyway.",
 };
 
 test("creates a scalar from a GraphQLScalarType", () => {
@@ -997,6 +999,57 @@ test("ignores non-null markers in a nested list scalar type when writing", () =>
       },
     },
   });
+});
+
+test("passes through a non-array value and warns when a list scalar receives an object", () => {
+  using _ = spyOnConsole("warn");
+
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Event: {
+        fields: {
+          dates: { scalar: "[DateTime]" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      event {
+        id
+        dates
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        dates: "2026-01-01T00:00:00.000Z",
+      },
+    },
+  });
+
+  expect(rawCacheData(cache)).toEqual({
+    ROOT_QUERY: { __typename: "Query", event: { __ref: "Event:1" } },
+    "Event:1": {
+      __typename: "Event",
+      id: "1",
+      dates: "2026-01-01T00:00:00.000Z",
+    },
+  });
+
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    WARNINGS.LIST_SCALAR_MISMATCH,
+    "Event.dates",
+    "[DateTime]"
+  );
 });
 
 test("stores null as-is when null is written to a scalar field", () => {

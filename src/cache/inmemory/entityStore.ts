@@ -17,6 +17,7 @@ import {
   isPlainObject,
   makeReference,
   maybeDeepFreeze,
+  unwrapScalarType,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
@@ -36,7 +37,11 @@ import type {
 
 import { fieldNameFromStoreName, hasOwn } from "./helpers.js";
 import type { Policies, StorageType } from "./policies.js";
-import type { NormalizedCache, NormalizedCacheObject } from "./types.js";
+import type {
+  NormalizedCache,
+  NormalizedCacheObject,
+  ScalarType,
+} from "./types.js";
 
 const DELETE = {} as DeleteModifier;
 const delModifier: Modifier<any> = () => DELETE;
@@ -446,12 +451,12 @@ export abstract class EntityStore implements NormalizedCache {
     let changed = false;
 
     const entries = Object.entries(obj).map(([storeFieldName, value]) => {
-      const scalar = this.policies.getScalarTypeForField(
+      const scalarType = this.policies.getScalarTypeForField(
         typename,
         fieldNameFromStoreName(storeFieldName)
       );
 
-      const newValue = this.coerceValue(value, coerce, scalar);
+      const newValue = this.coerceValue(value, coerce, scalarType);
       changed ||= newValue !== value;
 
       return [storeFieldName, newValue];
@@ -463,18 +468,30 @@ export abstract class EntityStore implements NormalizedCache {
   private coerceValue(
     value: unknown,
     coerce: (scalar: Scalar<any, any>, value: unknown) => unknown,
-    scalar?: Scalar<any, any>
+    scalarType?: ScalarType
   ): unknown {
     if (value == null) {
       return value;
     }
 
-    if (Array.isArray(value)) {
-      return value.map((item) => this.coerceValue(item, coerce, scalar));
+    if (scalarType) {
+      const match = scalarType.match(/^\[(.*)\]$/);
+
+      if (match && Array.isArray(value)) {
+        return value.map((item) => this.coerceValue(item, coerce, match[1]));
+      }
+
+      const scalar = this.policies.cache.getScalar(
+        unwrapScalarType(scalarType)
+      );
+
+      if (scalar) {
+        return coerce(scalar, value);
+      }
     }
 
-    if (scalar) {
-      return coerce(scalar, value);
+    if (Array.isArray(value)) {
+      return value.map((item) => this.coerceValue(item, coerce, scalarType));
     }
 
     if (isPlainObject(value) && "__typename" in value) {

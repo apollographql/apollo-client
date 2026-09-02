@@ -45,6 +45,7 @@ export { friendListSchemaGraphQL17Alpha9 } from "./schemas/friendList.graphql17A
 
 export {
   dateScalar,
+  dateTimeRangeScalar,
   dateTimeScalar,
   jsonObjectScalar,
   priceScalar,

@@ -24,7 +24,12 @@ import {
 
 import type { CustomScalarsPluginConfig } from "./config.js";
 
-type InputObjectMap = Map<string, Record<string, string>>;
+interface InputFieldType {
+  name: string;
+  type: string;
+}
+
+type InputObjectMap = Map<string, Record<string, InputFieldType>>;
 type InputObjectsConfig = Record<string, { fields: Record<string, string> }>;
 
 // Use a shim to avoid the need to add `@apollo/client` as a peer dependency
@@ -66,13 +71,16 @@ export const plugin: PluginFunction<CustomScalarsPluginConfig, string> = async (
     if (isCustomScalar(type, config)) {
       customScalars.add(type.name);
     } else if (isInputObjectType(type)) {
-      const fields: Record<string, string> = {};
+      const fields: Record<string, InputFieldType> = {};
 
       for (const [fieldName, field] of Object.entries(type.getFields())) {
         const inputType = getNamedType(field.type);
 
         if (isCustomScalar(inputType, config) || isInputObjectType(inputType)) {
-          fields[fieldName] = inputType.name;
+          fields[fieldName] = {
+            name: inputType.name,
+            type: field.type.toString().replaceAll("!", ""),
+          };
         }
       }
 
@@ -117,9 +125,12 @@ export const plugin: PluginFunction<CustomScalarsPluginConfig, string> = async (
     const fields = inputObjects.get(name)!;
     const fieldsConfig: Record<string, string> = {};
 
-    for (const [fieldName, typeName] of Object.entries(fields)) {
-      if (customScalars.has(typeName) || withCustomScalars.has(typeName)) {
-        fieldsConfig[fieldName] = typeName;
+    for (const [fieldName, inputType] of Object.entries(fields)) {
+      if (
+        customScalars.has(inputType.name) ||
+        withCustomScalars.has(inputType.name)
+      ) {
+        fieldsConfig[fieldName] = inputType.type;
       }
     }
 
@@ -242,16 +253,16 @@ function getInputObjectsWithCustomScalars(
   const queue: string[] = [];
 
   for (const [name, fields] of inputObjects) {
-    for (const typeName of Object.values(fields)) {
-      if (customScalars.has(typeName)) {
+    for (const inputType of Object.values(fields)) {
+      if (customScalars.has(inputType.name)) {
         if (!useful.has(name)) {
           useful.add(name);
           queue.push(name);
         }
-      } else if (inputObjects.has(typeName)) {
-        let deps = dependents.get(typeName);
+      } else if (inputObjects.has(inputType.name)) {
+        let deps = dependents.get(inputType.name);
         if (!deps) {
-          dependents.set(typeName, (deps = []));
+          dependents.set(inputType.name, (deps = []));
         }
         deps.push(name);
       }
@@ -339,13 +350,13 @@ function getReachableInputObjects(
   while (queue.length) {
     const fields = reachable.get(queue.pop()!)!;
 
-    for (const typeName of Object.values(fields)) {
-      if (!reachable.has(typeName)) {
-        const dependencyFields = inputObjects.get(typeName);
+    for (const inputType of Object.values(fields)) {
+      if (!reachable.has(inputType.name)) {
+        const dependencyFields = inputObjects.get(inputType.name);
 
         if (dependencyFields) {
-          reachable.set(typeName, dependencyFields);
-          queue.push(typeName);
+          reachable.set(inputType.name, dependencyFields);
+          queue.push(inputType.name);
         }
       }
     }

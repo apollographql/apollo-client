@@ -50,7 +50,7 @@ import {
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
-import type { DiffIncrementalInfo } from "../inmemory/types.js";
+import type { DiffIncrementalInfo, ScalarNames } from "../inmemory/types.js";
 
 import type { Scalar } from "./Scalar.js";
 import type { Cache } from "./types/Cache.js";
@@ -330,11 +330,11 @@ export abstract class ApolloCache {
     return;
   }
 
-  /** Get a scalar instance for a field in a type */
-  public getScalarForField<TSerialized = unknown, TParsed = unknown>(
+  /** Get the configured scalar type for a field */
+  public getScalarTypeForField(
     typename: string,
     fieldName: string
-  ): Scalar<TSerialized, TParsed> | undefined {
+  ): ScalarNames | undefined {
     return;
   }
 

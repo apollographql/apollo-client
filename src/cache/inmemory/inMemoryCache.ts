@@ -50,6 +50,7 @@ import type {
   InMemoryCacheConfig,
   KnownScalars,
   NormalizedCacheObject,
+  ScalarNames,
 } from "./types.js";
 import { StoreWriter } from "./writeToStore.js";
 
@@ -224,12 +225,12 @@ export class InMemoryCache extends ApolloCache {
     return this.config.scalars?.[key as string] as any;
   }
 
-  /** Get a scalar instance for a field in a type */
-  public getScalarForField<TSerialized = unknown, TParsed = unknown>(
+  /** Get the configured scalar type for a field */
+  public getScalarTypeForField(
     typename: string,
     fieldName: string
-  ): Scalar<TSerialized, TParsed> | undefined {
-    return this.policies.getScalarForField(typename, fieldName);
+  ): ScalarNames | undefined {
+    return this.policies.getScalarTypeForField(typename, fieldName);
   }
 
   public configuresScalars(): boolean {

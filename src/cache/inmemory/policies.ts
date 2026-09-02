@@ -932,13 +932,11 @@ export class Policies {
       : fieldName + ":" + storeFieldName;
   }
 
-  public getScalarForField(
+  public getScalarTypeForField(
     typename: string,
     fieldName: string
-  ): Scalar<any, any> | undefined {
-    const policy = this.getFieldPolicy(typename, fieldName);
-
-    return policy?.scalar ? this.cache.getScalar(policy.scalar) : undefined;
+  ): ScalarNames | undefined {
+    return this.getFieldPolicy(typename, fieldName)?.scalar;
   }
 
   public readField<V = StoreValue>(

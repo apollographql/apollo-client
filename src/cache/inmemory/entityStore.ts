@@ -446,7 +446,7 @@ export abstract class EntityStore implements NormalizedCache {
     let changed = false;
 
     const entries = Object.entries(obj).map(([storeFieldName, value]) => {
-      const scalar = this.policies.getScalarForField(
+      const scalar = this.policies.getScalarTypeForField(
         typename,
         fieldNameFromStoreName(storeFieldName)
       );

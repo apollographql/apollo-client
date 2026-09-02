@@ -122,11 +122,20 @@ test("allows any scalar name in field policies", () => {
           startDate: {
             scalar: "RelativeDate",
           },
+          dates: {
+            scalar: "[RelativeDate]",
+          },
+          datesByYear: {
+            scalar: "[[RelativeDate]]",
+          },
           metadata: {
             scalar: "JSONObject",
           },
           unknown: {
             scalar: "Unknown",
+          },
+          unknownList: {
+            scalar: "[Unknown]",
           },
         },
       },

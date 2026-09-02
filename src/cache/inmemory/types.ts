@@ -203,5 +203,9 @@ type NestedScalarName<T extends string> =
 
 export type KnownScalars = RemoveIndexSignature<ApolloCache.Scalars>;
 export type ScalarName =
-  | NestedScalarName<keyof KnownScalars & string>
+  | keyof KnownScalars
+  | (string extends keyof ApolloCache.Scalars ? string & {} : never);
+
+export type ScalarType =
+  | NestedScalarName<ScalarName & string>
   | (string extends keyof ApolloCache.Scalars ? string & {} : never);

@@ -61,7 +61,7 @@ import type {
   MergeInfo,
   NormalizedCache,
   ReadMergeModifyContext,
-  ScalarName,
+  ScalarType,
 } from "./types.js";
 import type { WriteContext } from "./writeToStore.js";
 
@@ -176,7 +176,7 @@ export type FieldPolicy<
   keyArgs?: KeySpecifier | KeyArgsFunction | false;
   read?: FieldReadFunction<TExisting, TReadResult, TReadOptions>;
   merge?: FieldMergeFunction<TExisting, TIncoming, TMergeOptions> | boolean;
-  scalar?: ScalarName;
+  scalar?: ScalarType;
 };
 
 export type StorageType = Record<string, any>;
@@ -935,7 +935,7 @@ export class Policies {
   public getScalarTypeForField(
     typename: string,
     fieldName: string
-  ): ScalarName | undefined {
+  ): ScalarType | undefined {
     return this.getFieldPolicy(typename, fieldName)?.scalar;
   }
 

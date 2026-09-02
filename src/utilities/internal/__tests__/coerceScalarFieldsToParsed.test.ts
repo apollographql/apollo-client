@@ -2,6 +2,7 @@ import { gql } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import {
   dateScalar,
+  dateTimeRangeScalar,
   jsonObjectScalar,
   priceScalar,
 } from "@apollo/client/testing/internal";
@@ -313,7 +314,7 @@ test("parses custom scalar values in a list of scalars", () => {
     typePolicies: {
       Event: {
         fields: {
-          dates: { scalar: "Date" },
+          dates: { scalar: "[Date]" },
         },
       },
     },
@@ -393,7 +394,181 @@ test("parses custom scalar values in a list of lists", () => {
     typePolicies: {
       Event: {
         fields: {
-          datesByYear: { scalar: "Date" },
+          datesByYear: { scalar: "[[Date]]" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query Event {
+      event {
+        id
+        datesByYear
+      }
+    }
+  `;
+
+  const result = {
+    event: {
+      __typename: "Event",
+      id: "1",
+      datesByYear: [["2026-01-01", "2026-06-15"], ["2027-03-10"]],
+    },
+  };
+
+  expect(coerceScalarFieldsToParsed(result, query, cache)).toStrictEqualTyped({
+    event: {
+      __typename: "Event",
+      id: "1",
+      datesByYear: [
+        [new Date(2026, 0, 1), new Date(2026, 5, 15)],
+        [new Date(2027, 2, 10)],
+      ],
+    },
+  });
+});
+
+test("passes an array-shaped scalar value to parse as a whole", () => {
+  const cache = new InMemoryCache({
+    scalars: {
+      DateTimeRange: dateTimeRangeScalar,
+    },
+    typePolicies: {
+      Event: {
+        fields: {
+          dateRange: { scalar: "DateTimeRange" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query Event {
+      event {
+        id
+        dateRange
+      }
+    }
+  `;
+
+  const result = {
+    event: {
+      __typename: "Event",
+      id: "1",
+      dateRange: ["2026-01-01T00:00:00.000Z", "2026-06-01T00:00:00.000Z"],
+    },
+  };
+
+  expect(coerceScalarFieldsToParsed(result, query, cache)).toStrictEqualTyped({
+    event: {
+      __typename: "Event",
+      id: "1",
+      dateRange: {
+        start: new Date("2026-01-01T00:00:00.000Z"),
+        end: new Date("2026-06-01T00:00:00.000Z"),
+      },
+    },
+  });
+});
+
+test("parses each array-shaped scalar in a list of array-shaped scalars", () => {
+  const cache = new InMemoryCache({
+    scalars: {
+      DateTimeRange: dateTimeRangeScalar,
+    },
+    typePolicies: {
+      Event: {
+        fields: {
+          dateRanges: { scalar: "[DateTimeRange]" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query Event {
+      event {
+        id
+        dateRanges
+      }
+    }
+  `;
+
+  const result = {
+    event: {
+      __typename: "Event",
+      id: "1",
+      dateRanges: [
+        ["2026-01-01T00:00:00.000Z", "2026-06-01T00:00:00.000Z"],
+        ["2026-07-01T00:00:00.000Z", "2026-12-01T00:00:00.000Z"],
+      ],
+    },
+  };
+
+  expect(coerceScalarFieldsToParsed(result, query, cache)).toStrictEqualTyped({
+    event: {
+      __typename: "Event",
+      id: "1",
+      dateRanges: [
+        {
+          start: new Date("2026-01-01T00:00:00.000Z"),
+          end: new Date("2026-06-01T00:00:00.000Z"),
+        },
+        {
+          start: new Date("2026-07-01T00:00:00.000Z"),
+          end: new Date("2026-12-01T00:00:00.000Z"),
+        },
+      ],
+    },
+  });
+});
+
+test("ignores non-null markers in a list scalar type", () => {
+  const cache = new InMemoryCache({
+    scalars: { Date: dateScalar },
+    typePolicies: {
+      Event: {
+        fields: {
+          dates: { scalar: "[Date!]!" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query Event {
+      event {
+        id
+        dates
+      }
+    }
+  `;
+
+  const result = {
+    event: {
+      __typename: "Event",
+      id: "1",
+      dates: ["2026-01-01", "2026-06-15"],
+    },
+  };
+
+  expect(coerceScalarFieldsToParsed(result, query, cache)).toStrictEqualTyped({
+    event: {
+      __typename: "Event",
+      id: "1",
+      dates: [new Date(2026, 0, 1), new Date(2026, 5, 15)],
+    },
+  });
+});
+
+test("ignores non-null markers in a nested list scalar type", () => {
+  const cache = new InMemoryCache({
+    scalars: { Date: dateScalar },
+    typePolicies: {
+      Event: {
+        fields: {
+          datesByYear: { scalar: "[[Date!]!]!" },
         },
       },
     },
@@ -968,7 +1143,7 @@ test("leaves null values in a list as-is", () => {
       Event: {
         fields: {
           startDate: { scalar: "Date" },
-          dates: { scalar: "Date" },
+          dates: { scalar: "[Date]" },
         },
       },
     },

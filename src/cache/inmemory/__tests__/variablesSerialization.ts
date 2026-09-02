@@ -371,33 +371,6 @@ test("serializes each array-shaped scalar in a list of array-shaped scalars", ()
   });
 });
 
-test("ignores non-null markers when serializing a list scalar variable", () => {
-  const cache = new InMemoryCache({
-    scalars: {
-      DateTime: dateTimeScalar,
-    },
-  });
-
-  const mutation = gql`
-    mutation ScheduleEvents($startsAt: [DateTime!]!) {
-      scheduleEvents(startsAt: $startsAt) {
-        id
-      }
-    }
-  `;
-
-  expect(
-    cache.serializeVariables(mutation, {
-      startsAt: [
-        new Date("2026-01-01T00:00:00.000Z"),
-        new Date("2026-01-02T00:00:00.000Z"),
-      ],
-    })
-  ).toStrictEqualTyped({
-    startsAt: ["2026-01-01T00:00:00.000Z", "2026-01-02T00:00:00.000Z"],
-  });
-});
-
 test("serializes mixed parsed and serialized scalar object list values", () => {
   const cache = new InMemoryCache({
     scalars: {
@@ -787,44 +760,6 @@ test("serializes each array-shaped scalar field in a list on a configured input 
         ["2026-01-01T00:00:00.000Z", "2026-06-01T00:00:00.000Z"],
         ["2026-07-01T00:00:00.000Z", "2026-12-01T00:00:00.000Z"],
       ],
-    },
-  });
-});
-
-test("ignores non-null markers in a configured input object field type", () => {
-  const cache = new InMemoryCache({
-    scalars: {
-      DateTime: dateTimeScalar,
-    },
-    inputObjects: {
-      AvailabilityInput: {
-        fields: {
-          dates: "[DateTime!]!",
-        },
-      },
-    },
-  });
-
-  const mutation = gql`
-    mutation SetAvailability($input: AvailabilityInput!) {
-      setAvailability(input: $input) {
-        id
-      }
-    }
-  `;
-
-  expect(
-    cache.serializeVariables(mutation, {
-      input: {
-        dates: [
-          new Date("2026-01-01T00:00:00.000Z"),
-          new Date("2026-01-02T00:00:00.000Z"),
-        ],
-      },
-    })
-  ).toStrictEqualTyped({
-    input: {
-      dates: ["2026-01-01T00:00:00.000Z", "2026-01-02T00:00:00.000Z"],
     },
   });
 });

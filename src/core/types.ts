@@ -381,7 +381,7 @@ export type MutationUpdaterFunction<
   result: FormattedExecutionResult<Unmasked<TData>>,
   options: {
     context?: DefaultContext;
-    variables?: TVariables;
+    variables: TVariables;
   }
 ) => void;
 

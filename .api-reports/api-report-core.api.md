@@ -798,7 +798,7 @@ interface MutationStoreValue {
 // @public (undocumented)
 export type MutationUpdaterFunction<TData, TVariables extends OperationVariables, TCache extends Cache_2.Implementation> = (cache: TCache, result: FormattedExecutionResult<Unmasked<TData>>, options: {
     context?: DefaultContext;
-    variables?: TVariables;
+    variables: TVariables;
 }) => void;
 
 // @public

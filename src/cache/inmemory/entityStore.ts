@@ -451,12 +451,18 @@ export abstract class EntityStore implements NormalizedCache {
     let changed = false;
 
     const entries = Object.entries(obj).map(([storeFieldName, value]) => {
+      const fieldName = fieldNameFromStoreName(storeFieldName);
       const scalarType = this.policies.getScalarTypeForField(
         typename,
-        fieldNameFromStoreName(storeFieldName)
+        fieldName
       );
 
-      const newValue = this.coerceValue(value, coerce, scalarType);
+      const newValue = this.coerceValue(
+        value,
+        coerce,
+        scalarType,
+        `${typename}.${fieldName}`
+      );
       changed ||= newValue !== value;
 
       return [storeFieldName, newValue];
@@ -468,7 +474,8 @@ export abstract class EntityStore implements NormalizedCache {
   private coerceValue(
     value: unknown,
     coerce: (scalar: Scalar<any, any>, value: unknown) => unknown,
-    scalarType?: ScalarType
+    scalarType: ScalarType | undefined,
+    coordinate: string
   ): unknown {
     if (value == null) {
       return value;
@@ -477,8 +484,21 @@ export abstract class EntityStore implements NormalizedCache {
     if (scalarType) {
       const match = scalarType.match(/^\[(.*)\]$/);
 
-      if (match && Array.isArray(value)) {
-        return value.map((item) => this.coerceValue(item, coerce, match[1]));
+      if (match) {
+        if (Array.isArray(value)) {
+          return value.map((item) =>
+            this.coerceValue(item, coerce, match[1], coordinate)
+          );
+        } else {
+          if (__DEV__) {
+            invariant.warn(
+              "The custom scalar configuration for '%s' uses list type '%s', but the value is not an array. The value was coerced as '%s' anyway.",
+              coordinate,
+              scalarType,
+              unwrapScalarType(scalarType)
+            );
+          }
+        }
       }
 
       const scalar = this.policies.cache.getScalar(
@@ -491,7 +511,9 @@ export abstract class EntityStore implements NormalizedCache {
     }
 
     if (Array.isArray(value)) {
-      return value.map((item) => this.coerceValue(item, coerce, scalarType));
+      return value.map((item) =>
+        this.coerceValue(item, coerce, scalarType, coordinate)
+      );
     }
 
     if (isPlainObject(value) && "__typename" in value) {

@@ -20,7 +20,7 @@ const WARNINGS = {
   NON_SCALAR_FIELD:
     "The field policy for '%s' is configured with the '%s' scalar, but the field is not a scalar field because it contains a selection set. The field value remains unchanged.",
   LIST_SCALAR_MISMATCH:
-    "Expected an array value for '%s' of type '%s', but received a non-array value. The value was coerced anyway.",
+    "The custom scalar configuration for '%s' uses list type '%s', but the value is not an array. The value was coerced as '%s' anyway.",
 };
 
 test("creates a scalar from a GraphQLScalarType", () => {
@@ -851,7 +851,8 @@ test("passes through a non-array value and warns when a list scalar receives an 
   expect(console.warn).toHaveBeenCalledWith(
     WARNINGS.LIST_SCALAR_MISMATCH,
     "Event.dates",
-    "[DateTime]"
+    "[DateTime]",
+    "DateTime"
   );
 });
 

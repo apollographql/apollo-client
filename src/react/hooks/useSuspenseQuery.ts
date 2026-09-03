@@ -27,7 +27,6 @@ import { getSuspenseCache } from "@apollo/client/react/internal";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
   DocumentationTypes as UtilityDocumentationTypes,
-  NoInfer,
   OptionWithFallback,
   Prettify,
   SignatureStyle,
@@ -86,7 +85,7 @@ export declare namespace useSuspenseQuery {
        * @example Recommended usage of `skipToken`:
        *
        * ```ts
-       * import { skipToken, useSuspenseQuery } from "@apollo/client";
+       * import { skipToken, useSuspenseQuery } from "@apollo/client/react";
        *
        * const { data } = useSuspenseQuery(
        *   query,
@@ -249,7 +248,7 @@ export declare namespace useSuspenseQuery {
        *
        * ```jsx
        * import { Suspense } from "react";
-       * import { useSuspenseQuery } from "@apollo/client";
+       * import { useSuspenseQuery } from "@apollo/client/react";
        *
        * const listQuery = gql`
        *   query {

@@ -52,6 +52,8 @@ import type { IgnoreModifier } from '@apollo/client/cache';
 import type { Incremental } from '@apollo/client/incremental';
 import { InMemoryCache } from '@apollo/client/cache';
 import { InMemoryCacheConfig } from '@apollo/client/cache';
+import { InputObjectConfig } from '@apollo/client/cache';
+import { InputObjectsOption } from '@apollo/client/cache';
 import type { InternalTypes as InternalTypes_2 } from '@apollo/client';
 import type { InteropObservable } from 'rxjs';
 import type { IsAny } from '@apollo/client/utilities/internal';
@@ -88,6 +90,8 @@ import type { Reference as Reference_2 } from '@apollo/client/cache';
 import { RequestHandler } from '@apollo/client/link';
 import { resetCaches } from 'graphql-tag';
 import { rewriteURIForGET } from '@apollo/client/link/http';
+import { Scalar } from '@apollo/client/cache';
+import { ScalarType } from '@apollo/client/cache';
 import { selectHttpOptionsAndBody } from '@apollo/client/link/http';
 import { selectHttpOptionsAndBodyInternal } from '@apollo/client/link/http';
 import { selectURI } from '@apollo/client/link/http';
@@ -116,7 +120,7 @@ export { ApolloCache }
 
 // @public (undocumented)
 export namespace ApolloClient {
-    export type { DeclareDefaultOptions, DefaultOptions };
+    export export type { DeclareDefaultOptions, DefaultOptions };
     // (undocumented)
     export namespace Base {
         // (undocumented)
@@ -217,7 +221,7 @@ export namespace ApolloClient {
     }
     // (undocumented)
     export namespace DocumentationTypes {
-        export function mutate<TData = unknown, TVariables extends OperationVariables = OperationVariables, TCache extends ApolloCache = ApolloCache>(options: ApolloClient.MutateOptions<TData, TVariables, TCache>): Promise<ApolloClient.MutateResult<MaybeMasked<TData>>>;
+        export function mutate<TData = unknown, TVariables extends OperationVariables = OperationVariables, TCache extends Cache_2.Implementation = Cache_2.Implementation>(options: ApolloClient.MutateOptions<TData, TVariables, TCache>): Promise<ApolloClient.MutateResult<MaybeMasked<TData>>>;
         export function query<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloClient.QueryOptions<TData, TVariables>): Promise<ApolloClient.QueryResult<MaybeMasked<TData>>>;
     }
     // (undocumented)
@@ -233,7 +237,7 @@ export namespace ApolloClient {
         export interface DefaultOptions extends ApolloClient.DefaultOptions.Mutate.Calculated {
         }
         // (undocumented)
-        export type OptionsFor<TData, TVariables extends OperationVariables, TCache extends ApolloCache, TOptions extends {
+        export type OptionsFor<TData, TVariables extends OperationVariables, TCache extends Cache_2.Implementation, TOptions extends {
             variables?: unknown;
         }> = MutateOptions<NoInfer<TData>, NoInfer<TVariables>, TCache> & {
             variables?: Prettify<TVariables & {
@@ -254,11 +258,11 @@ export namespace ApolloClient {
         export namespace Signatures {
             // (undocumented)
             export interface Classic {
-                <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(options: ApolloClient.MutateOptions<TData, TVariables, ApolloCache> & {
+                <TData, TVariables extends OperationVariables, _INFERENCE_ONLY_DO_NOT_SPECIFY extends "inferred", TErrorPolicy extends ErrorPolicy | undefined = undefined>(options: ApolloClient.MutateOptions<TData, TVariables, Cache_2.Implementation> & {
                     errorPolicy?: TErrorPolicy;
                 }): Promise<ApolloClient.MutateResult<MaybeMasked<TData>, TErrorPolicy>>;
                 // @deprecated (undocumented)
-                <TData, TVariables extends OperationVariables = OperationVariables, TCache extends ApolloCache = ApolloCache, TErrorPolicy extends ErrorPolicy | undefined = undefined>(options: ApolloClient.MutateOptions<TData, TVariables, TCache> & (TErrorPolicy extends undefined ? {} : {
+                <TData, TVariables extends OperationVariables = OperationVariables, TCache extends Cache_2.Implementation = Cache_2.Implementation, TErrorPolicy extends ErrorPolicy | undefined = undefined>(options: ApolloClient.MutateOptions<TData, TVariables, TCache> & (TErrorPolicy extends undefined ? {} : {
                     errorPolicy: TErrorPolicy;
                 })): Promise<ApolloClient.MutateResult<MaybeMasked<TData>, TErrorPolicy>>;
             }
@@ -266,9 +270,9 @@ export namespace ApolloClient {
             export type Evaluated = SignatureStyle extends "classic" ? Classic : Modern;
             // (undocumented)
             export interface Modern {
-                <TData, TVariables extends OperationVariables, TCache extends ApolloCache, TOptions extends Omit<ApolloClient.MutateOptions<NoInfer<TData>, any, TCache>, "variables"> & {
+                <TData, TVariables extends OperationVariables, TOptions extends Omit<ApolloClient.MutateOptions<NoInfer<TData>, any, Cache_2.Implementation>, "variables"> & {
                     variables?: unknown;
-                }, TErrorPolicy extends ErrorPolicy | undefined = undefined>(options: TOptions & ApolloClient.mutate.OptionsFor<TData, TVariables, TCache, TOptions> & {
+                }, TErrorPolicy extends ErrorPolicy | undefined = undefined>(options: TOptions & ApolloClient.mutate.OptionsFor<TData, TVariables, Cache_2.Implementation, TOptions> & {
                     mutation: TypedDocumentNode<TData, TVariables>;
                     errorPolicy?: TErrorPolicy;
                 }): Promise<ApolloClient.mutate.ResultForOptions<TData, TErrorPolicy>>;
@@ -276,8 +280,8 @@ export namespace ApolloClient {
         }
     }
     // (undocumented)
-    export type MutateOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables, TCache extends ApolloCache = ApolloCache> = {
-        optimisticResponse?: Unmasked<NoInfer<TData>> | ((vars: TVariables, { IGNORE }: {
+    export type MutateOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables, TCache extends Cache_2.Implementation = Cache_2.Implementation> = {
+        optimisticResponse?: Unmasked<NoInfer<TData>> | ((vars: TVariables, input: {
             IGNORE: IgnoreModifier;
         }) => Unmasked<NoInfer<TData>> | IgnoreModifier);
         updateQueries?: MutationQueryReducersMap<TData>;
@@ -321,7 +325,7 @@ export namespace ApolloClient {
     // (undocumented)
     export interface Options extends InternalTypes_2.DefaultOptionsParentObject {
         assumeImmutableResults?: boolean;
-        cache: ApolloCache;
+        cache: Cache_2.Implementation;
         // (undocumented)
         clientAwareness?: ClientAwarenessLink.ClientAwarenessOptions;
         dataMasking?: boolean;
@@ -418,7 +422,7 @@ export namespace ApolloClient {
     export type ReadFragmentOptions<TData, TVariables extends OperationVariables> = Base.ReadFragmentOptions<TData, TVariables> & VariablesOption<TVariables> & Cache_2.CacheIdentifierOption<TData>;
     // (undocumented)
     export type ReadQueryOptions<TData, TVariables extends OperationVariables> = Base.ReadQueryOptions<TData, TVariables> & VariablesOption<TVariables>;
-    export interface RefetchQueriesOptions<TCache extends ApolloCache, TResult> {
+    export interface RefetchQueriesOptions<TCache extends Cache_2.Implementation, TResult> {
         include?: RefetchQueriesInclude;
         onQueryUpdated?: OnQueryUpdated<TResult> | null;
         optimistic?: boolean;
@@ -481,7 +485,7 @@ export class ApolloClient {
     // (undocumented)
     __requestRaw(request: ApolloLink.Request): Observable_2<ApolloLink.Result<unknown>>;
     // (undocumented)
-    cache: ApolloCache;
+    cache: Cache_2.Implementation;
     clearStore(): Promise<any[]>;
     // (undocumented)
     get defaultContext(): Partial<DefaultContext>;
@@ -519,7 +523,7 @@ export class ApolloClient {
     // @deprecated
     reFetchObservableQueries: (includeStandby?: boolean) => Promise<ApolloClient.QueryResult<any>[]>;
     refetchObservableQueries(includeStandby?: boolean): Promise<ApolloClient.QueryResult<any>[]>;
-    refetchQueries<TCache extends ApolloCache = ApolloCache, TResult = Promise<ApolloClient.QueryResult<any>>>(options: ApolloClient.RefetchQueriesOptions<TCache, TResult>): ApolloClient.RefetchQueriesResult<TResult>;
+    refetchQueries<TCache extends Cache_2.Implementation = Cache_2.Implementation, TResult = Promise<ApolloClient.QueryResult<any>>>(options: ApolloClient.RefetchQueriesOptions<TCache, TResult>): ApolloClient.RefetchQueriesResult<TResult>;
     resetStore(): Promise<ApolloClient.QueryResult<any>[] | null>;
     restore(serializedState: unknown): ApolloCache;
     setLink(newLink: ApolloLink): void;
@@ -687,6 +691,10 @@ export { InMemoryCache }
 
 export { InMemoryCacheConfig }
 
+export { InputObjectConfig }
+
+export { InputObjectsOption }
+
 // Warning: (ae-forgotten-export) The symbol "RefetchQueriesIncludeShorthand" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
@@ -696,7 +704,7 @@ export type InternalRefetchQueriesInclude = InternalRefetchQueryDescriptor[] | R
 export type InternalRefetchQueriesMap<TResult> = Map<ObservableQuery<any>, InternalRefetchQueriesResult<TResult>>;
 
 // @public (undocumented)
-export interface InternalRefetchQueriesOptions<TCache extends ApolloCache, TResult> extends Omit<ApolloClient.RefetchQueriesOptions<TCache, TResult>, "include"> {
+export interface InternalRefetchQueriesOptions<TCache extends Cache_2.Implementation, TResult> extends Omit<ApolloClient.RefetchQueriesOptions<TCache, TResult>, "include"> {
     // (undocumented)
     include?: InternalRefetchQueriesInclude;
     // (undocumented)
@@ -711,7 +719,7 @@ export type InternalRefetchQueryDescriptor = RefetchQueryDescriptor | ApolloClie
 
 // @internal @deprecated (undocumented)
 export namespace InternalTypes {
-    export type { DefaultOptionsParentObject, NextFetchPolicyContext, PossibleDefaultOptions, QueryManager, };
+    export export type { DefaultOptionsParentObject, NextFetchPolicyContext, OverridableTypes, PossibleDefaultOptions, QueryManager, };
 }
 
 export { isNetworkRequestSettled }
@@ -760,7 +768,7 @@ export type MutateResult<TData = unknown> = ApolloClient.MutateResult<TData>;
 export type MutationFetchPolicy = Extract<FetchPolicy, "network-only" | "no-cache">;
 
 // @public @deprecated (undocumented)
-export type MutationOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables, TCache extends ApolloCache = ApolloCache> = ApolloClient.MutateOptions<TData, TVariables, TCache>;
+export type MutationOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables, TCache extends Cache_2.Implementation = Cache_2.Implementation> = ApolloClient.MutateOptions<TData, TVariables, TCache>;
 
 // @public (undocumented)
 export type MutationQueryReducer<T> = (previousResult: Record<string, any>, options: {
@@ -789,9 +797,9 @@ interface MutationStoreValue {
 }
 
 // @public (undocumented)
-export type MutationUpdaterFunction<TData, TVariables extends OperationVariables, TCache extends ApolloCache> = (cache: TCache, result: FormattedExecutionResult<Unmasked<TData>>, options: {
+export type MutationUpdaterFunction<TData, TVariables extends OperationVariables, TCache extends Cache_2.Implementation> = (cache: TCache, result: FormattedExecutionResult<Unmasked<TData>>, options: {
     context?: DefaultContext;
-    variables?: TVariables;
+    variables: TVariables;
 }) => void;
 
 // @public
@@ -912,7 +920,7 @@ export class ObservableQuery<TData = unknown, TVariables extends OperationVariab
     ["@@observable"]: () => Subscribable<ObservableQuery.Result<MaybeMasked<TData>>>;
     // (undocumented)
     [Symbol.observable]: () => Subscribable<ObservableQuery.Result<MaybeMasked<TData>>>;
-    constructor({ queryManager, options, transformedQuery, }: {
+    constructor(input: {
         queryManager: QueryManager;
         options: ApolloClient.WatchQueryOptions<TData, TVariables>;
         transformedQuery?: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
@@ -924,15 +932,13 @@ export class ObservableQuery<TData = unknown, TVariables extends OperationVariab
         errorPolicy?: TErrorPolicy;
     }): Promise<ApolloClient.QueryResult<TFetchData, TErrorPolicy>>;
     // @internal @deprecated (undocumented)
-    getCacheDiff({ optimistic }?: {
+    getCacheDiff(input?: {
         optimistic?: boolean | undefined;
-    }): Cache_2.DiffResult<TData>;
+    }): Cache_2.InternalDiffResultWithDataState<TData>;
     // (undocumented)
     getCurrentResult(): ObservableQuery.Result<MaybeMasked<TData>>;
     // (undocumented)
     hasObservers(): boolean;
-    // @internal @deprecated
-    _lastWrite?: unknown;
     // @internal @deprecated (undocumented)
     notify(scheduled?: boolean): void;
     // (undocumented)
@@ -987,11 +993,22 @@ namespace OverridableTypes {
         // Warning: (ae-forgotten-export) The symbol "OverridableTypes" needs to be exported by the entry point index.d.ts
         //
         // (undocumented)
+        FromOptionValue: FromOptionValue;
+        // Warning: (ae-forgotten-export) The symbol "OverridableTypes" needs to be exported by the entry point index.d.ts
+        //
+        // (undocumented)
         Partial: Partial;
         // Warning: (ae-forgotten-export) The symbol "OverridableTypes" needs to be exported by the entry point index.d.ts
         //
         // (undocumented)
         Streaming: Streaming;
+    }
+    // (undocumented)
+    interface FromOptionValue extends HKT {
+        // (undocumented)
+        arg1: unknown;
+        // (undocumented)
+        return: StoreObject | Reference | FragmentType<NoInfer<this["arg1"]>> | string;
     }
     // (undocumented)
     interface Partial extends HKT {
@@ -1030,7 +1047,7 @@ class QueryManager {
     // (undocumented)
     broadcastQueries(): void;
     // (undocumented)
-    get cache(): ApolloCache;
+    get cache(): Cache_2.Implementation;
     // (undocumented)
     clearStore(options?: Cache_2.ResetOptions): Promise<void>;
     // (undocumented)
@@ -1049,7 +1066,7 @@ class QueryManager {
     // Warning: (ae-forgotten-export) The symbol "ObservableAndInfo" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    fetchObservableWithInfo<TData, TVariables extends OperationVariables>(options: ApolloClient.WatchQueryOptions<TData, TVariables>, { networkStatus, query, fetchQueryOperator, onCacheHit, observableQuery, exposeExtensions, }: {
+    fetchObservableWithInfo<TData, TVariables extends OperationVariables>(options: ApolloClient.WatchQueryOptions<TData, TVariables>, input: {
         networkStatus?: NetworkStatus;
         query?: DocumentNode_2;
         fetchQueryOperator?: <T>(source: Observable_2<T>) => Observable_2<T>;
@@ -1087,7 +1104,7 @@ class QueryManager {
     // (undocumented)
     maskOperation<TData = unknown>(options: MaskOperationOptions<TData>): MaybeMasked<TData>;
     // (undocumented)
-    mutate<TData, TVariables extends OperationVariables, TCache extends ApolloCache>({ mutation, variables, optimisticResponse, updateQueries, refetchQueries, awaitRefetchQueries, update: updateWithProxyFn, onQueryUpdated, fetchPolicy, errorPolicy, keepRootFields, context, }: ApolloClient.MutateOptions<TData, TVariables, TCache> & {
+    mutate<TData, TVariables extends OperationVariables, TCache extends Cache_2.Implementation>(input: ApolloClient.MutateOptions<TData, TVariables, TCache> & {
         errorPolicy: ErrorPolicy;
         fetchPolicy: MutationFetchPolicy;
     }): Promise<ApolloClient.MutateResult<MaybeMasked<TData>>>;
@@ -1102,7 +1119,7 @@ class QueryManager {
     // (undocumented)
     refetchObservableQueries(includeStandby?: boolean): Promise<ApolloClient.QueryResult<any>[]>;
     // (undocumented)
-    refetchQueries<TResult>({ updateCache, include, optimistic, removeOptimistic, onQueryUpdated, }: InternalRefetchQueriesOptions<ApolloCache, TResult>): InternalRefetchQueriesMap<TResult>;
+    refetchQueries<TResult>(input: InternalRefetchQueriesOptions<Cache_2.Implementation, TResult>): InternalRefetchQueriesMap<TResult>;
     // (undocumented)
     readonly ssrMode: boolean;
     // (undocumented)
@@ -1254,7 +1271,7 @@ export type RefetchQueriesInclude = RefetchQueryDescriptor[] | RefetchQueriesInc
 type RefetchQueriesIncludeShorthand = "all" | "active";
 
 // @public @deprecated (undocumented)
-export type RefetchQueriesOptions<TCache extends ApolloCache, TResult> = ApolloClient.RefetchQueriesOptions<TCache, TResult>;
+export type RefetchQueriesOptions<TCache extends Cache_2.Implementation, TResult> = ApolloClient.RefetchQueriesOptions<TCache, TResult>;
 
 // @public (undocumented)
 export type RefetchQueriesPromiseResults<TResult> = IsAny<TResult> extends true ? any[] : TResult extends boolean ? ApolloClient.QueryResult<any>[] : TResult extends PromiseLike<infer U> ? U[] : TResult[];
@@ -1273,6 +1290,10 @@ export { RequestHandler }
 export { resetCaches }
 
 export { rewriteURIForGET }
+
+export { Scalar }
+
+export { ScalarType }
 
 export { selectHttpOptionsAndBody }
 
@@ -1397,9 +1418,9 @@ export const windowFocusSource: RefetchEventManager.EventSource<Event>;
 
 // Warnings were encountered during analysis:
 //
-// src/core/ApolloClient.ts:667:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:375:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:195:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:673:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:406:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:197:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

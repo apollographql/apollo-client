@@ -108,7 +108,6 @@ export abstract class ApolloCache {
     getRootTypename(operation: OperationTypeNode): string;
     // (undocumented)
     getScalar<TKey extends keyof ApolloCache.Scalars>(key: TKey): ApolloCache.GetScalarType<TKey> | undefined;
-    // Warning: (ae-forgotten-export) The symbol "ScalarType" needs to be exported by the entry point index.d.ts
     getScalarTypeForField(typename: string, fieldName: string): ScalarType | undefined;
     // (undocumented)
     identify(object: StoreObject | Reference): string | undefined;
@@ -3004,7 +3003,7 @@ export class Scalar<TSerialized, TParsed> {
 // Warning: (ae-forgotten-export) The symbol "NestedScalarName" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-type ScalarType = NestedScalarName<keyof KnownScalars & string> | (string extends keyof ApolloCache.Scalars ? string & {} : never);
+export type ScalarType = NestedScalarName<keyof KnownScalars & string> | (string extends keyof ApolloCache.Scalars ? string & {} : never);
 
 // Warning: (ae-forgotten-export) The symbol "HttpConfig" needs to be exported by the entry point index.d.ts
 //

@@ -90,6 +90,7 @@ export type {
   ReactiveVar,
   ReadMergeModifyContext,
   ReadQueryOptions,
+  ScalarType,
   StoreValue,
   // All the exports (types) from ../cache, minus cacheSlot,
   // which we want to keep semi-private.

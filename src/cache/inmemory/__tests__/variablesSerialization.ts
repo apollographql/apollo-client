@@ -9,8 +9,8 @@ import {
 } from "@apollo/client/testing/internal";
 
 const WARNINGS = {
-  LIST_SCALAR_MISMATCH:
-    "The custom scalar configuration for '%s' uses list type '%s', but the value is not an array. The value was coerced as '%s' anyway.",
+  LIST_VARIABLE_MISMATCH:
+    "The variable '%s' has list type '%s', but the value is not an array. The value was coerced as '%s' anyway.",
 };
 
 test("serializes a custom scalar variable", () => {
@@ -329,7 +329,7 @@ test("passes through a non-array variable and warns when the variable type is a 
   expect(result).toStrictEqualTyped({ dates: "2026-01-01T00:00:00.000Z" });
   expect(console.warn).toHaveBeenCalledTimes(1);
   expect(console.warn).toHaveBeenCalledWith(
-    WARNINGS.LIST_SCALAR_MISMATCH,
+    WARNINGS.LIST_VARIABLE_MISMATCH,
     "dates",
     "[DateTime]",
     "DateTime"

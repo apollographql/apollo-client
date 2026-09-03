@@ -7,6 +7,7 @@
     "@apollo/client-codemod-migrate-3-to-4": "1.0.2"
   },
   "changesets": [
+    "afraid-starfishes-smash",
     "angry-baboons-decide",
     "beige-colts-flow",
     "big-scissors-hope",
@@ -15,6 +16,7 @@
     "cyan-camels-think",
     "dirty-donuts-punch",
     "eighty-files-sort",
+    "empty-pears-tell",
     "fast-geckos-help",
     "fifty-books-return",
     "forty-trainers-switch",
@@ -37,6 +39,7 @@
     "soft-nails-argue",
     "strong-shoes-sell",
     "swift-starfishes-know",
+    "tasty-keys-repeat",
     "thin-tips-fold",
     "tidy-cache-type-constraints",
     "tough-swans-shop",

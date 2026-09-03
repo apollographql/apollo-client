@@ -1,5 +1,11 @@
 # @apollo/client-graphql-codegen
 
+## 2.2.0-rc.1
+
+### Minor Changes
+
+- [#13447](https://github.com/apollographql/apollo-client/pull/13447) [`24133fe`](https://github.com/apollographql/apollo-client/commit/24133fe429af460fcfe44d529375ebb063a29326) Thanks [@jerelmiller](https://github.com/jerelmiller)! - The `@apollo/client-graphql-codegen/custom-scalars` plugin now emits GraphQL list syntax in `inputObjects` and `scalarTypePolicies` (for example `"[DateTime]"`).
+
 ## 2.2.0-rc.0
 
 ### Minor Changes

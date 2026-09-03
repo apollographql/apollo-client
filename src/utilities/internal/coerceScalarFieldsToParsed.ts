@@ -10,6 +10,7 @@ import { getFragmentFromSelection } from "./getFragmentFromSelection.js";
 import { getMainDefinition } from "./getMainDefinition.js";
 import { getOperationDefinition } from "./getOperationDefinition.js";
 import { isField } from "./isField.js";
+import { matchScalarList } from "./matchScalarList.js";
 import { resultKeyNameFromField } from "./resultKeyNameFromField.js";
 import { unwrapScalarType } from "./unwrapScalarType.js";
 
@@ -62,7 +63,7 @@ export function coerceScalarFieldsToParsed(
     if (fieldValue === null || !typename) return fieldValue;
 
     if (scalarType) {
-      const match = scalarType.match(/^\[(.*)\]$/);
+      const match = matchScalarList(scalarType);
 
       if (match) {
         if (Array.isArray(fieldValue)) {

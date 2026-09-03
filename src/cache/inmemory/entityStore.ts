@@ -16,6 +16,7 @@ import {
   isNonNullObject,
   isPlainObject,
   makeReference,
+  matchScalarList,
   maybeDeepFreeze,
   unwrapScalarType,
 } from "@apollo/client/utilities/internal";
@@ -482,7 +483,7 @@ export abstract class EntityStore implements NormalizedCache {
     }
 
     if (scalarType) {
-      const match = scalarType.match(/^\[(.*)\]$/);
+      const match = matchScalarList(scalarType);
 
       if (match) {
         if (Array.isArray(value)) {

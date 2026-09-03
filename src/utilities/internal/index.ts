@@ -51,7 +51,6 @@ export { getOperationDefinition } from "./getOperationDefinition.js";
 export { getOperationName } from "./getOperationName.js";
 export { getQueryDefinition } from "./getQueryDefinition.js";
 export { getStoreKeyName } from "./getStoreKeyName.js";
-export { getUnwrappedType } from "./getUnwrappedType.js";
 export { graphQLResultHasError } from "./graphQLResultHasError.js";
 export { hasDirectives } from "./hasDirectives.js";
 export { hasForcedResolvers } from "./hasForcedResolvers.js";

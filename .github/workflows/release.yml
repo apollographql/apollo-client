@@ -134,38 +134,6 @@ jobs:
   #       env:
   #         SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
 
-  tag-next:
-    name: Postrelease Tag Next Release
-    runs-on: ubuntu-latest
-    needs: release
-    if: github.ref_name != 'main' && github.ref_name != 'version-3.x' && needs.release.result == 'success' && needs.release.outputs.published == 'true'
-    permissions:
-      id-token: write
-    strategy:
-      matrix:
-        package: ${{ fromJSON(needs.release.outputs.publishedPackages) }}
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
-        with:
-          persist-credentials: false
-
-      - name: Setup Node.js
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
-        with:
-          node-version: "24.x"
-          registry-url: "https://registry.npmjs.org"
-          # deliberately not using a cache for action with elevated permissions, see https://tanstack.com/blog/npm-supply-chain-compromise-postmortem
-          package-manager-cache: false
-
-      - run: npm ci
-
-      - name: Tag release with next on npm
-        run: |
-          if NEXT=$(npm show ${{ matrix.package.name }}@next version) node -e 'process.exit(require("semver").gt("${{ matrix.package.version }}",process.env.NEXT)?0:1)'; then
-            npm dist-tag add ${{ matrix.package.name }}@${{ matrix.package.version }} next;
-          fi
-
   devtools-errorcodes:
     name: Trigger Devtools Error Code Update
     needs: release
@@ -183,4 +151,5 @@ jobs:
         with:
           workflow: update-errorcodes.yml
           repo: apollographql/apollo-client-devtools
+          ref: main
           token: ${{ steps.github-actions-bot-app-token.outputs.token }}

@@ -1086,14 +1086,10 @@ export class Scalar<TSerialized, TParsed> {
     serialize(value: TParsed): TSerialized;
 }
 
-// @public (undocumented)
-type ScalarName = keyof KnownScalars | (string extends keyof ApolloCache.Scalars ? string & {} : never);
-
 // Warning: (ae-forgotten-export) The symbol "NestedScalarName" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "ScalarName" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-export type ScalarType = NestedScalarName<ScalarName & string> | (string extends keyof ApolloCache.Scalars ? string & {} : never);
+export type ScalarType = NestedScalarName<keyof KnownScalars & string> | (string extends keyof ApolloCache.Scalars ? string & {} : never);
 
 // @public (undocumented)
 type StorageType = Record<string, any>;

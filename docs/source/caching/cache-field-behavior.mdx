@@ -6,7 +6,7 @@ You can customize how a particular field in your Apollo Client cache is read and
 
 - A [`read` function](#the-read-function) that specifies what happens when the field's cached value is read
 - A [`merge` function](#the-merge-function) that specifies what happens when field's cached value is written
-- A [`scalar`](#the-scalar-option) that tells the cache which custom GraphQL scalar to use when it parses or serializes the field
+- A [`scalar`](#the-scalar-option) that tells the cache what custom GraphQL scalar to use when it parses or serializes the field
 - An array of [key arguments](#specifying-key-arguments) that help the cache avoid storing unnecessary duplicate data.
 
 You provide field policies to the constructor of `InMemoryCache`. Each field policy is defined inside whichever [`TypePolicy` object](./cache-configuration/#typepolicy-fields) corresponds to the field's parent type.
@@ -666,7 +666,7 @@ For details, see `KeyArgsFunction` in the [API reference](#fieldpolicy-api-refer
 
 </MinVersion>
 
-Set `scalar` to tell the cache which [custom scalar](../data/custom-scalars) to use when it parses or serializes the field.
+Set `scalar` to tell the cache what [custom scalar](../data/custom-scalars) to use when parsing or serializing the field.
 
 ```ts
 import { Scalar } from "@apollo/client";

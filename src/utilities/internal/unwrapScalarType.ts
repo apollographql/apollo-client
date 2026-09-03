@@ -1,14 +1,12 @@
 import type { ApolloCache } from "@apollo/client";
-import type { ScalarType } from "@apollo/client/cache";
 
-type UnwrapScalarType<TScalarName extends ScalarType> =
+type UnwrapScalarType<TScalarName extends string> =
   TScalarName extends `[${infer TName extends string}]` ?
     UnwrapScalarType<TName>
-  : TScalarName extends keyof ApolloCache.Scalars ? TScalarName
-  : never;
+  : TScalarName & keyof ApolloCache.Scalars;
 
 /** @internal */
-export function unwrapScalarType<TScalarName extends ScalarType>(
+export function unwrapScalarType<TScalarName extends string>(
   scalarType: TScalarName
 ): UnwrapScalarType<TScalarName> {
   return scalarType.replace(/[[\]]/g, "") as UnwrapScalarType<TScalarName>;

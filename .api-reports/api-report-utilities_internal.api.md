@@ -595,12 +595,12 @@ export function toQueryResult<TData = unknown>(value: ObservableQuery.Result<TDa
 type TupleToIntersection<T extends any[]> = T extends [infer A] ? A : T extends [infer A, infer B] ? A & B : T extends [infer A, infer B, infer C] ? A & B & C : T extends [infer A, infer B, infer C, infer D] ? A & B & C & D : T extends [infer A, infer B, infer C, infer D, infer E] ? A & B & C & D & E : T extends (infer U)[] ? U : any;
 
 // @public (undocumented)
-type UnwrapScalarType<TScalarName extends ScalarType> = TScalarName extends `[${infer TName extends string}]` ? UnwrapScalarType<TName> : TScalarName extends keyof ApolloCache_2.Scalars ? TScalarName : never;
+type UnwrapScalarType<TScalarName extends string> = TScalarName extends `[${infer TName extends string}]` ? UnwrapScalarType<TName> : TScalarName & keyof ApolloCache_2.Scalars;
 
 // Warning: (ae-forgotten-export) The symbol "UnwrapScalarType" needs to be exported by the entry point index.d.ts
 //
 // @internal @deprecated (undocumented)
-export function unwrapScalarType<TScalarName extends ScalarType>(scalarType: TScalarName): UnwrapScalarType<TScalarName>;
+export function unwrapScalarType<TScalarName extends string>(scalarType: TScalarName): UnwrapScalarType<TScalarName>;
 
 // @internal @deprecated (undocumented)
 export type VariablesOption<TVariables extends OperationVariables> = {} extends TVariables ? {

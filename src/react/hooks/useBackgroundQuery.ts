@@ -76,7 +76,7 @@ export declare namespace useBackgroundQuery {
        * @example Recommended usage of `skipToken`:
        *
        * ```ts
-       * import { skipToken, useBackgroundQuery } from "@apollo/client";
+       * import { skipToken, useBackgroundQuery } from "@apollo/client/react";
        *
        * const [queryRef] = useBackgroundQuery(
        *   query,

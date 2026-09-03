@@ -114,7 +114,7 @@ export abstract class ApolloCache {
     getRootTypename(operation: OperationTypeNode): string;
     // (undocumented)
     getScalar<TKey extends keyof ApolloCache.Scalars>(key: TKey): ApolloCache.GetScalarType<TKey> | undefined;
-    getScalarForField<TSerialized = unknown, TParsed = unknown>(typename: string, fieldName: string): Scalar<TSerialized, TParsed> | undefined;
+    getScalarTypeForField(typename: string, fieldName: string): ScalarType | undefined;
     // (undocumented)
     identify(object: StoreObject | Reference): string | undefined;
     // (undocumented)
@@ -548,7 +548,7 @@ export type FieldPolicy<TExisting = any, TIncoming = TExisting, TReadResult = TI
     keyArgs?: KeySpecifier | KeyArgsFunction | false;
     read?: FieldReadFunction<TExisting, TReadResult, TReadOptions>;
     merge?: FieldMergeFunction<TExisting, TIncoming, TMergeOptions> | boolean;
-    scalar?: ScalarNames;
+    scalar?: ScalarType;
 };
 
 // @public (undocumented)
@@ -673,7 +673,7 @@ export class InMemoryCache extends ApolloCache {
     getRootTypename(operation: OperationTypeNode): string;
     // (undocumented)
     getScalar<TKey extends keyof ApolloCache.Scalars>(key: TKey): ApolloCache.GetScalarType<TKey> extends (Scalar<infer TSerialized, infer TParsed>) ? IsLooselyEqual<TSerialized, TParsed> extends true ? ApolloCache.GetScalarType<TKey> | undefined : ApolloCache.GetScalarType<TKey> : never;
-    getScalarForField<TSerialized = unknown, TParsed = unknown>(typename: string, fieldName: string): Scalar<TSerialized, TParsed> | undefined;
+    getScalarTypeForField(typename: string, fieldName: string): ScalarType | undefined;
     // (undocumented)
     identify(object: StoreObject | Reference): string | undefined;
     // (undocumented)
@@ -803,6 +803,9 @@ class Layer extends EntityStore {
 }
 
 // @public (undocumented)
+type ListOf<T extends string> = `[${T}]`;
+
+// @public (undocumented)
 export function makeVar<T>(value: T): ReactiveVar<T>;
 
 // @public (undocumented)
@@ -871,6 +874,11 @@ export type ModifierDetails = {
 export type Modifiers<T extends Record<string, any> = Record<string, unknown>> = Partial<{
     [FieldName in keyof T]: Modifier<StoreObjectValueMaybeReference<Exclude<T[FieldName], undefined>>>;
 }>;
+
+// Warning: (ae-forgotten-export) The symbol "ListOf" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+type NestedScalarName<T extends string> = T | ListOf<T> | ListOf<ListOf<T>> | ListOf<ListOf<ListOf<T>>> | ListOf<ListOf<ListOf<ListOf<T>>>>;
 
 // @public
 export interface NormalizedCache {
@@ -943,7 +951,7 @@ export class Policies {
     // (undocumented)
     getReadFunction(typename: string | undefined, fieldName: string): FieldReadFunction | undefined;
     // (undocumented)
-    getScalarForField(typename: string, fieldName: string): Scalar<any, any> | undefined;
+    getScalarTypeForField(typename: string, fieldName: string): ScalarType | undefined;
     // Warning: (ae-forgotten-export) The symbol "FieldSpecifier" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -1079,7 +1087,13 @@ export class Scalar<TSerialized, TParsed> {
 }
 
 // @public (undocumented)
-type ScalarNames = keyof KnownScalars | (string extends keyof ApolloCache.Scalars ? string & {} : never);
+type ScalarName = keyof KnownScalars | (string extends keyof ApolloCache.Scalars ? string & {} : never);
+
+// Warning: (ae-forgotten-export) The symbol "NestedScalarName" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "ScalarName" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+export type ScalarType = NestedScalarName<ScalarName & string> | (string extends keyof ApolloCache.Scalars ? string & {} : never);
 
 // @public (undocumented)
 type StorageType = Record<string, any>;
@@ -1164,9 +1178,8 @@ interface WriteContext extends ReadMergeModifyContext {
 // Warnings were encountered during analysis:
 //
 // src/cache/core/cache.ts:254:7 - (ae-incompatible-release-tags) The symbol "[handleIncrementalSymbol]" is marked as @public, but its signature references "DiffIncrementalInfo" which is marked as @internal
-// src/cache/inmemory/inMemoryCache.ts:472:7 - (ae-incompatible-release-tags) The symbol "[handleIncrementalSymbol]" is marked as @public, but its signature references "DiffIncrementalInfo" which is marked as @internal
-// src/cache/inmemory/policies.ts:176:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:179:3 - (ae-forgotten-export) The symbol "ScalarNames" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/inMemoryCache.ts:517:7 - (ae-incompatible-release-tags) The symbol "[handleIncrementalSymbol]" is marked as @public, but its signature references "DiffIncrementalInfo" which is marked as @internal
+// src/cache/inmemory/policies.ts:175:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:147:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)

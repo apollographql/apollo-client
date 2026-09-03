@@ -204,6 +204,120 @@ const data = client.readQuery({ query: QUERY, variables: { id } });
 // }
 ```
 
+### Lists of scalars
+
+Some fields return a list of custom scalar values, such as `[DateTime!]`. Use GraphQL list syntax so Apollo Client parses and serializes each element as that scalar:
+
+```ts
+new InMemoryCache({
+  scalars: {
+    DateTime: dateTimeScalar,
+  },
+  typePolicies: {
+    Event: {
+      fields: {
+        createdAt: {
+          scalar: "DateTime",
+        },
+        meetingTimes: {
+          scalar: "[DateTime]",
+        },
+        availabilitySlots: {
+          scalar: "[[DateTime]]",
+        },
+      },
+    },
+  },
+});
+```
+
+Use one pair of brackets per list level so Apollo Client iterates each item at the right depth.
+
+<Caution>
+
+Do not include the GraphQL non-null marker (`!`) in the value because it won't match. Write `"[DateTime]"`, not `"[DateTime!]!"`
+
+</Caution>
+
+Query results then return parsed values for each element:
+
+```ts
+const QUERY = gql`
+  query GetEvent($id: ID!) {
+    event(id: $id) {
+      id
+      createdAt
+      meetingTimes
+      availabilitySlots
+    }
+  }
+`;
+
+const { data } = useQuery(QUERY, { variables: { id } });
+// => {
+//   event: {
+//     id: "1",
+//     createdAt: Date,
+//     meetingTimes: [Date, Date],
+//     availabilitySlots: [[Date, Date], [Date]],
+//   },
+// }
+```
+
+The same list syntax applies to [`inputObjects`](#input-objects) field mappings.
+
+<Note>
+
+If a field is configured as a list type such as `"[DateTime]"` but the value is not an array, Apollo Client still coerces the value as `DateTime` and emits a development-only warning.
+
+</Note>
+
+#### Scalars that serialize as arrays
+
+Some custom scalars use a JSON array as the serialized form, even though the GraphQL field is not a list. For example, a `DateTimeRange` scalar might serialize as `["2026-01-01T00:00:00.000Z", "2026-06-01T00:00:00.000Z"]`.
+
+Do not wrap that scalar in list syntax. Pass the scalar name so Apollo Client gives the whole array to `parse` and `serialize`:
+
+```ts
+const dateTimeRangeScalar = new Scalar<
+  [string, string],
+  { start: Date; end: Date }
+>({
+  parse: ([start, end]) => ({
+    start: new Date(start),
+    end: new Date(end),
+  }),
+  serialize: (range) => [range.start.toISOString(), range.end.toISOString()],
+  is: (value) => !Array.isArray(value),
+});
+
+new InMemoryCache({
+  scalars: {
+    DateTimeRange: dateTimeRangeScalar,
+  },
+  typePolicies: {
+    Event: {
+      fields: {
+        dateRange: {
+          scalar: "DateTimeRange",
+        },
+        dateRanges: {
+          scalar: "[DateTimeRange]",
+        },
+      },
+    },
+  },
+});
+```
+
+`"[DateTimeRange]"` is a list of `DateTimeRange` values. Apollo Client iterates the outer array, then passes each inner array to the `DateTimeRange` `Scalar` instance.
+
+<Caution>
+
+If you omit `is`, Apollo Client treats any non-null object as a parsed value, including JSON arrays. Provide an `is` function that returns `false` for the serialized array so Apollo Client still calls `parse`.
+
+</Caution>
+
 ## Variable serialization
 
 Apollo Client serializes parsed scalar values in `variables` before it sends the request to your server and before it reads or writes the cache with those variables. You can pass parsed values in any API that accepts a `variables` option:
@@ -243,6 +357,30 @@ client.writeQuery({
 ```
 
 Apollo Client reads the GraphQL type from the variable definition (`$date: DateTime!`) and calls `serialize` on the configured `DateTime` scalar.
+
+Apollo Client also reads list types from the variable definition. You do not need extra cache configuration for a `[DateTime]` variable. Apollo Client serializes each element:
+
+```ts
+const QUERY = gql`
+  query GetEventsOnDates($dates: [DateTime!]!) {
+    events(on: $dates) {
+      id
+      name
+    }
+  }
+`;
+
+const { data } = useQuery(QUERY, {
+  variables: {
+    dates: [
+      new Date("2026-01-01T00:00:00.000Z"),
+      new Date("2026-01-02T00:00:00.000Z"),
+    ],
+  },
+});
+
+// The link receives `{ dates: ["2026-01-01T00:00:00.000Z", "2026-01-02T00:00:00.000Z"] }`
+```
 
 ### Input objects
 
@@ -289,6 +427,21 @@ const { data } = useQuery(QUERY, {
     dateRange: {
       start: new Date("2026-01-01T00:00:00.000Z"),
       end: new Date("2026-02-01T00:00:00.000Z"),
+    },
+  },
+});
+```
+
+Input object fields can also be lists of custom scalars. Use the same GraphQL list syntax described in [Lists of scalars](#lists-of-scalars):
+
+```ts
+new InMemoryCache({
+  inputObjects: {
+    AvailabilityInput: {
+      fields: {
+        dates: "[DateTime]",
+        slots: "[[DateTime]]",
+      },
     },
   },
 });
@@ -542,6 +695,11 @@ export const inputObjects: InputObjectsOption = {
       end: "DateTime",
     },
   },
+  AvailabilityInput: {
+    fields: {
+      dates: "[DateTime]",
+    },
+  },
 };
 
 export const scalarTypePolicies: TypePolicies = {
@@ -552,6 +710,12 @@ export const scalarTypePolicies: TypePolicies = {
       },
       updatedAt: {
         scalar: "DateTime",
+      },
+      meetingTimes: {
+        scalar: "[DateTime]",
+      },
+      availabilitySlots: {
+        scalar: "[[DateTime]]",
       },
       siteLink: {
         scalar: "URL",

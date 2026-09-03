@@ -6,8 +6,48 @@ export declare namespace Scalar {
     // users declare scalars using
     // `extends Record<string, { serialized: unknown; parsed: unknown }>` while
     // allowing specific scalar overrides.
+
+    /**
+     * A function that transforms the JSON serialized value into its parsed value.
+     *
+     * @example
+     *
+     * ```ts
+     * new Scalar<string, Date>({
+     *   parse: (dateString) => new Date(dateString),
+     * });
+     * ```
+     */
     parse(serializedValue: TSerialized): NoInfer<TParsed>;
+
+    /**
+     * A function that transforms the parsed value into its JSON serialized value.
+     *
+     * @example
+     *
+     * ```ts
+     * new Scalar<string, Date>({
+     *   serialize: (date) => date.toISOString(),
+     * });
+     * ```
+     */
     serialize(parsedValue: TParsed): NoInfer<TSerialized>;
+
+    /**
+     * A [predicate function](https://www.typescriptlang.org/docs/handbook/2/narrowing.html#using-type-predicates) that determines whether the value
+     * is the parsed value. Return `true` when the value is the parsed value.
+     *
+     * @defaultValue
+     * Function that returns `true` when the value is a non-null object type.
+     *
+     * @example
+     *
+     * ```ts
+     * new Scalar<string, Date>({
+     *   is: (value) => value instanceof Date,
+     * });
+     * ```
+     */
     is?(value: TSerialized | TParsed): boolean;
   }
 }

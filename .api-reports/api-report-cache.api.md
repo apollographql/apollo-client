@@ -1060,11 +1060,8 @@ type SafeReadonly<T> = T extends object ? Readonly<T> : T;
 export namespace Scalar {
     // (undocumented)
     export interface Options<TSerialized, TParsed> {
-        // (undocumented)
         is?(value: TSerialized | TParsed): boolean;
-        // (undocumented)
         parse(serializedValue: TSerialized): NoInfer<TParsed>;
-        // (undocumented)
         serialize(parsedValue: TParsed): NoInfer<TSerialized>;
     }
 }

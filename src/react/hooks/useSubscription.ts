@@ -44,7 +44,20 @@ export declare namespace useSubscription {
       /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#client:member} */
       client?: ApolloClient;
 
-      /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#skip:member} */
+      /**
+       * {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#skip_deprecated:member}
+       *
+       * @example Recommended usage of `skipToken`:
+       *
+       * ```ts
+       * import { skipToken, useSubscription } from "@apollo/client/react";
+       *
+       * const { data } = useSubscription(
+       *   subscription,
+       *   id ? { variables: { id } } : skipToken
+       * );
+       * ```
+       */
       skip?: boolean;
 
       /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#context:member} */

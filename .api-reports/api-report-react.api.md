@@ -1112,6 +1112,7 @@ export namespace useQuery {
             refetchOn?: RefetchOn.Option;
             refetchWritePolicy?: RefetchWritePolicy;
             returnPartialData?: boolean;
+            // @deprecated
             skip?: boolean;
             skipPollAttempt?: () => boolean;
             ssr?: boolean;
@@ -1367,6 +1368,7 @@ export namespace useSubscription {
             onData?: (options: OnDataOptions<TData>) => any;
             onError?: (error: ErrorLike) => void;
             shouldResubscribe?: boolean | ((options: Options<TData, TVariables>) => boolean);
+            // @deprecated
             skip?: boolean;
         }
     }

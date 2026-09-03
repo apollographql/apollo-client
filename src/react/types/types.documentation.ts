@@ -121,7 +121,7 @@ export interface QueryOptionsDocumentation {
    * @deprecated We recommend using `skipToken` in place of the `skip` option as
    * it is more type-safe.
    *
-   * This option is deprecated and only supported to ease the migration from `useQuery`. It will be removed in a future release.
+   * This option is deprecated and will be removed in a future release.
    * Please use [`skipToken`](https://www.apollographql.com/docs/react/api/react/hooks#skiptoken) instead of the `skip` option as it is more type-safe.
    *
    * @docGroup 1. Operation options

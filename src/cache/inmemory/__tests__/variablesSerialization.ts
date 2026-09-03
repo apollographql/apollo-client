@@ -10,7 +10,7 @@ import {
 
 const WARNINGS = {
   LIST_SCALAR_MISMATCH:
-    "Expected an array value for '%s' of type '%s', but received a non-array value. The value was coerced anyway.",
+    "The custom scalar configuration for '%s' uses list type '%s', but the value is not an array. The value was coerced as '%s' anyway.",
 };
 
 test("serializes a custom scalar variable", () => {
@@ -331,7 +331,8 @@ test("passes through a non-array variable and warns when the variable type is a 
   expect(console.warn).toHaveBeenCalledWith(
     WARNINGS.LIST_SCALAR_MISMATCH,
     "dates",
-    "[DateTime]"
+    "[DateTime]",
+    "DateTime"
   );
 });
 

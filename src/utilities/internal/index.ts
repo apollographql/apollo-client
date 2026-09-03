@@ -67,6 +67,7 @@ export { isTypenameField } from "./isTypenameField.js";
 export { makeStreamInfoTrie } from "./makeStreamInfoTrie.js";
 export { makeReference } from "./makeReference.js";
 export { makeUniqueId } from "./makeUniqueId.js";
+export { matchScalarList } from "./matchScalarList.js";
 export { maybeDeepFreeze } from "./maybeDeepFreeze.js";
 export { mergeDeep } from "./mergeDeep.js";
 export { mergeDeepArray } from "./mergeDeepArray.js";

@@ -447,7 +447,7 @@ export function makeUniqueId(prefix: string): string;
 // @public (undocumented)
 export const mapObservableFragmentMemoized: <From, To>(observable: ApolloCache_2.ObservableFragment<From>, _cacheKey: symbol, mapFn: (from: ApolloCache_2.WatchFragmentResult<From>) => ApolloCache_2.WatchFragmentResult<To>) => ApolloCache_2.ObservableFragment<To>;
 
-// @public (undocumented)
+// @internal @deprecated (undocumented)
 export function matchScalarList(scalarType: ScalarType): RegExpMatchArray | null;
 
 // @internal @deprecated (undocumented)

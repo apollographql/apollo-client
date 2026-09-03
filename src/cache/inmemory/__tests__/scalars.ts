@@ -843,7 +843,7 @@ test("passes through a non-array value and warns when a list scalar receives an 
     "Event:1": {
       __typename: "Event",
       id: "1",
-      dates: "2026-01-01T00:00:00.000Z",
+      dates: new Date("2026-01-01T00:00:00.000Z"),
     },
   });
 

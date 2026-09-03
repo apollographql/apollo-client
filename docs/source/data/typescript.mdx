@@ -847,6 +847,44 @@ Using classic signatures after declaring `DeclareDefaultOptions` is not recommen
 
 </Caution>
 
+<MinVersion version="4.3">
+
+## Declaring the cache type
+
+</MinVersion>
+
+By default, `client.cache`, as well as any API that provides access to the cache, is typed as the generic `ApolloCache` regardless of what implementation you provide to `ApolloClient`. Declare the cache implementation used by the client by overriding the `cache` property in the `TypeOverrides` interface:
+
+```ts title="apollo.d.ts"
+import "@apollo/client";
+import type { InMemoryCache } from "@apollo/client";
+
+declare module "@apollo/client" {
+  export interface TypeOverrides {
+    cache: InMemoryCache;
+  }
+}
+```
+
+Anywhere the cache is available, TypeScript uses the declared type:
+
+```ts
+client.cache;
+//     ^? InMemoryCache
+
+client.mutate({
+  update: (cache) => {
+    //     ^? InMemoryCache
+  },
+});
+```
+
+<Note>
+
+Setting a cache type requires the same cache instance in the `ApolloClient` constructor.
+
+</Note>
+
 ## Declaring refetch event types
 
 Learn more about integrating TypeScript with refetch events in the [event-based refetching guide](./event-based-refetching#typescript).
@@ -1021,12 +1059,14 @@ And that's it! Now when `dataState` is `"complete"` or `"streaming"`, Apollo Cli
 
 The following utility types are available to override:
 
-- `FragmentType<TFragmentData>` - Type used with fragments to ensure parent objects contain the fragment spread
+- `cache` - The cache implementation passed to `ApolloClient` (for example, `InMemoryCache`)
+- `FragmentType<TFragmentData>` - The type used with fragments to ensure parent objects contain the fragment spread
 - `Unmasked<TData>` - Unwraps masked types into the full result type
-- `MaybeMasked<TData>` - Conditionally returns either masked or unmasked type
-- `Complete<TData>` - Type returned when `dataState` is `"complete"`
-- `Streaming<TData>` - Type returned when `dataState` is `"streaming"` (for `@defer` queries)
-- `Partial<TData>` - Type returned when `dataState` is `"partial"`
+- `MaybeMasked<TData>` - Conditionally returns either a masked or unmasked type
+- `Complete<TData>` - The type returned when `dataState` is `"complete"`
+- `Streaming<TData>` - The type returned when `dataState` is `"streaming"` (for `@defer` queries)
+- `Partial<TData>` - The type returned when `dataState` is `"partial"`
+- `FromOptionValue<TData>` - The type used by the `from` option on cache APIs to limit the types of values that can be passed to it. Use this when you want to apply a stricter policy around what value types are accepted.
 - `AdditionalApolloLinkResultTypes<TData, TExtensions>` - Additional types that can be returned from Apollo Link operations
 
 For more information about data masking types specifically, see the [data masking guide](../data/fragments#defining-your-own-masking-types-using-higher-kinded-types).

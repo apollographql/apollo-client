@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 4.3.0-rc.2
+
+### Patch Changes
+
+- [#13448](https://github.com/apollographql/apollo-client/pull/13448) [`77e1e35`](https://github.com/apollographql/apollo-client/commit/77e1e350514f4574f77d9a682587d4bfe2ee03ec) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Mark `skip` as deprecated in `useQuery` and `useSubscription` now that both of these hooks support `skipToken`.
+
 ## 4.3.0-rc.1
 
 ### Minor Changes

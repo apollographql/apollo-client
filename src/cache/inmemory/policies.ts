@@ -32,7 +32,6 @@ import {
 } from "@apollo/client/utilities/invariant";
 
 import type { ApolloCache } from "../core/cache.js";
-import type { Scalar } from "../core/Scalar.js";
 import type {
   CanReadFunction,
   FieldSpecifier,

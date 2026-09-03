@@ -549,6 +549,18 @@ export interface SubscriptionOptionsDocumentation {
   skip: unknown;
 
   /**
+   * Determines if the current subscription should be skipped. Useful if, for
+   * example, variables depend on previous queries and are not ready yet.
+   *
+   * @deprecated We recommend using `skipToken` in place of the `skip` option as
+   * it is more type-safe.
+   *
+   * This option is deprecated and will be removed in a future release.
+   * Please use [`skipToken`](https://www.apollographql.com/docs/react/api/react/hooks#skiptoken) instead of the `skip` option as it is more type-safe.
+   */
+  skip_deprecated: unknown;
+
+  /**
    * Shared context between your component and your network interface (Apollo Link).
    */
   context: unknown;

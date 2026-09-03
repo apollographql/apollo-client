@@ -2,10 +2,18 @@ import { gql } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import {
   dateScalar,
+  dateTimeRangeScalar,
+  dateTimeScalar,
   jsonObjectScalar,
   priceScalar,
+  spyOnConsole,
 } from "@apollo/client/testing/internal";
 import { coerceScalarFieldsToParsed } from "@apollo/client/utilities/internal";
+
+const WARNINGS = {
+  LIST_SCALAR_MISMATCH:
+    "The custom scalar configuration for '%s' uses list type '%s', but the value is not an array. The value was coerced as '%s' anyway.",
+};
 
 test("parses custom scalar fields on nested objects", () => {
   const cache = new InMemoryCache({
@@ -313,7 +321,7 @@ test("parses custom scalar values in a list of scalars", () => {
     typePolicies: {
       Event: {
         fields: {
-          dates: { scalar: "Date" },
+          dates: { scalar: "[Date]" },
         },
       },
     },
@@ -393,7 +401,7 @@ test("parses custom scalar values in a list of lists", () => {
     typePolicies: {
       Event: {
         fields: {
-          datesByYear: { scalar: "Date" },
+          datesByYear: { scalar: "[[Date]]" },
         },
       },
     },
@@ -426,6 +434,149 @@ test("parses custom scalar values in a list of lists", () => {
       ],
     },
   });
+});
+
+test("passes an array-shaped scalar value to parse as a whole", () => {
+  const cache = new InMemoryCache({
+    scalars: {
+      DateTimeRange: dateTimeRangeScalar,
+    },
+    typePolicies: {
+      Event: {
+        fields: {
+          dateRange: { scalar: "DateTimeRange" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query Event {
+      event {
+        id
+        dateRange
+      }
+    }
+  `;
+
+  const result = {
+    event: {
+      __typename: "Event",
+      id: "1",
+      dateRange: ["2026-01-01T00:00:00.000Z", "2026-06-01T00:00:00.000Z"],
+    },
+  };
+
+  expect(coerceScalarFieldsToParsed(result, query, cache)).toStrictEqualTyped({
+    event: {
+      __typename: "Event",
+      id: "1",
+      dateRange: {
+        start: new Date("2026-01-01T00:00:00.000Z"),
+        end: new Date("2026-06-01T00:00:00.000Z"),
+      },
+    },
+  });
+});
+
+test("parses each array-shaped scalar in a list of array-shaped scalars", () => {
+  const cache = new InMemoryCache({
+    scalars: {
+      DateTimeRange: dateTimeRangeScalar,
+    },
+    typePolicies: {
+      Event: {
+        fields: {
+          dateRanges: { scalar: "[DateTimeRange]" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query Event {
+      event {
+        id
+        dateRanges
+      }
+    }
+  `;
+
+  const result = {
+    event: {
+      __typename: "Event",
+      id: "1",
+      dateRanges: [
+        ["2026-01-01T00:00:00.000Z", "2026-06-01T00:00:00.000Z"],
+        ["2026-07-01T00:00:00.000Z", "2026-12-01T00:00:00.000Z"],
+      ],
+    },
+  };
+
+  expect(coerceScalarFieldsToParsed(result, query, cache)).toStrictEqualTyped({
+    event: {
+      __typename: "Event",
+      id: "1",
+      dateRanges: [
+        {
+          start: new Date("2026-01-01T00:00:00.000Z"),
+          end: new Date("2026-06-01T00:00:00.000Z"),
+        },
+        {
+          start: new Date("2026-07-01T00:00:00.000Z"),
+          end: new Date("2026-12-01T00:00:00.000Z"),
+        },
+      ],
+    },
+  });
+});
+
+test("passes through a non-array value and warns when a list scalar receives an object", () => {
+  using _ = spyOnConsole("warn");
+
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Event: {
+        fields: {
+          dates: { scalar: "[DateTime]" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query Event {
+      event {
+        id
+        dates
+      }
+    }
+  `;
+
+  const result = {
+    event: {
+      __typename: "Event",
+      id: "1",
+      dates: "2026-01-01T00:00:00.000Z",
+    },
+  };
+
+  expect(coerceScalarFieldsToParsed(result, query, cache)).toStrictEqualTyped({
+    event: {
+      __typename: "Event",
+      id: "1",
+      dates: new Date("2026-01-01T00:00:00.000Z"),
+    },
+  });
+
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    WARNINGS.LIST_SCALAR_MISMATCH,
+    "Event.dates",
+    "[DateTime]",
+    "DateTime"
+  );
 });
 
 test("parses custom scalar fields selected by a named fragment", () => {
@@ -968,7 +1119,7 @@ test("leaves null values in a list as-is", () => {
       Event: {
         fields: {
           startDate: { scalar: "Date" },
-          dates: { scalar: "Date" },
+          dates: { scalar: "[Date]" },
         },
       },
     },

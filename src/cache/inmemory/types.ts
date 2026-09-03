@@ -192,7 +192,17 @@ export interface ReadMergeModifyContext {
   extensions?: ExtensionsWithStreamInfo;
 }
 
+type ListOf<T extends string> = `[${T}]`;
+
+type NestedScalarName<T extends string> =
+  | T
+  | ListOf<T>
+  | ListOf<ListOf<T>>
+  | ListOf<ListOf<ListOf<T>>>
+  | ListOf<ListOf<ListOf<ListOf<T>>>>;
+
 export type KnownScalars = RemoveIndexSignature<ApolloCache.Scalars>;
-export type ScalarNames =
-  | keyof KnownScalars
+
+export type ScalarType =
+  | NestedScalarName<keyof KnownScalars & string>
   | (string extends keyof ApolloCache.Scalars ? string & {} : never);

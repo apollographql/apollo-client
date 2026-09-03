@@ -16,7 +16,9 @@ import {
   isNonNullObject,
   isPlainObject,
   makeReference,
+  matchScalarList,
   maybeDeepFreeze,
+  unwrapScalarType,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
@@ -36,7 +38,11 @@ import type {
 
 import { fieldNameFromStoreName, hasOwn } from "./helpers.js";
 import type { Policies, StorageType } from "./policies.js";
-import type { NormalizedCache, NormalizedCacheObject } from "./types.js";
+import type {
+  NormalizedCache,
+  NormalizedCacheObject,
+  ScalarType,
+} from "./types.js";
 
 const DELETE = {} as DeleteModifier;
 const delModifier: Modifier<any> = () => DELETE;
@@ -446,12 +452,18 @@ export abstract class EntityStore implements NormalizedCache {
     let changed = false;
 
     const entries = Object.entries(obj).map(([storeFieldName, value]) => {
-      const scalar = this.policies.getScalarForField(
+      const fieldName = fieldNameFromStoreName(storeFieldName);
+      const scalarType = this.policies.getScalarTypeForField(
         typename,
-        fieldNameFromStoreName(storeFieldName)
+        fieldName
       );
 
-      const newValue = this.coerceValue(value, coerce, scalar);
+      const newValue = this.coerceValue(
+        value,
+        coerce,
+        scalarType,
+        `${typename}.${fieldName}`
+      );
       changed ||= newValue !== value;
 
       return [storeFieldName, newValue];
@@ -463,18 +475,46 @@ export abstract class EntityStore implements NormalizedCache {
   private coerceValue(
     value: unknown,
     coerce: (scalar: Scalar<any, any>, value: unknown) => unknown,
-    scalar?: Scalar<any, any>
+    scalarType: ScalarType | undefined,
+    coordinate: string
   ): unknown {
     if (value == null) {
       return value;
     }
 
-    if (Array.isArray(value)) {
-      return value.map((item) => this.coerceValue(item, coerce, scalar));
+    if (scalarType) {
+      const match = matchScalarList(scalarType);
+
+      if (match) {
+        if (Array.isArray(value)) {
+          return value.map((item) =>
+            this.coerceValue(item, coerce, match[1], coordinate)
+          );
+        } else {
+          if (__DEV__) {
+            invariant.warn(
+              "The custom scalar configuration for '%s' uses list type '%s', but the value is not an array. The value was coerced as '%s' anyway.",
+              coordinate,
+              scalarType,
+              unwrapScalarType(scalarType)
+            );
+          }
+        }
+      }
+
+      const scalar = this.policies.cache.getScalar(
+        unwrapScalarType(scalarType)
+      );
+
+      if (scalar) {
+        return coerce(scalar, value);
+      }
     }
 
-    if (scalar) {
-      return coerce(scalar, value);
+    if (Array.isArray(value)) {
+      return value.map((item) =>
+        this.coerceValue(item, coerce, scalarType, coordinate)
+      );
     }
 
     if (isPlainObject(value) && "__typename" in value) {

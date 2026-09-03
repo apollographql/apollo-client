@@ -32,12 +32,12 @@ import type { OperationTypeNode } from 'graphql';
 import type { OperationVariables } from '@apollo/client';
 import type { OperatorFunction } from 'rxjs';
 import type { Reference } from '@apollo/client/utilities';
+import type { ScalarType } from '@apollo/client/cache';
 import type { SelectionNode } from 'graphql';
 import type { SelectionSetNode } from 'graphql';
 import { StrongCache } from '@wry/caches';
 import type { Subscription } from 'rxjs';
 import type { Trie } from '@wry/trie';
-import type { TypeNode } from 'graphql';
 import type { TypeOverrides } from '@apollo/client';
 import { WeakCache } from '@wry/caches';
 
@@ -370,9 +370,6 @@ export const getStoreKeyName: ((fieldName: string, args?: Record<string, any> | 
     setStringify(s: typeof storeKeyNameStringify): (value: any) => string;
 };
 
-// @internal @deprecated (undocumented)
-export function getUnwrappedType(node: TypeNode): string;
-
 // @public (undocumented)
 const globalCaches: {
     print?: () => number;
@@ -449,6 +446,9 @@ export function makeUniqueId(prefix: string): string;
 
 // @public (undocumented)
 export const mapObservableFragmentMemoized: <From, To>(observable: ApolloCache_2.ObservableFragment<From>, _cacheKey: symbol, mapFn: (from: ApolloCache_2.WatchFragmentResult<From>) => ApolloCache_2.WatchFragmentResult<To>) => ApolloCache_2.ObservableFragment<To>;
+
+// @internal @deprecated (undocumented)
+export function matchScalarList(scalarType: ScalarType): RegExpMatchArray | null;
 
 // @internal @deprecated (undocumented)
 export function maybeDeepFreeze<T>(obj: T): T;
@@ -593,6 +593,14 @@ export function toQueryResult<TData = unknown>(value: ObservableQuery.Result<TDa
 
 // @public (undocumented)
 type TupleToIntersection<T extends any[]> = T extends [infer A] ? A : T extends [infer A, infer B] ? A & B : T extends [infer A, infer B, infer C] ? A & B & C : T extends [infer A, infer B, infer C, infer D] ? A & B & C & D : T extends [infer A, infer B, infer C, infer D, infer E] ? A & B & C & D & E : T extends (infer U)[] ? U : any;
+
+// @public (undocumented)
+type UnwrapScalarType<TScalarName extends string> = TScalarName extends `[${infer TName extends string}]` ? UnwrapScalarType<TName> : TScalarName & keyof ApolloCache_2.Scalars;
+
+// Warning: (ae-forgotten-export) The symbol "UnwrapScalarType" needs to be exported by the entry point index.d.ts
+//
+// @internal @deprecated (undocumented)
+export function unwrapScalarType<TScalarName extends string>(scalarType: TScalarName): UnwrapScalarType<TScalarName>;
 
 // @internal @deprecated (undocumented)
 export type VariablesOption<TVariables extends OperationVariables> = {} extends TVariables ? {

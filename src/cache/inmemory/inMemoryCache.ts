@@ -30,8 +30,9 @@ import type {
 import {
   getInMemoryCacheMemoryInternals,
   getOperationDefinition,
-  getUnwrappedType,
   isPlainObject,
+  matchScalarList,
+  unwrapScalarType,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
@@ -41,7 +42,11 @@ import type { Scalar } from "../core/Scalar.js";
 import type { Cache } from "../core/types/Cache.js";
 
 import { EntityStore, supportsResultCaching } from "./entityStore.js";
-import { hasOwn, normalizeConfig } from "./helpers.js";
+import {
+  getScalarTypeFromTypeNode,
+  hasOwn,
+  normalizeConfig,
+} from "./helpers.js";
 import { Policies } from "./policies.js";
 import { forgetCache, makeVar, recallCache } from "./reactiveVars.js";
 import { StoreReader } from "./readFromStore.js";
@@ -50,6 +55,7 @@ import type {
   InMemoryCacheConfig,
   KnownScalars,
   NormalizedCacheObject,
+  ScalarType,
 } from "./types.js";
 import { StoreWriter } from "./writeToStore.js";
 
@@ -224,12 +230,12 @@ export class InMemoryCache extends ApolloCache {
     return this.config.scalars?.[key as string] as any;
   }
 
-  /** Get a scalar instance for a field in a type */
-  public getScalarForField<TSerialized = unknown, TParsed = unknown>(
+  /** Get the configured scalar type for a field */
+  public getScalarTypeForField(
     typename: string,
     fieldName: string
-  ): Scalar<TSerialized, TParsed> | undefined {
-    return this.policies.getScalarForField(typename, fieldName);
+  ): ScalarType | undefined {
+    return this.policies.getScalarTypeForField(typename, fieldName);
   }
 
   public configuresScalars(): boolean {
@@ -273,7 +279,7 @@ export class InMemoryCache extends ApolloCache {
     const variableTypes = getOperationDefinition(
       document
     )?.variableDefinitions?.reduce<Record<string, string>>((memo, node) => {
-      memo[node.variable.name.value] = getUnwrappedType(node.type);
+      memo[node.variable.name.value] = getScalarTypeFromTypeNode(node.type);
 
       return memo;
     }, {});
@@ -288,18 +294,52 @@ export class InMemoryCache extends ApolloCache {
   private serializeVariablesValue(
     value: unknown,
     variableTypes: Record<string, string>,
-    scalar?: Scalar<any, any>
+    scalarType?: ScalarType,
+    coordinate?: string
   ): unknown {
-    if (Array.isArray(value)) {
-      return this.serializeInputArray(value, variableTypes, scalar);
+    if (value == null) {
+      return value;
     }
 
-    if (scalar && value != null) {
-      return scalar.coerceToSerialized(value);
+    if (scalarType) {
+      const match = matchScalarList(scalarType);
+
+      if (match) {
+        if (Array.isArray(value)) {
+          return this.serializeInputArray(
+            value,
+            variableTypes,
+            match[1],
+            coordinate
+          );
+        } else if (__DEV__) {
+          invariant.warn(
+            "The variable '%s' has list type '%s', but the value is not an array. The value was coerced as '%s' anyway.",
+            coordinate,
+            scalarType,
+            unwrapScalarType(scalarType)
+          );
+        }
+      }
+
+      const scalar = this.getScalar(unwrapScalarType(scalarType));
+
+      if (scalar) {
+        return scalar.coerceToSerialized(value);
+      }
+    }
+
+    if (Array.isArray(value)) {
+      return this.serializeInputArray(
+        value,
+        variableTypes,
+        undefined,
+        coordinate
+      );
     }
 
     if (isPlainObject(value)) {
-      return this.serializeInputObject(value, variableTypes);
+      return this.serializeInputObject(value, variableTypes, coordinate);
     }
 
     return value;
@@ -308,12 +348,18 @@ export class InMemoryCache extends ApolloCache {
   private serializeInputArray(
     value: unknown[],
     variableTypes: Record<string, string>,
-    scalar?: Scalar<any, any>
+    scalarType?: ScalarType,
+    coordinate?: string
   ) {
     let changed = false;
 
     const newValue = value.map((item) => {
-      const newItem = this.serializeVariablesValue(item, variableTypes, scalar);
+      const newItem = this.serializeVariablesValue(
+        item,
+        variableTypes,
+        scalarType,
+        coordinate
+      );
       changed ||= newItem !== item;
 
       return newItem;
@@ -324,43 +370,42 @@ export class InMemoryCache extends ApolloCache {
 
   private serializeInputObject(
     value: Record<string, unknown>,
-    variableTypes: Record<string, string>
+    variableTypes: Record<string, string>,
+    coordinate?: string
   ) {
     let changed = false;
 
     const entries = Object.entries(value).map(([name, value]) => {
       const type = variableTypes[name];
+      const fieldCoordinate = coordinate ? `${coordinate}.${name}` : name;
 
       if (!type) {
         return [name, value];
       }
 
-      const inputObject = this.config.inputObjects?.[type];
+      const inputObject = this.config.inputObjects?.[unwrapScalarType(type)];
 
       if (inputObject) {
         const newValue = this.serializeVariablesValue(
           value,
-          inputObject.fields
+          inputObject.fields,
+          undefined,
+          fieldCoordinate
         );
         changed ||= newValue !== value;
 
         return [name, newValue];
       }
 
-      const scalar = this.getScalar(type);
+      const newValue = this.serializeVariablesValue(
+        value,
+        variableTypes,
+        type,
+        fieldCoordinate
+      );
+      changed ||= newValue !== value;
 
-      if (scalar) {
-        const newValue = this.serializeVariablesValue(
-          value,
-          variableTypes,
-          scalar
-        );
-        changed ||= newValue !== value;
-
-        return [name, newValue];
-      }
-
-      return [name, value];
+      return [name, newValue];
     });
 
     return changed ? Object.fromEntries(entries) : value;

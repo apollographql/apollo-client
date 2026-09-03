@@ -32,7 +32,6 @@ import {
 } from "@apollo/client/utilities/invariant";
 
 import type { ApolloCache } from "../core/cache.js";
-import type { Scalar } from "../core/Scalar.js";
 import type {
   CanReadFunction,
   FieldSpecifier,
@@ -61,7 +60,7 @@ import type {
   MergeInfo,
   NormalizedCache,
   ReadMergeModifyContext,
-  ScalarNames,
+  ScalarType,
 } from "./types.js";
 import type { WriteContext } from "./writeToStore.js";
 
@@ -176,7 +175,7 @@ export type FieldPolicy<
   keyArgs?: KeySpecifier | KeyArgsFunction | false;
   read?: FieldReadFunction<TExisting, TReadResult, TReadOptions>;
   merge?: FieldMergeFunction<TExisting, TIncoming, TMergeOptions> | boolean;
-  scalar?: ScalarNames;
+  scalar?: ScalarType;
 };
 
 export type StorageType = Record<string, any>;
@@ -932,13 +931,11 @@ export class Policies {
       : fieldName + ":" + storeFieldName;
   }
 
-  public getScalarForField(
+  public getScalarTypeForField(
     typename: string,
     fieldName: string
-  ): Scalar<any, any> | undefined {
-    const policy = this.getFieldPolicy(typename, fieldName);
-
-    return policy?.scalar ? this.cache.getScalar(policy.scalar) : undefined;
+  ): ScalarType | undefined {
+    return this.getFieldPolicy(typename, fieldName)?.scalar;
   }
 
   public readField<V = StoreValue>(

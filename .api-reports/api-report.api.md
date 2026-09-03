@@ -108,7 +108,7 @@ export abstract class ApolloCache {
     getRootTypename(operation: OperationTypeNode): string;
     // (undocumented)
     getScalar<TKey extends keyof ApolloCache.Scalars>(key: TKey): ApolloCache.GetScalarType<TKey> | undefined;
-    getScalarForField<TSerialized = unknown, TParsed = unknown>(typename: string, fieldName: string): Scalar<TSerialized, TParsed> | undefined;
+    getScalarTypeForField(typename: string, fieldName: string): ScalarType | undefined;
     // (undocumented)
     identify(object: StoreObject | Reference): string | undefined;
     // (undocumented)
@@ -1409,7 +1409,7 @@ export type FieldPolicy<TExisting = any, TIncoming = TExisting, TReadResult = TI
     keyArgs?: KeySpecifier | KeyArgsFunction | false;
     read?: FieldReadFunction<TExisting, TReadResult, TReadOptions>;
     merge?: FieldMergeFunction<TExisting, TIncoming, TMergeOptions> | boolean;
-    scalar?: ScalarNames;
+    scalar?: ScalarType;
 };
 
 // @public (undocumented)
@@ -1758,7 +1758,7 @@ export class InMemoryCache extends ApolloCache {
     getRootTypename(operation: OperationTypeNode): string;
     // (undocumented)
     getScalar<TKey extends keyof ApolloCache.Scalars>(key: TKey): ApolloCache.GetScalarType<TKey> extends (Scalar<infer TSerialized, infer TParsed>) ? IsLooselyEqual<TSerialized, TParsed> extends true ? ApolloCache.GetScalarType<TKey> | undefined : ApolloCache.GetScalarType<TKey> : never;
-    getScalarForField<TSerialized = unknown, TParsed = unknown>(typename: string, fieldName: string): Scalar<TSerialized, TParsed> | undefined;
+    getScalarTypeForField(typename: string, fieldName: string): ScalarType | undefined;
     // (undocumented)
     identify(object: StoreObject | Reference): string | undefined;
     // (undocumented)
@@ -1939,6 +1939,9 @@ type LazyType<T> = T & {
 export const LinkError: {
     is: (error: unknown) => boolean;
 };
+
+// @public (undocumented)
+type ListOf<T extends string> = `[${T}]`;
 
 // @public (undocumented)
 namespace LocalState {
@@ -2198,6 +2201,11 @@ export type MutationUpdaterFunction<TData, TVariables extends OperationVariables
     context?: DefaultContext;
     variables: TVariables;
 }) => void;
+
+// Warning: (ae-forgotten-export) The symbol "ListOf" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+type NestedScalarName<T extends string> = T | ListOf<T> | ListOf<ListOf<T>> | ListOf<ListOf<ListOf<T>>> | ListOf<ListOf<ListOf<ListOf<T>>>>;
 
 // @public
 export enum NetworkStatus {
@@ -2529,7 +2537,7 @@ class Policies {
     // (undocumented)
     getReadFunction(typename: string | undefined, fieldName: string): FieldReadFunction | undefined;
     // (undocumented)
-    getScalarForField(typename: string, fieldName: string): Scalar<any, any> | undefined;
+    getScalarTypeForField(typename: string, fieldName: string): ScalarType | undefined;
     // Warning: (ae-forgotten-export) The symbol "FieldSpecifier" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -2992,8 +3000,10 @@ export class Scalar<TSerialized, TParsed> {
     serialize(value: TParsed): TSerialized;
 }
 
+// Warning: (ae-forgotten-export) The symbol "NestedScalarName" needs to be exported by the entry point index.d.ts
+//
 // @public (undocumented)
-type ScalarNames = keyof KnownScalars | (string extends keyof ApolloCache.Scalars ? string & {} : never);
+export type ScalarType = NestedScalarName<keyof KnownScalars & string> | (string extends keyof ApolloCache.Scalars ? string & {} : never);
 
 // Warning: (ae-forgotten-export) The symbol "HttpConfig" needs to be exported by the entry point index.d.ts
 //
@@ -3325,10 +3335,9 @@ interface WriteContext extends ReadMergeModifyContext {
 //
 // src/cache/core/cache.ts:179:11 - (ae-forgotten-export) The symbol "MissingTree" needs to be exported by the entry point index.d.ts
 // src/cache/core/cache.ts:254:7 - (ae-forgotten-export) The symbol "DiffIncrementalInfo" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:104:3 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:176:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:176:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:179:3 - (ae-forgotten-export) The symbol "ScalarNames" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:103:3 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:175:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:175:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:147:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:162:3 - (ae-forgotten-export) The symbol "FragmentRegistryAPI" needs to be exported by the entry point index.d.ts
 // src/core/ApolloClient.ts:202:5 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts

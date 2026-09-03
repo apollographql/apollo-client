@@ -34,3 +34,16 @@ export const jsonObjectScalar = new Scalar<
   parse: (value) => new Map(Object.entries(value)),
   is: (value) => value instanceof Map,
 });
+
+// Used to test scalar that is an array itself
+export const dateTimeRangeScalar = new Scalar<
+  [string, string],
+  { start: Date; end: Date }
+>({
+  serialize: (value) => [value.start.toISOString(), value.end.toISOString()],
+  parse: (value) => ({
+    start: new Date(value[0]),
+    end: new Date(value[1]),
+  }),
+  is: (value) => !Array.isArray(value),
+});

@@ -133,12 +133,29 @@ test("allows only defined scalars in field policies", () => {
           startDate: {
             scalar: "DateTime",
           },
+          dates: {
+            scalar: "[DateTime]",
+          },
+          datesByYear: {
+            scalar: "[[DateTime]]",
+          },
           endDate: {
             scalar: "RelativeDate",
+          },
+          relativeDates: {
+            scalar: "[RelativeDate]",
           },
           metadata: {
             // @ts-expect-error scalar not registered
             scalar: "JSONObject",
+          },
+          metadataList: {
+            // @ts-expect-error scalar not registered
+            scalar: "[JSONObject]",
+          },
+          nonNullList: {
+            // @ts-expect-error non-null markers are not part of the scalar type
+            scalar: "[DateTime!]!",
           },
         },
       },

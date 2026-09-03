@@ -143,11 +143,20 @@ test("allows any scalar name in field policies", () => {
           startDate: {
             scalar: "DateTime",
           },
+          dates: {
+            scalar: "[DateTime]",
+          },
+          datesByYear: {
+            scalar: "[[DateTime]]",
+          },
           endDate: {
             scalar: "RelativeDate",
           },
           metadata: {
             scalar: "Unknown",
+          },
+          unknownList: {
+            scalar: "[Unknown]",
           },
         },
       },

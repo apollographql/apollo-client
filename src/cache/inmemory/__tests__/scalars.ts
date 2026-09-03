@@ -4,6 +4,7 @@ import type { TypedDocumentNode } from "@apollo/client";
 import { gql } from "@apollo/client";
 import { InMemoryCache, Scalar } from "@apollo/client/cache";
 import {
+  dateTimeRangeScalar,
   dateTimeScalar,
   jsonObjectScalar,
   ObservableStream,
@@ -18,6 +19,8 @@ const WARNINGS = {
     "The field policy for '%s' is configured with the '%s' scalar, so its '%s' function is ignored. Scalar configuration cannot be used with custom read or merge functions.",
   NON_SCALAR_FIELD:
     "The field policy for '%s' is configured with the '%s' scalar, but the field is not a scalar field because it contains a selection set. The field value remains unchanged.",
+  LIST_SCALAR_MISMATCH:
+    "The custom scalar configuration for '%s' uses list type '%s', but the value is not an array. The value was coerced as '%s' anyway.",
 };
 
 test("creates a scalar from a GraphQLScalarType", () => {
@@ -560,7 +563,7 @@ test("stores each element as a parsed value when writing an array of scalar valu
     typePolicies: {
       Schedule: {
         fields: {
-          meetingTimes: { scalar: "DateTime" },
+          meetingTimes: { scalar: "[DateTime]" },
         },
       },
     },
@@ -607,7 +610,7 @@ test("parses each serialized element when writing an array of scalar values", ()
     typePolicies: {
       Schedule: {
         fields: {
-          meetingTimes: { scalar: "DateTime" },
+          meetingTimes: { scalar: "[DateTime]" },
         },
       },
     },
@@ -651,7 +654,7 @@ test("stores each leaf element as a parsed value when writing a 2D array of scal
     typePolicies: {
       Schedule: {
         fields: {
-          availabilitySlots: { scalar: "DateTime" },
+          availabilitySlots: { scalar: "[[DateTime]]" },
         },
       },
     },
@@ -696,6 +699,161 @@ test("stores each leaf element as a parsed value when writing a 2D array of scal
       },
     },
   });
+});
+
+test("passes an array-shaped scalar value to parse as a whole when scalar is defined without list syntax", () => {
+  const cache = new InMemoryCache({
+    scalars: {
+      DateTimeRange: dateTimeRangeScalar,
+    },
+    typePolicies: {
+      Event: {
+        fields: {
+          dateRange: { scalar: "DateTimeRange" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      event {
+        id
+        dateRange
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        dateRange: ["2026-01-01T00:00:00.000Z", "2026-06-01T00:00:00.000Z"],
+      },
+    },
+  });
+
+  expect(rawCacheData(cache)).toEqual({
+    ROOT_QUERY: { __typename: "Query", event: { __ref: "Event:1" } },
+    "Event:1": {
+      __typename: "Event",
+      id: "1",
+      dateRange: {
+        start: new Date("2026-01-01T00:00:00.000Z"),
+        end: new Date("2026-06-01T00:00:00.000Z"),
+      },
+    },
+  });
+});
+
+test("parses each array-shaped scalar when writing a list of array-shaped scalars", () => {
+  const cache = new InMemoryCache({
+    scalars: {
+      DateTimeRange: dateTimeRangeScalar,
+    },
+    typePolicies: {
+      Event: {
+        fields: {
+          dateRanges: { scalar: "[DateTimeRange]" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      event {
+        id
+        dateRanges
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        dateRanges: [
+          ["2026-01-01T00:00:00.000Z", "2026-06-01T00:00:00.000Z"],
+          ["2026-07-01T00:00:00.000Z", "2026-12-01T00:00:00.000Z"],
+        ],
+      },
+    },
+  });
+
+  expect(rawCacheData(cache)).toEqual({
+    ROOT_QUERY: { __typename: "Query", event: { __ref: "Event:1" } },
+    "Event:1": {
+      __typename: "Event",
+      id: "1",
+      dateRanges: [
+        {
+          start: new Date("2026-01-01T00:00:00.000Z"),
+          end: new Date("2026-06-01T00:00:00.000Z"),
+        },
+        {
+          start: new Date("2026-07-01T00:00:00.000Z"),
+          end: new Date("2026-12-01T00:00:00.000Z"),
+        },
+      ],
+    },
+  });
+});
+
+test("passes through a non-array value and warns when a list scalar receives an object", () => {
+  using _ = spyOnConsole("warn");
+
+  const cache = new InMemoryCache({
+    scalars: { DateTime: dateTimeScalar },
+    typePolicies: {
+      Event: {
+        fields: {
+          dates: { scalar: "[DateTime]" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      event {
+        id
+        dates
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        dates: "2026-01-01T00:00:00.000Z",
+      },
+    },
+  });
+
+  expect(rawCacheData(cache)).toEqual({
+    ROOT_QUERY: { __typename: "Query", event: { __ref: "Event:1" } },
+    "Event:1": {
+      __typename: "Event",
+      id: "1",
+      dates: new Date("2026-01-01T00:00:00.000Z"),
+    },
+  });
+
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    WARNINGS.LIST_SCALAR_MISMATCH,
+    "Event.dates",
+    "[DateTime]",
+    "DateTime"
+  );
 });
 
 test("stores null as-is when null is written to a scalar field", () => {
@@ -998,7 +1156,7 @@ test("stores each element as a parsed value when writing an array of scalar valu
       Schedule: {
         fields: {
           meetingTimes: {
-            scalar: "DateTime",
+            scalar: "[DateTime]",
             merge,
           },
         },
@@ -1052,7 +1210,7 @@ test("stores each leaf element as a parsed value when writing a 2D array of scal
       Schedule: {
         fields: {
           availabilitySlots: {
-            scalar: "DateTime",
+            scalar: "[[DateTime]]",
             merge,
           },
         },
@@ -1122,12 +1280,12 @@ test("stores parsed scalar values across a complex nested write", () => {
       },
       Schedule: {
         fields: {
-          timeSlots: { scalar: "DateTime" },
+          timeSlots: { scalar: "[DateTime]" },
         },
       },
       Speaker: {
         fields: {
-          availableTimes: { scalar: "DateTime" },
+          availableTimes: { scalar: "[DateTime]" },
         },
       },
       Session: {
@@ -1570,7 +1728,7 @@ test("stores each element as a parsed value when modifying an array of scalar va
     typePolicies: {
       Speaker: {
         fields: {
-          availableTimes: { scalar: "DateTime" },
+          availableTimes: { scalar: "[DateTime]" },
         },
       },
     },
@@ -1625,7 +1783,7 @@ test("stores each leaf element as a parsed value when modifying a 2D array of sc
     typePolicies: {
       Speaker: {
         fields: {
-          availabilitySlots: { scalar: "DateTime" },
+          availabilitySlots: { scalar: "[[DateTime]]" },
         },
       },
     },
@@ -1853,13 +2011,13 @@ test("cache.extract() serializes all stored parsed scalar values", () => {
       },
       Schedule: {
         fields: {
-          meetingTimes: { scalar: "DateTime" },
-          availabilitySlots: { scalar: "DateTime" },
+          meetingTimes: { scalar: "[DateTime]" },
+          availabilitySlots: { scalar: "[[DateTime]]" },
         },
       },
       Speaker: {
         fields: {
-          availableTimes: { scalar: "DateTime" },
+          availableTimes: { scalar: "[DateTime]" },
         },
       },
       Session: {
@@ -2023,6 +2181,109 @@ test("cache.extract() serializes all stored parsed scalar values", () => {
   });
 });
 
+test("cache.extract() serializes an array-shaped scalar value as a whole", () => {
+  const cache = new InMemoryCache({
+    scalars: {
+      DateTimeRange: dateTimeRangeScalar,
+    },
+    typePolicies: {
+      Event: {
+        fields: {
+          dateRange: { scalar: "DateTimeRange" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      event {
+        id
+        dateRange
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        dateRange: {
+          start: new Date("2026-01-01T00:00:00.000Z"),
+          end: new Date("2026-06-01T00:00:00.000Z"),
+        },
+      },
+    },
+  });
+
+  expect(cache.extract()).toEqual({
+    ROOT_QUERY: { __typename: "Query", event: { __ref: "Event:1" } },
+    "Event:1": {
+      __typename: "Event",
+      id: "1",
+      dateRange: ["2026-01-01T00:00:00.000Z", "2026-06-01T00:00:00.000Z"],
+    },
+  });
+});
+
+test("cache.extract() serializes each array-shaped scalar in a list as a whole", () => {
+  const cache = new InMemoryCache({
+    scalars: {
+      DateTimeRange: dateTimeRangeScalar,
+    },
+    typePolicies: {
+      Event: {
+        fields: {
+          dateRanges: { scalar: "[DateTimeRange]" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      event {
+        id
+        dateRanges
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        dateRanges: [
+          {
+            start: new Date("2026-01-01T00:00:00.000Z"),
+            end: new Date("2026-06-01T00:00:00.000Z"),
+          },
+          {
+            start: new Date("2026-07-01T00:00:00.000Z"),
+            end: new Date("2026-12-01T00:00:00.000Z"),
+          },
+        ],
+      },
+    },
+  });
+
+  expect(cache.extract()).toEqual({
+    ROOT_QUERY: { __typename: "Query", event: { __ref: "Event:1" } },
+    "Event:1": {
+      __typename: "Event",
+      id: "1",
+      dateRanges: [
+        ["2026-01-01T00:00:00.000Z", "2026-06-01T00:00:00.000Z"],
+        ["2026-07-01T00:00:00.000Z", "2026-12-01T00:00:00.000Z"],
+      ],
+    },
+  });
+});
+
 test("cache.restore() parses all serialized scalar values before storing them", () => {
   const cache = new InMemoryCache({
     scalars: {
@@ -2043,13 +2304,13 @@ test("cache.restore() parses all serialized scalar values before storing them", 
       },
       Schedule: {
         fields: {
-          meetingTimes: { scalar: "DateTime" },
-          availabilitySlots: { scalar: "DateTime" },
+          meetingTimes: { scalar: "[DateTime]" },
+          availabilitySlots: { scalar: "[[DateTime]]" },
         },
       },
       Speaker: {
         fields: {
-          availableTimes: { scalar: "DateTime" },
+          availableTimes: { scalar: "[DateTime]" },
         },
       },
       Session: {
@@ -2857,7 +3118,7 @@ test("parses each element when the scalar field contains an array of values", ()
     typePolicies: {
       Schedule: {
         fields: {
-          meetingTimes: { scalar: "DateTime" },
+          meetingTimes: { scalar: "[DateTime]" },
         },
       },
     },
@@ -2898,7 +3159,7 @@ test("parses each leaf element when the scalar field contains a 2D array", () =>
     typePolicies: {
       Schedule: {
         fields: {
-          availabilitySlots: { scalar: "DateTime" },
+          availabilitySlots: { scalar: "[[DateTime]]" },
         },
       },
     },
@@ -2934,6 +3195,103 @@ test("parses each leaf element when the scalar field contains a 2D array", () =>
           new Date("2026-01-01T10:00:00.000Z"),
         ],
         [new Date("2026-01-02T14:00:00.000Z")],
+      ],
+    },
+  });
+});
+
+test("returns an array-shaped scalar value as a whole when reading", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTimeRange: dateTimeRangeScalar },
+    typePolicies: {
+      Event: {
+        fields: {
+          dateRange: { scalar: "DateTimeRange" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      event {
+        id
+        dateRange
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        dateRange: ["2026-01-01T00:00:00.000Z", "2026-06-01T00:00:00.000Z"],
+      },
+    },
+  });
+
+  expect(cache.readQuery({ query })).toEqual({
+    event: {
+      __typename: "Event",
+      id: "1",
+      dateRange: {
+        start: new Date("2026-01-01T00:00:00.000Z"),
+        end: new Date("2026-06-01T00:00:00.000Z"),
+      },
+    },
+  });
+});
+
+test("parses each array-shaped scalar when reading a list of array-shaped scalars", () => {
+  const cache = new InMemoryCache({
+    scalars: { DateTimeRange: dateTimeRangeScalar },
+    typePolicies: {
+      Event: {
+        fields: {
+          dateRanges: { scalar: "[DateTimeRange]" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      event {
+        id
+        dateRanges
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        dateRanges: [
+          ["2026-01-01T00:00:00.000Z", "2026-06-01T00:00:00.000Z"],
+          ["2026-07-01T00:00:00.000Z", "2026-12-01T00:00:00.000Z"],
+        ],
+      },
+    },
+  });
+
+  expect(cache.readQuery({ query })).toEqual({
+    event: {
+      __typename: "Event",
+      id: "1",
+      dateRanges: [
+        {
+          start: new Date("2026-01-01T00:00:00.000Z"),
+          end: new Date("2026-06-01T00:00:00.000Z"),
+        },
+        {
+          start: new Date("2026-07-01T00:00:00.000Z"),
+          end: new Date("2026-12-01T00:00:00.000Z"),
+        },
       ],
     },
   });
@@ -3487,12 +3845,12 @@ test("parses scalar values across a complex nested query", () => {
       },
       Schedule: {
         fields: {
-          timeSlots: { scalar: "DateTime" },
+          timeSlots: { scalar: "[[DateTime]]" },
         },
       },
       Speaker: {
         fields: {
-          availableTimes: { scalar: "DateTime" },
+          availableTimes: { scalar: "[DateTime]" },
         },
       },
       Session: {
@@ -4484,12 +4842,12 @@ test("deep merges scalar option with policies.addTypePolicies", () => {
     },
     Schedule: {
       fields: {
-        timeSlots: { scalar: "DateTime" },
+        timeSlots: { scalar: "[[DateTime]]" },
       },
     },
     Speaker: {
       fields: {
-        availableTimes: { scalar: "DateTime" },
+        availableTimes: { scalar: "[DateTime]" },
       },
     },
     Session: {

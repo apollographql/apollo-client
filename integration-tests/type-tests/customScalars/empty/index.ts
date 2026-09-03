@@ -30,6 +30,10 @@ test("does not allow any scalar name in field policies", () => {
             // @ts-expect-error no scalars are declared
             scalar: "DateTime",
           },
+          dates: {
+            // @ts-expect-error no scalars are declared
+            scalar: "[DateTime]",
+          },
         },
       },
     },

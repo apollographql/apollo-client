@@ -371,6 +371,7 @@ Array [
   "createMockWrapper",
   "createOperationWithDefaultContext",
   "dateScalar",
+  "dateTimeRangeScalar",
   "dateTimeScalar",
   "enableFakeTimers",
   "executeSchemaGraphQL17Alpha2",
@@ -474,7 +475,6 @@ Array [
   "getOperationName",
   "getQueryDefinition",
   "getStoreKeyName",
-  "getUnwrappedType",
   "graphQLResultHasError",
   "handleIncrementalSymbol",
   "hasDirectives",
@@ -492,6 +492,7 @@ Array [
   "makeStreamInfoTrie",
   "makeUniqueId",
   "mapObservableFragmentMemoized",
+  "matchScalarList",
   "maybeDeepFreeze",
   "mergeDeep",
   "mergeDeepArray",
@@ -508,6 +509,7 @@ Array [
   "stringifyForDisplay",
   "toDiffWithDataState",
   "toQueryResult",
+  "unwrapScalarType",
   "variablesUnknownSymbol",
 ]
 `;

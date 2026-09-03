@@ -1,10 +1,17 @@
 import { gql } from "@apollo/client";
 import { InMemoryCache, Scalar } from "@apollo/client/cache";
 import {
+  dateTimeRangeScalar,
   dateTimeScalar,
   jsonObjectScalar,
   priceScalar,
+  spyOnConsole,
 } from "@apollo/client/testing/internal";
+
+const WARNINGS = {
+  LIST_VARIABLE_MISMATCH:
+    "The variable '%s' has list type '%s', but the value is not an array. The value was coerced as '%s' anyway.",
+};
 
 test("serializes a custom scalar variable", () => {
   const cache = new InMemoryCache({
@@ -245,6 +252,126 @@ test("leaves lists and nested lists alone when variables are already serialized"
   expect(result).toBe(variables);
 });
 
+test("serializes an array-shaped scalar variable as a whole", () => {
+  const cache = new InMemoryCache({
+    scalars: {
+      DateTimeRange: dateTimeRangeScalar,
+    },
+  });
+
+  const mutation = gql`
+    mutation CreateEvent($dateRange: DateTimeRange) {
+      createEvent(dateRange: $dateRange) {
+        id
+      }
+    }
+  `;
+
+  expect(
+    cache.serializeVariables(mutation, {
+      dateRange: {
+        start: new Date("2026-01-01T00:00:00.000Z"),
+        end: new Date("2026-06-01T00:00:00.000Z"),
+      },
+    })
+  ).toStrictEqualTyped({
+    dateRange: ["2026-01-01T00:00:00.000Z", "2026-06-01T00:00:00.000Z"],
+  });
+});
+
+test("serializes each item when the variable type is a list of scalars", () => {
+  const cache = new InMemoryCache({
+    scalars: {
+      DateTime: dateTimeScalar,
+    },
+  });
+
+  const mutation = gql`
+    mutation CreateEvent($dateRange: [DateTime]) {
+      createEvent(dateRange: $dateRange) {
+        id
+      }
+    }
+  `;
+
+  expect(
+    cache.serializeVariables(mutation, {
+      dateRange: [
+        new Date("2026-01-01T00:00:00.000Z"),
+        new Date("2026-06-01T00:00:00.000Z"),
+      ],
+    })
+  ).toStrictEqualTyped({
+    dateRange: ["2026-01-01T00:00:00.000Z", "2026-06-01T00:00:00.000Z"],
+  });
+});
+
+test("passes through a non-array variable and warns when the variable type is a list", () => {
+  using _ = spyOnConsole("warn");
+
+  const cache = new InMemoryCache({
+    scalars: {
+      DateTime: dateTimeScalar,
+    },
+  });
+
+  const mutation = gql`
+    mutation CreateEvent($dates: [DateTime]) {
+      createEvent(dates: $dates) {
+        id
+      }
+    }
+  `;
+
+  const variables = { dates: new Date("2026-01-01T00:00:00.000Z") };
+  const result = cache.serializeVariables(mutation, variables);
+
+  expect(result).toStrictEqualTyped({ dates: "2026-01-01T00:00:00.000Z" });
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    WARNINGS.LIST_VARIABLE_MISMATCH,
+    "dates",
+    "[DateTime]",
+    "DateTime"
+  );
+});
+
+test("serializes each array-shaped scalar in a list of array-shaped scalars", () => {
+  const cache = new InMemoryCache({
+    scalars: {
+      DateTimeRange: dateTimeRangeScalar,
+    },
+  });
+
+  const mutation = gql`
+    mutation CreateEvents($dateRanges: [DateTimeRange]) {
+      createEvents(dateRanges: $dateRanges) {
+        id
+      }
+    }
+  `;
+
+  expect(
+    cache.serializeVariables(mutation, {
+      dateRanges: [
+        {
+          start: new Date("2026-01-01T00:00:00.000Z"),
+          end: new Date("2026-06-01T00:00:00.000Z"),
+        },
+        {
+          start: new Date("2026-07-01T00:00:00.000Z"),
+          end: new Date("2026-12-01T00:00:00.000Z"),
+        },
+      ],
+    })
+  ).toStrictEqualTyped({
+    dateRanges: [
+      ["2026-01-01T00:00:00.000Z", "2026-06-01T00:00:00.000Z"],
+      ["2026-07-01T00:00:00.000Z", "2026-12-01T00:00:00.000Z"],
+    ],
+  });
+});
+
 test("serializes mixed parsed and serialized scalar object list values", () => {
   const cache = new InMemoryCache({
     scalars: {
@@ -379,7 +506,7 @@ test("serializes mixed scalar object list fields in a configured input object", 
     inputObjects: {
       EventInput: {
         fields: {
-          metadata: "JSONObject",
+          metadata: "[JSONObject]",
         },
       },
     },
@@ -484,7 +611,7 @@ test("serializes lists of custom scalars in a configured input object", () => {
     inputObjects: {
       AvailabilityInput: {
         fields: {
-          dates: "DateTime",
+          dates: "[DateTime]",
         },
       },
     },
@@ -504,13 +631,136 @@ test("serializes lists of custom scalars in a configured input object", () => {
         dates: [
           new Date("2026-01-01T00:00:00.000Z"),
           null,
+          new Date("2026-01-02T00:00:00.000Z"),
+        ],
+      },
+    })
+  ).toStrictEqualTyped({
+    input: {
+      dates: ["2026-01-01T00:00:00.000Z", null, "2026-01-02T00:00:00.000Z"],
+    },
+  });
+});
+
+test("serializes nested lists of custom scalars in a configured input object", () => {
+  const cache = new InMemoryCache({
+    scalars: {
+      DateTime: dateTimeScalar,
+    },
+    inputObjects: {
+      AvailabilityInput: {
+        fields: {
+          dates: "[[DateTime]]",
+        },
+      },
+    },
+  });
+
+  const mutation = gql`
+    mutation SetAvailability($input: AvailabilityInput!) {
+      setAvailability(input: $input) {
+        id
+      }
+    }
+  `;
+
+  expect(
+    cache.serializeVariables(mutation, {
+      input: {
+        dates: [
+          [new Date("2026-01-01T00:00:00.000Z"), null],
           [new Date("2026-01-02T00:00:00.000Z")],
         ],
       },
     })
   ).toStrictEqualTyped({
     input: {
-      dates: ["2026-01-01T00:00:00.000Z", null, ["2026-01-02T00:00:00.000Z"]],
+      dates: [["2026-01-01T00:00:00.000Z", null], ["2026-01-02T00:00:00.000Z"]],
+    },
+  });
+});
+
+test("serializes an array-shaped scalar field in a configured input object as a whole", () => {
+  const cache = new InMemoryCache({
+    scalars: {
+      DateTimeRange: dateTimeRangeScalar,
+    },
+    inputObjects: {
+      EventInput: {
+        fields: {
+          dateRange: "DateTimeRange",
+        },
+      },
+    },
+  });
+
+  const mutation = gql`
+    mutation CreateEvent($input: EventInput!) {
+      createEvent(input: $input) {
+        id
+      }
+    }
+  `;
+
+  expect(
+    cache.serializeVariables(mutation, {
+      input: {
+        dateRange: {
+          start: new Date("2026-01-01T00:00:00.000Z"),
+          end: new Date("2026-06-01T00:00:00.000Z"),
+        },
+      },
+    })
+  ).toStrictEqualTyped({
+    input: {
+      dateRange: ["2026-01-01T00:00:00.000Z", "2026-06-01T00:00:00.000Z"],
+    },
+  });
+});
+
+test("serializes each array-shaped scalar field in a list on a configured input object", () => {
+  const cache = new InMemoryCache({
+    scalars: {
+      DateTimeRange: dateTimeRangeScalar,
+    },
+    inputObjects: {
+      EventInput: {
+        fields: {
+          dateRanges: "[DateTimeRange]",
+        },
+      },
+    },
+  });
+
+  const mutation = gql`
+    mutation CreateEvent($input: EventInput!) {
+      createEvent(input: $input) {
+        id
+      }
+    }
+  `;
+
+  expect(
+    cache.serializeVariables(mutation, {
+      input: {
+        dateRanges: [
+          {
+            start: new Date("2026-01-01T00:00:00.000Z"),
+            end: new Date("2026-06-01T00:00:00.000Z"),
+          },
+          {
+            start: new Date("2026-07-01T00:00:00.000Z"),
+            end: new Date("2026-12-01T00:00:00.000Z"),
+          },
+        ],
+      },
+    })
+  ).toStrictEqualTyped({
+    input: {
+      dateRanges: [
+        ["2026-01-01T00:00:00.000Z", "2026-06-01T00:00:00.000Z"],
+        ["2026-07-01T00:00:00.000Z", "2026-12-01T00:00:00.000Z"],
+      ],
     },
   });
 });
@@ -523,7 +773,7 @@ test("serializes lists and nested lists of configured input objects", () => {
     inputObjects: {
       ScheduleInput: {
         fields: {
-          sessions: "SessionInput",
+          sessions: "[SessionInput]",
         },
       },
       SessionInput: {
@@ -586,7 +836,7 @@ test("serializes recursive input objects", () => {
       EventFilter: {
         fields: {
           startsAt: "DateTime",
-          and: "EventFilter",
+          and: "[EventFilter]",
         },
       },
     },

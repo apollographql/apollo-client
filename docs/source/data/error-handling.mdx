@@ -147,7 +147,7 @@ Apollo Client supports the following error policies:
 | `none`      | If the response includes errors, they are returned in the `error` field and the response `data` is set to `undefined` even if the server returns `data` in its response. This means network errors and GraphQL errors result in a similar response shape. This is the default error policy. |
 | `ignore`    | Errors are ignored (`error` is _not_ populated), and any returned `data` is cached and rendered as if no errors occurred. Note: `data` may also be `undefined` in the event a network error occurs.                                                                                         |
 | `all`       | Both `data` and `error` are populated and any returned `data` is cached, enabling you to render both partial results and error information.                                                                                                                                                 |
-| `localized` | Like `all` for errors that name a field, with those fields left out of the cache write: the operation receives the whole response shape, while the rest of your app only sees the fields that resolved. A network error behaves like `none`.                                                |
+| `localized` | Like `all` for errors in the response body, with the fields they name in their `path` left out of the cache write: the operation receives the whole response shape, while the rest of your app only sees the fields that resolved. A network error behaves like `none`.                     |
 
 ### Setting an error policy
 
@@ -209,7 +209,7 @@ Because the errored field never reaches the cache, a later cache read for this q
 
 Errors without a `path` cannot be attributed to a field, so they do not restrict the cache write. An error inside a list omits the field on the affected list item, but the item itself stays in the list.
 
-A network error is not localized to anything — there is no `path` to attribute it to and no response shape to return — so `localized` handles it exactly as `none` does. That keeps a total failure from clearing data your components are already rendering.
+A **network** error is different in kind: it fails the whole operation, so there is no response shape to return and nothing to localize. `localized` handles that case exactly as `none` does, which keeps a total failure from clearing data your components are already rendering. Note this is about _how the error arrived_, not whether it has a `path` — a GraphQL error in the response body with no `path` is still delivered with `data`, it just doesn't restrict the cache write.
 
 Use `localized` when a failing field should not poison shared cache data, and `all` when you want the response cached exactly as the server sent it.
 
@@ -286,7 +286,7 @@ console.log("Data (errors ignored):", result.data);
 
 ##### `errorPolicy: "localized"`
 
-For errors that name a field, the `localized` error policy resolves the promise the same way `all` does, and additionally keeps those fields out of the cache. A network error rejects, as it does under `none`.
+For GraphQL errors in the response body, the `localized` error policy resolves the promise the same way `all` does, and additionally keeps the fields they name out of the cache. A network error rejects, as it does under `none`.
 
 ```ts
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
@@ -372,7 +372,7 @@ observable.subscribe({
 
 ##### `errorPolicy: "localized"`
 
-Field errors are included as part of the result object emitted to the `next` callback through the `error` field, and `data` holds the full response shape. The fields those errors point at are left out of the cache, so watchers of unrelated fields still receive their update. A network error is delivered the way `none` delivers it.
+GraphQL errors are included as part of the result object emitted to the `next` callback through the `error` field, and `data` holds the full response shape. The fields they name in their `path` are left out of the cache, so watchers of unrelated fields still receive their update. A network error is delivered the way `none` delivers it.
 
 ```ts
 const observable = client.watchQuery({

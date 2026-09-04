@@ -150,6 +150,53 @@ describe("errorPolicy: 'localized'", () => {
       });
     });
 
+    it("still delivers data for a body error with no path, unlike a network error", async () => {
+      const pathless = new GraphQLError("Something went wrong");
+      const client = createClient([
+        {
+          request: { query: profileQuery },
+          result: {
+            data: {
+              profile: {
+                __typename: "Profile",
+                id: "1",
+                name: "Alice",
+                bio: null,
+              },
+            },
+            errors: [pathless],
+          },
+        },
+      ]);
+
+      // The `none` fallback is keyed on HOW the error arrived, not on whether it has
+      // a `path`: an error in the response body still comes with a response shape,
+      // so it resolves like `all` and only forgoes restricting the cache write.
+      await expect(
+        client.query({ query: profileQuery, errorPolicy: "localized" })
+      ).resolves.toStrictEqualTyped({
+        data: {
+          profile: {
+            __typename: "Profile",
+            id: "1",
+            name: "Alice",
+            bio: null,
+          },
+        },
+        error: new CombinedGraphQLErrors({
+          data: {
+            profile: {
+              __typename: "Profile",
+              id: "1",
+              name: "Alice",
+              bio: null,
+            },
+          },
+          errors: [pathless],
+        }),
+      });
+    });
+
     it("writes the full result when the errors carry no path", async () => {
       const client = createClient([
         {

@@ -40,8 +40,10 @@ export type RefetchWritePolicy = "merge" | "overwrite";
  * - none (default): any errors from the request are treated like runtime errors and the observable is stopped
  * - ignore: errors from the request do not stop the observable, but also don't call `next`
  * - all: errors are treated like data and will notify observables
- * - localized: errors are treated like data and will notify observables, but the
- *   fields the errors point at are not written to the cache
+ * - localized: like `all` for errors that name a field `path` — the result and the
+ *   errors both reach observables — but the fields those errors point at are not
+ *   written to the cache. An error with no field to attribute it to (a network or
+ *   transport failure) behaves like `none`.
  */
 export type ErrorPolicy = "none" | "ignore" | "all" | "localized";
 

@@ -255,15 +255,18 @@ describe("errorPolicy: 'localized'", () => {
       });
     });
 
-    it("resolves with the error on a network error", async () => {
+    it("rejects on a network error, like `none`", async () => {
       const networkError = new Error("Oops");
       const client = createClient([
         { request: { query: profileQuery }, error: networkError },
       ]);
 
+      // A transport failure has no error `path`, so there is no field to localize
+      // it to and no response shape to hand back. Resolving with an empty result
+      // (what `all` does) would clear data the caller is already rendering.
       await expect(
         client.query({ query: profileQuery, errorPolicy: "localized" })
-      ).resolves.toStrictEqualTyped({ data: undefined, error: networkError });
+      ).rejects.toThrow(networkError);
     });
 
     it("omits a field on a single list item", async () => {
@@ -736,7 +739,7 @@ describe("errorPolicy: 'localized'", () => {
       });
     });
 
-    it("resolves with the error on a network error", async () => {
+    it("rejects on a network error, like `none`", async () => {
       const networkError = new Error("Oops");
       const client = createClient([
         { request: { query: mutation }, error: networkError },
@@ -744,7 +747,7 @@ describe("errorPolicy: 'localized'", () => {
 
       await expect(
         client.mutate({ mutation, errorPolicy: "localized" })
-      ).resolves.toStrictEqualTyped({ data: undefined, error: networkError });
+      ).rejects.toThrow(networkError);
     });
   });
 

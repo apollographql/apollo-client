@@ -84,6 +84,28 @@ export declare namespace Cache {
      * are available in `merge` functions.
      */
     extensions?: ExtensionsWithStreamInfo;
+
+    /**
+     * Response paths that should be left out of the write. Each path is a list
+     * of response keys and array indexes relative to the root of `result`, in
+     * the same format as the `path` of a GraphQL error.
+     *
+     * A field at one of these paths keeps whatever value it already had in the
+     * cache, and reading the field back reports it as missing when the cache
+     * never held a value for it.
+     *
+     * @example
+     *
+     * ```ts
+     * // Writes `user.name` but leaves `user.emails[0].address` untouched.
+     * cache.write({
+     *   query,
+     *   result,
+     *   skipPaths: [["user", "emails", 0, "address"]],
+     * });
+     * ```
+     */
+    skipPaths?: ReadonlyArray<ReadonlyArray<string | number>>;
   }
 
   export interface DiffOptions<
@@ -292,6 +314,9 @@ export declare namespace Cache {
      * are available in `merge` functions.
      */
     extensions?: ExtensionsWithStreamInfo;
+
+    /** {@inheritDoc @apollo/client/cache!Cache.WriteOptions#skipPaths:member} */
+    skipPaths?: ReadonlyArray<ReadonlyArray<string | number>>;
   }
 
   export type WriteFragmentOptions<

@@ -4078,4 +4078,374 @@ describe("writing to the store", () => {
       });
     });
   });
+
+  describe("skipPaths", () => {
+    it("omits a top level field", () => {
+      const query = gql`
+        query {
+          goodField
+          badField
+        }
+      `;
+
+      expect(
+        writeQueryToStore({
+          writer,
+          query,
+          result: { goodField: "good", badField: null },
+          skipPaths: [["badField"]],
+        }).toObject()
+      ).toEqual({
+        ROOT_QUERY: {
+          __typename: "Query",
+          goodField: "good",
+        },
+      });
+    });
+
+    it("omits several fields at once", () => {
+      const query = gql`
+        query {
+          a
+          b
+          c
+        }
+      `;
+
+      expect(
+        writeQueryToStore({
+          writer,
+          query,
+          result: { a: null, b: "b", c: null },
+          skipPaths: [["a"], ["c"]],
+        }).toObject()
+      ).toEqual({
+        ROOT_QUERY: {
+          __typename: "Query",
+          b: "b",
+        },
+      });
+    });
+
+    it("omits a nested field on a non-normalized object", () => {
+      const query = gql`
+        query {
+          nested {
+            goodField
+            badField
+          }
+        }
+      `;
+
+      expect(
+        writeQueryToStore({
+          writer,
+          query,
+          result: { nested: { goodField: "good", badField: null } },
+          skipPaths: [["nested", "badField"]],
+        }).toObject()
+      ).toEqual({
+        ROOT_QUERY: {
+          __typename: "Query",
+          nested: { goodField: "good" },
+        },
+      });
+    });
+
+    it("omits a nested field on a normalized entity", () => {
+      const cache = new InMemoryCache();
+      const query = gql`
+        query {
+          user {
+            __typename
+            id
+            name
+            email
+          }
+        }
+      `;
+
+      cache.writeQuery({
+        query,
+        data: {
+          user: { __typename: "User", id: "1", name: "Alice", email: null },
+        },
+        skipPaths: [["user", "email"]],
+      });
+
+      expect(cache.extract()).toEqual({
+        ROOT_QUERY: {
+          __typename: "Query",
+          user: { __ref: "User:1" },
+        },
+        "User:1": {
+          __typename: "User",
+          id: "1",
+          name: "Alice",
+        },
+      });
+    });
+
+    it("uses the response key rather than the field name when the field is aliased", () => {
+      const query = gql`
+        query {
+          renamed: badField
+          goodField
+        }
+      `;
+
+      expect(
+        writeQueryToStore({
+          writer,
+          query,
+          result: { renamed: null, goodField: "good" },
+          skipPaths: [["renamed"]],
+        }).toObject()
+      ).toEqual({
+        ROOT_QUERY: {
+          __typename: "Query",
+          goodField: "good",
+        },
+      });
+    });
+
+    it("does not omit a field when the path matches the field name instead of the alias", () => {
+      const query = gql`
+        query {
+          renamed: badField
+        }
+      `;
+
+      expect(
+        writeQueryToStore({
+          writer,
+          query,
+          result: { renamed: null },
+          skipPaths: [["badField"]],
+        }).toObject()
+      ).toEqual({
+        ROOT_QUERY: {
+          __typename: "Query",
+          badField: null,
+        },
+      });
+    });
+
+    it("omits a field on a single item of a list", () => {
+      const cache = new InMemoryCache();
+      const query = gql`
+        query {
+          users {
+            __typename
+            id
+            name
+          }
+        }
+      `;
+
+      cache.writeQuery({
+        query,
+        data: {
+          users: [
+            { __typename: "User", id: "1", name: "Alice" },
+            { __typename: "User", id: "2", name: null },
+          ],
+        },
+        skipPaths: [["users", 1, "name"]],
+      });
+
+      expect(cache.extract()).toEqual({
+        ROOT_QUERY: {
+          __typename: "Query",
+          users: [{ __ref: "User:1" }, { __ref: "User:2" }],
+        },
+        "User:1": { __typename: "User", id: "1", name: "Alice" },
+        "User:2": { __typename: "User", id: "2" },
+      });
+    });
+
+    it("omits a field reached through a fragment", () => {
+      const cache = new InMemoryCache();
+      const query = gql`
+        query {
+          user {
+            __typename
+            id
+            ...UserFields
+          }
+        }
+
+        fragment UserFields on User {
+          name
+          email
+        }
+      `;
+
+      cache.writeQuery({
+        query,
+        data: {
+          user: { __typename: "User", id: "1", name: "Alice", email: null },
+        },
+        skipPaths: [["user", "email"]],
+      });
+
+      expect(cache.extract()["User:1"]).toEqual({
+        __typename: "User",
+        id: "1",
+        name: "Alice",
+      });
+    });
+
+    it("omits a null field whose skipped path continues underneath it", () => {
+      const cache = new InMemoryCache();
+      const query = gql`
+        query {
+          goodField
+          nested {
+            __typename
+            id
+            requiredField
+          }
+        }
+      `;
+
+      cache.writeQuery({
+        query,
+        data: { goodField: "good", nested: null },
+        // A GraphQL error on the non-null `requiredField` nulls out `nested`
+        // in the response, but the error `path` still points at the field
+        // that failed.
+        skipPaths: [["nested", "requiredField"]],
+      });
+
+      expect(cache.extract()).toEqual({
+        ROOT_QUERY: {
+          __typename: "Query",
+          goodField: "good",
+        },
+      });
+    });
+
+    it("leaves existing cache data in place for a skipped field", () => {
+      const cache = new InMemoryCache();
+      const query = gql`
+        query {
+          user {
+            __typename
+            id
+            name
+            email
+          }
+        }
+      `;
+      const data = {
+        user: { __typename: "User", id: "1", name: "Alice", email: null },
+      };
+
+      cache.writeQuery({
+        query,
+        data: { ...data, user: { ...data.user, email: "alice@example.com" } },
+      });
+
+      cache.writeQuery({ query, data, skipPaths: [["user", "email"]] });
+
+      expect(cache.extract()["User:1"]).toEqual({
+        __typename: "User",
+        id: "1",
+        name: "Alice",
+        email: "alice@example.com",
+      });
+    });
+
+    it("does not warn about the skipped field being missing from the result", () => {
+      using consoleSpy = spyOnConsole("error");
+      const query = gql`
+        query {
+          goodField
+          badField
+        }
+      `;
+
+      writeQueryToStore({
+        writer,
+        query,
+        result: { goodField: "good", badField: null },
+        skipPaths: [["badField"]],
+      });
+
+      expect(consoleSpy.error).not.toHaveBeenCalled();
+    });
+
+    it("writes the full result when skipPaths is empty", () => {
+      const query = gql`
+        query {
+          goodField
+          badField
+        }
+      `;
+
+      expect(
+        writeQueryToStore({
+          writer,
+          query,
+          result: { goodField: "good", badField: null },
+          skipPaths: [],
+        }).toObject()
+      ).toEqual({
+        ROOT_QUERY: {
+          __typename: "Query",
+          goodField: "good",
+          badField: null,
+        },
+      });
+    });
+
+    it("ignores an empty path", () => {
+      const query = gql`
+        query {
+          goodField
+        }
+      `;
+
+      expect(
+        writeQueryToStore({
+          writer,
+          query,
+          result: { goodField: "good" },
+          skipPaths: [[]],
+        }).toObject()
+      ).toEqual({
+        ROOT_QUERY: {
+          __typename: "Query",
+          goodField: "good",
+        },
+      });
+    });
+
+    it("reads back a skipped field as missing", () => {
+      const cache = new InMemoryCache();
+      const query = gql`
+        query {
+          user {
+            __typename
+            id
+            name
+            email
+          }
+        }
+      `;
+
+      cache.writeQuery({
+        query,
+        data: {
+          user: { __typename: "User", id: "1", name: "Alice", email: null },
+        },
+        skipPaths: [["user", "email"]],
+      });
+
+      const diff = cache.diff({ query, optimistic: false });
+
+      expect(diff.complete).toBe(false);
+    });
+  });
 });

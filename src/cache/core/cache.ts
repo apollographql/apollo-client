@@ -794,6 +794,7 @@ export abstract class ApolloCache {
     overwrite,
     id,
     broadcast,
+    skipPaths,
   }: Cache.WriteQueryOptions<TData, TVariables>): Reference | undefined;
   public writeQuery<
     TData = unknown,

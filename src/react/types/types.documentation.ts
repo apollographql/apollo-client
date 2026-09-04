@@ -22,6 +22,9 @@ export interface QueryOptionsDocumentation {
    *
    * The default value is `none`, meaning that the query result includes error details but not partial results.
    *
+   * Use `localized` to receive the full response shape while keeping the fields
+   * the errors point at out of the cache.
+   *
    * @docGroup 1. Operation options
    */
   errorPolicy: unknown;

@@ -1119,7 +1119,13 @@ export class QueryManager {
         return aqr;
       }),
       catchError((error) => {
-        if (errorPolicy === "none") {
+        // `localized` softens errors that belong to a FIELD. An error that reaches
+        // here instead of arriving in the response body failed the whole operation,
+        // so there is no field to localize it to and no response shape to hand back
+        // — it keeps `none`'s behavior. Emitting an empty result here would clear
+        // data the subscriber is already rendering, which is exactly the collateral
+        // damage the policy exists to avoid.
+        if (errorPolicy === "none" || errorPolicy === "localized") {
           queryInfo.resetLastWrite();
           observableQuery?.["resetNotifications"]();
           throw error;

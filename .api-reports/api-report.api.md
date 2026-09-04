@@ -151,7 +151,7 @@ export abstract class ApolloCache {
     // (undocumented)
     abstract write<TData = unknown, TVariables extends OperationVariables = OperationVariables>(write: Cache_2.WriteOptions<TData, TVariables>): Reference | undefined;
     writeFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ data, fragment, fragmentName, variables, overwrite, id, from, broadcast, }: Cache_2.WriteFragmentOptions<TData, TVariables>): Reference | undefined;
-    writeQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ data, query, variables, overwrite, id, broadcast, }: Cache_2.WriteQueryOptions<TData, TVariables>): Reference | undefined;
+    writeQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ data, query, variables, overwrite, id, broadcast, skipPaths, }: Cache_2.WriteQueryOptions<TData, TVariables>): Reference | undefined;
 }
 
 // @public (undocumented)
@@ -356,6 +356,10 @@ export namespace ApolloClient {
             data: TData | undefined;
             error?: never;
         };
+        localized: {
+            data: TData | undefined;
+            error?: ErrorLike;
+        };
         undefined: {
             data: TData | undefined;
             error?: ErrorLike;
@@ -462,6 +466,10 @@ export namespace ApolloClient {
         ignore: {
             data: TData | undefined;
             error?: never;
+        };
+        localized: {
+            data: TData | undefined;
+            error?: ErrorLike;
         };
         undefined: {
             data: TData | undefined;
@@ -900,6 +908,7 @@ namespace Cache_2 {
         query: DocumentNode | TypedDocumentNode<TData, TVariables>;
         // (undocumented)
         result: Unmasked<TData>;
+        skipPaths?: ReadonlyArray<ReadonlyArray<string | number>>;
         variables?: TVariables;
     }
     // (undocumented)
@@ -910,6 +919,7 @@ namespace Cache_2 {
         id?: string;
         overwrite?: boolean;
         query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+        skipPaths?: ReadonlyArray<ReadonlyArray<string | number>>;
         variables?: TVariables;
     }
 }
@@ -1259,7 +1269,7 @@ export interface ErrorLike {
 }
 
 // @public
-export type ErrorPolicy = "none" | "ignore" | "all";
+export type ErrorPolicy = "none" | "ignore" | "all" | "localized";
 
 // @public (undocumented)
 export const execute: typeof ApolloLink.execute;
@@ -3099,7 +3109,7 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/policies.ts:173:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:135:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 // src/core/ApolloClient.ts:202:5 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:667:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:681:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:375:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:195:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:149:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts

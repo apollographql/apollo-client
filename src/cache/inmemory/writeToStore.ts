@@ -131,6 +131,41 @@ interface ProcessSelectionSetOptions {
   context: WriteContext;
   mergeTree: MergeTree;
   path: Array<string | number>;
+  skipNode?: SkipPathNode;
+}
+
+/**
+ * A single node of the tree built from `Cache.WriteOptions.skipPaths`. `skip` is
+ * `true` for a node one of those paths ends at, and `children` holds the
+ * response keys and array indexes that continue deeper into the response.
+ */
+interface SkipPathNode {
+  skip: boolean;
+  children: Map<string | number, SkipPathNode>;
+}
+
+function buildSkipPathTree(
+  skipPaths: ReadonlyArray<ReadonlyArray<string | number>> | undefined
+): SkipPathNode | undefined {
+  if (!skipPaths || !skipPaths.length) return;
+
+  const root: SkipPathNode = { skip: false, children: new Map() };
+
+  for (const path of skipPaths) {
+    let node = root;
+    for (const key of path) {
+      let child = node.children.get(key);
+      if (!child) {
+        node.children.set(key, (child = { skip: false, children: new Map() }));
+      }
+      node = child;
+    }
+    if (node !== root) {
+      node.skip = true;
+    }
+  }
+
+  return root.children.size ? root : undefined;
 }
 
 export class StoreWriter {
@@ -152,6 +187,7 @@ export class StoreWriter {
       variables,
       overwrite,
       extensions,
+      skipPaths,
     }: Cache.WriteOptions<TData, TVariables>
   ): Reference | undefined {
     const operationDefinition = getOperationDefinition(query)!;
@@ -186,6 +222,7 @@ export class StoreWriter {
       mergeTree: { map: new Map() },
       context,
       path: [],
+      skipNode: buildSkipPathTree(skipPaths),
     });
 
     if (!isReference(ref)) {
@@ -275,6 +312,7 @@ export class StoreWriter {
     // to its callers without explicitly returning that information.
     mergeTree,
     path: currentPath,
+    skipNode,
   }: ProcessSelectionSetOptions): StoreObject | Reference {
     const { policies } = this.cache;
 
@@ -343,6 +381,16 @@ export class StoreWriter {
       const resultFieldKey = resultKeyNameFromField(field);
       const value = result[resultFieldKey];
       const path = [...currentPath, field.name.value];
+      const fieldSkipNode = skipNode?.children.get(resultFieldKey);
+
+      // Leave this field out of the write entirely when the caller asked us to
+      // skip it, or when the field is `null` and a skipped path continues
+      // underneath it. The second case covers a GraphQL error on a non-null
+      // field, where the `null` propagates up to this field but the error
+      // `path` still points at the field that failed.
+      if (fieldSkipNode && (fieldSkipNode.skip || value === null)) {
+        return;
+      }
 
       fieldNodeSet.add(field);
 
@@ -365,7 +413,8 @@ export class StoreWriter {
             getContextFlavor(context, false, false)
           : context,
           childTree,
-          path
+          path,
+          fieldSkipNode
         );
 
         // To determine if this field holds a child object with a merge function
@@ -509,7 +558,8 @@ export class StoreWriter {
     field: FieldNode,
     context: WriteContext,
     mergeTree: MergeTree,
-    path: Array<string | number>
+    path: Array<string | number>,
+    skipNode?: SkipPathNode
   ): StoreValue {
     if (!field.selectionSet || value === null) {
       // In development, we need to clone scalar values so that they can be
@@ -525,7 +575,8 @@ export class StoreWriter {
           field,
           context,
           getChildMergeTree(mergeTree, i),
-          [...path, i]
+          [...path, i],
+          skipNode?.children.get(i)
         );
         maybeRecycleChildMergeTree(mergeTree, i);
         return value;
@@ -538,6 +589,7 @@ export class StoreWriter {
       context,
       mergeTree,
       path,
+      skipNode,
     });
   }
 

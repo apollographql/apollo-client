@@ -40,8 +40,10 @@ export type RefetchWritePolicy = "merge" | "overwrite";
  * - none (default): any errors from the request are treated like runtime errors and the observable is stopped
  * - ignore: errors from the request do not stop the observable, but also don't call `next`
  * - all: errors are treated like data and will notify observables
+ * - localized: errors are treated like data and will notify observables, but the
+ *   fields the errors point at are not written to the cache
  */
-export type ErrorPolicy = "none" | "ignore" | "all";
+export type ErrorPolicy = "none" | "ignore" | "all" | "localized";
 
 export interface NextFetchPolicyContext<
   TData,

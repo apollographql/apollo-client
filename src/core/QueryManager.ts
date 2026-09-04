@@ -440,7 +440,7 @@ export class QueryManager {
               return resolve({ data: undefined });
             }
 
-            if (errorPolicy === "all") {
+            if (errorPolicy === "all" || errorPolicy === "localized") {
               return resolve({ data: undefined, error });
             }
 

@@ -1045,6 +1045,10 @@ export namespace useMutation {
             data: MaybeMasked<TData> | null | undefined;
             error: undefined;
         };
+        localized: {
+            data: MaybeMasked<TData> | null | undefined;
+            error: ErrorLike | undefined;
+        };
         undefined: {
             data: MaybeMasked<TData> | null | undefined;
             error: ErrorLike | undefined;

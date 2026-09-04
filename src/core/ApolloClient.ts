@@ -370,6 +370,13 @@ export declare namespace ApolloClient {
       /** {@inheritDoc @apollo/client!MutationResultDocumentation#error:member} */
       error?: never;
     };
+    localized: {
+      /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
+      data: TData | undefined;
+
+      /** {@inheritDoc @apollo/client!MutationResultDocumentation#error:member} */
+      error?: ErrorLike;
+    };
     // Fallback case via `undefined` for backwards compatibility when the
     // `errorPolicy` is not known at the call site.
     undefined: {
@@ -430,6 +437,13 @@ export declare namespace ApolloClient {
 
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
       error?: never;
+    };
+    localized: {
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
+      data: TData | undefined;
+
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
+      error?: ErrorLike;
     };
     // Fallback case via `undefined` for backwards compatibility. Helps with
     // other APIs such as `ObservableQuery.refetch()` which we don't know the

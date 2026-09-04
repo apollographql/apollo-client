@@ -244,6 +244,7 @@ export class QueryInfo<
 
     if (shouldWriteResult(result, errorPolicy)) {
       let written = false;
+      const skipPaths = getSkipPaths(result, errorPolicy);
 
       // Using a transaction here so we have a chance to read the result
       // back from the cache before the watch callback fires as a result
@@ -269,6 +270,7 @@ export class QueryInfo<
               variables,
               overwrite: cacheWriteBehavior === CacheWriteBehavior.OVERWRITE,
               extensions: result.extensions,
+              skipPaths,
             });
 
             written = true;
@@ -335,7 +337,12 @@ export class QueryInfo<
             written &&
             // A result that is still streaming is expected to read back
             // incomplete until the remaining chunks arrive.
-            !this.hasNext
+            !this.hasNext &&
+            // The `localized` error policy deliberately leaves the errored
+            // fields out of the write, so reading back incomplete is the
+            // expected outcome rather than a sign of a faulty `read`/`merge`
+            // function.
+            !skipPaths.length
           ) {
             warnAboutPartialCacheResult(query, result.data, diff);
           }
@@ -416,6 +423,7 @@ export class QueryInfo<
         query: mutation.document,
         variables: mutation.variables,
         extensions: result.extensions,
+        skipPaths: getSkipPaths(result, mutation.errorPolicy),
       });
 
       const { updateQueries } = mutation;
@@ -623,6 +631,7 @@ export class QueryInfo<
           dataId: "ROOT_SUBSCRIPTION",
           variables: variables,
           extensions: result.extensions,
+          skipPaths: getSkipPaths(result, errorPolicy),
         });
       }
 
@@ -662,10 +671,38 @@ function shouldWriteResult<T>(
   result: FormattedExecutionResult<T>,
   errorPolicy: ErrorPolicy = "none"
 ) {
-  const ignoreErrors = errorPolicy === "ignore" || errorPolicy === "all";
+  const ignoreErrors =
+    errorPolicy === "ignore" ||
+    errorPolicy === "all" ||
+    errorPolicy === "localized";
   let writeWithErrors = !graphQLResultHasError(result);
   if (!writeWithErrors && ignoreErrors && result.data) {
     writeWithErrors = true;
   }
   return writeWithErrors;
+}
+
+/**
+ * Collects the response paths that the `localized` error policy keeps out of
+ * the cache. Every other error policy writes the full result, so this returns
+ * an empty array for them.
+ *
+ * Errors without a `path` cannot be attributed to a field, so they don't
+ * restrict the write at all.
+ */
+function getSkipPaths<T>(
+  result: FormattedExecutionResult<T>,
+  errorPolicy: ErrorPolicy = "none"
+): ReadonlyArray<ReadonlyArray<string | number>> {
+  if (errorPolicy !== "localized" || !result.errors) {
+    return [];
+  }
+
+  const skipPaths: Array<ReadonlyArray<string | number>> = [];
+  for (const error of result.errors) {
+    if (error.path && error.path.length) {
+      skipPaths.push(error.path);
+    }
+  }
+  return skipPaths;
 }

@@ -151,7 +151,7 @@ export abstract class ApolloCache {
     // (undocumented)
     abstract write<TData = unknown, TVariables extends OperationVariables = OperationVariables>(write: Cache_2.WriteOptions<TData, TVariables>): Reference | undefined;
     writeFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ data, fragment, fragmentName, variables, overwrite, id, from, broadcast, }: Cache_2.WriteFragmentOptions<TData, TVariables>): Reference | undefined;
-    writeQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ data, query, variables, overwrite, id, broadcast, }: Cache_2.WriteQueryOptions<TData, TVariables>): Reference | undefined;
+    writeQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ data, query, variables, overwrite, id, broadcast, skipPaths, }: Cache_2.WriteQueryOptions<TData, TVariables>): Reference | undefined;
 }
 
 // @public (undocumented)
@@ -290,6 +290,7 @@ namespace Cache_2 {
         query: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
         // (undocumented)
         result: Unmasked<TData>;
+        skipPaths?: ReadonlyArray<ReadonlyArray<string | number>>;
         variables?: TVariables;
     }
     // (undocumented)
@@ -300,6 +301,7 @@ namespace Cache_2 {
         id?: string;
         overwrite?: boolean;
         query: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
+        skipPaths?: ReadonlyArray<ReadonlyArray<string | number>>;
         variables?: TVariables;
     }
 }

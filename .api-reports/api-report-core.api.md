@@ -309,6 +309,10 @@ export namespace ApolloClient {
             data: TData | undefined;
             error?: never;
         };
+        localized: {
+            data: TData | undefined;
+            error?: ErrorLike;
+        };
         undefined: {
             data: TData | undefined;
             error?: ErrorLike;
@@ -408,6 +412,10 @@ export namespace ApolloClient {
         ignore: {
             data: TData | undefined;
             error?: never;
+        };
+        localized: {
+            data: TData | undefined;
+            error?: ErrorLike;
         };
         undefined: {
             data: TData | undefined;
@@ -645,7 +653,7 @@ export interface ErrorLike {
 }
 
 // @public
-export type ErrorPolicy = "none" | "ignore" | "all";
+export type ErrorPolicy = "none" | "ignore" | "all" | "localized";
 
 export { execute }
 
@@ -1397,7 +1405,7 @@ export const windowFocusSource: RefetchEventManager.EventSource<Event>;
 
 // Warnings were encountered during analysis:
 //
-// src/core/ApolloClient.ts:667:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:681:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:375:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:195:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 

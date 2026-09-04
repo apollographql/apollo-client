@@ -179,6 +179,13 @@ export declare namespace useMutation {
       /** {@inheritDoc @apollo/client!MutationResultDocumentation#error:member} */
       error: undefined;
     };
+    localized: {
+      /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
+      data: MaybeMasked<TData> | null | undefined;
+
+      /** {@inheritDoc @apollo/client!MutationResultDocumentation#error:member} */
+      error: ErrorLike | undefined;
+    };
     undefined: {
       /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
       data: MaybeMasked<TData> | null | undefined;

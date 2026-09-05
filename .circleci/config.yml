@@ -18,7 +18,7 @@ commands:
 jobs:
   Circularity:
     docker:
-      - image: cimg/node:24.19.0
+      - image: cimg/node:24.20.0
     steps:
       - checkout
       - run: npm version
@@ -27,7 +27,7 @@ jobs:
 
   Publint:
     docker:
-      - image: cimg/node:24.19.0
+      - image: cimg/node:24.20.0
     steps:
       - checkout
       - attach_workspace:
@@ -41,7 +41,7 @@ jobs:
 
   Lint:
     docker:
-      - image: cimg/node:24.19.0
+      - image: cimg/node:24.20.0
     steps:
       - checkout
       - attach_workspace:
@@ -56,7 +56,7 @@ jobs:
 
   Formatting:
     docker:
-      - image: cimg/node:24.19.0
+      - image: cimg/node:24.20.0
     steps:
       - checkout
       - npm_ci
@@ -64,7 +64,7 @@ jobs:
 
   Codegen:
     docker:
-      - image: cimg/node:24.19.0
+      - image: cimg/node:24.20.0
     parameters:
       codegenDeps:
         type: string
@@ -103,7 +103,7 @@ jobs:
 
   Tests:
     docker:
-      - image: cimg/node:24.19.0
+      - image: cimg/node:24.20.0
     parameters:
       project:
         type: string
@@ -129,7 +129,7 @@ jobs:
           path: reports/junit
   Typecheck:
     docker:
-      - image: cimg/node:24.19.0
+      - image: cimg/node:24.20.0
     steps:
       - checkout
       - attach_workspace:
@@ -143,7 +143,7 @@ jobs:
 
   Attest:
     docker:
-      - image: cimg/node:24.19.0
+      - image: cimg/node:24.20.0
     steps:
       - checkout
       - npm_ci
@@ -151,7 +151,7 @@ jobs:
 
   BuildTarball:
     docker:
-      - image: cimg/node:24.19.0
+      - image: cimg/node:24.20.0
     steps:
       - checkout
       - run: npm run ci:precheck
@@ -169,7 +169,7 @@ jobs:
 
   BuildCodegenTarball:
     docker:
-      - image: cimg/node:24.19.0
+      - image: cimg/node:24.20.0
     steps:
       - checkout
       - run: npm run ci:precheck
@@ -188,7 +188,7 @@ jobs:
       react:
         type: string
     docker:
-      - image: cimg/node:24.19.0-browsers
+      - image: cimg/node:24.20.0-browsers
     steps:
       - checkout
       - attach_workspace:
@@ -236,7 +236,7 @@ jobs:
       externalPackage:
         type: string
     docker:
-      - image: cimg/node:24.19.0
+      - image: cimg/node:24.20.0
     steps:
       - checkout
       - attach_workspace:

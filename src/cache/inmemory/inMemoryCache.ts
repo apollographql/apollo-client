@@ -276,10 +276,8 @@ export class InMemoryCache extends ApolloCache {
       recallCache(this);
     }
     this.watches.add(watch);
-    if (watch.immediate) {
-      this.maybeBroadcastWatch(watch);
-    }
-    return () => {
+
+    const removeWatch = () => {
       // Once we remove the last watch from this.watches, cache.broadcastWatches
       // no longer does anything, so we preemptively tell the reactive variable
       // system to exclude this cache from future broadcasts.
@@ -291,6 +289,20 @@ export class InMemoryCache extends ApolloCache {
       // leaks involving the closure of watch.callback.
       this.maybeBroadcastWatch.forget(watch);
     };
+
+    if (watch.immediate) {
+      try {
+        this.maybeBroadcastWatch(watch);
+      } catch (error) {
+        // The caller never receives removeWatch when this throws, so without
+        // this the watch would stay registered with nothing able to remove it,
+        // and every later broadcast would run into the same failing read.
+        removeWatch();
+        throw error;
+      }
+    }
+
+    return removeWatch;
   }
 
   public gc(options?: {

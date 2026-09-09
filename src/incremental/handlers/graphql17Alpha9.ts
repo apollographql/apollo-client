@@ -221,7 +221,7 @@ class IncrementalRequest<TData>
         const { path, label } = this.pending.get(completed.id)!;
         const streamPosition = this.streamPositions[completed.id];
 
-        if (!completed.errors) {
+        if (!isNonEmptyArray) {
           this.deferPending.lookupArray([...path, label]).count--;
         }
 

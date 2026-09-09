@@ -9,6 +9,7 @@ import {
   markAsStreaming,
   mockDeferStreamGraphQL17Alpha9,
   ObservableStream,
+  spyOnConsole,
 } from "@apollo/client/testing/internal";
 
 test("deduplicates queries as long as a query still has deferred chunks", async () => {
@@ -369,3 +370,171 @@ it.each([["cache-first"], ["no-cache"]] as const)(
     await expect(stream).not.toEmitAnything();
   }
 );
+
+test("deeply nested defer doesn't cause cache to log errors about missing fields", async () => {
+  const query = gql`
+    query Q {
+      post {
+        id
+        __typename
+        comments {
+          id
+          __typename
+          text
+          author {
+            id
+            __typename
+            name
+          }
+        }
+        ...CommentDetails @defer
+      }
+    }
+    fragment CommentDetails on Post {
+      id
+      __typename
+      comments {
+        id
+        __typename
+        likes
+        author {
+          id
+          __typename
+          badge {
+            id
+            __typename
+          }
+        }
+      }
+    }
+  `;
+
+  using spy = spyOnConsole("error");
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+
+  const client = new ApolloClient({
+    link: httpLink,
+    cache: new InMemoryCache(),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+  const stream = new ObservableStream(client.watchQuery({ query }));
+
+  enqueueInitialChunk({
+    data: {
+      post: {
+        __typename: "Post",
+        id: "p1",
+        comments: [
+          {
+            __typename: "Comment",
+            id: "c1",
+            text: "first!",
+            author: {
+              __typename: "Author",
+              id: "a1",
+              name: "x",
+            },
+          },
+        ],
+      },
+    },
+    pending: [{ id: "0", path: ["post"] }],
+    hasNext: true,
+  });
+  enqueueSubsequentChunk({
+    hasNext: false,
+    incremental: [
+      {
+        id: "0",
+        data: {
+          __typename: "Post",
+          id: "p1",
+          comments: [
+            {
+              __typename: "Comment",
+              id: "c1",
+              likes: 42,
+              author: {
+                __typename: "Author",
+                id: "a1",
+                badge: { __typename: "Badge", id: "b1" },
+              },
+            },
+          ],
+        },
+      },
+    ],
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      post: {
+        __typename: "Post",
+        id: "p1",
+        comments: [
+          {
+            __typename: "Comment",
+            author: {
+              __typename: "Author",
+              id: "a1",
+              name: "x",
+            },
+            id: "c1",
+            text: "first!",
+          },
+        ],
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      post: {
+        __typename: "Post",
+        id: "p1",
+        comments: [
+          {
+            __typename: "Comment",
+            author: {
+              __typename: "Author",
+              id: "a1",
+              badge: {
+                __typename: "Badge",
+                id: "b1",
+              },
+              name: "x",
+            },
+            id: "c1",
+            likes: 42,
+            text: "first!",
+          },
+        ],
+      },
+    }),
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  // this should not log errors, but currently does:
+  /*
+    1: "Missing field '%s' while writing result %o", "likes", {"__typename": "Comment", "author": {"__typename": "Author", "id": "a1", "name": "x"}, "id": "c1", "text": "first!"}
+    2: "Missing field '%s' while writing result %o", "badge", {"__typename": "Author", "id": "a1", "name": "x"}
+  */
+  expect(spy.error).not.toHaveBeenCalled();
+});

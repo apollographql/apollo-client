@@ -18,6 +18,7 @@ import {
   ObservableStream,
   promiseWithResolvers,
 } from "@apollo/client/testing/internal";
+import { streamInfoSymbol } from "@apollo/client/utilities/internal";
 
 // This is the test setup of the `graphql-js` v17.0.0-alpha.2 release:
 // https://github.com/graphql/graphql-js/blob/042002c3d332d36c67861f5b37d39b74d54d97d4/src/execution/__tests__/stream-test.ts
@@ -27,6 +28,10 @@ const friends = [
   { name: "Han", id: 2 },
   { name: "Leia", id: 3 },
 ];
+
+const extensionsWithStreamDetails = {
+  [streamInfoSymbol]: new WeakRef({ isDeferPending: expect.any(Function) }),
+};
 
 function run(document: DocumentNode, rootValue: unknown = {}) {
   return executeSchemaGraphQL17Alpha2(
@@ -75,6 +80,7 @@ describe("Execute: stream directive", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           scalarList: ["apple", "banana", "coconut"],
         },
@@ -128,6 +134,7 @@ describe("Execute: stream directive", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           scalarList: ["apple", "banana", "coconut"],
         },
@@ -181,6 +188,7 @@ describe("Execute: stream directive", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           scalarList: ["apple", "banana", "coconut"],
         },
@@ -226,6 +234,7 @@ describe("Execute: stream directive", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           scalarListList: [
             ["apple", "apple", "apple"],
@@ -283,6 +292,7 @@ describe("Execute: stream directive", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           friendList: [
             { name: "Luke", id: "1" },
@@ -360,6 +370,7 @@ describe("Execute: stream directive", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           friendList: [
             { name: "Luke", id: "1" },
@@ -420,6 +431,7 @@ describe("Execute: stream directive", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           friendList: [
             { name: "Luke", id: "1" },
@@ -480,6 +492,7 @@ describe("Execute: stream directive", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           friendList: [
             { name: "Luke", id: "1" },
@@ -584,6 +597,7 @@ describe("Execute: stream directive", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           friendList: [
             { name: "Luke", id: "1" },
@@ -656,6 +670,7 @@ describe("Execute: stream directive", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           friendList: [
             { name: "Luke", id: "1" },
@@ -719,6 +734,7 @@ describe("Execute: stream directive", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           friendList: [{ name: "Luke", id: "1" }, null],
         },
@@ -768,6 +784,7 @@ describe("Execute: stream directive", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           nonNullFriendList: [{ name: "Luke" }],
         },
@@ -820,6 +837,7 @@ describe("Execute: stream directive", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           scalarList: ["Luke", null],
         },
@@ -875,6 +893,7 @@ describe("Execute: stream directive", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           nonNullFriendList: [{ nonNullName: "Luke" }],
         },
@@ -968,6 +987,7 @@ describe("Execute: stream directive", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           friendList: [{ nonNullName: "Luke" }, null, { nonNullName: "Han" }],
         },
@@ -1034,6 +1054,7 @@ describe("Execute: stream directive", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           otherNestedObject: {
             scalarField: null,
@@ -1100,6 +1121,7 @@ describe("Execute: stream directive", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           nestedObject: {
             deeperNestedObject: null,
@@ -1180,6 +1202,7 @@ describe("Execute: stream directive", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           friendList: [null],
         },
@@ -1275,6 +1298,7 @@ describe("Execute: stream directive", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           friendList: [
             { id: "1", name: "Luke" },
@@ -1386,6 +1410,7 @@ describe("Execute: stream directive", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           nestedObject: {
             scalarField: "slow",
@@ -1467,6 +1492,7 @@ describe("Execute: stream directive", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           friendList: [
             { id: "1", name: "Luke" },
@@ -1608,6 +1634,7 @@ test("properly merges streamed data into cache data", async () => {
         chunk
       )
     ).toStrictEqualTyped({
+      extensions: extensionsWithStreamDetails,
       data: {
         friendList: [
           { name: "Luke", id: "1" },
@@ -1674,6 +1701,7 @@ test("properly merges streamed data into partial cache data", async () => {
         chunk
       )
     ).toStrictEqualTyped({
+      extensions: extensionsWithStreamDetails,
       data: {
         friendList: [
           { name: "Luke", id: "1" },
@@ -1737,6 +1765,7 @@ test("properly merges streamed data into list with fewer items", async () => {
         chunk
       )
     ).toStrictEqualTyped({
+      extensions: extensionsWithStreamDetails,
       data: {
         friendList: [
           { name: "Luke", id: "1" },
@@ -1810,6 +1839,7 @@ test("properly merges streamed data into list with more items", async () => {
         chunk
       )
     ).toStrictEqualTyped({
+      extensions: extensionsWithStreamDetails,
       data: {
         friendList: [
           { name: "Luke", id: "1" },
@@ -1965,6 +1995,7 @@ test("properly merges cache data when list is included in deferred chunk", async
         chunk
       )
     ).toStrictEqualTyped({
+      extensions: extensionsWithStreamDetails,
       data: {
         nestedObject: {
           scalarField: "slow",
@@ -2024,6 +2055,7 @@ test("handles streams with more than one item in a chunk", async () => {
 
     assert(handler.isIncrementalResult(chunk));
     expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      extensions: extensionsWithStreamDetails,
       data: {
         friendList: [
           { name: "Luke", id: "1" },

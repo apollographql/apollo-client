@@ -3233,7 +3233,8 @@ describe("writing to the store", () => {
             true: true,
             false: false,
           },
-        }
+        },
+        []
       );
 
       expect(flat.size).toBe(3);
@@ -4051,7 +4052,10 @@ describe("writing to the store", () => {
       `;
 
       const extensions: ExtensionsWithStreamInfo = {
-        [streamInfoSymbol]: new WeakRef(new Trie() as StreamInfoTrie),
+        [streamInfoSymbol]: new WeakRef({
+          streamInfo: new Trie() as StreamInfoTrie,
+          isDeferPending: () => true,
+        }),
       };
 
       const item = (id: string) => ({

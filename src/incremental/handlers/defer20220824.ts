@@ -6,10 +6,15 @@ import type {
 
 import type { ApolloLink } from "@apollo/client/link";
 import type { DeepPartial, HKT } from "@apollo/client/utilities";
+import type {
+  ExtensionsWithStreamInfo,
+  IncrementalInfo,
+} from "@apollo/client/utilities/internal";
 import {
   DeepMerger,
   hasDirectives,
   isNonEmptyArray,
+  streamInfoSymbol,
 } from "@apollo/client/utilities/internal";
 
 import type { Incremental } from "../types.js";
@@ -63,6 +68,8 @@ export declare namespace Defer20220824Handler {
     | SubsequentResult<TData>;
 }
 
+const nothingPending: IncrementalInfo = { isDeferPending: () => false };
+
 class DeferRequest<TData extends Record<string, unknown>>
   implements
     Incremental.IncrementalRequest<Defer20220824Handler.Chunk<TData>, TData>
@@ -77,6 +84,10 @@ class DeferRequest<TData extends Record<string, unknown>>
   // to these stream arrays to prevent creating sparse arrays or inserting
   // `null` for an expected non-null value which could cause runtime crashes.
   private ignoredImpossibleStreamPaths = new Set<string>();
+  // This protocol doesn't announce which `@defer` boundaries exist, so the
+  // cache treats every boundary as pending until told otherwise. A boundary
+  // that failed (`data: null`) never delivers, so in that case we never do.
+  private hasFailedDefer = false;
 
   private merge(
     normalized: FormattedExecutionResult<TData>,
@@ -131,6 +142,10 @@ class DeferRequest<TData extends Record<string, unknown>>
           : "data" in incremental ? incremental.data ?? undefined
           : undefined;
 
+        if ("data" in incremental && incremental.data === null) {
+          this.hasFailedDefer = true;
+        }
+
         if (path && typeof path.at(-1) === "number" && Array.isArray(data)) {
           const startingIdx = path.at(-1) as number;
           data.forEach((item, idx) => {
@@ -157,6 +172,15 @@ class DeferRequest<TData extends Record<string, unknown>>
 
     if (Object.keys(this.extensions).length > 0) {
       result.extensions = this.extensions;
+    }
+
+    if (!this.hasNext && !this.hasFailedDefer) {
+      // The `WeakRef` also makes `QueryInfo` write a final `hasNext: false`
+      // chunk without data, so the cache can check for missing deferred fields.
+      result.extensions = {
+        ...result.extensions,
+        [streamInfoSymbol]: new WeakRef(nothingPending),
+      } satisfies ExtensionsWithStreamInfo;
     }
 
     return result;

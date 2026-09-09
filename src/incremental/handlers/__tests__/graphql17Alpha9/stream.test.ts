@@ -54,7 +54,9 @@ function createSchemaLink(rootValue?: Record<string, unknown>) {
 }
 
 const extensionsWithStreamDetails = {
-  [streamInfoSymbol]: new WeakRef(expect.any(Trie)),
+  [streamInfoSymbol]: new WeakRef(
+    expect.objectContaining({ streamInfo: expect.any(Trie) })
+  ),
 };
 
 describe("graphql-js test cases", () => {
@@ -1726,6 +1728,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           nestedObject: {},
         },
@@ -1739,6 +1742,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           nestedObject: {
             deeperNestedObject: null,
@@ -2072,6 +2076,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           nestedObject: {},
         },
@@ -2087,6 +2092,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           nestedObject: {
             scalarField: "slow",
@@ -2188,6 +2194,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           nestedObject: {},
         },
@@ -2203,6 +2210,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           nestedObject: {
             scalarField: "slow",
@@ -2877,6 +2885,7 @@ test("properly merges cache data when list is included in deferred chunk", async
         chunk
       )
     ).toStrictEqualTyped({
+      extensions: extensionsWithStreamDetails,
       data: {
         nestedObject: {
           scalarField: "cached",
@@ -2905,6 +2914,7 @@ test("properly merges cache data when list is included in deferred chunk", async
         chunk
       )
     ).toStrictEqualTyped({
+      extensions: extensionsWithStreamDetails,
       data: {
         nestedObject: {
           scalarField: "slow",

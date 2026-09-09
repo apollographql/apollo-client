@@ -1,5 +1,6 @@
 import assert from "node:assert";
 
+import { Trie } from "@wry/trie";
 import {
   GraphQLID,
   GraphQLList,
@@ -28,6 +29,7 @@ import {
   promiseWithResolvers,
   wait,
 } from "@apollo/client/testing/internal";
+import { streamInfoSymbol } from "@apollo/client/utilities/internal";
 
 // This is the test setup of the `graphql-js` v17.0.0-alpha.9 release:
 // https://github.com/graphql/graphql-js/blob/3283f8adf52e77a47f148ff2f30185c8d11ff0f0/src/execution/__tests__/defer-test.ts
@@ -145,6 +147,12 @@ const query = new GraphQLObjectType({
 
 const schema = new GraphQLSchema({ query });
 
+const extensionsWithStreamDetails = {
+  [streamInfoSymbol]: new WeakRef(
+    expect.objectContaining({ streamInfo: expect.any(Trie) })
+  ),
+};
+
 function resolveOnNextTick(): Promise<void> {
   return Promise.resolve(undefined);
 }
@@ -196,6 +204,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           hero: {
             id: "1",
@@ -211,6 +220,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           hero: {
             id: "1",
@@ -278,6 +288,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {},
       });
       expect(request.hasNext).toBe(true);
@@ -289,6 +300,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           hero: {
             id: "1",
@@ -328,6 +340,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {},
       });
       expect(request.hasNext).toBe(true);
@@ -339,6 +352,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           hero: {
             name: null,
@@ -384,6 +398,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           hero: {},
         },
@@ -397,6 +412,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           hero: {
             id: "1",
@@ -438,6 +454,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           hero: {
             id: "1",
@@ -453,6 +470,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           hero: {
             id: "1",
@@ -492,6 +510,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           hero: {},
         },
@@ -505,6 +524,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           hero: {
             name: "Luke",
@@ -540,6 +560,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           hero: {},
         },
@@ -553,6 +574,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           hero: {
             id: "1",
@@ -591,6 +613,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {},
       });
       expect(request.hasNext).toBe(true);
@@ -602,6 +625,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           hero: {
             id: "1",
@@ -644,6 +668,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           hero: {},
         },
@@ -657,6 +682,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           hero: {
             id: "1",
@@ -692,6 +718,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {},
       });
       expect(request.hasNext).toBe(true);
@@ -703,6 +730,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           hero: {
             id: "1",
@@ -768,6 +796,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {},
       });
       expect(request.hasNext).toBe(true);
@@ -779,6 +808,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           a: {
             b: {
@@ -798,6 +828,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           a: {
             b: {
@@ -868,6 +899,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {},
       });
       expect(request.hasNext).toBe(true);
@@ -879,6 +911,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           a: {},
         },
@@ -894,6 +927,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           a: {
             b: {
@@ -945,6 +979,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           hero: {
             friends: [{}, {}, {}],
@@ -960,6 +995,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           hero: {
             friends: [
@@ -1019,6 +1055,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           hero: {
             nestedObject: {
@@ -1043,6 +1080,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           hero: {
             nestedObject: {
@@ -1094,6 +1132,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           hero: {},
         },
@@ -1107,6 +1146,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           hero: {
             nestedObject: {
@@ -1173,6 +1213,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           hero: {
             nestedObject: {
@@ -1192,6 +1233,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           hero: {
             nestedObject: {
@@ -1247,6 +1289,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           hero: {
             nestedObject: {
@@ -1264,6 +1307,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           hero: {
             nestedObject: {
@@ -1328,6 +1372,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           a: {
             b: {
@@ -1345,6 +1390,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           a: {
             b: {
@@ -1391,6 +1437,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {},
       });
       expect(request.hasNext).toBe(true);
@@ -1402,6 +1449,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           hero: {
             id: "1",
@@ -1451,6 +1499,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           a: {},
         },
@@ -1464,6 +1513,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           a: {
             b: {
@@ -1523,6 +1573,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           a: {},
         },
@@ -1536,6 +1587,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           a: {
             b: {
@@ -1593,6 +1645,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {},
       });
       expect(request.hasNext).toBe(true);
@@ -1604,6 +1657,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {},
         errors: [
           {
@@ -1666,6 +1720,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {},
       });
       expect(request.hasNext).toBe(true);
@@ -1677,6 +1732,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           a: {
             b: {
@@ -1749,6 +1805,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           a: {},
         },
@@ -1762,6 +1819,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           a: {
             b: {
@@ -1779,6 +1837,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           a: {
             b: {
@@ -1834,6 +1893,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {},
       });
       expect(request.hasNext).toBe(true);
@@ -1845,6 +1905,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           hero: null,
         },
@@ -1898,6 +1959,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           hero: {
             friends: [{ name: "Han" }, { name: "Leia" }, { name: "C-3PO" }],
@@ -1913,6 +1975,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           hero: {
             friends: [
@@ -1970,6 +2033,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           hero: {
             id: "1",
@@ -1985,6 +2049,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           hero: {
             id: "1",
@@ -2030,6 +2095,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           hero: {
             id: "1",
@@ -2045,6 +2111,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           hero: {
             id: "1",
@@ -2094,6 +2161,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           hero: {
             id: "1",
@@ -2109,6 +2177,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           hero: {
             id: "1",
@@ -2163,6 +2232,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           hero: {
             id: "1",
@@ -2178,6 +2248,7 @@ describe("graphql-js test cases", () => {
       assert(!done);
       assert(handler.isIncrementalResult(chunk));
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+        extensions: extensionsWithStreamDetails,
         data: {
           hero: {
             id: "1",

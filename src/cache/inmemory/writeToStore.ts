@@ -338,6 +338,7 @@ export class StoreWriter {
       // by the flattenFields method, but some fields may be assigned a modified
       // context, depending on the presence of @client and other directives.
       context,
+      currentPath,
       typename
     ).forEach((context, field) => {
       const resultFieldKey = resultKeyNameFromField(field);
@@ -359,10 +360,13 @@ export class StoreWriter {
         let incomingValue = this.processFieldValue(
           value,
           field,
-          // Reset context.clientOnly and context.deferred to their default
-          // values before processing nested selection sets.
+          // Reset context.clientOnly before processing nested selection sets:
+          // if a @client field is present, its children must be too.
+          // context.deferred is inherited, since a field can be present
+          // through a non-deferred path while a still-pending @defer boundary
+          // contributes more of its children later.
           field.selectionSet ?
-            getContextFlavor(context, false, false)
+            getContextFlavor(context, false, context.deferred)
           : context,
           childTree,
           path
@@ -552,15 +556,18 @@ export class StoreWriter {
       | "fragmentMap"
       | "lookupFragment"
       | "variables"
+      | "extensions"
     >,
   >(
     selectionSet: SelectionSetNode,
     result: Record<string, any>,
     context: TContext,
+    path: Array<string | number>,
     typename = getTypenameFromResult(result, selectionSet, context.fragmentMap)
   ): Map<FieldNode, TContext> {
     const fieldMap = new Map<FieldNode, TContext>();
     const { policies } = this.cache;
+    const incrementalInfo = context.extensions?.[streamInfoSymbol]?.deref();
 
     const limitingTrie = new Trie<{
       // Tracks whether (selectionSet, clientOnly, deferred) has been flattened
@@ -606,16 +613,20 @@ export class StoreWriter {
             const name = dir.name.value;
             if (name === "client") clientOnly = true;
             if (name === "defer") {
-              const args = argumentsObjectFromField(dir, context.variables);
+              const args = argumentsObjectFromField(dir, context.variables) as {
+                if?: boolean;
+                label?: string;
+              } | null;
               // The @defer directive takes an optional args.if boolean
               // argument, similar to @include(if: boolean). Note that
               // @defer(if: false) does not make context.deferred false, but
               // instead behaves as if there was no @defer directive.
-              if (!args || (args as { if?: boolean }).if !== false) {
-                deferred = true;
+              if (!args || args.if !== false) {
+                // Without information from an incremental handler (e.g. for a
+                // manual cache.writeQuery), assume the boundary is pending.
+                deferred ||=
+                  incrementalInfo?.isDeferPending(path, args?.label) ?? true;
               }
-              // TODO In the future, we may want to record args.label using
-              // context.deferred, if a label is specified.
             }
           });
         }

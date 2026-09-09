@@ -9,6 +9,7 @@ import type { ApolloLink } from "@apollo/client/link";
 import type { DeepPartial, HKT } from "@apollo/client/utilities";
 import type {
   ExtensionsWithStreamInfo,
+  IncrementalInfo,
   StreamInfoTrie,
 } from "@apollo/client/utilities/internal";
 import {
@@ -97,6 +98,17 @@ class IncrementalRequest<TData>
   private streamInfo: StreamInfoTrie = new Trie(false, () => ({
     current: { isFirstChunk: true, isLastChunk: false },
   }));
+  // Number of `pending` entries per `[...path, label]` that have not been
+  // `completed` yet. Entries completed with errors are never removed, since
+  // their data will never arrive.
+  private deferPending = new Trie<{ count: number }>(false, () => ({
+    count: 0,
+  }));
+  private info: IncrementalInfo = {
+    streamInfo: this.streamInfo,
+    isDeferPending: (path, label) =>
+      (this.deferPending.peekArray([...path, label])?.count ?? 0) > 0,
+  };
   // `streamPositions` maps `pending.id` to the index that should be set by the
   // next `incremental` stream chunk to ensure the streamed array item is placed
   // at the correct point in the data array. `this.data` contains cached
@@ -116,6 +128,7 @@ class IncrementalRequest<TData>
     if (chunk.pending) {
       for (const pending of chunk.pending) {
         this.pending.set(pending.id, pending);
+        this.deferPending.lookupArray([...pending.path, pending.label]).count++;
 
         if ("data" in chunk) {
           const dataAtPath = pending.path.reduce(
@@ -205,8 +218,12 @@ class IncrementalRequest<TData>
 
     if ("completed" in chunk && chunk.completed) {
       for (const completed of chunk.completed) {
-        const { path } = this.pending.get(completed.id)!;
+        const { path, label } = this.pending.get(completed.id)!;
         const streamPosition = this.streamPositions[completed.id];
+
+        if (!completed.errors) {
+          this.deferPending.lookupArray([...path, label]).count--;
+        }
 
         // Truncate any stream arrays in case the chunk only contains `hasNext`
         // and `completed`.
@@ -245,17 +262,15 @@ class IncrementalRequest<TData>
       result.extensions = this.extensions;
     }
 
-    if (this.streamInfo["strong"]) {
-      result.extensions = {
-        ...result.extensions,
-        // Create a new object so we can check for === in QueryInfo to trigger a
-        // final cache write when emitting a `hasNext: false` by itself.
-        // We create a `WeakRef`, not a plain object to avoid retaining memory
-        // in case the `result` or `extensions` stays around longer than the handler
-        // itself.
-        [streamInfoSymbol]: new WeakRef(this.streamInfo),
-      } satisfies ExtensionsWithStreamInfo;
-    }
+    result.extensions = {
+      ...result.extensions,
+      // Create a new object so we can check for === in QueryInfo to trigger a
+      // final cache write when emitting a `hasNext: false` by itself.
+      // We create a `WeakRef`, not a plain object to avoid retaining memory
+      // in case the `result` or `extensions` stays around longer than the handler
+      // itself.
+      [streamInfoSymbol]: new WeakRef(this.info),
+    } satisfies ExtensionsWithStreamInfo;
 
     return result;
   }

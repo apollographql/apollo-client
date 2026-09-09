@@ -508,10 +508,130 @@ test("deeply nested defer doesn't cause cache to log errors about missing fields
     partial: false,
   });
 
-  // this should not log errors, but currently does:
-  /*
-    1: "Missing field '%s' while writing result %o", "likes", {"__typename": "Comment", "author": {"__typename": "Author", "id": "a1", "name": "x"}, "id": "c1", "text": "first!"}
-    2: "Missing field '%s' while writing result %o", "badge", {"__typename": "Author", "id": "a1", "name": "x"}
-  */
   expect(spy.error).not.toHaveBeenCalled();
+});
+
+test("deeply nested defer still logs errors about missing non-deferred fields under shared parents", async () => {
+  const query = gql`
+    query Q {
+      post {
+        id
+        __typename
+        comments {
+          id
+          __typename
+          text
+          author {
+            id
+            __typename
+            name
+          }
+        }
+        ...CommentDetails @defer
+      }
+    }
+    fragment CommentDetails on Post {
+      id
+      __typename
+      comments {
+        id
+        __typename
+        likes
+        author {
+          id
+          __typename
+          badge {
+            id
+            __typename
+          }
+        }
+      }
+    }
+  `;
+
+  using spy = spyOnConsole("error");
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDefer20220824();
+
+  const client = new ApolloClient({
+    link: httpLink,
+    cache: new InMemoryCache(),
+    incrementalHandler: new Defer20220824Handler(),
+  });
+  const stream = new ObservableStream(client.watchQuery({ query }));
+
+  // `text` and `name` are missing, but not deferred
+  enqueueInitialChunk({
+    data: {
+      post: {
+        __typename: "Post",
+        id: "p1",
+        comments: [
+          {
+            __typename: "Comment",
+            id: "c1",
+            author: {
+              __typename: "Author",
+              id: "a1",
+            },
+          },
+        ],
+      },
+    },
+    hasNext: true,
+  });
+
+  await stream.takeNext();
+  await stream.takeNext();
+
+  expect(spy.error).toHaveBeenCalledTimes(2);
+  expect(spy.error).toHaveBeenCalledWith(
+    expect.stringContaining("Missing field"),
+    "text",
+    expect.anything()
+  );
+  expect(spy.error).toHaveBeenCalledWith(
+    expect.stringContaining("Missing field"),
+    "name",
+    expect.anything()
+  );
+
+  enqueueSubsequentChunk({
+    hasNext: false,
+    incremental: [
+      {
+        path: ["post"],
+        data: {
+          __typename: "Post",
+          id: "p1",
+          comments: [
+            {
+              __typename: "Comment",
+              id: "c1",
+              likes: 42,
+              author: {
+                __typename: "Author",
+                id: "a1",
+                badge: { __typename: "Badge", id: "b1" },
+              },
+            },
+          ],
+        },
+      },
+    ],
+  });
+
+  await stream.takeNext();
+
+  expect(spy.error).not.toHaveBeenCalledWith(
+    expect.anything(),
+    "likes",
+    expect.anything()
+  );
+  expect(spy.error).not.toHaveBeenCalledWith(
+    expect.anything(),
+    "badge",
+    expect.anything()
+  );
 });

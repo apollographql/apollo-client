@@ -613,10 +613,10 @@ export class StoreWriter {
             const name = dir.name.value;
             if (name === "client") clientOnly = true;
             if (name === "defer") {
-              const args = argumentsObjectFromField(dir, context.variables) as {
+              const args: {
                 if?: boolean;
                 label?: string;
-              } | null;
+              } | null = argumentsObjectFromField(dir, context.variables);
               // The @defer directive takes an optional args.if boolean
               // argument, similar to @include(if: boolean). Note that
               // @defer(if: false) does not make context.deferred false, but

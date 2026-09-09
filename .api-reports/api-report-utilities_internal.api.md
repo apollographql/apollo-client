@@ -216,7 +216,7 @@ export const extensionsSymbol: unique symbol;
 export interface ExtensionsWithStreamInfo extends Record<string, unknown> {
     // (undocumented)
     [streamInfoSymbol]?: {
-        deref(): StreamInfoTrie | undefined;
+        deref(): IncrementalInfo | undefined;
     };
 }
 
@@ -357,6 +357,13 @@ export function hasDirectives(names: string[], root: ASTNode, all?: boolean): bo
 
 // @public (undocumented)
 export function hasForcedResolvers(document: ASTNode): boolean;
+
+// @internal @deprecated
+export interface IncrementalInfo {
+    isDeferPending(path: Incremental.Path, label: string | undefined): boolean;
+    // (undocumented)
+    streamInfo?: StreamInfoTrie;
+}
 
 // @internal @deprecated (undocumented)
 export type IsAny<T> = 0 extends 1 & T ? true : false;
@@ -538,7 +545,7 @@ export const variablesUnknownSymbol: unique symbol;
 // Warnings were encountered during analysis:
 //
 // src/utilities/internal/getStoreKeyName.ts:89:1 - (ae-forgotten-export) The symbol "storeKeyNameStringify" needs to be exported by the entry point index.d.ts
-// src/utilities/internal/types/ExtensionsWithStreamDetails.ts:11:5 - (ae-incompatible-release-tags) The symbol "deref" is marked as @public, but its signature references "StreamInfoTrie" which is marked as @internal
+// src/utilities/internal/types/ExtensionsWithStreamDetails.ts:28:5 - (ae-incompatible-release-tags) The symbol "deref" is marked as @public, but its signature references "IncrementalInfo" which is marked as @internal
 
 // (No @packageDocumentation comment for this package)
 

@@ -1271,7 +1271,7 @@ const extensionsSymbol: unique symbol;
 interface ExtensionsWithStreamInfo extends Record<string, unknown> {
     // (undocumented)
     [streamInfoSymbol]?: {
-        deref(): StreamInfoTrie | undefined;
+        deref(): IncrementalInfo | undefined;
     };
 }
 
@@ -1571,6 +1571,15 @@ namespace Incremental {
         // (undocumented)
         isLastChunk: boolean;
     }
+}
+
+// @internal @deprecated
+interface IncrementalInfo {
+    isDeferPending(path: Incremental.Path, label: string | undefined): boolean;
+    // Warning: (ae-forgotten-export) The symbol "StreamInfoTrie" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    streamInfo?: StreamInfoTrie;
 }
 
 // @public (undocumented)
@@ -3105,7 +3114,7 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/local-state/LocalState.ts:149:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:202:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:245:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
-// src/utilities/internal/types/ExtensionsWithStreamDetails.ts:11:5 - (ae-forgotten-export) The symbol "StreamInfoTrie" needs to be exported by the entry point index.d.ts
+// src/utilities/internal/types/ExtensionsWithStreamDetails.ts:28:5 - (ae-forgotten-export) The symbol "IncrementalInfo" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

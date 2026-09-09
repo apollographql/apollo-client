@@ -342,7 +342,7 @@ export class StoreWriter {
     ).forEach((context, field) => {
       const resultFieldKey = resultKeyNameFromField(field);
       const value = result[resultFieldKey];
-      const path = [...currentPath, field.name.value];
+      const path = [...currentPath, resultFieldKey];
 
       fieldNodeSet.add(field);
 

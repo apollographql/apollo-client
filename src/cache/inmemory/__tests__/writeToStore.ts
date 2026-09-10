@@ -3233,7 +3233,8 @@ describe("writing to the store", () => {
             true: true,
             false: false,
           },
-        }
+        },
+        []
       );
 
       expect(flat.size).toBe(3);

@@ -9,6 +9,7 @@ import type {
 } from "@apollo/client/utilities";
 import type {
   ExtensionsWithStreamInfo,
+  handleIncrementalSymbol,
   RemoveIndexSignature,
   StreamInfoTrie,
 } from "@apollo/client/utilities/internal";
@@ -140,6 +141,10 @@ export interface DiffIncrementalInfo {
     path: Incremental.Path,
     label: string | undefined
   ) => boolean;
+}
+
+export interface WithHandleIncremental {
+  [handleIncrementalSymbol]?: DiffIncrementalInfo | undefined;
 }
 
 export type DiffQueryAgainstStoreOptions = ReadQueryOptions & {

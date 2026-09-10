@@ -10926,7 +10926,7 @@ test("deeply nested defer doesn't cause cache to log errors about missing fields
         ],
       },
     },
-    pending: [{ id: "0", path: ["post"] }],
+    pending: [{ id: "0", path: ["post"], label: "ac_0" }],
     hasNext: true,
   });
   enqueueSubsequentChunk({
@@ -11089,7 +11089,7 @@ test("deeply nested defer still logs errors about missing non-deferred fields un
         ],
       },
     },
-    pending: [{ id: "0", path: ["post"] }],
+    pending: [{ id: "0", path: ["post"], label: "ac_0" }],
     hasNext: true,
   });
 

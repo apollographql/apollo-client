@@ -179,9 +179,6 @@ type DeepOmitArray<T extends any[], K> = {
 // @public (undocumented)
 type DeepOmitPrimitive = Primitive | Function;
 
-// @internal @deprecated
-export type DeferInfoTrie = Trie<true>;
-
 // @public (undocumented)
 type Directives = {
     [directiveName: string]: {

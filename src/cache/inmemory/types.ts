@@ -1,13 +1,13 @@
 import type { DocumentNode, FieldNode } from "graphql";
 
 import type { OperationVariables } from "@apollo/client";
+import type { Incremental } from "@apollo/client/incremental";
 import type {
   Reference,
   StoreObject,
   StoreValue,
 } from "@apollo/client/utilities";
 import type {
-  DeferInfoTrie,
   ExtensionsWithStreamInfo,
   RemoveIndexSignature,
   StreamInfoTrie,
@@ -136,7 +136,10 @@ export type ReadQueryOptions = {
 /** @internal */
 export interface DiffIncrementalInfo {
   streamInfo?: StreamInfoTrie;
-  deferInfo?: DeferInfoTrie;
+  isDeferPending?: (
+    path: Incremental.Path,
+    label: string | undefined
+  ) => boolean;
 }
 
 export type DiffQueryAgainstStoreOptions = ReadQueryOptions & {
@@ -190,6 +193,10 @@ export interface ReadMergeModifyContext {
   // A JSON.stringify-serialized version of context.variables.
   varString?: string;
   extensions?: ExtensionsWithStreamInfo;
+  isDeferPending?: (
+    path: Incremental.Path,
+    label: string | undefined
+  ) => boolean;
 }
 
 type ListOf<T extends string> = `[${T}]`;

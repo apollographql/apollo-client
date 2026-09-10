@@ -170,8 +170,14 @@ export abstract class ApolloCache {
     // (undocumented)
     watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloCache.WatchFragmentOptions<TData, TVariables>): ApolloCache.ObservableFragment<Unmasked<TData> | null>;
     // (undocumented)
-    abstract write<TData = unknown, TVariables extends OperationVariables = OperationVariables>(write: Cache_2.WriteOptions<TData, TVariables>): Reference | undefined;
+    abstract write<TData = unknown, TVariables extends OperationVariables = OperationVariables>(write: Cache_2.WriteOptions<TData, TVariables> & {
+        [handleIncrementalSymbol]?: DiffIncrementalInfo | undefined;
+    }): Reference | undefined;
     writeFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(input: Cache_2.WriteFragmentOptions<TData, TVariables>): Reference | undefined;
+    writeQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: Cache_2.WriteQueryOptions<TData, TVariables> & {
+        [handleIncrementalSymbol]: DiffIncrementalInfo | undefined;
+    }): Reference | undefined;
+    // (undocumented)
     writeQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(input: Cache_2.WriteQueryOptions<TData, TVariables>): Reference | undefined;
 }
 
@@ -1162,9 +1168,6 @@ export type DefaultOptions = ApolloClient.DefaultOptions;
 // @public (undocumented)
 export const defaultPrinter: BaseHttpLink.Printer;
 
-// @internal @deprecated
-type DeferInfoTrie = Trie<true>;
-
 // @public (undocumented)
 interface DeleteModifier {
     // (undocumented)
@@ -1179,10 +1182,8 @@ export type DevtoolsOptions = ApolloClient.DevtoolsOptions;
 
 // @internal @deprecated (undocumented)
 interface DiffIncrementalInfo {
-    // Warning: (ae-forgotten-export) The symbol "DeferInfoTrie" needs to be exported by the entry point index.d.ts
-    //
     // (undocumented)
-    deferInfo?: DeferInfoTrie;
+    isDeferPending?: (path: Incremental.Path, label: string | undefined) => boolean;
     // Warning: (ae-forgotten-export) The symbol "StreamInfoTrie" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -1639,6 +1640,8 @@ namespace Incremental {
         // (undocumented)
         hasNext: boolean;
         // @internal @deprecated (undocumented)
+        isDeferPending(path: Incremental.Path, label: string | undefined): boolean;
+        // @internal @deprecated (undocumented)
         readonly streamInfo?: StreamInfoTrie;
     }
     // (undocumented)
@@ -1796,7 +1799,9 @@ export class InMemoryCache extends ApolloCache {
     // (undocumented)
     watch<TData = unknown, TVariables extends OperationVariables = OperationVariables>(watch: Cache_2.WatchOptions<TData, TVariables>): () => void;
     // (undocumented)
-    write<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: Cache_2.WriteOptions<TData, TVariables>): Reference | undefined;
+    write<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: Cache_2.WriteOptions<TData, TVariables> & {
+        [handleIncrementalSymbol]?: DiffIncrementalInfo | undefined;
+    }): Reference | undefined;
 }
 
 // @public (undocumented)
@@ -2817,6 +2822,8 @@ export interface ReadMergeModifyContext {
     // (undocumented)
     extensions?: ExtensionsWithStreamInfo;
     // (undocumented)
+    isDeferPending?: (path: Incremental.Path, label: string | undefined) => boolean;
+    // (undocumented)
     store: NormalizedCache;
     // (undocumented)
     variables?: OperationVariables;
@@ -3331,12 +3338,12 @@ interface WriteContext extends ReadMergeModifyContext {
 // Warnings were encountered during analysis:
 //
 // src/cache/core/cache.ts:179:11 - (ae-forgotten-export) The symbol "MissingTree" needs to be exported by the entry point index.d.ts
-// src/cache/core/cache.ts:254:7 - (ae-forgotten-export) The symbol "DiffIncrementalInfo" needs to be exported by the entry point index.d.ts
+// src/cache/core/cache.ts:239:7 - (ae-forgotten-export) The symbol "DiffIncrementalInfo" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:103:3 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:175:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:175:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/types.ts:147:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/types.ts:162:3 - (ae-forgotten-export) The symbol "FragmentRegistryAPI" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/types.ts:150:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/types.ts:165:3 - (ae-forgotten-export) The symbol "FragmentRegistryAPI" needs to be exported by the entry point index.d.ts
 // src/core/ApolloClient.ts:202:5 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 // src/core/ApolloClient.ts:673:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:406:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts

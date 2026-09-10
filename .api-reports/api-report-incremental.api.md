@@ -110,6 +110,8 @@ class DeferRequest<TData extends Record<string, unknown>> implements Incremental
     handle(cacheData: TData | DeepPartial<TData> | null | undefined, chunk: Defer20220824Handler.Chunk<TData>): FormattedExecutionResult<TData>;
     // (undocumented)
     hasNext: boolean;
+    // (undocumented)
+    isDeferPending: () => boolean;
 }
 
 // @public (undocumented)
@@ -278,6 +280,8 @@ export namespace Incremental {
         // (undocumented)
         hasNext: boolean;
         // @internal @deprecated (undocumented)
+        isDeferPending(path: Incremental.Path, label: string | undefined): boolean;
+        // @internal @deprecated (undocumented)
         readonly streamInfo?: StreamInfoTrie;
     }
     // (undocumented)
@@ -343,6 +347,8 @@ class IncrementalRequest<TData> implements Incremental.IncrementalRequest<GraphQ
     handle(cacheData: TData | DeepPartial<TData> | null | undefined, chunk: GraphQL17Alpha9Handler.Chunk<TData>): FormattedExecutionResult<TData>;
     // (undocumented)
     hasNext: boolean;
+    // @internal @deprecated (undocumented)
+    isDeferPending: (path: Incremental.Path, label: string | undefined) => boolean;
     // @internal @deprecated (undocumented)
     get streamInfo(): StreamInfoTrie | undefined;
 }

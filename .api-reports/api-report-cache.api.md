@@ -10,7 +10,6 @@ import type { AsStoreObject } from '@apollo/client/utilities';
 import { canonicalStringify } from '@apollo/client/utilities';
 import type { DataValue } from '@apollo/client';
 import type { DeepPartial } from '@apollo/client/utilities';
-import type { DeferInfoTrie } from '@apollo/client/utilities/internal';
 import type { DocumentNode } from 'graphql';
 import type { DocumentNode as DocumentNode_2 } from '@apollo/client';
 import type { ExtensionsWithStreamInfo } from '@apollo/client/utilities/internal';
@@ -176,8 +175,14 @@ export abstract class ApolloCache {
     // (undocumented)
     watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloCache.WatchFragmentOptions<TData, TVariables>): ApolloCache.ObservableFragment<Unmasked<TData> | null>;
     // (undocumented)
-    abstract write<TData = unknown, TVariables extends OperationVariables = OperationVariables>(write: Cache_2.WriteOptions<TData, TVariables>): Reference | undefined;
+    abstract write<TData = unknown, TVariables extends OperationVariables = OperationVariables>(write: Cache_2.WriteOptions<TData, TVariables> & {
+        [handleIncrementalSymbol]?: DiffIncrementalInfo | undefined;
+    }): Reference | undefined;
     writeFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(input: Cache_2.WriteFragmentOptions<TData, TVariables>): Reference | undefined;
+    writeQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: Cache_2.WriteQueryOptions<TData, TVariables> & {
+        [handleIncrementalSymbol]: DiffIncrementalInfo | undefined;
+    }): Reference | undefined;
+    // (undocumented)
     writeQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(input: Cache_2.WriteQueryOptions<TData, TVariables>): Reference | undefined;
 }
 
@@ -410,7 +415,7 @@ const _deleteModifier: unique symbol;
 // @internal @deprecated (undocumented)
 export interface DiffIncrementalInfo {
     // (undocumented)
-    deferInfo?: DeferInfoTrie;
+    isDeferPending?: (path: Incremental.Path, label: string | undefined) => boolean;
     // (undocumented)
     streamInfo?: StreamInfoTrie;
 }
@@ -711,7 +716,9 @@ export class InMemoryCache extends ApolloCache {
     // (undocumented)
     watch<TData = unknown, TVariables extends OperationVariables = OperationVariables>(watch: Cache_2.WatchOptions<TData, TVariables>): () => void;
     // (undocumented)
-    write<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: Cache_2.WriteOptions<TData, TVariables>): Reference | undefined;
+    write<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: Cache_2.WriteOptions<TData, TVariables> & {
+        [handleIncrementalSymbol]?: DiffIncrementalInfo | undefined;
+    }): Reference | undefined;
 }
 
 // @public (undocumented)
@@ -1013,6 +1020,8 @@ export interface ReadMergeModifyContext {
     // (undocumented)
     extensions?: ExtensionsWithStreamInfo;
     // (undocumented)
+    isDeferPending?: (path: Incremental.Path, label: string | undefined) => boolean;
+    // (undocumented)
     store: NormalizedCache;
     // (undocumented)
     variables?: OperationVariables;
@@ -1170,10 +1179,13 @@ interface WriteContext extends ReadMergeModifyContext {
 
 // Warnings were encountered during analysis:
 //
-// src/cache/core/cache.ts:254:7 - (ae-incompatible-release-tags) The symbol "[handleIncrementalSymbol]" is marked as @public, but its signature references "DiffIncrementalInfo" which is marked as @internal
-// src/cache/inmemory/inMemoryCache.ts:517:7 - (ae-incompatible-release-tags) The symbol "[handleIncrementalSymbol]" is marked as @public, but its signature references "DiffIncrementalInfo" which is marked as @internal
+// src/cache/core/cache.ts:239:7 - (ae-incompatible-release-tags) The symbol "[handleIncrementalSymbol]" is marked as @public, but its signature references "DiffIncrementalInfo" which is marked as @internal
+// src/cache/core/cache.ts:259:7 - (ae-incompatible-release-tags) The symbol "[handleIncrementalSymbol]" is marked as @public, but its signature references "DiffIncrementalInfo" which is marked as @internal
+// src/cache/core/cache.ts:935:7 - (ae-incompatible-release-tags) The symbol "[handleIncrementalSymbol]" is marked as @public, but its signature references "DiffIncrementalInfo" which is marked as @internal
+// src/cache/inmemory/inMemoryCache.ts:467:7 - (ae-incompatible-release-tags) The symbol "[handleIncrementalSymbol]" is marked as @public, but its signature references "DiffIncrementalInfo" which is marked as @internal
+// src/cache/inmemory/inMemoryCache.ts:521:7 - (ae-incompatible-release-tags) The symbol "[handleIncrementalSymbol]" is marked as @public, but its signature references "DiffIncrementalInfo" which is marked as @internal
 // src/cache/inmemory/policies.ts:175:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/types.ts:147:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/types.ts:150:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

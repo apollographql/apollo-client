@@ -174,11 +174,9 @@ export abstract class ApolloCache {
         [handleIncrementalSymbol]?: DiffIncrementalInfo | undefined;
     }): Reference | undefined;
     writeFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(input: Cache_2.WriteFragmentOptions<TData, TVariables>): Reference | undefined;
-    writeQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: Cache_2.WriteQueryOptions<TData, TVariables> & {
-        [handleIncrementalSymbol]: DiffIncrementalInfo | undefined;
-    }): Reference | undefined;
-    // (undocumented)
     writeQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(input: Cache_2.WriteQueryOptions<TData, TVariables>): Reference | undefined;
+    // (undocumented)
+    writeQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: Cache_2.WriteQueryOptions.WithIncremental<TData, TVariables>): Reference | undefined;
 }
 
 // @public (undocumented)
@@ -967,6 +965,14 @@ namespace Cache_2 {
         overwrite?: boolean;
         query: DocumentNode | TypedDocumentNode<TData, TVariables>;
         variables?: TVariables;
+    }
+    // (undocumented)
+    namespace WriteQueryOptions {
+        // Warning: (ae-forgotten-export) The symbol "WithHandleIncremental" needs to be exported by the entry point index.d.ts
+        //
+        // (undocumented)
+        interface WithIncremental<TData, TVariables extends OperationVariables> extends WriteQueryOptions<TData, TVariables>, WithHandleIncremental {
+        }
     }
 }
 export { Cache_2 as Cache }
@@ -3304,6 +3310,12 @@ export type WatchQueryOptions<TVariables extends OperationVariables = OperationV
 export const windowFocusSource: RefetchEventManager.EventSource<Event>;
 
 // @public (undocumented)
+interface WithHandleIncremental {
+    // (undocumented)
+    [handleIncrementalSymbol]?: DiffIncrementalInfo | undefined;
+}
+
+// @public (undocumented)
 interface WriteContext extends ReadMergeModifyContext {
     // (undocumented)
     clientOnly: boolean;
@@ -3338,12 +3350,12 @@ interface WriteContext extends ReadMergeModifyContext {
 // Warnings were encountered during analysis:
 //
 // src/cache/core/cache.ts:179:11 - (ae-forgotten-export) The symbol "MissingTree" needs to be exported by the entry point index.d.ts
-// src/cache/core/cache.ts:239:7 - (ae-forgotten-export) The symbol "DiffIncrementalInfo" needs to be exported by the entry point index.d.ts
+// src/cache/core/cache.ts:238:7 - (ae-forgotten-export) The symbol "DiffIncrementalInfo" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:103:3 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:175:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:175:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/types.ts:150:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/types.ts:165:3 - (ae-forgotten-export) The symbol "FragmentRegistryAPI" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/types.ts:155:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/types.ts:170:3 - (ae-forgotten-export) The symbol "FragmentRegistryAPI" needs to be exported by the entry point index.d.ts
 // src/core/ApolloClient.ts:202:5 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 // src/core/ApolloClient.ts:673:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:406:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts

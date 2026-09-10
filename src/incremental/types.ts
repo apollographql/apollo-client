@@ -47,6 +47,8 @@ export declare namespace Incremental {
     readonly streamInfo?: StreamInfoTrie;
     /** @internal */
     getPendingWithInfo?: () => Array<PendingItemWithInfo>;
+    /** @internal */
+    isDeferPending(path: Incremental.Path, label: string | undefined): boolean;
 
     handle: (
       cacheData: TData | DeepPartial<TData> | undefined | null,

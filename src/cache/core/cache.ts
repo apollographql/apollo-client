@@ -230,10 +230,15 @@ export abstract class ApolloCache {
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(query: Cache.ReadOptions<TData, TVariables>): Unmasked<TData> | null;
+
   public abstract write<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
-  >(write: Cache.WriteOptions<TData, TVariables>): Reference | undefined;
+  >(
+    write: Cache.WriteOptions<TData, TVariables> & {
+      [handleIncrementalSymbol]?: DiffIncrementalInfo | undefined;
+    }
+  ): Reference | undefined;
 
   /**
    * Returns data read from the cache for a given query along with information
@@ -922,6 +927,14 @@ export abstract class ApolloCache {
    * the shape of the data you’re writing to the cache is the same as the shape of
    * the data required by the query. Great for prepping the cache with initial data.
    */
+  public writeQuery<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: Cache.WriteQueryOptions<TData, TVariables> & {
+      [handleIncrementalSymbol]: DiffIncrementalInfo | undefined;
+    }
+  ): Reference | undefined;
   public writeQuery<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,

@@ -1,4 +1,3 @@
-import { Trie } from "@wry/trie";
 import type { DocumentNode, FormattedExecutionResult } from "graphql";
 
 import type {
@@ -259,6 +258,9 @@ export class QueryInfo<
           variables,
           overwrite: cacheWriteBehavior === CacheWriteBehavior.OVERWRITE,
           extensions: result.extensions,
+          [handleIncrementalSymbol]: {
+            isDeferPending: this.incremental?.isDeferPending,
+          },
         });
 
         const { dataState, result: diffResult } = this.getDiff(
@@ -312,10 +314,19 @@ export class QueryInfo<
     if (prune) {
       for (const item of pending) {
         if (item.type === "defer" && !item.delivered) {
-          incrementalInfo.deferInfo ||= new Trie(true, () => true);
-          incrementalInfo.deferInfo.lookupArray(
-            item.path.concat(item.label || [])
-          );
+          // Deliberately a new closure on every call, NOT
+          // `this.incremental.isDeferPending` itself. `context.isDeferPending`
+          // is part of the memoization key of
+          // `prunePartialBoundaries`/`prunePartialStreamArray` in
+          // readFromStore.ts. A stable function reference would let a prune
+          // result computed while a boundary was pending be served again
+          // after it was delivered. A fresh identity per read (like the
+          // fresh Trie it replaces) keeps those results from being reused
+          // across chunks, while `undefined` (nothing pending) still allows
+          // reuse. Do not "optimize" this into a cached reference.
+          const isDeferPending = this.incremental!.isDeferPending;
+          incrementalInfo.isDeferPending ||= (path, label) =>
+            isDeferPending(path, label);
         } else if (streamInfo && item.type === "stream") {
           streamInfo.lookupArray(item.path as any[]).state.truncate = true;
         }

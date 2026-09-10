@@ -10857,3 +10857,938 @@ test.failing(
     await expect(stream).not.toEmitAnything();
   }
 );
+
+test("deeply nested defer merges non-deferred and deferred fields correctly once the defer boundary receives a `completed` entry", async () => {
+  const query = gql`
+    query Q {
+      post {
+        id
+        __typename
+        comments {
+          id
+          __typename
+          text
+          author {
+            id
+            __typename
+            name
+          }
+        }
+        ...CommentDetails @defer
+      }
+    }
+    fragment CommentDetails on Post {
+      id
+      __typename
+      comments {
+        id
+        __typename
+        likes
+        author {
+          id
+          __typename
+          badge {
+            id
+            __typename
+          }
+        }
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+
+  const client = new ApolloClient({
+    link: httpLink,
+    cache: new InMemoryCache(),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+  const stream = new ObservableStream(client.watchQuery({ query }));
+
+  enqueueInitialChunk({
+    data: {
+      post: {
+        __typename: "Post",
+        id: "p1",
+        comments: [
+          {
+            __typename: "Comment",
+            id: "c1",
+            text: "first!",
+            author: {
+              __typename: "Author",
+              id: "a1",
+              name: "x",
+            },
+          },
+        ],
+      },
+    },
+    pending: [{ id: "0", path: ["post"] }],
+    hasNext: true,
+  });
+  enqueueSubsequentChunk({
+    hasNext: false,
+    incremental: [
+      {
+        id: "0",
+        data: {
+          __typename: "Post",
+          id: "p1",
+          comments: [
+            {
+              __typename: "Comment",
+              id: "c1",
+              likes: 42,
+              author: {
+                __typename: "Author",
+                id: "a1",
+                badge: { __typename: "Badge", id: "b1" },
+              },
+            },
+          ],
+        },
+      },
+    ],
+    completed: [{ id: "0" }],
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      post: {
+        __typename: "Post",
+        id: "p1",
+        comments: [
+          {
+            __typename: "Comment",
+            author: {
+              __typename: "Author",
+              id: "a1",
+              name: "x",
+            },
+            id: "c1",
+            text: "first!",
+          },
+        ],
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      post: {
+        __typename: "Post",
+        id: "p1",
+        comments: [
+          {
+            __typename: "Comment",
+            author: {
+              __typename: "Author",
+              id: "a1",
+              badge: {
+                __typename: "Badge",
+                id: "b1",
+              },
+              name: "x",
+            },
+            id: "c1",
+            likes: 42,
+            text: "first!",
+          },
+        ],
+      },
+    }),
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+});
+
+test("deeply nested defer drops non-deferred fields when the defer boundary is never marked completed", async () => {
+  const query = gql`
+    query Q {
+      post {
+        id
+        __typename
+        comments {
+          id
+          __typename
+          text
+          author {
+            id
+            __typename
+            name
+          }
+        }
+        ...CommentDetails @defer
+      }
+    }
+    fragment CommentDetails on Post {
+      id
+      __typename
+      comments {
+        id
+        __typename
+        likes
+        author {
+          id
+          __typename
+          badge {
+            id
+            __typename
+          }
+        }
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+
+  const client = new ApolloClient({
+    link: httpLink,
+    cache: new InMemoryCache(),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+  const stream = new ObservableStream(
+    client.watchQuery({ query, errorPolicy: "all" })
+  );
+
+  enqueueInitialChunk({
+    data: {
+      post: {
+        __typename: "Post",
+        id: "p1",
+        comments: [
+          {
+            __typename: "Comment",
+            id: "c1",
+            text: "first!",
+            author: {
+              __typename: "Author",
+              id: "a1",
+              name: "x",
+            },
+          },
+        ],
+      },
+    },
+    pending: [{ id: "0", path: ["post"] }],
+    hasNext: true,
+  });
+  enqueueSubsequentChunk({
+    hasNext: false,
+    incremental: [
+      {
+        id: "0",
+        errors: [
+          {
+            message: "Could not fetch comment details",
+            path: ["post", "comments", 0, "likes"],
+          },
+        ],
+        data: {
+          __typename: "Post",
+          id: "p1",
+          comments: [
+            {
+              __typename: "Comment",
+              id: "c1",
+              likes: 42,
+              author: {
+                __typename: "Author",
+                id: "a1",
+                badge: { __typename: "Badge", id: "b1" },
+              },
+            },
+          ],
+        },
+      },
+    ],
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      post: {
+        __typename: "Post",
+        id: "p1",
+        comments: [
+          {
+            __typename: "Comment",
+            author: {
+              __typename: "Author",
+              id: "a1",
+              name: "x",
+            },
+            id: "c1",
+            text: "first!",
+          },
+        ],
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      post: {
+        __typename: "Post",
+        id: "p1",
+        comments: [
+          {
+            __typename: "Comment",
+            author: {
+              __typename: "Author",
+              id: "a1",
+              badge: {
+                __typename: "Badge",
+                id: "b1",
+              },
+              name: "x",
+            },
+            id: "c1",
+            likes: 42,
+            text: "first!",
+          },
+        ],
+      },
+    }),
+    dataState: "complete",
+    error: new CombinedGraphQLErrors({
+      data: {
+        post: {
+          __typename: "Post",
+          id: "p1",
+          comments: [
+            {
+              __typename: "Comment",
+              author: {
+                __typename: "Author",
+                id: "a1",
+                badge: {
+                  __typename: "Badge",
+                  id: "b1",
+                },
+                name: "x",
+              },
+              id: "c1",
+              likes: 42,
+              text: "first!",
+            },
+          ],
+        },
+      },
+      errors: [
+        {
+          message: "Could not fetch comment details",
+          path: ["post", "comments", 0, "likes"],
+        },
+      ],
+    }),
+    loading: false,
+    networkStatus: NetworkStatus.error,
+    partial: false,
+  });
+});
+
+test("deeply nested defer drops non-deferred fields while a sibling parallel defer boundary is still pending", async () => {
+  const query = gql`
+    query Q {
+      post {
+        id
+        __typename
+        comments {
+          id
+          __typename
+          text
+          author {
+            id
+            __typename
+            name
+          }
+        }
+        ...CommentDetails @defer
+        ...CommentExtra @defer
+      }
+    }
+    fragment CommentDetails on Post {
+      id
+      __typename
+      comments {
+        id
+        __typename
+        likes
+        author {
+          id
+          __typename
+          badge {
+            id
+            __typename
+          }
+        }
+      }
+    }
+    fragment CommentExtra on Post {
+      id
+      __typename
+      comments {
+        id
+        __typename
+        pinned
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+
+  const client = new ApolloClient({
+    link: httpLink,
+    cache: new InMemoryCache(),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+  const stream = new ObservableStream(client.watchQuery({ query }));
+
+  enqueueInitialChunk({
+    data: {
+      post: {
+        __typename: "Post",
+        id: "p1",
+        comments: [
+          {
+            __typename: "Comment",
+            id: "c1",
+            text: "first!",
+            author: {
+              __typename: "Author",
+              id: "a1",
+              name: "x",
+            },
+          },
+        ],
+      },
+    },
+    pending: [
+      { id: "0", path: ["post"] },
+      { id: "1", path: ["post"] },
+    ],
+    hasNext: true,
+  });
+  enqueueSubsequentChunk({
+    hasNext: true,
+    incremental: [
+      {
+        id: "0",
+        data: {
+          __typename: "Post",
+          id: "p1",
+          comments: [
+            {
+              __typename: "Comment",
+              id: "c1",
+              likes: 42,
+              author: {
+                __typename: "Author",
+                id: "a1",
+                badge: { __typename: "Badge", id: "b1" },
+              },
+            },
+          ],
+        },
+      },
+    ],
+    completed: [{ id: "0" }],
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      post: {
+        __typename: "Post",
+        id: "p1",
+        comments: [
+          {
+            __typename: "Comment",
+            author: {
+              __typename: "Author",
+              id: "a1",
+              name: "x",
+            },
+            id: "c1",
+            text: "first!",
+          },
+        ],
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  // Only the "0" defer boundary (CommentDetails) has completed; "1"
+  // (CommentExtra) is still pending. The non-deferred fields (`text`,
+  // `author.name`) were never part of either deferred fragment, so they
+  // should still be present here alongside the newly-delivered `likes` and
+  // `author.badge`.
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      post: {
+        __typename: "Post",
+        id: "p1",
+        comments: [
+          {
+            __typename: "Comment",
+            author: {
+              __typename: "Author",
+              id: "a1",
+              badge: {
+                __typename: "Badge",
+                id: "b1",
+              },
+              name: "x",
+            },
+            id: "c1",
+            likes: 42,
+            text: "first!",
+          },
+        ],
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    hasNext: false,
+    incremental: [
+      {
+        id: "1",
+        data: {
+          __typename: "Post",
+          id: "p1",
+          comments: [
+            {
+              __typename: "Comment",
+              id: "c1",
+              pinned: true,
+            },
+          ],
+        },
+      },
+    ],
+    completed: [{ id: "1" }],
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      post: {
+        __typename: "Post",
+        id: "p1",
+        comments: [
+          {
+            __typename: "Comment",
+            author: {
+              __typename: "Author",
+              id: "a1",
+              badge: {
+                __typename: "Badge",
+                id: "b1",
+              },
+              name: "x",
+            },
+            id: "c1",
+            likes: 42,
+            pinned: true,
+            text: "first!",
+          },
+        ],
+      },
+    }),
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+});
+
+test("deeply nested defer: non-deferred fields reappear once all parallel defers complete", async () => {
+  const query = gql`
+    query Q {
+      post {
+        id
+        __typename
+        comments {
+          id
+          __typename
+          text
+          author {
+            id
+            __typename
+            name
+          }
+        }
+        ...CommentDetails @defer
+        ...CommentExtra @defer
+      }
+    }
+    fragment CommentDetails on Post {
+      id
+      __typename
+      comments {
+        id
+        __typename
+        likes
+        author {
+          id
+          __typename
+          badge {
+            id
+            __typename
+          }
+        }
+      }
+    }
+    fragment CommentExtra on Post {
+      id
+      __typename
+      comments {
+        id
+        __typename
+        pinned
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+
+  const client = new ApolloClient({
+    link: httpLink,
+    cache: new InMemoryCache(),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+  const stream = new ObservableStream(client.watchQuery({ query }));
+
+  enqueueInitialChunk({
+    data: {
+      post: {
+        __typename: "Post",
+        id: "p1",
+        comments: [
+          {
+            __typename: "Comment",
+            id: "c1",
+            text: "first!",
+            author: {
+              __typename: "Author",
+              id: "a1",
+              name: "x",
+            },
+          },
+        ],
+      },
+    },
+    pending: [
+      { id: "0", path: ["post"] },
+      { id: "1", path: ["post"] },
+    ],
+    hasNext: true,
+  });
+  enqueueSubsequentChunk({
+    hasNext: true,
+    incremental: [
+      {
+        id: "0",
+        data: {
+          __typename: "Post",
+          id: "p1",
+          comments: [
+            {
+              __typename: "Comment",
+              id: "c1",
+              likes: 42,
+              author: {
+                __typename: "Author",
+                id: "a1",
+                badge: { __typename: "Badge", id: "b1" },
+              },
+            },
+          ],
+        },
+      },
+    ],
+    completed: [{ id: "0" }],
+  });
+
+  // Drain the "empty" and "streaming" (first chunk) values without
+  // asserting on them - they're covered by the previous test.
+  await stream.takeNext();
+  await stream.takeNext();
+  // Drain the value emitted after the "0" boundary completes while "1" is
+  // still pending. This is the value that currently (incorrectly) drops
+  // `text` and `author.name` - not asserted here, see the previous test.
+  await stream.takeNext();
+
+  enqueueSubsequentChunk({
+    hasNext: false,
+    incremental: [
+      {
+        id: "1",
+        data: {
+          __typename: "Post",
+          id: "p1",
+          comments: [
+            {
+              __typename: "Comment",
+              id: "c1",
+              pinned: true,
+            },
+          ],
+        },
+      },
+    ],
+    completed: [{ id: "1" }],
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      post: {
+        __typename: "Post",
+        id: "p1",
+        comments: [
+          {
+            __typename: "Comment",
+            author: {
+              __typename: "Author",
+              id: "a1",
+              badge: {
+                __typename: "Badge",
+                id: "b1",
+              },
+              name: "x",
+            },
+            id: "c1",
+            likes: 42,
+            pinned: true,
+            text: "first!",
+          },
+        ],
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+});
+
+test("deeply nested defer preserves non-deferred fields when a defer boundary completes with an error and no incremental data", async () => {
+  const query = gql`
+    query Q {
+      post {
+        id
+        __typename
+        comments {
+          id
+          __typename
+          text
+          author {
+            id
+            __typename
+            name
+          }
+        }
+        ...CommentDetails @defer
+      }
+    }
+    fragment CommentDetails on Post {
+      id
+      __typename
+      comments {
+        id
+        __typename
+        likes
+        author {
+          id
+          __typename
+          badge {
+            id
+            __typename
+          }
+        }
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+
+  const client = new ApolloClient({
+    link: httpLink,
+    cache: new InMemoryCache(),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+  const stream = new ObservableStream(
+    client.watchQuery({ query, errorPolicy: "all" })
+  );
+
+  enqueueInitialChunk({
+    data: {
+      post: {
+        __typename: "Post",
+        id: "p1",
+        comments: [
+          {
+            __typename: "Comment",
+            id: "c1",
+            text: "first!",
+            author: {
+              __typename: "Author",
+              id: "a1",
+              name: "x",
+            },
+          },
+        ],
+      },
+    },
+    pending: [{ id: "0", path: ["post"] }],
+    hasNext: true,
+  });
+  // The defer boundary resolves with an error and never delivers any
+  // `incremental` data for it - matching how graphql.js reports a
+  // fragment that failed to resolve at all (see the "Could not fetch
+  // recipient" example earlier in this file).
+  enqueueSubsequentChunk({
+    hasNext: false,
+    completed: [
+      {
+        id: "0",
+        errors: [
+          {
+            message: "Could not fetch comment details",
+            path: ["post"],
+          },
+        ],
+      },
+    ],
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      post: {
+        __typename: "Post",
+        id: "p1",
+        comments: [
+          {
+            __typename: "Comment",
+            author: {
+              __typename: "Author",
+              id: "a1",
+              name: "x",
+            },
+            id: "c1",
+            text: "first!",
+          },
+        ],
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      post: {
+        __typename: "Post",
+        id: "p1",
+        comments: [
+          {
+            __typename: "Comment",
+            author: {
+              __typename: "Author",
+              id: "a1",
+              name: "x",
+            },
+            id: "c1",
+            text: "first!",
+          },
+        ],
+      },
+    }),
+    error: new CombinedGraphQLErrors({
+      data: {
+        post: {
+          __typename: "Post",
+          id: "p1",
+          comments: [
+            {
+              __typename: "Comment",
+              author: {
+                __typename: "Author",
+                id: "a1",
+                name: "x",
+              },
+              id: "c1",
+              text: "first!",
+            },
+          ],
+        },
+      },
+      errors: [
+        {
+          message: "Could not fetch comment details",
+          path: ["post"],
+        },
+      ],
+    }),
+    dataState: "streaming",
+    loading: false,
+    networkStatus: NetworkStatus.error,
+    partial: true,
+  });
+});

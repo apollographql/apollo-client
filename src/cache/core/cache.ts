@@ -230,7 +230,6 @@ export abstract class ApolloCache {
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(query: Cache.ReadOptions<TData, TVariables>): Unmasked<TData> | null;
-
   public abstract write<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
@@ -930,14 +929,6 @@ export abstract class ApolloCache {
   public writeQuery<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
-  >(
-    options: Cache.WriteQueryOptions<TData, TVariables> & {
-      [handleIncrementalSymbol]: DiffIncrementalInfo | undefined;
-    }
-  ): Reference | undefined;
-  public writeQuery<
-    TData = unknown,
-    TVariables extends OperationVariables = OperationVariables,
   >({
     // spread in type definitions for discoverability in the docs
     data,
@@ -947,6 +938,12 @@ export abstract class ApolloCache {
     id,
     broadcast,
   }: Cache.WriteQueryOptions<TData, TVariables>): Reference | undefined;
+  public writeQuery<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: Cache.WriteQueryOptions.WithIncremental<TData, TVariables>
+  ): Reference | undefined;
   public writeQuery<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,

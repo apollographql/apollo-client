@@ -52,7 +52,8 @@ jobs:
       - run:
           name: Restore built dist
           command: rm -rf ./dist && mv /tmp/workspace/dist ./dist
-      - run: npm run lint
+      - run: npm run lint:docs
+      - run: npm run lint:src
 
   Formatting:
     docker:
@@ -266,6 +267,7 @@ workflows:
                   "ReactDOM 17",
                   "ReactDOM 18",
                   "ReactDOM 19",
+                  "GraphQL Codegen Plugins",
                 ]
       - Circularity
       - Publint:

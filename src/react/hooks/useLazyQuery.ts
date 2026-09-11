@@ -27,7 +27,6 @@ import type {
 } from "@apollo/client/react/internal";
 import type {
   DocumentationTypes as UtilityDocumentationTypes,
-  NoInfer,
   OptionWithFallback,
   SignatureStyle,
   VariablesOption,

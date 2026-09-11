@@ -14,7 +14,6 @@ import type { FragmentKey } from "@apollo/client/react/internal";
 import { getSuspenseCache } from "@apollo/client/react/internal";
 import type {
   DocumentationTypes as UtilityDocumentationTypes,
-  NoInfer,
   VariablesOption,
 } from "@apollo/client/utilities/internal";
 

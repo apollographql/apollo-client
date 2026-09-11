@@ -103,6 +103,8 @@ function getCurrentCacheSizes() {
   const defaults: Record<keyof CacheSizes, number> = {
     canonicalStringify: defaultCacheSizes["canonicalStringify"],
     checkDocument: defaultCacheSizes["checkDocument"],
+    isDeferredFragment: defaultCacheSizes["isDeferredFragment"],
+    isStreamField: defaultCacheSizes["isStreamField"],
     print: defaultCacheSizes["print"],
     "documentTransform.cache": defaultCacheSizes["documentTransform.cache"],
     "queryManager.getDocumentInfo":
@@ -124,6 +126,10 @@ function getCurrentCacheSizes() {
       defaultCacheSizes["inMemoryCache.executeSelectionSet"],
     "inMemoryCache.executeSubSelectedArray":
       defaultCacheSizes["inMemoryCache.executeSubSelectedArray"],
+    "inMemoryCache.prunePartialBoundaries":
+      defaultCacheSizes["inMemoryCache.prunePartialBoundaries"],
+    "inMemoryCache.prunePartialStreamArray":
+      defaultCacheSizes["inMemoryCache.prunePartialStreamArray"],
   };
   return Object.fromEntries(
     Object.entries(defaults).map(([k, v]) => [
@@ -184,6 +190,12 @@ function _getInMemoryCacheMemoryInternals(this: InMemoryCache) {
         this["storeReader"]["executeSubSelectedArray"]
       ),
       maybeBroadcastWatch: getWrapperInformation(this["maybeBroadcastWatch"]),
+      prunePartialBoundaries: getWrapperInformation(
+        this["storeReader"]["prunePartialBoundaries"]
+      ),
+      prunePartialStreamArray: getWrapperInformation(
+        this["storeReader"]["prunePartialStreamArray"]
+      ),
     },
     fragmentRegistry: {
       findFragmentSpreads: getWrapperInformation(

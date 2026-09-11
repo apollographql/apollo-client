@@ -16,6 +16,12 @@ const { loading, error, data } = useQuery(GET_DOGS, {
 
 Operations that use this fetch policy don't write their result to the cache, and they also don't check the cache for data before sending a request to your server. [See all available fetch policies.](../data/queries/#setting-a-fetch-policy)
 
+<Note>
+
+If you use [custom scalars](../data/custom-scalars), Apollo Client parses those scalar fields on `no-cache` operations. The `no-cache` fetch policy skips the cache, not scalar conversion.
+
+</Note>
+
 ## Persisting the cache
 
 You can persist and rehydrate the `InMemoryCache` from a storage provider like `AsyncStorage` or `localStorage`. To do so, use the [`apollo3-cache-persist`](https://github.com/apollographql/apollo-cache-persist) library. This library works with a variety of [storage providers](https://github.com/apollographql/apollo-cache-persist/blob/master/docs/storage-providers.md).

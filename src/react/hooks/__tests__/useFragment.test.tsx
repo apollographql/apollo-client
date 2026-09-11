@@ -21,6 +21,7 @@ import type { Observer } from "rxjs";
 import { Observable } from "rxjs";
 
 import type {
+  ApolloCache,
   DocumentNode,
   OperationVariables,
   Reference,
@@ -2642,7 +2643,7 @@ describe("works with skip/non-include of all fields, even if the cache doesn't a
   // but we want to simulate a 3rd party cache that doesn't add `__typename`
   // without building an entire mock cache in this test. Instead we
   // override the diff method to strip it out again
-  cache.diff = (options) => {
+  (cache as ApolloCache).diff = (options) => {
     const diff = (InMemoryCache.prototype.diff<any>).call(cache, options);
     if (diff.result) {
       const { __typename: _, ...rest } = diff.result;

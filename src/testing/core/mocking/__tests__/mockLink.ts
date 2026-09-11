@@ -1362,6 +1362,80 @@ test("removes fields with @client directives", async () => {
   }
 });
 
+test("matches mocks against queries with auto-labeled @defer fragments", async () => {
+  const serverQuery = gql`
+    query A {
+      a
+      ... on Query @defer(label: "ac_0") {
+        b
+      }
+      ... on Query @defer(label: "ac_1") {
+        c
+      }
+    }
+  `;
+
+  const link = new MockLink([
+    {
+      request: {
+        query: gql`
+          query A {
+            a
+            ... on Query @defer {
+              b
+            }
+            ... on Query @defer {
+              c
+            }
+          }
+        `,
+      },
+      result: { data: { a: 1, b: 2, c: 3 } },
+    },
+  ]);
+
+  const stream = new ObservableStream(execute(link, { query: serverQuery }));
+
+  await expect(stream).toEmitTypedValue({ data: { a: 1, b: 2, c: 3 } });
+});
+
+test("matches mocks that define their own @defer labels", async () => {
+  const serverQuery = gql`
+    query A {
+      a
+      ... on Query @defer(label: "mine") {
+        b
+      }
+      ... on Query @defer(label: "ac_0") {
+        c
+      }
+    }
+  `;
+
+  const link = new MockLink([
+    {
+      request: {
+        query: gql`
+          query A {
+            a
+            ... on Query @defer(label: "mine") {
+              b
+            }
+            ... on Query @defer {
+              c
+            }
+          }
+        `,
+      },
+      result: { data: { a: 1, b: 2, c: 3 } },
+    },
+  ]);
+
+  const stream = new ObservableStream(execute(link, { query: serverQuery }));
+
+  await expect(stream).toEmitTypedValue({ data: { a: 1, b: 2, c: 3 } });
+});
+
 test("shows warning in console when a mock cannot be matched", async () => {
   using _ = spyOnConsole("warn");
   const query = gql`

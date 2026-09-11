@@ -4,9 +4,11 @@
 
 ```ts
 
-import type { ApolloCache } from '@apollo/client';
+import type { ApolloCache } from '@apollo/client/cache';
+import type { ApolloCache as ApolloCache_2 } from '@apollo/client';
 import type { ApolloClient } from '@apollo/client';
 import type { ASTNode } from 'graphql';
+import type { Cache as Cache_2 } from '@apollo/client/cache';
 import type { DataValue } from '@apollo/client';
 import type { DirectiveNode } from 'graphql';
 import type { DocumentNode } from 'graphql';
@@ -14,10 +16,12 @@ import { ErrorLike } from '@apollo/client';
 import type { FieldNode } from 'graphql';
 import type { FormattedExecutionResult } from 'graphql';
 import type { FragmentDefinitionNode } from 'graphql';
+import type { FragmentSpreadNode } from 'graphql';
 import type { GraphQLFormattedError } from 'graphql';
 import type { HKT } from '@apollo/client/utilities';
 import type { Incremental } from '@apollo/client/incremental';
 import type { InlineFragmentNode } from 'graphql';
+import { Kind } from 'graphql';
 import type { MaybeMasked } from '@apollo/client';
 import type { NetworkStatus } from '@apollo/client';
 import { Observable } from 'rxjs';
@@ -28,6 +32,7 @@ import type { OperationTypeNode } from 'graphql';
 import type { OperationVariables } from '@apollo/client';
 import type { OperatorFunction } from 'rxjs';
 import type { Reference } from '@apollo/client/utilities';
+import type { ScalarType } from '@apollo/client/cache';
 import type { SelectionNode } from 'graphql';
 import type { SelectionSetNode } from 'graphql';
 import { StrongCache } from '@wry/caches';
@@ -35,6 +40,9 @@ import type { Subscription } from 'rxjs';
 import type { Trie } from '@wry/trie';
 import type { TypeOverrides } from '@apollo/client';
 import { WeakCache } from '@wry/caches';
+
+// @public (undocumented)
+export function addDeferFragmentLabels(document: DocumentNode): DocumentNode;
 
 // @internal @deprecated (undocumented)
 export type ApplyHKT<fn extends HKT, arg1, arg2 = never, arg3 = never, arg4 = never> = (fn & {
@@ -75,6 +83,9 @@ export const canonicalStringify: ((value: any) => string) & {
 // @internal @deprecated (undocumented)
 export const canUseDOM: boolean;
 
+// @internal @deprecated (undocumented)
+export function capitalize(str: string): string;
+
 // @internal @deprecated
 export const checkDocument: (doc: DocumentNode, expectedType?: OperationTypeNode) => void;
 
@@ -83,6 +94,9 @@ export type ClassicSignature = SignatureStyle extends "classic" ? unknown : neve
 
 // @internal @deprecated
 export function cloneDeep<T>(value: T): T;
+
+// @internal @deprecated (undocumented)
+export function coerceScalarFieldsToParsed(result: Record<string, any>, query: DocumentNode, cache: ApolloCache): Record<string, any>;
 
 // @public
 export function combineLatestBatched<T>(observables: Array<Observable<T> & {
@@ -165,6 +179,9 @@ type DeepOmitArray<T extends any[], K> = {
 // @public (undocumented)
 type DeepOmitPrimitive = Primitive | Function;
 
+// @internal @deprecated
+export type DeferInfoTrie = Trie<true>;
+
 // @public (undocumented)
 type Directives = {
     [directiveName: string]: {
@@ -207,7 +224,10 @@ export namespace DocumentationTypes {
 }
 
 // @public (undocumented)
-export function equalByQuery(query: DocumentNode, { data: aData, ...aRest }: Partial<ObservableQuery.Result<unknown>>, { data: bData, ...bRest }: Partial<ObservableQuery.Result<unknown>>, variables?: OperationVariables): boolean;
+export function equalByQuery(query: DocumentNode, input: Partial<ObservableQuery.Result<unknown>>, input2: Partial<ObservableQuery.Result<unknown>>, variables?: OperationVariables): boolean;
+
+// @public (undocumented)
+export type Exact<in out T> = (x: T) => T;
 
 // @internal @deprecated
 export const extensionsSymbol: unique symbol;
@@ -266,6 +286,8 @@ export const getApolloClientMemoryInternals: (() => {
             executeSelectionSet: number | undefined;
             executeSubSelectedArray: number | undefined;
             maybeBroadcastWatch: number | undefined;
+            prunePartialBoundaries: number | undefined;
+            prunePartialStreamArray: number | undefined;
         } | undefined;
         fragmentRegistry?: {
             findFragmentSpreads: number | undefined;
@@ -286,6 +308,9 @@ export const getApolloClientMemoryInternals: (() => {
 
 // @internal @deprecated (undocumented)
 export function getDefaultValues(definition: OperationDefinitionNode | undefined): Record<string, any>;
+
+// @internal @deprecated (undocumented)
+export function getDirectiveArgValue(directive: DirectiveNode, name: string, kind: typeof Kind.STRING): string | undefined;
 
 // @internal @deprecated (undocumented)
 export function getFragmentDefinition(doc: DocumentNode): FragmentDefinitionNode;
@@ -313,6 +338,8 @@ export const getInMemoryCacheMemoryInternals: (() => {
         executeSelectionSet: number | undefined;
         executeSubSelectedArray: number | undefined;
         maybeBroadcastWatch: number | undefined;
+        prunePartialBoundaries: number | undefined;
+        prunePartialStreamArray: number | undefined;
     };
     fragmentRegistry: {
         findFragmentSpreads: number | undefined;
@@ -352,6 +379,9 @@ const globalCaches: {
 // @internal @deprecated (undocumented)
 export function graphQLResultHasError(result: FormattedExecutionResult<any>): boolean;
 
+// @internal @deprecated
+export const handleIncrementalSymbol: unique symbol;
+
 // @internal @deprecated (undocumented)
 export function hasDirectives(names: string[], root: ASTNode, all?: boolean): boolean;
 
@@ -365,10 +395,25 @@ export type IsAny<T> = 0 extends 1 & T ? true : false;
 export const isArray: (a: any) => a is any[] | readonly any[];
 
 // @internal @deprecated (undocumented)
+export const isDeferredFragment: (fragmentSelection: FragmentSpreadNode | InlineFragmentNode, variables: OperationVariables | undefined) => boolean;
+
+// @internal @deprecated (undocumented)
 export function isDocumentNode(value: unknown): value is DocumentNode;
 
 // @internal @deprecated (undocumented)
 export function isField(selection: SelectionNode): selection is FieldNode;
+
+// @public
+export type IsLooselyEqual<A, B> = [
+A
+] extends [B] ? [
+B
+] extends [A] ? true : false : false;
+
+// @public (undocumented)
+export type IsNeverish<V> = [
+Exclude<V, undefined>
+] extends [never] ? true : false;
 
 // @internal @deprecated (undocumented)
 export function isNonEmptyArray<T>(value: ArrayLike<T> | null | undefined): value is Array<T>;
@@ -379,6 +424,12 @@ export function isNonNullObject(obj: unknown): obj is Record<string | number, an
 // @internal @deprecated (undocumented)
 export function isPlainObject(obj: unknown): obj is Record<string | number, any>;
 
+// @internal @deprecated (undocumented)
+export const isStreamField: (field: FieldNode, variables: OperationVariables | undefined) => boolean;
+
+// @public (undocumented)
+export function isTypenameField(field: FieldNode): boolean;
+
 // @public
 export type LazyType<T> = T & {
     [K in "" as never]: LazyType<never>;
@@ -387,11 +438,17 @@ export type LazyType<T> = T & {
 // @internal @deprecated (undocumented)
 export function makeReference(id: string): Reference;
 
+// @internal @deprecated (undocumented)
+export function makeStreamInfoTrie(): StreamInfoTrie;
+
 // @internal @deprecated
 export function makeUniqueId(prefix: string): string;
 
 // @public (undocumented)
-export const mapObservableFragmentMemoized: <From, To>(observable: ApolloCache.ObservableFragment<From>, _cacheKey: symbol, mapFn: (from: ApolloCache.WatchFragmentResult<From>) => ApolloCache.WatchFragmentResult<To>) => ApolloCache.ObservableFragment<To>;
+export const mapObservableFragmentMemoized: <From, To>(observable: ApolloCache_2.ObservableFragment<From>, _cacheKey: symbol, mapFn: (from: ApolloCache_2.WatchFragmentResult<From>) => ApolloCache_2.WatchFragmentResult<To>) => ApolloCache_2.ObservableFragment<To>;
+
+// @internal @deprecated (undocumented)
+export function matchScalarList(scalarType: ScalarType): RegExpMatchArray | null;
 
 // @internal @deprecated (undocumented)
 export function maybeDeepFreeze<T>(obj: T): T;
@@ -406,10 +463,6 @@ export function mergeDeepArray<T>(sources: T[]): T;
 //
 // @internal @deprecated (undocumented)
 export function mergeOptions<TDefaultOptions extends Partial<OptionsUnion<any, any>>, TOptions extends TDefaultOptions>(defaults: TDefaultOptions | Partial<TDefaultOptions> | undefined, options: TOptions | Partial<TOptions>): TOptions & TDefaultOptions;
-
-// @public @deprecated
-type NoInfer_2<T> = [T][T extends any ? 0 : never];
-export { NoInfer_2 as NoInfer }
 
 // @internal @deprecated (undocumented)
 export function omitDeep<T, K extends string>(value: T, key: K): DeepOmit<T, K>;
@@ -485,7 +538,7 @@ type ReplaceUndefinedWithDefault<Value, Default> = Value extends any ? Value ext
 export function resultKeyNameFromField(field: FieldNode): string;
 
 // @internal @deprecated (undocumented)
-export function shouldInclude({ directives }: SelectionNode, variables?: Record<string, any>): boolean;
+export function shouldInclude(input: SelectionNode, variables?: Record<string, any>): boolean;
 
 // @public
 export type SignatureStyle = TypeOverrides extends ({
@@ -500,12 +553,25 @@ export function storeKeyNameFromField(field: FieldNode, variables?: Object): str
 // @public (undocumented)
 let storeKeyNameStringify: (value: any) => string;
 
+// @public (undocumented)
+export class StreamArrayState {
+    constructor(path: Incremental.Path);
+    // (undocumented)
+    depend(): void;
+    // (undocumented)
+    get streamPosition(): number;
+    set streamPosition(value: number);
+    // (undocumented)
+    truncate: boolean;
+}
+
 // @public
 export const streamInfoSymbol: unique symbol;
 
 // @internal @deprecated (undocumented)
 export type StreamInfoTrie = Trie<{
     current: Incremental.StreamFieldInfo;
+    state: StreamArrayState;
     previous?: {
         incoming: unknown;
         streamFieldInfo: Incremental.StreamFieldInfo;
@@ -517,6 +583,9 @@ export type StreamInfoTrie = Trie<{
 export function stringifyForDisplay(value: any, space?: number): string;
 
 // @internal @deprecated (undocumented)
+export function toDiffWithDataState<TData>(diff: Cache_2.DiffResult<TData> | Cache_2.InternalDiffResultWithDataState<TData>): Cache_2.InternalDiffResultWithDataState<TData>;
+
+// @internal @deprecated (undocumented)
 export function toQueryResult<TData = unknown>(value: ObservableQuery.Result<TData>): {
     data: TData | undefined;
     error?: ErrorLike;
@@ -524,6 +593,14 @@ export function toQueryResult<TData = unknown>(value: ObservableQuery.Result<TDa
 
 // @public (undocumented)
 type TupleToIntersection<T extends any[]> = T extends [infer A] ? A : T extends [infer A, infer B] ? A & B : T extends [infer A, infer B, infer C] ? A & B & C : T extends [infer A, infer B, infer C, infer D] ? A & B & C & D : T extends [infer A, infer B, infer C, infer D, infer E] ? A & B & C & D & E : T extends (infer U)[] ? U : any;
+
+// @public (undocumented)
+type UnwrapScalarType<TScalarName extends string> = TScalarName extends `[${infer TName extends string}]` ? UnwrapScalarType<TName> : TScalarName & keyof ApolloCache_2.Scalars;
+
+// Warning: (ae-forgotten-export) The symbol "UnwrapScalarType" needs to be exported by the entry point index.d.ts
+//
+// @internal @deprecated (undocumented)
+export function unwrapScalarType<TScalarName extends string>(scalarType: TScalarName): UnwrapScalarType<TScalarName>;
 
 // @internal @deprecated (undocumented)
 export type VariablesOption<TVariables extends OperationVariables> = {} extends TVariables ? {

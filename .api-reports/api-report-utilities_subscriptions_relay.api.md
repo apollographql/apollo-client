@@ -12,7 +12,7 @@ import type { RequestParameters } from 'relay-runtime';
 // Warning: (ae-forgotten-export) The symbol "CreateMultipartSubscriptionOptions" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-export function createFetchMultipartSubscription(uri: string, { fetch: preferredFetch, headers }?: CreateMultipartSubscriptionOptions): (operation: RequestParameters, variables: OperationVariables) => Observable<GraphQLResponse>;
+export function createFetchMultipartSubscription(uri: string, input?: CreateMultipartSubscriptionOptions): (operation: RequestParameters, variables: OperationVariables) => Observable<GraphQLResponse>;
 
 // @public (undocumented)
 type CreateMultipartSubscriptionOptions = {

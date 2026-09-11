@@ -63,15 +63,13 @@ class DeferRequest<TData extends Record<string, unknown>>
   implements
     Incremental.IncrementalRequest<Defer20220824Handler.Chunk<TData>, TData>
 {
+  private hasDefer: boolean;
   public hasNext = true;
-
-  // This protocol has no `pending`/`completed` bookkeeping, so we can't tell
-  // which `@defer` boundary (if any) a given `path`/`label` refers to - only
-  // whether *something* is still in flight (`hasNext`) or a boundary failed
-  // outright and will never deliver (`hasFailedDefer`). `isDeferPending`
-  // below is intentionally coarse-grained: it treats every path as pending
-  // as long as either is true.
   private hasFailedDefer = false;
+
+  constructor({ query }: Incremental.StartRequestOptions) {
+    this.hasDefer = hasDirectives(["defer"], query);
+  }
 
   private errors: Array<GraphQLFormattedError> = [];
   private extensions: Record<string, any> = {};
@@ -129,10 +127,6 @@ class DeferRequest<TData extends Record<string, unknown>>
         }
 
         if ("data" in incremental && incremental.data === null) {
-          // A `null` `data` on a `@defer` incremental chunk means that
-          // boundary failed and will never deliver its data. We can't tell
-          // which boundary failed, so treat any boundary as potentially
-          // still pending until the whole request finishes.
           this.hasFailedDefer = true;
         }
 
@@ -178,7 +172,7 @@ class DeferRequest<TData extends Record<string, unknown>>
   // `path`/`label`, so we can't answer whether a *specific* boundary is
   // pending - only whether *anything* might still be coming (`hasNext`), or
   // whether a boundary failed and will never arrive (`hasFailedDefer`).
-  isDeferPending = () => this.hasNext || this.hasFailedDefer;
+  isDeferPending = () => this.hasDefer && (this.hasNext || this.hasFailedDefer);
 }
 
 /**
@@ -233,9 +227,9 @@ export class Defer20220824Handler
     return request;
   }
   startRequest<TData extends Record<string, unknown>>(
-    _: Incremental.StartRequestOptions
+    opts: Incremental.StartRequestOptions
   ) {
-    return new DeferRequest<TData>();
+    return new DeferRequest<TData>(opts);
   }
 }
 

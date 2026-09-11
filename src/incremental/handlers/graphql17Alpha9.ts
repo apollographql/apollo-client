@@ -1,3 +1,4 @@
+import { equal } from "@wry/equality";
 import type { FormattedExecutionResult, GraphQLFormattedError } from "graphql";
 
 import type { ApolloLink } from "@apollo/client/link";
@@ -123,6 +124,29 @@ class IncrementalRequest<TData>
       };
     });
   }
+
+  /**
+   * @internal
+   * Important: this function is used as a reactivity dependency in the `readFromStore.prune*` methods.
+   * It needs to be a different instance for each instance of `IncrementalRequest`,
+   * so it cannot be a normal class/prototype method, but it has to be an instance property.
+   */
+  isDeferPending = (
+    path: Incremental.Path,
+    label: string | undefined
+  ): boolean => {
+    for (const pending of this.pendingMap.values()) {
+      if (pending.id in this.streamPositions) {
+        continue;
+      }
+
+      if (pending.label === label && equal(pending.path, path)) {
+        return this.completedMap.get(pending.id) !== true;
+      }
+    }
+
+    return false;
+  };
 
   handle(
     cacheData: TData | DeepPartial<TData> | null | undefined = this.data,

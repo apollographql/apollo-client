@@ -19,7 +19,6 @@ import {
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
-  DeferInfoTrie,
   FragmentMap,
   FragmentMapFunction,
   StreamInfoTrie,
@@ -93,7 +92,6 @@ interface ReadContext extends ReadMergeModifyContext {
   fragmentMap: FragmentMap;
   lookupFragment: FragmentMapFunction;
   streamInfo?: StreamInfoTrie;
-  deferInfo?: DeferInfoTrie;
 }
 
 type ExecResult<R = any> = {
@@ -268,7 +266,7 @@ export class StoreReader {
               selectionSet,
               boundaries,
               context.streamInfo,
-              context.deferInfo
+              context.isDeferPending
             );
           }
         },
@@ -295,7 +293,7 @@ export class StoreReader {
               field,
               boundaries,
               context.streamInfo,
-              context.deferInfo
+              context.isDeferPending
             );
           }
         },
@@ -894,14 +892,14 @@ export class StoreReader {
       const fragment = getFragmentFromSelection(selection, lookupFragment);
       let prune = false;
 
-      if (context.deferInfo && isDeferredFragment(selection, variables)) {
+      if (context.isDeferPending && isDeferredFragment(selection, variables)) {
         const directive = selection.directives?.find(
           (d) => d.name.value === "defer"
         );
         const label =
           directive && getDirectiveArgValue(directive, "label", Kind.STRING);
 
-        prune = !!context.deferInfo.peekArray(path.concat(label || []));
+        prune = context.isDeferPending(path, label);
       }
 
       if (fragment && policies.fragmentMatches(fragment, data.__typename)) {
@@ -1103,7 +1101,7 @@ function shouldPrune({ dataState }: ExecResult<any>, context: ReadContext) {
         context.streamInfo ||
         // The network hasn't delivered these @defer boundaries yet, so prune
         // the (possibly complete) cached data sitting at them.
-        context.deferInfo
+        context.isDeferPending
       )
     );
   }

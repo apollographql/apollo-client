@@ -2284,9 +2284,9 @@ describe("writing to the store", () => {
       });
     });
 
-    it("should not warn if a field is defered", () => {
-      using _consoleSpy = spyOnConsole.takeSnapshots("error");
-      const defered = gql`
+    it("should warn if a field is deferred in a userland write", () => {
+      using consoleSpy = spyOnConsole("error");
+      const deferred = gql`
         query LazyLoad {
           id
           expensive @defer
@@ -2304,7 +2304,7 @@ describe("writing to the store", () => {
 
       const newStore = writeQueryToStore({
         writer,
-        query: defered,
+        query: deferred,
         result,
       });
 
@@ -2312,6 +2312,13 @@ describe("writing to the store", () => {
         __typename: "Query",
         id: 1,
       });
+
+      expect(consoleSpy.error).toHaveBeenCalledTimes(1);
+      expect(consoleSpy.error).toHaveBeenCalledWith(
+        expect.stringContaining("Missing field"),
+        "expensive",
+        result
+      );
     });
   });
 

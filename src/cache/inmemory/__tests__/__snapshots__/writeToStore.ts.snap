@@ -262,8 +262,6 @@ Object {
 }
 `;
 
-exports[`writing to the store writeResultToStore shape checking should not warn if a field is defered 1`] = `[MockFunction]`;
-
 exports[`writing to the store writeResultToStore shape checking should warn when it receives the wrong data inside a fragment 1`] = `
 [MockFunction] {
   "calls": Array [

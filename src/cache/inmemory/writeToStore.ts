@@ -48,6 +48,8 @@ import type { Cache } from "../../core/index.js";
 import { normalizeReadFieldOptions } from "./policies.js";
 import type { ReadFieldFunction } from "../core/types/common.js";
 
+const fromNetworkSymbol = Symbol.for("apollo.fromNetwork");
+
 export interface WriteContext extends ReadMergeModifyContext {
   readonly written: {
     [dataId: string]: SelectionSetNode[];
@@ -58,6 +60,7 @@ export interface WriteContext extends ReadMergeModifyContext {
   merge<T>(existing: T, incoming: T): T;
   // If true, merge functions will be called with undefined existing data.
   overwrite: boolean;
+  fromNetwork: boolean;
   incomingById: Map<
     string,
     {
@@ -124,7 +127,16 @@ export class StoreWriter {
 
   public writeToStore(
     store: NormalizedCache,
-    { query, result, dataId, variables, overwrite }: Cache.WriteOptions
+    {
+      query,
+      result,
+      dataId,
+      variables,
+      overwrite,
+      [fromNetworkSymbol]: fromNetwork,
+    }: Cache.WriteOptions & {
+      [fromNetworkSymbol]?: boolean;
+    }
   ): Reference | undefined {
     const operationDefinition = getOperationDefinition(query)!;
     const merger = makeProcessedFieldsMerger();
@@ -144,6 +156,7 @@ export class StoreWriter {
       varString: canonicalStringify(variables),
       ...extractFragmentContext(query, this.fragments),
       overwrite: !!overwrite,
+      fromNetwork: fromNetwork === true,
       incomingById: new Map(),
       clientOnly: false,
       deferred: false,
@@ -328,10 +341,10 @@ export class StoreWriter {
         let incomingValue = this.processFieldValue(
           value,
           field,
-          // Reset context.clientOnly and context.deferred to their default
-          // values before processing nested selection sets.
+          // Reset context.clientOnly before processing nested selection sets,
+          // but preserve whether the field was reached through @defer.
           field.selectionSet ?
-            getContextFlavor(context, false, false)
+            getContextFlavor(context, false, context.deferred)
           : context,
           childTree
         );
@@ -373,7 +386,7 @@ export class StoreWriter {
       } else if (
         __DEV__ &&
         !context.clientOnly &&
-        !context.deferred &&
+        !(context.fromNetwork && context.deferred) &&
         !addTypenameToDocument.added(field) &&
         // If the field has a read function, it may be a synthetic field or
         // provide a default value, so its absence from the written data should

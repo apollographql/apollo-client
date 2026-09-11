@@ -18,6 +18,8 @@ import type { QueryManager } from "./QueryManager.js";
 import type { Unmasked } from "../masking/index.js";
 import { muteDeprecations } from "../utilities/index.js";
 
+const fromNetworkSymbol = Symbol.for("apollo.fromNetwork");
+
 export type QueryStoreValue = Pick<
   QueryInfo,
   "variables" | "networkStatus" | "networkError" | "graphQLErrors"
@@ -348,12 +350,14 @@ export class QueryInfo {
         // it when we receive it redundantly from the watch callback.
         this.cache.performTransaction((cache) => {
           if (this.shouldWrite(result, options.variables)) {
-            cache.writeQuery({
+            const writeOptions = {
+              [fromNetworkSymbol]: true,
               query: document,
               data: result.data as Unmasked<T>,
               variables: options.variables,
               overwrite: cacheWriteBehavior === CacheWriteBehavior.OVERWRITE,
-            });
+            };
+            cache.writeQuery(writeOptions);
 
             this.lastWrite = {
               result,

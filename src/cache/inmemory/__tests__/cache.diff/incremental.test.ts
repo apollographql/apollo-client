@@ -14,16 +14,6 @@ import {
   makeStreamInfoTrie,
 } from "@apollo/client/utilities/internal";
 
-function pendingDefers(
-  ...entries: Array<[path: Array<string | number>, label?: string]>
-) {
-  return (path: ReadonlyArray<string | number>, label: string | undefined) =>
-    entries.some(
-      ([entryPath, entryLabel]) =>
-        equal(entryPath, path) && entryLabel === label
-    );
-}
-
 test('returns dataState "complete" when the cache fully satisfies the query', () => {
   const cache = new InMemoryCache();
   const query = gql`
@@ -9261,7 +9251,7 @@ test("prunes a complete cached @defer boundary when isDeferPending marks it as p
     },
   });
 
-  const isDeferPending = pendingDefers([["greeting"]]);
+  const isDeferPending = getIsDeferPending({ path: ["greeting"] });
 
   expect(
     cache.diff({
@@ -9316,7 +9306,7 @@ test("keeps a cached @defer boundary that isDeferPending does not mark as pendin
     },
   });
 
-  const isDeferPending = pendingDefers([["greeting"]]);
+  const isDeferPending = getIsDeferPending({ path: ["greeting"] });
 
   expect(
     cache.diff({
@@ -9369,7 +9359,7 @@ test("keeps a non-deferred fragment's fields at a path that isDeferPending marks
     },
   });
 
-  const isDeferPending = pendingDefers([["greeting"]]);
+  const isDeferPending = getIsDeferPending({ path: ["greeting"] });
 
   expect(
     cache.diff({
@@ -9422,7 +9412,10 @@ test("prunes only the labeled @defer boundary that isDeferPending marks as pendi
     },
   });
 
-  const isDeferPending = pendingDefers([["greeting"], "ac_1"]);
+  const isDeferPending = getIsDeferPending({
+    path: ["greeting"],
+    label: "ac_1",
+  });
 
   expect(
     cache.diff({
@@ -9473,7 +9466,10 @@ test("prunes a labeled @defer boundary on a fragment spread that isDeferPending 
     },
   });
 
-  const isDeferPending = pendingDefers([["greeting"], "ac_0"]);
+  const isDeferPending = getIsDeferPending({
+    path: ["greeting"],
+    label: "ac_0",
+  });
 
   expect(
     cache.diff({
@@ -9531,7 +9527,10 @@ test("prunes only the labeled @defer boundary that isDeferPending marks as pendi
     },
   });
 
-  const isDeferPending = pendingDefers([["greeting"], "ac_1"]);
+  const isDeferPending = getIsDeferPending({
+    path: ["greeting"],
+    label: "ac_1",
+  });
 
   expect(
     cache.diff({
@@ -9580,7 +9579,7 @@ test("does not apply isDeferPending pruning when returnPartialData is true", () 
     },
   });
 
-  const isDeferPending = pendingDefers([["greeting"]]);
+  const isDeferPending = getIsDeferPending({ path: ["greeting"] });
 
   expect(
     cache.diff({
@@ -9633,9 +9632,9 @@ test("prunes cached @defer boundaries for list items marked pending in isDeferPe
     },
   });
 
-  const isDeferPending = pendingDefers(
-    [["person", "friends", 0]],
-    [["person", "friends", 1]]
+  const isDeferPending = getIsDeferPending(
+    { path: ["person", "friends", 0] },
+    { path: ["person", "friends", 1] }
   );
 
   expect(
@@ -9692,7 +9691,7 @@ test("keeps a delivered list item's @defer boundary while pruning a still-pendin
     },
   });
 
-  const isDeferPending = pendingDefers([["person", "friends", 1]]);
+  const isDeferPending = getIsDeferPending({ path: ["person", "friends", 1] });
 
   expect(
     cache.diff({
@@ -9744,9 +9743,7 @@ test("does not reuse an isDeferPending-pruned result when isDeferPending is late
     },
   });
 
-  // A fresh callback identity per call, just like a fresh Trie was, since the
-  // callback participates in the diff's memoization key.
-  const isDeferPending = pendingDefers([["greeting"]]);
+  const isDeferPending = getIsDeferPending({ path: ["greeting"] });
 
   expect(
     cache.diff({
@@ -9822,9 +9819,10 @@ test("does not reuse an isDeferPending-pruned result when a sibling boundary is 
   });
 
   {
-    // A fresh callback identity per call, just like a fresh Trie was, since
-    // the callback participates in the diff's memoization key.
-    const isDeferPending = pendingDefers([["greeting"]], [["hero"]]);
+    const isDeferPending = getIsDeferPending(
+      { path: ["greeting"] },
+      { path: ["hero"] }
+    );
 
     expect(
       cache.diff({
@@ -9848,7 +9846,7 @@ test("does not reuse an isDeferPending-pruned result when a sibling boundary is 
   }
 
   {
-    const isDeferPending = pendingDefers([["hero"]]);
+    const isDeferPending = getIsDeferPending({ path: ["hero"] });
 
     expect(
       cache.diff({
@@ -9910,7 +9908,7 @@ test("strips a partial pending @defer boundary while keeping a complete delivere
     });
   }
 
-  const isDeferPending = pendingDefers([["greeting"]]);
+  const isDeferPending = getIsDeferPending({ path: ["greeting"] });
 
   expect(
     cache.diff({
@@ -9970,7 +9968,10 @@ test("strips both a partial pending @defer boundary and a complete pending sibli
     });
   }
 
-  const isDeferPending = pendingDefers([["greeting"]], [["hero"]]);
+  const isDeferPending = getIsDeferPending(
+    { path: ["greeting"] },
+    { path: ["hero"] }
+  );
 
   expect(
     cache.diff({
@@ -10024,7 +10025,7 @@ test("keeps fields shared with a delivered @defer boundary while pruning a pendi
     },
   });
 
-  const isDeferPending = pendingDefers([["hero"]]);
+  const isDeferPending = getIsDeferPending({ path: ["hero"] });
 
   expect(
     cache.diff({
@@ -10077,7 +10078,7 @@ test('returns dataState "partial" when a non-deferred field is missing and isDef
   const missingObject = { __typename: "Greeting", message: "Hello world" };
   const missingRoot = { __ref: "ROOT_QUERY" };
 
-  const isDeferPending = pendingDefers([["greeting"]]);
+  const isDeferPending = getIsDeferPending({ path: ["greeting"] });
 
   expect(
     cache.diff({
@@ -10140,7 +10141,7 @@ test('returns dataState "empty" when a non-deferred field is missing and isDefer
   const missingObject = { __typename: "Greeting", message: "Hello world" };
   const missingRoot = { __ref: "ROOT_QUERY" };
 
-  const isDeferPending = pendingDefers([["greeting"]]);
+  const isDeferPending = getIsDeferPending({ path: ["greeting"] });
 
   expect(
     cache.diff({
@@ -10184,7 +10185,7 @@ test('returns dataState "empty" when the cache is empty and isDeferPending marks
 
   const missingRoot = { __ref: "ROOT_QUERY" };
 
-  const isDeferPending = pendingDefers([["greeting"]]);
+  const isDeferPending = getIsDeferPending({ path: ["greeting"] });
 
   expect(
     cache.diff({
@@ -10212,4 +10213,11 @@ function getMissingMessage(fieldName: string, obj: Record<string, unknown>) {
       obj.__ref + " object"
     : "object " + JSON.stringify(obj, null, 2)
   }`;
+}
+
+function getIsDeferPending(
+  ...entries: Array<{ path: Array<string | number>; label?: string }>
+) {
+  return (path: ReadonlyArray<string | number>, label: string | undefined) =>
+    entries.some((entry) => equal(entry.path, path) && entry.label === label);
 }

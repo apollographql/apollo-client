@@ -2,36 +2,75 @@
 
 ## 2.2.0
 
+Add support for generating configuration objects for custom scalars in Apollo Client.
+
+```ts
+// codegen.ts
+import type { CustomScalarsPluginConfig } from "@apollo/client-graphql-codegen/custom-scalars";
+
+const config: CodegenConfig = {
+  // ...
+  generates: {
+    "./path/to/custom-scalars.ts": {
+      plugins: ["@apollo/client-graphql-codegen/custom-scalars"],
+      config: {
+        // ...
+      } satisfies CustomScalarsPluginConfig,
+    },
+  },
+};
+```
+
+This will generate both an `inputObjects` object and a `scalarTypePolicies` object in the generated file that can be used to configure custom scalars in `InMemoryCache`.
+
+```ts
+import { inputObjects, scalarTypePolicies } from "./path/to/custom-scalars";
+
+const cache = new InMemoryCache({
+  inputObjects,
+});
+
+cache.policies.addTypePolicies(scalarTypePolicies);
+```
+
+For more information on using custom scalars, read the [Custom Scalars](https://apollographql.com/docs/react/data/custom-scalars) guide.
+
+<details>
+
+<summary>
+
 ### Minor Changes
+
+</summary>
 
 - [#13310](https://github.com/apollographql/apollo-client/pull/13310) [`8ab63fc`](https://github.com/apollographql/apollo-client/commit/8ab63fc4bbf9f2c5b5f225ba2c54c2a255f0632e) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Introduce a new GraphQL Codegen plugin to generate the input object configuration needed to configure custom scalars for each field.
 
-  ```ts
-  // codegen.ts
-  import type { CustomScalarsPluginConfig } from "@apollo/client-graphql-codegen/custom-scalars";
+```ts
+// codegen.ts
+import type { CustomScalarsPluginConfig } from "@apollo/client-graphql-codegen/custom-scalars";
 
-  const config: CodegenConfig = {
-    // ...
-    generates: {
-      "./path/to/custom-scalars.ts": {
-        plugins: ["@apollo/client-graphql-codegen/custom-scalars"],
-        config: {
-          // ...
-        } satisfies CustomScalarsPluginConfig,
-      },
+const config: CodegenConfig = {
+  // ...
+  generates: {
+    "./path/to/custom-scalars.ts": {
+      plugins: ["@apollo/client-graphql-codegen/custom-scalars"],
+      config: {
+        // ...
+      } satisfies CustomScalarsPluginConfig,
     },
-  };
-  ```
+  },
+};
+```
 
-  This will generate an `inputObjects` object in the generated file that can be used to configure the `inputObjects` option for `InMemoryCache`.
+This will generate an `inputObjects` object in the generated file that can be used to configure the `inputObjects` option for `InMemoryCache`.
 
-  ```ts
-  import { inputObjects } from "./path/to/custom-scalars";
+```ts
+import { inputObjects } from "./path/to/custom-scalars";
 
-  const cache = new InMemoryCache({
-    inputObjects,
-  });
-  ```
+const cache = new InMemoryCache({
+  inputObjects,
+});
+```
 
 - [#13318](https://github.com/apollographql/apollo-client/pull/13318) [`01f255b`](https://github.com/apollographql/apollo-client/commit/01f255be684808c763664e84b4c2d5391ee807dd) Thanks [@jerelmiller](https://github.com/jerelmiller)! - The `@apollo/client-graphql-codegen/custom-scalars` GraphQL Codegen plugin now generates the type policy configuration needed to configure custom scalars for each field.
 
@@ -65,6 +104,8 @@
 - [#13426](https://github.com/apollographql/apollo-client/pull/13426) [`a9beaff`](https://github.com/apollographql/apollo-client/commit/a9beaff117e6eae791b078e22ecdfc93b82ded8f) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Version bump only to `rc`.
 
 - [#13447](https://github.com/apollographql/apollo-client/pull/13447) [`24133fe`](https://github.com/apollographql/apollo-client/commit/24133fe429af460fcfe44d529375ebb063a29326) Thanks [@jerelmiller](https://github.com/jerelmiller)! - The `@apollo/client-graphql-codegen/custom-scalars` plugin now emits GraphQL list syntax in `inputObjects` and `scalarTypePolicies` (for example `"[DateTime]"`).
+
+</details>
 
 ## 2.2.0-rc.1
 

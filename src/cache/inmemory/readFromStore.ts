@@ -899,7 +899,7 @@ export class StoreReader {
         const label =
           directive && getDirectiveArgValue(directive, "label", Kind.STRING);
 
-        prune = context.isDeferPending(path, label || undefined);
+        prune = context.isDeferPending(path, label);
       }
 
       if (fragment && policies.fragmentMatches(fragment, data.__typename)) {

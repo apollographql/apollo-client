@@ -739,10 +739,5 @@ test("deeply nested defer doesn't cause cache to log errors about missing fields
     partial: false,
   });
 
-  // this should not log errors, but currently does:
-  /*
-    1: "Missing field '%s' while writing result %o", "likes", {"__typename": "Comment", "author": {"__typename": "Author", "id": "a1", "name": "x"}, "id": "c1", "text": "first!"}
-    2: "Missing field '%s' while writing result %o", "badge", {"__typename": "Author", "id": "a1", "name": "x"}
-  */
   expect(spy.error).not.toHaveBeenCalled();
 });

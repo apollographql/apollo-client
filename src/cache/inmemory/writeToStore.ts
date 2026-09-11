@@ -350,10 +350,6 @@ export class StoreWriter {
     ).forEach((context, field) => {
       const resultFieldKey = resultKeyNameFromField(field);
       const value = result[resultFieldKey];
-      // Use the response key (which accounts for aliases), not
-      // field.name.value, so that @defer/@stream path lookups (and
-      // context.isDeferPending) resolve to the correct boundary for
-      // aliased fields.
       const path = [...currentPath, resultFieldKey];
 
       fieldNodeSet.add(field);

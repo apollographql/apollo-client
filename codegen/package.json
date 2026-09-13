@@ -42,7 +42,7 @@
     "@graphql-codegen/visitor-plugin-common": "^7.1.2",
     "@types/jest": "^30.0.0",
     "graphql-tag": "^2.12.7",
-    "typescript": "^5.8.3"
+    "typescript": "^7.0.0"
   },
   "peerDependencies": {
     "@graphql-codegen/plugin-helpers": "^6.0.0 || ^7.0.0",

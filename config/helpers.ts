@@ -4,14 +4,14 @@ import { mkdir, readFile, rm, symlink } from "node:fs/promises";
 import { relative } from "node:path";
 import * as path from "path";
 
-import { ApiModelGenerator } from "@microsoft/api-extractor/lib/generators/ApiModelGenerator.js";
+import { ApiModelGenerator } from "@microsoft/api-extractor/lib/generators/ApiModelGenerator";
 import type { ApiItem, ApiPackage } from "@microsoft/api-extractor-model";
 import {
   ApiDeclaredItem,
   ApiEntryPoint,
   ApiNamespace,
 } from "@microsoft/api-extractor-model";
-import { apiItem_onParentChanged } from "@microsoft/api-extractor-model/lib/items/ApiItem.js";
+import { apiItem_onParentChanged } from "@microsoft/api-extractor-model/lib/items/ApiItem";
 import { TSDocParser } from "@microsoft/tsdoc";
 import { DeclarationReference } from "@microsoft/tsdoc/lib-commonjs/beta/DeclarationReference.js";
 import * as recast from "recast";

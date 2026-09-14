@@ -14,11 +14,15 @@ import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
   DeepMerger,
   isNonNullObject,
+  isPlainObject,
   makeReference,
+  matchScalarList,
   maybeDeepFreeze,
+  unwrapScalarType,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
+import type { Scalar } from "../core/Scalar.js";
 import type { Cache } from "../core/types/Cache.js";
 import type {
   CanReadFunction,
@@ -34,7 +38,11 @@ import type {
 
 import { fieldNameFromStoreName, hasOwn } from "./helpers.js";
 import type { Policies, StorageType } from "./policies.js";
-import type { NormalizedCache, NormalizedCacheObject } from "./types.js";
+import type {
+  NormalizedCache,
+  NormalizedCacheObject,
+  ScalarType,
+} from "./types.js";
 
 const DELETE = {} as DeleteModifier;
 const delModifier: Modifier<any> = () => DELETE;
@@ -122,7 +130,7 @@ export abstract class EntityStore implements NormalizedCache {
     const existing: StoreObject | undefined =
       typeof older === "string" ? this.lookup((dataId = older)) : older;
 
-    const incoming: StoreObject | undefined =
+    let incoming: StoreObject | undefined =
       typeof newer === "string" ? this.lookup((dataId = newer)) : newer;
 
     // If newer was a string ID, but that ID was not defined in this store,
@@ -130,6 +138,16 @@ export abstract class EntityStore implements NormalizedCache {
     if (!incoming) return;
 
     invariant(typeof dataId === "string", "store.merge expects a string ID");
+
+    // Parse all scalars before merging so that the storeObjectReconciler can
+    // deep compare the parsed value with the existing value
+    incoming = this.coerceStoreObject(
+      incoming,
+      (scalar, value) => scalar.coerceToParsed(value),
+      incoming.__typename ||
+        existing?.__typename ||
+        this.policies.rootTypenamesById[dataId]
+    );
 
     const merged: StoreObject = new DeepMerger({
       reconciler: storeObjectReconciler,
@@ -390,7 +408,22 @@ export abstract class EntityStore implements NormalizedCache {
   }
 
   public extract(): NormalizedCacheObject {
-    const obj = this.toObject();
+    let obj = this.toObject();
+
+    if (this.hasScalarConfig()) {
+      obj = Object.fromEntries(
+        Object.entries(obj).map(([dataId, storeObject]) => [
+          dataId,
+          storeObject &&
+            this.coerceStoreObject(
+              storeObject,
+              (scalar, value) => scalar.coerceToSerialized(value),
+              storeObject?.__typename || this.policies.rootTypenamesById[dataId]
+            ),
+        ])
+      );
+    }
+
     const extraRootIds: string[] = [];
     this.getRootIdSet().forEach((id) => {
       if (!hasOwn.call(this.policies.rootTypenamesById, id)) {
@@ -401,6 +434,94 @@ export abstract class EntityStore implements NormalizedCache {
       obj.__META = { extraRootIds: extraRootIds.sort() };
     }
     return obj;
+  }
+
+  private hasScalarConfig() {
+    return !!this.policies.cache["config"].scalars;
+  }
+
+  private coerceStoreObject(
+    obj: StoreObject,
+    coerce: (scalar: Scalar<any, any>, value: unknown) => unknown,
+    typename = obj.__typename
+  ): StoreObject {
+    if (!typename || !this.hasScalarConfig()) {
+      return obj;
+    }
+
+    let changed = false;
+
+    const entries = Object.entries(obj).map(([storeFieldName, value]) => {
+      const fieldName = fieldNameFromStoreName(storeFieldName);
+      const scalarType = this.policies.getScalarTypeForField(
+        typename,
+        fieldName
+      );
+
+      const newValue = this.coerceValue(
+        value,
+        coerce,
+        scalarType,
+        `${typename}.${fieldName}`
+      );
+      changed ||= newValue !== value;
+
+      return [storeFieldName, newValue];
+    });
+
+    return changed ? Object.fromEntries(entries) : obj;
+  }
+
+  private coerceValue(
+    value: unknown,
+    coerce: (scalar: Scalar<any, any>, value: unknown) => unknown,
+    scalarType: ScalarType | undefined,
+    coordinate: string
+  ): unknown {
+    if (value == null) {
+      return value;
+    }
+
+    if (scalarType) {
+      const match = matchScalarList(scalarType);
+
+      if (match) {
+        if (Array.isArray(value)) {
+          return value.map((item) =>
+            this.coerceValue(item, coerce, match[1], coordinate)
+          );
+        } else {
+          if (__DEV__) {
+            invariant.warn(
+              "The custom scalar configuration for '%s' uses list type '%s', but the value is not an array. The value was coerced as '%s' anyway.",
+              coordinate,
+              scalarType,
+              unwrapScalarType(scalarType)
+            );
+          }
+        }
+      }
+
+      const scalar = this.policies.cache.getScalar(
+        unwrapScalarType(scalarType)
+      );
+
+      if (scalar) {
+        return coerce(scalar, value);
+      }
+    }
+
+    if (Array.isArray(value)) {
+      return value.map((item) =>
+        this.coerceValue(item, coerce, scalarType, coordinate)
+      );
+    }
+
+    if (isPlainObject(value) && "__typename" in value) {
+      return this.coerceStoreObject(value, coerce);
+    }
+
+    return value;
   }
 
   public replace(newData: NormalizedCacheObject | null): void {

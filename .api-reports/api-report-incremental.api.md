@@ -4,12 +4,37 @@
 
 ```ts
 
+import type { ApolloCache } from '@apollo/client/cache';
 import type { ApolloLink } from '@apollo/client/link';
 import type { DeepPartial } from '@apollo/client/utilities';
 import type { DocumentNode } from 'graphql';
+import { DocumentTransform } from '@apollo/client/utilities';
+import type { Exact } from '@apollo/client/utilities/internal';
 import type { FormattedExecutionResult } from 'graphql';
 import type { GraphQLFormattedError } from 'graphql';
 import type { HKT } from '@apollo/client/utilities';
+import type { IsAny } from '@apollo/client/utilities/internal';
+import type { IsNeverish } from '@apollo/client/utilities/internal';
+import type { Prettify } from '@apollo/client/utilities/internal';
+import type { Primitive } from '@apollo/client/utilities/internal';
+import { StreamInfoTrie } from '@apollo/client/utilities/internal';
+
+// Warning: (ae-forgotten-export) The symbol "IsScalarType" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "ContainsNeverishFieldsInObject" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+type ContainsNeverishFields<TData, Seen = never> = true extends (IsAny<TData>) ? false : true extends IsScalarType<TData> ? false : TData extends ReadonlyArray<infer TItem> ? true extends IsScalarType<TItem> ? false : ContainsNeverishFields<TItem, Seen> : keyof TData extends never ? false : TData extends object ? string extends keyof TData ? false : [Seen] extends [never] ? ContainsNeverishFieldsInObject<TData, Exact<TData>> : Exact<TData> extends Seen ? false : ContainsNeverishFieldsInObject<TData, Seen | Exact<TData>> : false;
+
+// Warning: (ae-forgotten-export) The symbol "HasNeverishField" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "ContainsNeverishFields" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+type ContainsNeverishFieldsInObject<TData, Seen> = HasNeverishField<TData> extends true ? true : ContainsNeverishFields<TData[keyof TData], Seen>;
+
+// @public (undocumented)
+type CustomScalarTypes = {
+    [K in keyof ApolloCache.Scalars]: ApolloCache.Scalars[K]["serialized"] | ApolloCache.Scalars[K]["parsed"];
+}[keyof ApolloCache.Scalars];
 
 // @public (undocumented)
 namespace Defer20220824Handler {
@@ -74,9 +99,7 @@ class Defer20220824Handler implements Incremental.Handler<Defer20220824Handler.C
     // Warning: (ae-forgotten-export) The symbol "DeferRequest" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    startRequest<TData extends Record<string, unknown>>(_: {
-        query: DocumentNode;
-    }): DeferRequest<TData>;
+    startRequest<TData extends Record<string, unknown>>(_: Incremental.StartRequestOptions): DeferRequest<TData>;
 }
 export { Defer20220824Handler }
 export { Defer20220824Handler as GraphQL17Alpha2Handler }
@@ -171,6 +194,8 @@ export namespace GraphQL17Alpha9Handler {
 
 // @public
 export class GraphQL17Alpha9Handler implements Incremental.Handler<GraphQL17Alpha9Handler.Chunk<any>> {
+    // (undocumented)
+    readonly documentTransform: DocumentTransform;
     // @internal @deprecated (undocumented)
     extractErrors(result: ApolloLink.Result<any>): GraphQLFormattedError[] | undefined;
     // @internal @deprecated (undocumented)
@@ -180,15 +205,61 @@ export class GraphQL17Alpha9Handler implements Incremental.Handler<GraphQL17Alph
     // Warning: (ae-forgotten-export) The symbol "IncrementalRequest" needs to be exported by the entry point index.d.ts
     //
     // @internal @deprecated (undocumented)
-    startRequest<TData>(_: {
-        query: DocumentNode;
-    }): IncrementalRequest<TData>;
+    startRequest<TData>(_: Incremental.StartRequestOptions): IncrementalRequest<TData>;
 }
+
+// @public (undocumented)
+export namespace GraphQLCodegenIncremental {
+    // Warning: (ae-forgotten-export) The symbol "RemoveNeverishFields" needs to be exported by the entry point index.d.ts
+    export type Complete<TData> = TData extends any ? true extends IsAny<TData> ? TData : TData extends object ? true extends ContainsNeverishFields<TData> ? RemoveNeverishFields<TData> : TData : TData : never;
+    // (undocumented)
+    export namespace HKTImplementation {
+        // (undocumented)
+        export interface Complete extends HKT {
+            // (undocumented)
+            arg1: unknown;
+            // (undocumented)
+            return: GraphQLCodegenIncremental.Complete<this["arg1"]>;
+        }
+        // (undocumented)
+        export interface Partial extends HKT {
+            // (undocumented)
+            arg1: unknown;
+            // (undocumented)
+            return: GraphQLCodegenIncremental.Partial<this["arg1"]>;
+        }
+        // (undocumented)
+        export interface Streaming extends HKT {
+            // (undocumented)
+            arg1: unknown;
+            // (undocumented)
+            return: GraphQLCodegenIncremental.Streaming<this["arg1"]>;
+        }
+    }
+    export type Partial<TData> = DeepPartial<Complete<TData>>;
+    export type Streaming<TData> = TData;
+    // (undocumented)
+    export interface TypeOverrides {
+        // (undocumented)
+        Complete: HKTImplementation.Complete;
+        // (undocumented)
+        Partial: HKTImplementation.Partial;
+        // (undocumented)
+        Streaming: HKTImplementation.Streaming;
+    }
+}
+
+// @public (undocumented)
+type HasNeverishField<T> = true extends {
+    [K in keyof T]: IsNeverish<T[K]>;
+}[keyof T] ? true : false;
 
 // @public (undocumented)
 export namespace Incremental {
     // @internal @deprecated (undocumented)
     export interface Handler<Chunk extends Record<string, unknown> = Record<string, unknown>> {
+        // (undocumented)
+        readonly documentTransform?: DocumentTransform;
         // (undocumented)
         extractErrors: (result: ApolloLink.Result<any>) => readonly GraphQLFormattedError[] | undefined | void;
         // (undocumented)
@@ -196,19 +267,55 @@ export namespace Incremental {
         // (undocumented)
         prepareRequest: (request: ApolloLink.Request) => ApolloLink.Request;
         // (undocumented)
-        startRequest: <TData extends Record<string, unknown>>(request: {
-            query: DocumentNode;
-        }) => IncrementalRequest<Chunk, TData>;
+        startRequest: <TData extends Record<string, unknown>>(request: Incremental.StartRequestOptions) => IncrementalRequest<Chunk, TData>;
     }
     // (undocumented)
     export interface IncrementalRequest<Chunk extends Record<string, unknown>, TData> {
+        // @internal @deprecated (undocumented)
+        getPendingWithInfo?: () => Array<PendingItemWithInfo>;
         // (undocumented)
         handle: (cacheData: TData | DeepPartial<TData> | undefined | null, chunk: Chunk) => FormattedExecutionResult<TData>;
         // (undocumented)
         hasNext: boolean;
+        // @internal @deprecated (undocumented)
+        readonly streamInfo?: StreamInfoTrie;
     }
     // (undocumented)
     export type Path = ReadonlyArray<string | number>;
+    // @internal @deprecated (undocumented)
+    export interface PendingDeferResultWithInfo {
+        // (undocumented)
+        delivered: boolean;
+        // (undocumented)
+        label: string | undefined;
+        // (undocumented)
+        path: Incremental.Path;
+        // (undocumented)
+        type: "defer";
+    }
+    // @internal @deprecated (undocumented)
+    export type PendingItemWithInfo = PendingDeferResultWithInfo | PendingStreamResultWithInfo;
+    // (undocumented)
+    export interface PendingResult {
+        // (undocumented)
+        id: string;
+        // (undocumented)
+        label?: string;
+        // (undocumented)
+        path: Incremental.Path;
+    }
+    // @internal @deprecated (undocumented)
+    export interface PendingStreamResultWithInfo {
+        // (undocumented)
+        path: Incremental.Path;
+        // (undocumented)
+        type: "stream";
+    }
+    // @internal @deprecated (undocumented)
+    export interface StartRequestOptions {
+        // (undocumented)
+        query: DocumentNode;
+    }
     // @internal @deprecated (undocumented)
     export interface StreamFieldInfo {
         // (undocumented)
@@ -220,11 +327,30 @@ export namespace Incremental {
 
 // @public (undocumented)
 class IncrementalRequest<TData> implements Incremental.IncrementalRequest<GraphQL17Alpha9Handler.Chunk<TData>, TData> {
+    // @internal @deprecated (undocumented)
+    getPendingWithInfo(): ({
+        type: "stream";
+        path: Incremental.Path;
+        delivered?: undefined;
+        label?: undefined;
+    } | {
+        type: "defer";
+        delivered: boolean;
+        path: Incremental.Path;
+        label: string | undefined;
+    })[];
     // (undocumented)
     handle(cacheData: TData | DeepPartial<TData> | null | undefined, chunk: GraphQL17Alpha9Handler.Chunk<TData>): FormattedExecutionResult<TData>;
     // (undocumented)
     hasNext: boolean;
+    // @internal @deprecated (undocumented)
+    get streamInfo(): StreamInfoTrie | undefined;
 }
+
+// Warning: (ae-forgotten-export) The symbol "ScalarType" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+type IsScalarType<TData> = Exact<TData> extends Exact<Extract<ScalarType, TData>> ? true : false;
 
 // @public (undocumented)
 export namespace NotImplementedHandler {
@@ -255,6 +381,16 @@ export class NotImplementedHandler implements Incremental.Handler<never> {
     // (undocumented)
     startRequest: any;
 }
+
+// @public (undocumented)
+type RemoveNeverishFields<TData> = true extends IsAny<TData> ? TData : true extends IsScalarType<TData> ? TData : TData extends ReadonlyArray<infer TItem> ? TItem[] extends (TData) ? TData extends Array<infer TItem> ? Array<RemoveNeverishFields<TItem>> : ReadonlyArray<RemoveNeverishFields<TItem>> : TData : string extends keyof TData ? TData : keyof TData extends never ? TData : TData extends object ? HasNeverishField<TData> extends true ? never : Prettify<{
+    [K in keyof TData]: RemoveNeverishFields<TData[K]>;
+}> : TData;
+
+// Warning: (ae-forgotten-export) The symbol "CustomScalarTypes" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+type ScalarType = CustomScalarTypes extends any ? true extends IsAny<CustomScalarTypes> ? Primitive : unknown extends CustomScalarTypes ? Primitive : Primitive | CustomScalarTypes : never;
 
 // (No @packageDocumentation comment for this package)
 

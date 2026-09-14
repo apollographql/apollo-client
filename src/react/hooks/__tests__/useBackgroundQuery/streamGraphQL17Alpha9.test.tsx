@@ -24,7 +24,6 @@ import {
   createClientWrapper,
   executeSchemaGraphQL17Alpha9,
   friendListSchemaGraphQL17Alpha9,
-  markAsStreaming,
   spyOnConsole,
 } from "@apollo/client/testing/internal";
 
@@ -191,7 +190,7 @@ test('does not suspend deferred queries with data in the cache and using a "cach
       data: {
         friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
       },
-      dataState: "streaming",
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.streaming,
     });
@@ -210,7 +209,7 @@ test('does not suspend deferred queries with data in the cache and using a "cach
           { __typename: "Friend", id: "2", name: "Han" },
         ],
       },
-      dataState: "streaming",
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.streaming,
     });
@@ -224,14 +223,14 @@ test('does not suspend deferred queries with data in the cache and using a "cach
 
     expect(renderedComponents).toStrictEqual(["useReadQuery"]);
     expect(snapshot).toStrictEqualTyped({
-      data: markAsStreaming({
+      data: {
         friendList: [
           { __typename: "Friend", id: "1", name: "Luke" },
           { __typename: "Friend", id: "2", name: "Han" },
           { __typename: "Friend", id: "3", name: "Leia" },
         ],
-      }),
-      dataState: "streaming",
+      },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.streaming,
     });
@@ -351,7 +350,7 @@ test('does not suspend deferred queries with partial data in the cache and using
       data: {
         friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
       },
-      dataState: "streaming",
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.streaming,
     });
@@ -370,7 +369,7 @@ test('does not suspend deferred queries with partial data in the cache and using
           { __typename: "Friend", id: "2", name: "Han" },
         ],
       },
-      dataState: "streaming",
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.streaming,
     });
@@ -391,7 +390,7 @@ test('does not suspend deferred queries with partial data in the cache and using
           { __typename: "Friend", id: "3", name: "Leia" },
         ],
       },
-      dataState: "streaming",
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.streaming,
     });

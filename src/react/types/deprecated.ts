@@ -1,8 +1,5 @@
-import type {
-  ApolloCache,
-  DefaultContext,
-  OperationVariables,
-} from "@apollo/client";
+import type { DefaultContext, OperationVariables } from "@apollo/client";
+import type { Cache } from "@apollo/client/cache";
 
 import type { useBackgroundQuery } from "../hooks/useBackgroundQuery.js";
 import type { useFragment } from "../hooks/useFragment.js";
@@ -62,7 +59,7 @@ export type MutationHookOptions<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
   _TContext = DefaultContext,
-  TCache extends ApolloCache = ApolloCache,
+  TCache extends Cache.Implementation = Cache.Implementation,
 > = useMutation.Options<TData, TVariables, TCache>;
 
 /** @deprecated Use `useMutation.Result` instead */
@@ -73,7 +70,7 @@ export type MutationFunctionOptions<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
   _TContext = DefaultContext,
-  TCache extends ApolloCache = ApolloCache,
+  TCache extends Cache.Implementation = Cache.Implementation,
 > = useMutation.MutationFunctionOptions<TData, TVariables, TCache>;
 
 /** @deprecated Use `useMutation.ResultTuple` instead */
@@ -81,7 +78,7 @@ export type MutationTuple<
   TData,
   TVariables extends OperationVariables,
   _TContext = DefaultContext,
-  TCache extends ApolloCache = ApolloCache,
+  TCache extends Cache.Implementation = Cache.Implementation,
 > = useMutation.ResultTuple<TData, TVariables, TCache>;
 
 /** @deprecated Use `useSubscription.Result` instead */

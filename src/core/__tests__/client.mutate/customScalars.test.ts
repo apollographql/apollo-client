@@ -1,0 +1,988 @@
+import { delay, of } from "rxjs";
+
+import type { OperationVariables, TypedDocumentNode } from "@apollo/client";
+import {
+  ApolloClient,
+  ApolloLink,
+  CombinedGraphQLErrors,
+  gql,
+  NetworkStatus,
+} from "@apollo/client";
+import { InMemoryCache } from "@apollo/client/cache";
+import {
+  Defer20220824Handler,
+  GraphQL17Alpha9Handler,
+} from "@apollo/client/incremental";
+import { MockLink } from "@apollo/client/testing";
+import {
+  dateScalar,
+  mockDefer20220824,
+  mockDeferStreamGraphQL17Alpha9,
+  ObservableStream,
+} from "@apollo/client/testing/internal";
+
+test("serializes scalar variables used in field arguments", async () => {
+  let requestVariables!: OperationVariables;
+
+  const link = new ApolloLink((operation) => {
+    requestVariables = operation.variables;
+
+    return of({
+      data: { createEvent: { __typename: "Event", name: "GraphQL Summit" } },
+    });
+  });
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: {
+        Date: dateScalar,
+      },
+    }),
+    link,
+  });
+
+  const mutation = gql`
+    mutation CreateEvent($date: Date!) {
+      createEvent(date: $date) {
+        name
+      }
+    }
+  `;
+
+  await expect(
+    client.mutate({
+      mutation,
+      variables: {
+        date: new Date(2026, 0, 1),
+      },
+    })
+  ).resolves.toStrictEqualTyped({
+    data: {
+      createEvent: {
+        __typename: "Event",
+        name: "GraphQL Summit",
+      },
+    },
+  });
+
+  expect(requestVariables).toStrictEqualTyped({ date: "2026-01-01" });
+});
+
+test("serializes scalar variables used in directive arguments", async () => {
+  let requestVariables!: OperationVariables;
+
+  const link = new ApolloLink((operation) => {
+    requestVariables = operation.variables;
+
+    return of({
+      data: { createEvent: { __typename: "Event", name: "GraphQL Summit" } },
+    });
+  });
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: {
+        Date: dateScalar,
+      },
+    }),
+    link,
+  });
+
+  const mutation = gql`
+    mutation CreateEvent($date: Date!) {
+      createEvent @on(date: $date) {
+        name
+      }
+    }
+  `;
+
+  await expect(
+    client.mutate({
+      mutation,
+      variables: {
+        date: new Date(2026, 0, 1),
+      },
+    })
+  ).resolves.toStrictEqualTyped({
+    data: {
+      createEvent: {
+        __typename: "Event",
+        name: "GraphQL Summit",
+      },
+    },
+  });
+
+  expect(requestVariables).toStrictEqualTyped({ date: "2026-01-01" });
+});
+
+test("serializes scalar fields in input object variables", async () => {
+  let requestVariables!: OperationVariables;
+
+  const link = new ApolloLink((operation) => {
+    requestVariables = operation.variables;
+
+    return of({
+      data: { createEvent: { __typename: "Event", name: "GraphQL Summit" } },
+    });
+  });
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: {
+        Date: dateScalar,
+      },
+      inputObjects: {
+        EventInput: {
+          fields: {
+            date: "Date",
+          },
+        },
+      },
+    }),
+    link,
+  });
+
+  const mutation = gql`
+    mutation CreateEvent($input: EventInput!) {
+      createEvent(input: $input) {
+        name
+      }
+    }
+  `;
+
+  await expect(
+    client.mutate({
+      mutation,
+      variables: {
+        input: {
+          date: new Date(2026, 0, 1),
+        },
+      },
+    })
+  ).resolves.toStrictEqualTyped({
+    data: {
+      createEvent: {
+        __typename: "Event",
+        name: "GraphQL Summit",
+      },
+    },
+  });
+
+  expect(requestVariables).toStrictEqualTyped({
+    input: {
+      date: "2026-01-01",
+    },
+  });
+});
+
+test("parses custom scalar fields with a network-only fetch policy", async () => {
+  const mutation = gql`
+    mutation CreateEvent {
+      createEvent {
+        id
+        startDate
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: {
+        Date: dateScalar,
+      },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: {
+              scalar: "Date",
+            },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          createEvent: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+          },
+        },
+      }).pipe(delay(20))
+    ),
+  });
+
+  await expect(
+    client.mutate({
+      mutation,
+      fetchPolicy: "network-only",
+    })
+  ).resolves.toStrictEqualTyped({
+    data: {
+      createEvent: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+      },
+    },
+  });
+});
+
+test.failing(
+  "parses custom scalar fields with a no-cache fetch policy",
+  async () => {
+    const mutation = gql`
+      mutation CreateEvent {
+        createEvent {
+          id
+          startDate
+        }
+      }
+    `;
+    const client = new ApolloClient({
+      cache: new InMemoryCache({
+        scalars: {
+          Date: dateScalar,
+        },
+        typePolicies: {
+          Event: {
+            fields: {
+              startDate: {
+                scalar: "Date",
+              },
+            },
+          },
+        },
+      }),
+      link: new ApolloLink(() =>
+        of({
+          data: {
+            createEvent: {
+              __typename: "Event",
+              id: "1",
+              startDate: "2026-01-01",
+            },
+          },
+        }).pipe(delay(20))
+      ),
+    });
+
+    await expect(
+      client.mutate({
+        mutation,
+        fetchPolicy: "no-cache",
+      })
+    ).resolves.toStrictEqualTyped({
+      data: {
+        createEvent: {
+          __typename: "Event",
+          id: "1",
+          startDate: new Date(2026, 0, 1),
+        },
+      },
+    });
+  }
+);
+
+test("parses parsed custom scalar fields in optimistic responses", async () => {
+  const mutation = gql`
+    mutation CreateEvent {
+      createEvent {
+        id
+        startDate
+      }
+    }
+  `;
+  const fragment = gql`
+    fragment EventFragment on Event {
+      id
+      startDate
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: {
+        Date: dateScalar,
+      },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: {
+              scalar: "Date",
+            },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          createEvent: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-02-02",
+          },
+        },
+      }).pipe(delay(20))
+    ),
+  });
+
+  const promise = client.mutate({
+    mutation,
+    optimisticResponse: {
+      createEvent: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+      },
+    },
+  });
+
+  expect(
+    client.cache.readFragment({
+      id: "Event:1",
+      fragment,
+      optimistic: true,
+    })
+  ).toStrictEqualTyped({
+    __typename: "Event",
+    id: "1",
+    startDate: new Date(2026, 0, 1),
+  });
+
+  await expect(promise).resolves.toStrictEqualTyped({
+    data: {
+      createEvent: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 1, 2),
+      },
+    },
+  });
+});
+
+test("parses serialized custom scalar fields in optimistic responses", async () => {
+  const mutation = gql`
+    mutation CreateEvent {
+      createEvent {
+        id
+        startDate
+      }
+    }
+  `;
+  const fragment = gql`
+    fragment EventFragment on Event {
+      id
+      startDate
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: {
+        Date: dateScalar,
+      },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: {
+              scalar: "Date",
+            },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          createEvent: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-02-02",
+          },
+        },
+      }).pipe(delay(20))
+    ),
+  });
+
+  const promise = client.mutate({
+    mutation,
+    optimisticResponse: {
+      createEvent: {
+        __typename: "Event",
+        id: "1",
+        startDate: "2026-01-01",
+      },
+    },
+  });
+
+  expect(
+    client.cache.readFragment({
+      id: "Event:1",
+      fragment,
+      optimistic: true,
+    })
+  ).toStrictEqualTyped({
+    __typename: "Event",
+    id: "1",
+    startDate: new Date(2026, 0, 1),
+  });
+
+  await expect(promise).resolves.toStrictEqualTyped({
+    data: {
+      createEvent: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 1, 2),
+      },
+    },
+  });
+});
+
+test("passes parsed custom scalar fields to mutation updater callbacks", async () => {
+  const mutation: TypedDocumentNode<{
+    createEvent: { __typename: "Event"; id: string; startDate: Date };
+  }> = gql`
+    mutation CreateEvent {
+      createEvent {
+        id
+        startDate
+      }
+    }
+  `;
+  const query = gql`
+    query LastCreatedEvent {
+      lastCreatedEvent {
+        id
+        startDate
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: {
+        Date: dateScalar,
+      },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: {
+              scalar: "Date",
+            },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          createEvent: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+          },
+        },
+      }).pipe(delay(20))
+    ),
+  });
+
+  await expect(
+    client.mutate({
+      mutation,
+      update(cache, result) {
+        expect(result).toStrictEqualTyped({
+          data: {
+            createEvent: {
+              __typename: "Event",
+              id: "1",
+              startDate: new Date(2026, 0, 1),
+            },
+          },
+        });
+
+        cache.writeQuery({
+          query,
+          data: {
+            lastCreatedEvent: result.data!.createEvent,
+          },
+        });
+      },
+    })
+  ).resolves.toStrictEqualTyped({
+    data: {
+      createEvent: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+      },
+    },
+  });
+
+  expect(client.readQuery({ query })).toStrictEqualTyped({
+    lastCreatedEvent: {
+      __typename: "Event",
+      id: "1",
+      startDate: new Date(2026, 0, 1),
+    },
+  });
+});
+
+test("parses custom scalar fields in queries triggered by refetchQueries", async () => {
+  const query = gql`
+    query Event {
+      event {
+        id
+        startDate
+      }
+    }
+  `;
+  const mutation = gql`
+    mutation CreateEvent {
+      createEvent {
+        id
+        startDate
+      }
+    }
+  `;
+  let requestCount = 0;
+  const link = new MockLink([
+    {
+      request: { query },
+      maxUsageCount: 2,
+      delay: 20,
+      result: () => {
+        requestCount++;
+
+        return {
+          data: {
+            event: {
+              __typename: "Event",
+              id: "1",
+              startDate: requestCount === 1 ? "2026-01-01" : "2026-03-03",
+            },
+          },
+        };
+      },
+    },
+    {
+      request: { query: mutation },
+      delay: 20,
+      result: {
+        data: {
+          createEvent: {
+            __typename: "Event",
+            id: "2",
+            startDate: "2026-02-02",
+          },
+        },
+      },
+    },
+  ]);
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: {
+        Date: dateScalar,
+      },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: {
+              scalar: "Date",
+            },
+          },
+        },
+      },
+    }),
+    link,
+  });
+
+  using stream = new ObservableStream(client.watchQuery({ query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(
+    client.mutate({
+      mutation,
+      refetchQueries: [query],
+      awaitRefetchQueries: true,
+    })
+  ).resolves.toStrictEqualTyped({
+    data: {
+      createEvent: {
+        __typename: "Event",
+        id: "2",
+        startDate: new Date(2026, 1, 2),
+      },
+    },
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+      },
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.refetch,
+    partial: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 2, 3),
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+
+  expect(client.readQuery({ query })).toStrictEqualTyped({
+    event: {
+      __typename: "Event",
+      id: "1",
+      startDate: new Date(2026, 2, 3),
+    },
+  });
+});
+
+test("serializes scalar fields in the error with a `none` error policy", async () => {
+  const mutation = gql`
+    mutation CreateEvent {
+      createEvent {
+        id
+        startDate
+        endDate
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+            endDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          createEvent: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+            endDate: null,
+          },
+        },
+        errors: [
+          {
+            message: "Could not resolve endDate",
+            path: ["createEvent", "endDate"],
+          },
+        ],
+      }).pipe(delay(20))
+    ),
+  });
+
+  await expect(
+    client.mutate({ mutation, errorPolicy: "none" })
+  ).rejects.toEqual(
+    new CombinedGraphQLErrors({
+      data: {
+        createEvent: {
+          __typename: "Event",
+          id: "1",
+          startDate: "2026-01-01",
+          endDate: null,
+        },
+      },
+      errors: [
+        {
+          message: "Could not resolve endDate",
+          path: ["createEvent", "endDate"],
+        },
+      ],
+    })
+  );
+});
+
+test("parses scalar fields in the result and serializes them in the error with an `all` error policy", async () => {
+  const mutation = gql`
+    mutation CreateEvent {
+      createEvent {
+        id
+        startDate
+        endDate
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+            endDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          createEvent: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+            endDate: null,
+          },
+        },
+        errors: [
+          {
+            message: "Could not resolve endDate",
+            path: ["createEvent", "endDate"],
+          },
+        ],
+      }).pipe(delay(20))
+    ),
+  });
+
+  await expect(
+    client.mutate({ mutation, errorPolicy: "all" })
+  ).resolves.toStrictEqualTyped({
+    data: {
+      createEvent: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+        endDate: null,
+      },
+    },
+    error: new CombinedGraphQLErrors({
+      data: {
+        createEvent: {
+          __typename: "Event",
+          id: "1",
+          // TODO: Determine if this is correct
+          startDate: new Date(2026, 0, 1),
+          endDate: null,
+        },
+      },
+      errors: [
+        {
+          message: "Could not resolve endDate",
+          path: ["createEvent", "endDate"],
+        },
+      ],
+    }),
+  });
+});
+
+test("parses custom scalar fields with an `ignore` error policy", async () => {
+  const mutation = gql`
+    mutation CreateEvent {
+      createEvent {
+        id
+        startDate
+        endDate
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+            endDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          createEvent: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+            endDate: null,
+          },
+        },
+        errors: [
+          {
+            message: "Could not resolve endDate",
+            path: ["createEvent", "endDate"],
+          },
+        ],
+      }).pipe(delay(20))
+    ),
+  });
+
+  await expect(
+    client.mutate({ mutation, errorPolicy: "ignore" })
+  ).resolves.toStrictEqualTyped({
+    data: {
+      createEvent: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+        endDate: null,
+      },
+    },
+  });
+});
+
+test("parses custom scalar fields across `@defer` payloads (defer20220824)", async () => {
+  const link = mockDefer20220824();
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+            endDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: link.httpLink,
+    incrementalHandler: new Defer20220824Handler(),
+  });
+  const mutation = gql`
+    mutation CreateEvent {
+      createEvent {
+        id
+        startDate
+        ... @defer {
+          endDate
+        }
+      }
+    }
+  `;
+
+  const promise = client.mutate({ mutation });
+
+  link.enqueueInitialChunk({
+    data: {
+      createEvent: {
+        __typename: "Event",
+        id: "1",
+        startDate: "2026-01-01",
+      },
+    },
+    hasNext: true,
+  });
+
+  link.enqueueSubsequentChunk({
+    incremental: [{ data: { endDate: "2026-02-02" }, path: ["createEvent"] }],
+    hasNext: false,
+  });
+
+  await expect(promise).resolves.toStrictEqualTyped({
+    data: {
+      createEvent: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+        endDate: new Date(2026, 1, 2),
+      },
+    },
+  });
+});
+
+test("parses custom scalar fields across `@defer` payloads (graphql17Alpha9)", async () => {
+  const link = mockDeferStreamGraphQL17Alpha9();
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+            endDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: link.httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+  const mutation = gql`
+    mutation CreateEvent {
+      createEvent {
+        id
+        startDate
+        ... @defer {
+          endDate
+        }
+      }
+    }
+  `;
+
+  const promise = client.mutate({ mutation });
+
+  link.enqueueInitialChunk({
+    data: {
+      createEvent: {
+        __typename: "Event",
+        id: "1",
+        startDate: "2026-01-01",
+      },
+    },
+    pending: [{ id: "0", path: ["createEvent"] }],
+    hasNext: true,
+  });
+
+  link.enqueueSubsequentChunk({
+    incremental: [{ data: { endDate: "2026-02-02" }, id: "0" }],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  await expect(promise).resolves.toStrictEqualTyped({
+    data: {
+      createEvent: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+        endDate: new Date(2026, 1, 2),
+      },
+    },
+  });
+});

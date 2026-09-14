@@ -1,4 +1,5 @@
 import type {
+  Exact,
   IsAny,
   Prettify,
   Primitive,
@@ -186,7 +187,6 @@ type MergeObjects<T, U> = Prettify<
 export type RemoveFragmentName<T> =
   T extends any ? Omit<T, " $fragmentName"> : T;
 
-type Exact<in out T> = (x: T) => T;
 export type ContainsFragmentsRefs<TData, Seen = never> = true extends (
   IsAny<TData>
 ) ?

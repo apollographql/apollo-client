@@ -1667,12 +1667,12 @@ describe("reading from the store", () => {
         ],
       },
       missing: new MissingFieldError(
-        "Can't find field 'id' on object undefined",
+        "Can't find field 'id' on object {}",
         {
           ducks: {
             2: {
-              id: "Can't find field 'id' on object undefined",
-              quacking: "Can't find field 'quacking' on object undefined",
+              id: "Can't find field 'id' on object {}",
+              quacking: "Can't find field 'quacking' on object {}",
             },
           },
         },
@@ -2231,5 +2231,127 @@ describe("reading from the store", () => {
     expect(result1.abc).toBe(result2.abc);
     expect(result1.abc).toBe(abc);
     expect(result2.abc).toBe(abc);
+  });
+});
+
+describe("lazy MissingFieldError diagnostics", () => {
+  it("only constructs MissingFieldError when diff.missing is accessed", () => {
+    const cache = new InMemoryCache();
+
+    const fullQuery = gql`
+      query {
+        customer {
+          id
+          name
+          address {
+            street
+            city
+          }
+        }
+      }
+    `;
+
+    const partialQuery = gql`
+      query {
+        customer {
+          id
+        }
+      }
+    `;
+
+    cache.writeQuery({
+      query: partialQuery,
+      data: {
+        customer: {
+          __typename: "Customer",
+          id: "c1",
+        },
+      },
+    });
+
+    const diff = cache.diff({
+      query: fullQuery,
+      returnPartialData: true,
+      optimistic: true,
+    });
+
+    // @ts-ignore
+    const missingSpy = jest.spyOn(diff, "missing", "get");
+    expect(missingSpy).not.toHaveBeenCalled();
+
+    // diff.missing should be lazily constructed only when accessed
+    expect(diff.missing).toEqual(
+      new MissingFieldError(
+        "Can't find field 'name' on Customer:c1 object",
+        {
+          customer: {
+            name: "Can't find field 'name' on Customer:c1 object",
+            address: "Can't find field 'address' on Customer:c1 object",
+          },
+        },
+        fullQuery,
+        {}
+      )
+    );
+
+    expect(missingSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("missing message uses JSON.stringify for non-normalized embedded parents", () => {
+    const cache = new InMemoryCache();
+
+    const query = gql`
+      query {
+        profile {
+          bio
+          largeField
+        }
+      }
+    `;
+
+    cache.writeQuery({
+      query: gql`
+        query {
+          profile {
+            bio
+          }
+        }
+      `,
+      data: {
+        profile: {
+          __typename: "Profile",
+          bio: "a".repeat(10),
+        },
+      },
+    });
+
+    const diff = cache.diff({
+      query,
+      returnPartialData: true,
+      optimistic: true,
+    });
+
+    const message = `Can't find field 'largeField' on object ${JSON.stringify(
+      { __typename: "Profile", bio: "a".repeat(10) },
+      null,
+      2
+    )}`;
+
+    expect(diff).toStrictEqualTyped({
+      result: {
+        profile: { __typename: "Profile", bio: "a".repeat(10) },
+      },
+      complete: false,
+      missing: new MissingFieldError(
+        message,
+        {
+          profile: {
+            largeField: message,
+          },
+        },
+        query,
+        {}
+      ),
+    });
   });
 });

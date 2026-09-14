@@ -24,7 +24,7 @@ import {
   tap,
 } from "rxjs";
 
-import type { ApolloCache, Cache } from "@apollo/client/cache";
+import type { Cache } from "@apollo/client/cache";
 import { canonicalStringify } from "@apollo/client/cache";
 import {
   CombinedGraphQLErrors,
@@ -51,6 +51,7 @@ import type { ExtensionsWithStreamInfo } from "@apollo/client/utilities/internal
 import {
   AutoCleanedWeakCache,
   checkDocument,
+  coerceScalarFieldsToParsed,
   extensionsSymbol,
   filterMap,
   getDefaultValues,
@@ -75,6 +76,7 @@ import {
 import { defaultCacheSizes } from "../utilities/caching/sizes.js";
 
 import type { ApolloClient } from "./ApolloClient.js";
+import { dataStateErrorCache } from "./dataStateErrorCache.js";
 import { NetworkStatus } from "./networkStatus.js";
 import { logMissingFieldErrors, ObservableQuery } from "./ObservableQuery.js";
 import { CacheWriteBehavior, QueryInfo } from "./QueryInfo.js";
@@ -233,6 +235,14 @@ export class QueryManager {
           // selections and fragments from the fragment registry.
           .concat(defaultDocumentTransform)
       : defaultDocumentTransform;
+    // Put the incremental transform last so custom document transforms don't
+    // revert changes made to the document accidentally. Adding last also
+    // ensures `@defer` fragments added by the fragment registry are labeled.
+    if (this.incrementalHandler.documentTransform) {
+      this.documentTransform = this.documentTransform.concat(
+        this.incrementalHandler.documentTransform
+      );
+    }
     this.defaultContext = options.defaultContext || {};
 
     if ((this.onBroadcast = options.onBroadcast)) {
@@ -244,7 +254,7 @@ export class QueryManager {
     return this.client.link;
   }
 
-  get cache() {
+  get cache(): Cache.Implementation {
     return this.client.cache;
   }
 
@@ -268,7 +278,7 @@ export class QueryManager {
   public async mutate<
     TData,
     TVariables extends OperationVariables,
-    TCache extends ApolloCache,
+    TCache extends Cache.Implementation,
   >({
     mutation,
     variables,
@@ -314,7 +324,7 @@ export class QueryManager {
       this.mutationStore &&
       (this.mutationStore[queryInfo.id] = {
         mutation,
-        variables,
+        variables: this.cache.serializeVariables(mutation, variables),
         loading: true,
         error: null,
       } as MutationStoreValue);
@@ -904,6 +914,7 @@ export class QueryManager {
     const executeContext: ApolloLink.ExecuteContext = {
       client: this.client,
     };
+    variables = this.cache.serializeVariables(query, variables);
 
     if (serverQuery) {
       const { inFlightLinkObservables, link } = this;
@@ -1035,17 +1046,21 @@ export class QueryManager {
       context: DefaultContext | undefined;
       fetchPolicy: WatchQueryFetchPolicy;
       errorPolicy: ErrorPolicy;
+      networkStatus: NetworkStatus;
+      returnPartialData: boolean | undefined;
     },
     {
       queryInfo,
       cacheWriteBehavior,
       observableQuery,
       exposeExtensions,
+      prunePendingDeferFragments,
     }: {
       queryInfo: QueryInfo<TData, TVariables>;
       cacheWriteBehavior: CacheWriteBehavior;
       observableQuery: ObservableQuery<TData, TVariables> | undefined;
       exposeExtensions?: boolean;
+      prunePendingDeferFragments: boolean;
     }
   ): Observable<ObservableQuery.Result<TData>> {
     const { errorPolicy } = options;
@@ -1065,35 +1080,40 @@ export class QueryManager {
         // Use linkDocument rather than queryInfo.document so the
         // operation/fragments used to write the result are the same as the
         // ones used to obtain it from the link.
-        const result = queryInfo.markQueryResult(incoming, {
+        const { dataState, ...result } = queryInfo.markQueryResult(incoming, {
           ...options,
           document: linkDocument,
           cacheWriteBehavior,
+          returnPartialData: options.returnPartialData,
+          prunePendingDeferFragments,
         });
         const hasErrors = graphQLResultHasError(result);
 
         if (hasErrors && errorPolicy === "none") {
-          queryInfo.resetLastWrite();
           observableQuery?.["resetNotifications"]();
-          throw new CombinedGraphQLErrors(
+          const error = new CombinedGraphQLErrors(
             removeStreamDetailsFromExtensions(result)
           );
+
+          dataStateErrorCache.set(error, dataState);
+          throw error;
         }
 
+        const partial = dataState !== "complete";
         const aqr: QueryManager.Result<TData> = {
           data: result.data as TData,
           ...(queryInfo.hasNext ?
             {
               loading: true,
               networkStatus: NetworkStatus.streaming,
-              dataState: "streaming",
-              partial: true,
+              dataState,
+              partial,
             }
           : {
-              dataState: result.data ? "complete" : "empty",
+              dataState,
               loading: false,
               networkStatus: NetworkStatus.ready,
-              partial: !result.data,
+              partial,
             }),
         } as ObservableQuery.Result<TData>;
 
@@ -1101,18 +1121,12 @@ export class QueryManager {
           aqr[extensionsSymbol] = result.extensions;
         }
 
-        if (hasErrors) {
-          if (errorPolicy === "none") {
-            aqr.data = void 0 as TData;
-            aqr.dataState = "empty";
-          }
-          if (errorPolicy !== "ignore") {
-            aqr.error = new CombinedGraphQLErrors(
-              removeStreamDetailsFromExtensions(result)
-            );
-            if (aqr.dataState !== "streaming") {
-              aqr.networkStatus = NetworkStatus.error;
-            }
+        if (hasErrors && errorPolicy !== "ignore") {
+          aqr.error = new CombinedGraphQLErrors(
+            removeStreamDetailsFromExtensions(result)
+          );
+          if (aqr.networkStatus !== NetworkStatus.streaming) {
+            aqr.networkStatus = NetworkStatus.error;
           }
         }
 
@@ -1120,7 +1134,6 @@ export class QueryManager {
       }),
       catchError((error) => {
         if (errorPolicy === "none") {
-          queryInfo.resetLastWrite();
           observableQuery?.["resetNotifications"]();
           throw error;
         }
@@ -1196,6 +1209,7 @@ export class QueryManager {
       fetchPolicy,
       errorPolicy,
       returnPartialData,
+      networkStatus,
       notifyOnNetworkStatusChange,
       context,
     });
@@ -1318,7 +1332,7 @@ export class QueryManager {
     removeOptimistic = optimistic ? makeUniqueId("refetchQueries") : void 0,
     onQueryUpdated,
   }: InternalRefetchQueriesOptions<
-    ApolloCache,
+    Cache.Implementation,
     TResult
   >): InternalRefetchQueriesMap<TResult> {
     const includedQueriesByOq = new Map<
@@ -1542,11 +1556,13 @@ export class QueryManager {
       errorPolicy,
       returnPartialData,
       context,
+      networkStatus,
     }: {
       query: DocumentNode | TypedDocumentNode<TData, TVariables>;
       variables: TVariables;
       fetchPolicy: WatchQueryFetchPolicy;
       errorPolicy: ErrorPolicy;
+      networkStatus: NetworkStatus;
       returnPartialData?: boolean;
       context?: DefaultContext;
     },
@@ -1564,16 +1580,17 @@ export class QueryManager {
       exposeExtensions?: boolean;
     }
   ): ObservableAndInfo<TData> {
-    const readCache = () =>
-      this.cache.diff<any>({
+    const readCache = () => {
+      return queryInfo.getDiff({
         query,
         variables,
         returnPartialData: true,
         optimistic: true,
       });
+    };
 
     const resultsFromCache = (
-      diff: Cache.DiffResult<TData>,
+      diff: Cache.InternalDiffResultWithDataState<TData>,
       networkStatus: NetworkStatus
     ): Observable<QueryNotification.FromCache<TData>> => {
       const data = diff.result;
@@ -1583,7 +1600,8 @@ export class QueryManager {
       }
 
       const toResult = (
-        data: TData | DeepPartial<TData> | undefined
+        data: TData | DeepPartial<TData> | undefined,
+        dataState = diff.dataState
       ): ObservableQuery.Result<TData> => {
         // TODO: Eventually we should move this handling into
         // queryInfo.getDiff() directly. Since getDiff is updated to return null
@@ -1591,15 +1609,13 @@ export class QueryManager {
         // of having to patch it elsewhere.
         if (!diff.complete && !returnPartialData) {
           data = undefined;
+          dataState = "empty";
         }
 
         return {
           // TODO: Handle partial data
           data: data as TData | undefined,
-          dataState:
-            diff.complete ? "complete"
-            : data ? "partial"
-            : "empty",
+          dataState,
           loading: isNetworkRequestInFlight(networkStatus),
           networkStatus,
           partial: !diff.complete,
@@ -1649,7 +1665,12 @@ export class QueryManager {
           }).then(
             (resolved): QueryNotification.FromCache<TData> => ({
               kind: "N",
-              value: toResult(resolved.data || void 0),
+              value: toResult(
+                resolved.data || void 0,
+                diff.complete ? "complete"
+                : resolved.data ? "partial"
+                : "empty"
+              ),
               // Always attach the variables used for this fetch so @export
               // resolution can update ObservableQuery.options.variables and
               // resubscribe the cache watch under the correct variable set.
@@ -1675,7 +1696,11 @@ export class QueryManager {
       return fromData(data || undefined);
     };
 
-    const resultsFromLink = () =>
+    const resultsFromLink = ({
+      prunePendingDeferFragments = true,
+    }: {
+      prunePendingDeferFragments?: boolean;
+    } = {}) =>
       this.getResultsFromLink<TData, TVariables>(
         {
           query,
@@ -1683,12 +1708,15 @@ export class QueryManager {
           context,
           fetchPolicy,
           errorPolicy,
+          returnPartialData,
+          networkStatus,
         },
         {
           cacheWriteBehavior,
           queryInfo,
           observableQuery,
           exposeExtensions,
+          prunePendingDeferFragments,
         }
       ).pipe(
         validateDidEmitValue(),
@@ -1738,7 +1766,7 @@ export class QueryManager {
             fromLink: true,
             observable: concat(
               resultsFromCache(diff, NetworkStatus.loading),
-              resultsFromLink()
+              resultsFromLink({ prunePendingDeferFragments: false })
             ),
           };
         }
@@ -1755,10 +1783,34 @@ export class QueryManager {
         };
 
       case "network-only":
-        return { fromLink: true, observable: resultsFromLink() };
+        return {
+          fromLink: true,
+          observable: resultsFromLink({
+            prunePendingDeferFragments: networkStatus !== NetworkStatus.refetch,
+          }),
+        };
 
       case "no-cache":
-        return { fromLink: true, observable: resultsFromLink() };
+        return {
+          fromLink: true,
+          observable: resultsFromLink().pipe(
+            map((notification) => {
+              if (
+                notification.kind === "N" &&
+                notification.value.data != null &&
+                this.cache.configuresScalars()
+              ) {
+                notification.value.data = coerceScalarFieldsToParsed(
+                  notification.value.data,
+                  query,
+                  this.cache
+                ) as TData;
+              }
+
+              return notification;
+            })
+          ),
+        };
 
       case "standby":
         return { fromLink: false, observable: EMPTY };

@@ -6,6 +6,7 @@ You can customize how a particular field in your Apollo Client cache is read and
 
 - A [`read` function](#the-read-function) that specifies what happens when the field's cached value is read
 - A [`merge` function](#the-merge-function) that specifies what happens when field's cached value is written
+- A [`scalar`](#the-scalar-option) that tells the cache what custom GraphQL scalar to use when it parses or serializes the field
 - An array of [key arguments](#specifying-key-arguments) that help the cache avoid storing unnecessary duplicate data.
 
 You provide field policies to the constructor of `InMemoryCache`. Each field policy is defined inside whichever [`TypePolicy` object](./cache-configuration/#typepolicy-fields) corresponds to the field's parent type.
@@ -659,6 +660,51 @@ If you need more control over a particular field's `keyArgs`, you can pass a fun
 
 For details, see `KeyArgsFunction` in the [API reference](#fieldpolicy-api-reference) below.
 
+<MinVersion version="4.3">
+
+## The `scalar` option
+
+</MinVersion>
+
+Set `scalar` to tell the cache what [custom scalar](../data/custom-scalars) to use when parsing or serializing the field.
+
+```ts
+import { Scalar } from "@apollo/client";
+
+const cache = new InMemoryCache({
+  scalars: {
+    DateTime: new Scalar({
+      parse: (dateString) => new Date(dateString),
+      serialize: (date) => date.toISOString(),
+      is: (value) => value instanceof Date,
+    }),
+  },
+  typePolicies: {
+    Event: {
+      fields: {
+        startTime: {
+          scalar: "DateTime",
+        },
+      },
+    },
+  },
+});
+```
+
+Apollo Client uses that scalar for cache reads and writes.
+
+<Caution>
+
+If a field policy sets `scalar`, Apollo Client ignores `read` and `merge` functions on that field and emits a development-only warning.
+
+</Caution>
+
+<Tip>
+
+You can generate `scalar` field policies from your schema with the [`@apollo/client-graphql-codegen/custom-scalars`](../data/custom-scalars#generate-scalar-configuration) plugin.
+
+</Tip>
+
 ## `FieldPolicy` API reference
 
 Here are the definitions for the `FieldPolicy` type and its related types:
@@ -670,6 +716,7 @@ type FieldPolicy<TExisting, TIncoming = TExisting, TReadResult = TExisting> = {
   keyArgs?: KeySpecifier | KeyArgsFunction | false;
   read?: FieldReadFunction<TExisting, TReadResult>;
   merge?: FieldMergeFunction<TExisting, TIncoming> | boolean;
+  scalar?: string;
 };
 
 type KeySpecifier = (string | KeySpecifier)[];

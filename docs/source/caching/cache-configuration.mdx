@@ -25,6 +25,7 @@ You can configure the cache's behavior to better suit your application. For exam
 
 - Customize the format of a particular type's [cache ID](#customizing-cache-ids)
 - Customize the storage and retrieval of [individual fields](./cache-field-behavior/)
+- Parse and serialize [custom scalars](../data/custom-scalars/)
 - Define polymorphic type relationships for [fragment matching](#possibletypes)
 - Define patterns for [pagination](../pagination/overview/)
 - Manage client-side [local state](../local-state/local-state-management/)
@@ -106,6 +107,50 @@ For an example, see [Defining `possibleTypes` manually](../data/fragments/#defin
 Include this object to customize the cache's behavior on a type-by-type basis.
 
 Each key in the object is the `__typename` of a type to customize, and the corresponding value is a [`TypePolicy` object](#typepolicy-fields).
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+<MinVersion version="4.3">
+
+###### `scalars`
+
+</MinVersion>
+
+`Object`
+
+</td>
+<td>
+
+A map of GraphQL scalar names to [`Scalar`](../data/custom-scalars#define-a-scalar) instances. Apollo Client uses these implementations to parse and serialize scalar values.
+
+You must [declare each scalar](../data/custom-scalars#typescript) on `ApolloCache.Scalars` before you configure the `scalars` option.
+
+For setup instructions, go to [Custom scalars](../data/custom-scalars).
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+<MinVersion version="4.3">
+
+###### `inputObjects`
+
+</MinVersion>
+
+`Object`
+
+</td>
+<td>
+
+A map that tells the cache what nested fields of input object types contain custom scalars (or other input objects). Apollo Client uses this map to serialize those fields in operation variables.
+
+For setup instructions, go to [Variable serialization](../data/custom-scalars#variable-serialization).
 
 </td>
 </tr>

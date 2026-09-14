@@ -383,54 +383,52 @@ export class InternalQueryReference<
   private handleNext(
     result: ObservableQuery.Result<MaybeMasked<TData>, TStates>
   ) {
-    switch (this.promise.status) {
-      case "pending": {
-        // Maintain the last successful `data` value if the next result does not
-        // have one.
-        // TODO: This can likely be removed once
-        // https://github.com/apollographql/apollo-client/issues/12667 is fixed
-        if (result.data === void 0) {
-          result.data = this.result.data;
+    if (this.promise.status === "pending" && this.resolve) {
+      // Maintain the last successful `data` value if the next result does not
+      // have one.
+      // TODO: This can likely be removed once
+      // https://github.com/apollographql/apollo-client/issues/12667 is fixed
+      if (result.data === void 0) {
+        result.data = this.result.data;
 
-          if (result.data) {
-            result.dataState = "complete" as any;
-          }
+        if (result.data) {
+          result.dataState = "complete" as any;
         }
-
-        if (this.shouldReject(result)) {
-          this.reject?.(result.error);
-        } else {
-          this.result = result;
-          this.resolve?.(result);
-        }
-        break;
       }
-      default: {
-        // This occurs when switching to a result that is fully cached when this
-        // class is instantiated. ObservableQuery will run reobserve when
-        // subscribing, which delivers a result from the cache.
-        if (
-          result.data === this.result.data &&
-          result.networkStatus === this.result.networkStatus
-        ) {
-          return;
-        }
 
-        // Maintain the last successful `data` value if the next result does not
-        // have one.
-        if (result.data === void 0) {
-          result.data = this.result.data;
-        }
+      if (this.shouldReject(result)) {
+        this.reject?.(result.error);
+      } else {
+        this.result = result;
+        this.resolve(result);
+      }
+      // Promise status updates in a microtask, but synchronous results still
+      // need to be delivered after the first result has resolved the promise.
+      this.resolve = undefined;
+    } else {
+      // This occurs when switching to a result that is fully cached when this
+      // class is instantiated. ObservableQuery will run reobserve when
+      // subscribing, which delivers a result from the cache.
+      if (
+        result.data === this.result.data &&
+        result.networkStatus === this.result.networkStatus
+      ) {
+        return;
+      }
 
-        if (this.shouldReject(result)) {
-          this.promise = createRejectedPromise(result.error);
-          this.deliver(this.promise);
-        } else {
-          this.result = result;
-          this.promise = createFulfilledPromise(result);
-          this.deliver(this.promise);
-        }
-        break;
+      // Maintain the last successful `data` value if the next result does not
+      // have one.
+      if (result.data === void 0) {
+        result.data = this.result.data;
+      }
+
+      if (this.shouldReject(result)) {
+        this.promise = createRejectedPromise(result.error);
+        this.deliver(this.promise);
+      } else {
+        this.result = result;
+        this.promise = createFulfilledPromise(result);
+        this.deliver(this.promise);
       }
     }
   }

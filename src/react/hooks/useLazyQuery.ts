@@ -495,6 +495,10 @@ export const useLazyQuery: useLazyQuery.Signature = function useLazyQuery<
   const resultRef = React.useRef<ObservableQuery.Result<TData>>(undefined);
   const stableOptions = useDeepMemo(() => options, [options]);
   const calledDuringRender = useRenderGuard();
+  const [variablesOverride, setVariablesOverride] = React.useState<{
+    result: ObservableQuery.Result<TData> | undefined;
+    variables: TVariables;
+  }>();
 
   function createObservable() {
     return client.watchQuery({
@@ -625,13 +629,38 @@ export const useLazyQuery: useLazyQuery.Signature = function useLazyQuery<
           fetchPolicy = observable.options.initialFetchPolicy;
         }
 
-        return observable.reobserve({
+        const previousResult = resultRef.current;
+        const previousVariables = observable.variables;
+
+        const promise = observable.reobserve({
           fetchPolicy,
           // If `variables` is not given, reset back to empty variables by
           // ensuring the key exists in options
           variables: executeOptions?.variables,
           context: executeOptions?.context ?? {},
         });
+
+        // If a query is already in-flight and execute is called again with
+        // different variables, useLazyQuery doesn't emit a new value until the
+        // network request finishes because ObservableQuery doesn't emit a new
+        // value (it is deep equal to the previous one and ObservableQuery
+        // result doesn't track variables as part of the result). This forces
+        // the hook to rerender with the new variables immediately instead of
+        // waiting for ObservableQuery to emit the network result.
+        //
+        // See https://github.com/apollographql/apollo-client/issues/13459
+        if (
+          observable.options.notifyOnNetworkStatusChange &&
+          resultRef.current === previousResult &&
+          !equal(observable.variables, previousVariables)
+        ) {
+          setVariablesOverride({
+            result: previousResult,
+            variables: observable.variables,
+          });
+        }
+
+        return promise;
       },
       [observable, calledDuringRender]
     );
@@ -654,11 +683,14 @@ export const useLazyQuery: useLazyQuery.Signature = function useLazyQuery<
       ...result,
       client,
       previousData: previousDataRef.current,
-      variables: observable.variables,
+      variables:
+        variablesOverride?.result === observableResult ?
+          variablesOverride.variables
+        : observable.variables,
       observable,
       called: !!resultRef.current,
     };
-  }, [client, observableResult, eagerMethods, observable]);
+  }, [client, observableResult, eagerMethods, observable, variablesOverride]);
 
   return [stableExecute, result as any];
 } as any;

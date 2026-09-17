@@ -2603,6 +2603,77 @@ describe("useLazyQuery Hook", () => {
     await expect(takeSnapshot).not.toRerender();
   });
 
+  // https://github.com/apollographql/apollo-client/issues/13459
+  it("only updates result when request is finished when executing with new variables while a request is in flight and notifyOnNetworkStatusChange: false", async () => {
+    const { query, mocks } = setupVariablesCase();
+
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot } =
+      await renderHookToSnapshotStream(
+        () => useLazyQuery(query, { notifyOnNetworkStatusChange: false }),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>{children}</MockedProvider>
+          ),
+        }
+      );
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    const [execute] = getCurrentSnapshot();
+    const promise1 = execute({ variables: { id: "1" } });
+    await wait(10);
+    const promise2 = execute({ variables: { id: "2" } });
+
+    await expect(promise1).rejects.toStrictEqual(
+      new DOMException("The operation was aborted.", "AbortError")
+    );
+
+    await expect(promise2).resolves.toStrictEqualTyped({
+      data: {
+        character: {
+          __typename: "Character",
+          id: "2",
+          name: "Black Widow",
+        },
+      },
+    });
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toStrictEqualTyped({
+        data: {
+          character: {
+            __typename: "Character",
+            id: "2",
+            name: "Black Widow",
+          },
+        },
+        dataState: "complete",
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: "2" },
+      });
+    }
+
+    await expect(takeSnapshot).not.toRerender();
+  });
+
   // https://github.com/apollographql/apollo-client/issues/10198
   it("uses the most recent query document when the hook rerenders before execution", async () => {
     const query = gql`

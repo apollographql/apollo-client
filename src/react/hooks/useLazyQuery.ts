@@ -641,10 +641,11 @@ export const useLazyQuery: useLazyQuery.Signature = function useLazyQuery<
         // If a query is already in-flight and execute is called again with
         // different variables, useLazyQuery doesn't emit a new value until the
         // network request finishes because ObservableQuery doesn't emit a new
-        // value (it is deep equal to the previous one and ObservableQuery
-        // result doesn't track variables as part of the result). This forces
-        // the hook to rerender with the new variables immediately instead of
-        // waiting for ObservableQuery to emit the network result.
+        // value when it is deep equal to the previous one. ObservableQuery
+        // doesn't track variables as part of the result.
+        //
+        // Below forces the hook to rerender with the new variables immediately
+        // instead of waiting for ObservableQuery to emit the network result.
         //
         // See https://github.com/apollographql/apollo-client/issues/13459
         if (

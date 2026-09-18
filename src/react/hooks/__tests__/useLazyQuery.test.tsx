@@ -2509,7 +2509,7 @@ describe("useLazyQuery Hook", () => {
 
   // https://github.com/apollographql/apollo-client/issues/13459
   it("updates variables when executing with new variables while a request is in flight", async () => {
-    const { query, mocks } = setupVariablesCase();
+    const { query, mocks } = setupVariablesCase({ delay: 50 });
 
     using _disabledAct = disableActEnvironment();
     const { takeSnapshot, getCurrentSnapshot } =

@@ -493,12 +493,9 @@ export const useLazyQuery: useLazyQuery.Signature = function useLazyQuery<
   const client = useApolloClient(options?.client);
   const previousDataRef = React.useRef<TData>(undefined);
   const resultRef = React.useRef<ObservableQuery.Result<TData>>(undefined);
+  const forceUpdateRef = React.useRef<() => void>(() => {});
   const stableOptions = useDeepMemo(() => options, [options]);
   const calledDuringRender = useRenderGuard();
-  const [variablesOverride, setVariablesOverride] = React.useState<{
-    result: ObservableQuery.Result<TData> | undefined;
-    variables: TVariables;
-  }>();
 
   function createObservable() {
     return client.watchQuery({
@@ -539,6 +536,7 @@ export const useLazyQuery: useLazyQuery.Signature = function useLazyQuery<
   const observableResult = useSyncExternalStore(
     React.useCallback(
       (forceUpdate) => {
+        forceUpdateRef.current = forceUpdate;
         const subscription = observable.subscribe((result) => {
           if (!equal(resultRef.current, result)) {
             updateResult(result, forceUpdate);
@@ -654,10 +652,13 @@ export const useLazyQuery: useLazyQuery.Signature = function useLazyQuery<
           resultRef.current === previousResult &&
           !equal(observable.variables, previousVariables)
         ) {
-          setVariablesOverride({
-            result: previousResult,
-            variables: observable.variables,
-          });
+          // useSyncExternalStore compares the snapshot using Object.is so we
+          // need to force that comparison to fail by creating a new object,
+          // otherwise it bails out of the render.
+          if (resultRef.current) {
+            resultRef.current = { ...resultRef.current };
+          }
+          forceUpdateRef.current();
         }
 
         return promise;
@@ -683,14 +684,11 @@ export const useLazyQuery: useLazyQuery.Signature = function useLazyQuery<
       ...result,
       client,
       previousData: previousDataRef.current,
-      variables:
-        variablesOverride?.result === observableResult ?
-          variablesOverride.variables
-        : observable.variables,
+      variables: observable.variables,
       observable,
       called: !!resultRef.current,
     };
-  }, [client, observableResult, eagerMethods, observable, variablesOverride]);
+  }, [client, observableResult, eagerMethods, observable]);
 
   return [stableExecute, result as any];
 } as any;

@@ -338,6 +338,70 @@ describe("useQuery Hook", () => {
       }
     });
 
+    it("updates variables when rerendering with new variables while a request is in flight", async () => {
+      const { query, mocks } = setupVariablesCase();
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
+        ({ id }) => useQuery(query, { variables: { id } }),
+        {
+          initialProps: { id: "1" },
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>{children}</MockedProvider>
+          ),
+        }
+      );
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toStrictEqualTyped({
+          data: undefined,
+          dataState: "empty",
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: { id: "1" },
+        });
+      }
+
+      await rerender({ id: "2" });
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toStrictEqualTyped({
+          data: undefined,
+          dataState: "empty",
+          loading: true,
+          networkStatus: NetworkStatus.setVariables,
+          previousData: undefined,
+          variables: { id: "2" },
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toStrictEqualTyped({
+          data: {
+            character: {
+              __typename: "Character",
+              id: "2",
+              name: "Black Widow",
+            },
+          },
+          dataState: "complete",
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: { id: "2" },
+        });
+      }
+
+      await expect(takeSnapshot).not.toRerender();
+    });
+
     // TODO: Refactor this test. This test does not test the thing it says it
     // does as there is no cache interaction in this test. This is essentially
     // just a repeat of prior tests that rerender and check the result.

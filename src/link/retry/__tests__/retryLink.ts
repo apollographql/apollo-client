@@ -313,4 +313,41 @@ describe("RetryLink", () => {
       } as any,
     });
   });
+
+  // Reproduction for https://github.com/apollographql/apollo-client/issues/13125#issuecomment-3847762859
+  // Tests that RetryLink can successfully retry subscriptions that use HttpLink
+  // with AbortController, ensuring AbortError from the aborted first attempt
+  // doesn't interfere with the retry.
+  it("handles AbortError when retrying subscriptions with AbortController", async () => {
+    const subscription = gql`
+      subscription {
+        data {
+          value
+        }
+      }
+    `;
+
+    const retryLink = new RetryLink({
+      delay: { initial: 10 },
+      attempts: { max: 2 },
+    });
+
+    const { httpLink, enqueueProtocolErrors, enqueuePayloadResult } =
+      mockMultipartSubscriptionStream();
+    const link = ApolloLink.from([retryLink, httpLink]);
+    const stream = new ObservableStream(execute(link, { query: subscription }));
+
+    // First attempt fails with protocol error, triggering retry
+    // The HttpLink's AbortController will abort the first attempt when retry starts
+    enqueueProtocolErrors([
+      { message: "Temporary error", extensions: { code: "INTERNAL_ERROR" } },
+    ]);
+
+    // Second attempt succeeds - verifies retry works despite AbortController cleanup
+    enqueuePayloadResult({ data: { data: { value: "success" } } });
+
+    await expect(stream).toEmitTypedValue({
+      data: { data: { value: "success" } },
+    });
+  });
 });

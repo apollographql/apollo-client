@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 4.3.1
+
+### Patch Changes
+
+- [#13464](https://github.com/apollographql/apollo-client/pull/13464) [`37f700e`](https://github.com/apollographql/apollo-client/commit/37f700eb4c65ec7683111e128bca087d4a97cf41) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where `useLazyQuery` did not rerender with new `variables` until the network request had completed when calling `execute` with new variables while a request was already in-flight.
+
 ## 4.3.0
 
 ### Minor Changes

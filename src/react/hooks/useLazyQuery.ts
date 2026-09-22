@@ -493,6 +493,7 @@ export const useLazyQuery: useLazyQuery.Signature = function useLazyQuery<
   const client = useApolloClient(options?.client);
   const previousDataRef = React.useRef<TData>(undefined);
   const resultRef = React.useRef<ObservableQuery.Result<TData>>(undefined);
+  const forceUpdateRef = React.useRef<() => void>(() => {});
   const stableOptions = useDeepMemo(() => options, [options]);
   const calledDuringRender = useRenderGuard();
 
@@ -535,6 +536,7 @@ export const useLazyQuery: useLazyQuery.Signature = function useLazyQuery<
   const observableResult = useSyncExternalStore(
     React.useCallback(
       (forceUpdate) => {
+        forceUpdateRef.current = forceUpdate;
         const subscription = observable.subscribe((result) => {
           if (!equal(resultRef.current, result)) {
             updateResult(result, forceUpdate);
@@ -625,13 +627,42 @@ export const useLazyQuery: useLazyQuery.Signature = function useLazyQuery<
           fetchPolicy = observable.options.initialFetchPolicy;
         }
 
-        return observable.reobserve({
+        const previousResult = resultRef.current;
+        const previousVariables = observable.variables;
+
+        const promise = observable.reobserve({
           fetchPolicy,
           // If `variables` is not given, reset back to empty variables by
           // ensuring the key exists in options
           variables: executeOptions?.variables,
           context: executeOptions?.context ?? {},
         });
+
+        // If a query is already in-flight and execute is called again with
+        // different variables, useLazyQuery doesn't emit a new value until the
+        // network request finishes because ObservableQuery doesn't emit a new
+        // value when it is deep equal to the previous one. ObservableQuery
+        // doesn't track variables as part of the result.
+        //
+        // Below forces the hook to rerender with the new variables immediately
+        // instead of waiting for ObservableQuery to emit the network result.
+        //
+        // See https://github.com/apollographql/apollo-client/issues/13459
+        if (
+          observable.options.notifyOnNetworkStatusChange &&
+          resultRef.current === previousResult &&
+          !equal(observable.variables, previousVariables)
+        ) {
+          // useSyncExternalStore compares the snapshot using Object.is so we
+          // need to force that comparison to fail by creating a new object,
+          // otherwise it bails out of the render.
+          if (resultRef.current) {
+            resultRef.current = { ...resultRef.current };
+          }
+          forceUpdateRef.current();
+        }
+
+        return promise;
       },
       [observable, calledDuringRender]
     );

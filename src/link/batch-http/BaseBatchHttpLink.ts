@@ -115,23 +115,22 @@ export class BaseBatchHttpLink extends ApolloLink {
     const batchHandler: BatchLink.BatchHandler = (operations) => {
       const chosenURI = selectURI(operations[0], uri);
 
-      const context = operations[0].getContext();
-
-      const contextConfig = {
-        http: context.http,
-        options: context.fetchOptions,
-        credentials: context.credentials,
-        headers: context.headers,
-      };
-
       //uses fallback, link, and then context to build options
       const optsAndBody = operations.map((operation) => {
+        const context = operation.getContext();
+
+        const operationConfig = {
+          http: context.http,
+          options: context.fetchOptions,
+          credentials: context.credentials,
+          headers: context.headers,
+        };
         const result = selectHttpOptionsAndBodyInternal(
           operation,
           print,
           fallbackHttpConfig,
           linkConfig,
-          contextConfig
+          operationConfig
         );
 
         if (result.body.variables && !includeUnusedVariables) {
@@ -210,9 +209,17 @@ export class BaseBatchHttpLink extends ApolloLink {
       batchKey ||
       ((operation: ApolloLink.Operation) => {
         const context = operation.getContext();
+        const {
+          // omit includeExtensions and includeQuery from the HTTP options
+          // they only influence body creation, not the HTTP request itself
+          // so they should be grouped together
+          includeExtensions: _omit,
+          includeQuery: __omit,
+          ...otherHttpOptions
+        }: BaseHttpLink.HttpOptions = context.http ?? {};
 
         const contextConfig = {
-          http: context.http,
+          http: otherHttpOptions,
           options: context.fetchOptions,
           credentials: context.credentials,
           headers: context.headers,

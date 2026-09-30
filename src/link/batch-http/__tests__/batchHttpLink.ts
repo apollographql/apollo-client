@@ -18,6 +18,7 @@ import {
   BatchHttpLink,
 } from "@apollo/client/link/batch-http";
 import { ClientAwarenessLink } from "@apollo/client/link/client-awareness";
+import { PersistedQueryLink } from "@apollo/client/link/persisted-queries";
 import {
   executeWithDefaultContext as execute,
   ObservableStream,
@@ -114,6 +115,156 @@ describe("BatchHttpLink", () => {
       clientAwareness.version
     );
   });
+
+  it.each([
+    ["the persisted operation is first", true],
+    ["the non-persisted operation is first", false],
+  ] as const)(
+    "batches persisted and non-persisted operations together when %s",
+    async (_description, persistedFirst) => {
+      const hash = "persisted-query-hash";
+      fetchMock.post("/mixed-batch", makePromise([data, data]));
+
+      const batchLink = new BatchHttpLink({
+        uri: "/mixed-batch",
+        batchInterval: 20,
+        batchMax: 2,
+      });
+      const persistedQueryLink = new PersistedQueryLink({
+        sha256: () => hash,
+      }).concat(batchLink);
+
+      let persistedStream: ObservableStream<ApolloLink.Result>;
+      let nonPersistedStream: ObservableStream<ApolloLink.Result>;
+
+      if (persistedFirst) {
+        persistedStream = new ObservableStream(
+          execute(persistedQueryLink, { query: sampleQuery })
+        );
+        await wait(0);
+        nonPersistedStream = new ObservableStream(
+          execute(batchLink, { query: sampleQuery })
+        );
+      } else {
+        nonPersistedStream = new ObservableStream(
+          execute(batchLink, { query: sampleQuery })
+        );
+        persistedStream = new ObservableStream(
+          execute(persistedQueryLink, { query: sampleQuery })
+        );
+      }
+
+      await expect(persistedStream).toEmitTypedValue(data);
+      await expect(persistedStream).toComplete();
+      await expect(nonPersistedStream).toEmitTypedValue(data);
+      await expect(nonPersistedStream).toComplete();
+
+      expect(fetchMock.calls("/mixed-batch")).toHaveLength(1);
+
+      const body = JSON.parse(
+        fetchMock.lastOptions("/mixed-batch")!.body!.toString()
+      );
+      expect(body).toHaveLength(2);
+      expect(Boolean(body[0].extensions?.persistedQuery)).toBe(persistedFirst);
+
+      const persistedOperation = body.find(
+        ({ extensions }: any) => extensions?.persistedQuery
+      );
+      const nonPersistedOperation = body.find(
+        ({ extensions }: any) => !extensions?.persistedQuery
+      );
+
+      expect(persistedOperation).toMatchObject({
+        extensions: {
+          persistedQuery: {
+            version: 1,
+            sha256Hash: hash,
+          },
+        },
+      });
+      expect(persistedOperation).not.toHaveProperty("query");
+      expect(nonPersistedOperation).toMatchObject({
+        query: print(sampleQuery),
+      });
+    }
+  );
+
+  it.each([
+    ["PersistedQueryNotSupported", false],
+    ["PersistedQueryNotFound", true],
+  ] as const)(
+    "retries the persisted operation from a mixed batch after %s",
+    async (errorMessage, includePersistedQueryOnRetry) => {
+      const hash = "persisted-query-hash";
+      let requestCount = 0;
+
+      fetchMock.post("/mixed-batch-retry", (_url, options) => {
+        const requestBody = JSON.parse(options.body!.toString());
+
+        return {
+          headers,
+          body:
+            requestCount++ === 0 ?
+              requestBody.map(({ extensions }: any) =>
+                extensions?.persistedQuery ?
+                  { errors: [{ message: errorMessage }] }
+                : data2
+              )
+            : [data],
+        };
+      });
+
+      const batchLink = new BatchHttpLink({
+        uri: "/mixed-batch-retry",
+        batchInterval: 20,
+        batchMax: 2,
+      });
+      const persistedQueryLink = new PersistedQueryLink({
+        sha256: () => hash,
+      }).concat(batchLink);
+
+      const persistedStream = new ObservableStream(
+        execute(persistedQueryLink, { query: sampleQuery })
+      );
+      const nonPersistedStream = new ObservableStream(
+        execute(batchLink, { query: sampleQuery })
+      );
+
+      await expect(nonPersistedStream).toEmitTypedValue(data2);
+      await expect(nonPersistedStream).toComplete();
+      await expect(persistedStream).toEmitTypedValue(data);
+      await expect(persistedStream).toComplete();
+
+      const calls = fetchMock.calls("/mixed-batch-retry");
+      expect(calls).toHaveLength(2);
+
+      const initialBody = JSON.parse(calls[0][1]!.body!.toString());
+      expect(initialBody).toHaveLength(2);
+      expect(
+        initialBody.find(({ extensions }: any) => extensions?.persistedQuery)
+      ).not.toHaveProperty("query");
+      expect(
+        initialBody.find(({ extensions }: any) => !extensions?.persistedQuery)
+      ).toMatchObject({ query: print(sampleQuery) });
+
+      const retryBody = JSON.parse(calls[1][1]!.body!.toString());
+      expect(retryBody).toHaveLength(1);
+      expect(retryBody[0]).toMatchObject({ query: print(sampleQuery) });
+
+      if (includePersistedQueryOnRetry) {
+        expect(retryBody[0]).toMatchObject({
+          extensions: {
+            persistedQuery: {
+              version: 1,
+              sha256Hash: hash,
+            },
+          },
+        });
+      } else {
+        expect(retryBody[0]).not.toHaveProperty("extensions.persistedQuery");
+      }
+    }
+  );
 
   it("errors on an incorrect number of results for a batch", async () => {
     fetchMock.post("/batch", makePromise([data, data2]));

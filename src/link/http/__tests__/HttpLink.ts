@@ -2033,6 +2033,84 @@ describe("HttpLink", () => {
           })
         );
       });
+
+      it("does not trigger unhandledRejection when unsubscribing a multipart subscription", async () => {
+        let controller!: ReadableStreamDefaultController<string>;
+        const stream = new ReadableStream<string>({
+          start(c) {
+            controller = c;
+            controller.enqueue(
+              [
+                "---",
+                "Content-Type: application/json",
+                "",
+                "{}",
+                "---",
+                "Content-Type: application/json",
+                "",
+                '{"payload":{"data":{"aNewDieWasCreated":{"die":{"color":"red","roll":1,"sides":4}}}}}',
+                "---",
+                "",
+              ].join("\r\n")
+            );
+          },
+        });
+
+        const fetch = jest.fn(async (_url, options) => {
+          if (options?.signal) {
+            options.signal.addEventListener("abort", () => {
+              try {
+                controller.error(options.signal.reason);
+              } catch {}
+            });
+          }
+          return new Response(stream, {
+            status: 200,
+            headers: { "content-type": "multipart/mixed" },
+          });
+        });
+
+        const link = new HttpLink({ fetch });
+        const observable = execute(link, { query: sampleSubscription });
+
+        const unhandledRejections: any[] = [];
+        const onUnhandledRejection = (reason: any) => {
+          unhandledRejections.push(reason);
+        };
+        process.on("unhandledRejection", onUnhandledRejection);
+
+        try {
+          await new Promise<void>((resolve, reject) => {
+            const sub = observable.subscribe({
+              next(result) {
+                try {
+                  expect(result).toEqual({
+                    data: {
+                      aNewDieWasCreated: {
+                        die: { color: "red", roll: 1, sides: 4 },
+                      },
+                    },
+                  });
+                  sub.unsubscribe();
+                  resolve();
+                } catch (e) {
+                  reject(e);
+                }
+              },
+              error(e) {
+                reject(e);
+              },
+            });
+          });
+
+          // Wait for microtasks and any asynchronous reader cleanup
+          await new Promise((resolve) => setTimeout(resolve, 50));
+
+          expect(unhandledRejections).toHaveLength(0);
+        } finally {
+          process.off("unhandledRejection", onUnhandledRejection);
+        }
+      });
     });
   });
 

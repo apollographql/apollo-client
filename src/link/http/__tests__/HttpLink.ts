@@ -2072,6 +2072,7 @@ describe("HttpLink", () => {
 
         const link = new HttpLink({ fetch });
         const observable = execute(link, { query: sampleSubscription });
+        const obsStream = new ObservableStream(observable);
 
         const unhandledRejections: any[] = [];
         const onUnhandledRejection = (reason: any) => {
@@ -2080,31 +2081,18 @@ describe("HttpLink", () => {
         process.on("unhandledRejection", onUnhandledRejection);
 
         try {
-          await new Promise<void>((resolve, reject) => {
-            const sub = observable.subscribe({
-              next(result) {
-                try {
-                  expect(result).toEqual({
-                    data: {
-                      aNewDieWasCreated: {
-                        die: { color: "red", roll: 1, sides: 4 },
-                      },
-                    },
-                  });
-                  sub.unsubscribe();
-                  resolve();
-                } catch (e) {
-                  reject(e);
-                }
+          await expect(obsStream).toEmitTypedValue({
+            data: {
+              aNewDieWasCreated: {
+                die: { color: "red", roll: 1, sides: 4 },
               },
-              error(e) {
-                reject(e);
-              },
-            });
+            },
           });
 
+          obsStream.unsubscribe();
+
           // Wait for microtasks and any asynchronous reader cleanup
-          await new Promise((resolve) => setTimeout(resolve, 50));
+          await wait(50);
 
           expect(unhandledRejections).toHaveLength(0);
         } finally {

@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 4.3.2
+
+### Patch Changes
+
+- [#13467](https://github.com/apollographql/apollo-client/pull/13467) [`7786771`](https://github.com/apollographql/apollo-client/commit/778677132860b061ded75a7702a951bae0de7fe5) Thanks [@SSpirate11](https://github.com/SSpirate11)! - Fix an unhandled `AbortError` promise rejection that occurred when unsubscribing from a multipart HTTP subscription.
+
 ## 4.3.1
 
 ### Patch Changes

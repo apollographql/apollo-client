@@ -2033,6 +2033,72 @@ describe("HttpLink", () => {
           })
         );
       });
+
+      it("does not trigger unhandledRejection when unsubscribing a multipart subscription", async () => {
+        let controller!: ReadableStreamDefaultController<string>;
+        const stream = new ReadableStream<string>({
+          start(c) {
+            controller = c;
+            controller.enqueue(
+              [
+                "---",
+                "Content-Type: application/json",
+                "",
+                "{}",
+                "---",
+                "Content-Type: application/json",
+                "",
+                '{"payload":{"data":{"aNewDieWasCreated":{"die":{"color":"red","roll":1,"sides":4}}}}}',
+                "---",
+                "",
+              ].join("\r\n")
+            );
+          },
+        });
+
+        const fetch = jest.fn(async (_url, options) => {
+          if (options?.signal) {
+            options.signal.addEventListener("abort", () => {
+              try {
+                controller.error(options.signal.reason);
+              } catch {}
+            });
+          }
+          return new Response(stream, {
+            status: 200,
+            headers: { "content-type": "multipart/mixed" },
+          });
+        });
+
+        const link = new HttpLink({ fetch });
+        const observable = execute(link, { query: sampleSubscription });
+        const obsStream = new ObservableStream(observable);
+
+        const unhandledRejections: any[] = [];
+        const onUnhandledRejection = (reason: any) => {
+          unhandledRejections.push(reason);
+        };
+        process.on("unhandledRejection", onUnhandledRejection);
+
+        try {
+          await expect(obsStream).toEmitTypedValue({
+            data: {
+              aNewDieWasCreated: {
+                die: { color: "red", roll: 1, sides: 4 },
+              },
+            },
+          });
+
+          obsStream.unsubscribe();
+
+          // Wait for microtasks and any asynchronous reader cleanup
+          await wait(50);
+
+          expect(unhandledRejections).toHaveLength(0);
+        } finally {
+          process.off("unhandledRejection", onUnhandledRejection);
+        }
+      });
     });
   });
 

@@ -178,17 +178,30 @@ describe("BatchHttpLink", () => {
           ({ extensions }: any) => !extensions?.persistedQuery
         );
 
-        expect(persistedOperation).toMatchObject({
+        expect(persistedOperation).toStrictEqual({
+          operationName: "SampleQuery",
+          variables: {},
           extensions: {
             persistedQuery: {
               version: 1,
               sha256Hash: hash,
             },
+            clientLibrary: {
+              name: "@apollo/client",
+              version,
+            },
           },
         });
-        expect(persistedOperation).not.toHaveProperty("query");
-        expect(nonPersistedOperation).toMatchObject({
+        expect(nonPersistedOperation).toStrictEqual({
+          operationName: "SampleQuery",
+          variables: {},
           query: print(sampleQuery),
+          extensions: {
+            clientLibrary: {
+              name: "@apollo/client",
+              version,
+            },
+          },
         });
       }
     );
@@ -247,27 +260,54 @@ describe("BatchHttpLink", () => {
         expect(initialBody).toHaveLength(2);
         expect(
           initialBody.find(({ extensions }: any) => extensions?.persistedQuery)
-        ).not.toHaveProperty("query");
+        ).toStrictEqual({
+          operationName: "SampleQuery",
+          variables: {},
+          extensions: {
+            persistedQuery: {
+              version: 1,
+              sha256Hash: hash,
+            },
+            clientLibrary: {
+              name: "@apollo/client",
+              version,
+            },
+          },
+        });
         expect(
           initialBody.find(({ extensions }: any) => !extensions?.persistedQuery)
-        ).toMatchObject({ query: print(sampleQuery) });
+        ).toStrictEqual({
+          operationName: "SampleQuery",
+          variables: {},
+          query: print(sampleQuery),
+          extensions: {
+            clientLibrary: {
+              name: "@apollo/client",
+              version,
+            },
+          },
+        });
 
         const retryBody = JSON.parse(calls[1][1]!.body!.toString());
-        expect(retryBody).toHaveLength(1);
-        expect(retryBody[0]).toMatchObject({ query: print(sampleQuery) });
-
-        if (includePersistedQueryOnRetry) {
-          expect(retryBody[0]).toMatchObject({
+        expect(retryBody).toStrictEqual([
+          {
+            operationName: "SampleQuery",
+            variables: {},
+            query: print(sampleQuery),
             extensions: {
-              persistedQuery: {
-                version: 1,
-                sha256Hash: hash,
+              ...(includePersistedQueryOnRetry && {
+                persistedQuery: {
+                  version: 1,
+                  sha256Hash: hash,
+                },
+              }),
+              clientLibrary: {
+                name: "@apollo/client",
+                version,
               },
             },
-          });
-        } else {
-          expect(retryBody[0]).not.toHaveProperty("extensions.persistedQuery");
-        }
+          },
+        ]);
       }
     );
   });
@@ -350,7 +390,10 @@ describe("BatchHttpLink", () => {
               version: 1,
               sha256Hash: hash,
             },
-            clientLibrary: expect.any(Object),
+            clientLibrary: {
+              name: "@apollo/client",
+              version,
+            },
           },
         });
         expect(nonPersistedBody[0]).toMatchObject({
@@ -358,7 +401,10 @@ describe("BatchHttpLink", () => {
           variables: {},
           query: print(sampleQuery),
           extensions: {
-            clientLibrary: expect.any(Object),
+            clientLibrary: {
+              name: "@apollo/client",
+              version,
+            },
           },
         });
       }

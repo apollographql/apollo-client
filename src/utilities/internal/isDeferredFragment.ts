@@ -5,41 +5,44 @@ import type { OperationVariables } from "@apollo/client";
 
 import { cacheSizes, defaultCacheSizes } from "../caching/sizes.js";
 
-import { canonicalStringify } from "./canonicalStringify.js";
 import { memoize } from "./memoize.js";
 
-/** @internal */
-export const isDeferredFragment = memoize(
-  function isDeferredFragment(
-    fragmentSelection: InlineFragmentNode | FragmentSpreadNode,
-    variables: OperationVariables | undefined
-  ) {
-    return !!fragmentSelection.directives?.some((directive) => {
-      if (directive.name.value !== "defer") {
-        return false;
-      }
+const memoized = memoize(
+  function (
+    fragmentSelection: InlineFragmentNode | FragmentSpreadNode
+  ): boolean | ((variables: OperationVariables | undefined) => boolean) {
+    const directive = fragmentSelection.directives?.find(
+      (directive) => directive.name.value === "defer"
+    );
+    if (!directive) return false;
 
-      for (const arg of directive.arguments ?? []) {
-        if (arg.name.value === "if") {
-          switch (arg.value.kind) {
-            case Kind.BOOLEAN:
-              return arg.value.value;
-            case Kind.VARIABLE:
-              return !!variables?.[arg.value.name.value];
-          }
+    for (const arg of directive.arguments ?? []) {
+      if (arg.name.value === "if") {
+        switch (arg.value.kind) {
+          case Kind.BOOLEAN:
+            return arg.value.value;
+          case Kind.VARIABLE:
+            const varName = arg.value.name.value;
+            return (variables) => !!variables?.[varName];
         }
       }
+    }
 
-      return true;
-    });
+    return true;
   },
   {
     max:
       cacheSizes["isDeferredFragment"] ||
       defaultCacheSizes["isDeferredFragment"],
-    makeCacheKey: ([selection, variables]) => [
-      selection,
-      canonicalStringify(variables),
-    ],
   }
 );
+
+/** @internal */
+export function isDeferredFragment(
+  fragmentSelection: InlineFragmentNode | FragmentSpreadNode,
+  variables: OperationVariables | undefined
+): boolean {
+  const result = memoized(fragmentSelection);
+  return typeof result === "function" ? result(variables) : result;
+}
+isDeferredFragment.memoized = memoized;

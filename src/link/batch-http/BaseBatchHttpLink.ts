@@ -41,6 +41,14 @@ export declare namespace BaseBatchHttpLink {
       BaseHttpLink.Shared.Options {
     /** {@inheritDoc @apollo/client/link/batch!BatchLink.Shared.Options#batchMax:member {"defaultValue": 10}} */
     batchMax?: number;
+
+    /**
+     * If differently-shaped operations (with/without `includeExtensions` or `includeQuery`) should be combined into a single batch request.
+     * In most applications this will determine if persisted and non-persisted queries should be combined within the same batch.
+     *
+     * @defaultValue false
+     */
+    batchDifferentlyShapedOperations?: boolean;
   }
 }
 
@@ -209,17 +217,19 @@ export class BaseBatchHttpLink extends ApolloLink {
       batchKey ||
       ((operation: ApolloLink.Operation) => {
         const context = operation.getContext();
-        const {
-          // omit includeExtensions and includeQuery from the HTTP options
-          // they only influence body creation, not the HTTP request itself
-          // so they should be grouped together
-          includeExtensions: _omit,
-          includeQuery: __omit,
-          ...otherHttpOptions
-        }: BaseHttpLink.HttpOptions = context.http ?? {};
 
         const contextConfig = {
-          http: otherHttpOptions,
+          http:
+            options.batchDifferentlyShapedOperations ?
+              {
+                ...context.http,
+                // omit includeExtensions and includeQuery from the HTTP options
+                // they only influence body creation, not the HTTP request itself
+                // so they should be grouped together
+                includeExtensions: undefined,
+                includeQuery: undefined,
+              }
+            : context.http,
           options: context.fetchOptions,
           credentials: context.credentials,
           headers: context.headers,

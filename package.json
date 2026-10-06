@@ -162,7 +162,7 @@
     "tslib": "^2.3.0"
   },
   "devDependencies": {
-    "@actions/github-script": "github:actions/github-script#v8.0.0",
+    "@actions/github-script": "github:actions/github-script#ed597411d8f924073f98dfc5c65a23a2325f34cd",
     "@arethetypeswrong/cli": "0.15.3",
     "@ark/attest": "0.28.0",
     "@babel/core": "^7.26.9",

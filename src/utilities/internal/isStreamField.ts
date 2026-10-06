@@ -45,4 +45,3 @@ export function isStreamField(
   const result = memoized(field);
   return typeof result === "function" ? result(variables) : result;
 }
-isStreamField.memoized = memoized;

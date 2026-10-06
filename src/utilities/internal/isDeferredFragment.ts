@@ -45,4 +45,3 @@ export function isDeferredFragment(
   const result = memoized(fragmentSelection);
   return typeof result === "function" ? result(variables) : result;
 }
-isDeferredFragment.memoized = memoized;

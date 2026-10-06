@@ -15,7 +15,7 @@ export function getDataFromTree(tree: ReactTypes.ReactNode, context?: {
 // Warning: (ae-forgotten-export) The symbol "GetMarkupFromTreeOptions" needs to be exported by the entry point index.d.ts
 //
 // @public @deprecated (undocumented)
-export function getMarkupFromTree({ tree, context, renderFunction, }: GetMarkupFromTreeOptions): Promise<string>;
+export function getMarkupFromTree(input: GetMarkupFromTreeOptions): Promise<string>;
 
 // @public (undocumented)
 type GetMarkupFromTreeOptions = {
@@ -27,7 +27,7 @@ type GetMarkupFromTreeOptions = {
 };
 
 // @public
-export function prerenderStatic<Prerender extends prerenderStatic.PrerenderFunction = prerenderStatic.PrerenderFunction>({ tree, context, renderFunction, signal, ignoreResults, diagnostics, maxRerenders, }: prerenderStatic.Options<Prerender>): Promise<prerenderStatic.Result<Prerender>>;
+export function prerenderStatic<Prerender extends prerenderStatic.PrerenderFunction = prerenderStatic.PrerenderFunction>(input: prerenderStatic.Options<Prerender>): Promise<prerenderStatic.Result<Prerender>>;
 
 // @public (undocumented)
 export namespace prerenderStatic {

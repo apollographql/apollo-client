@@ -17,7 +17,11 @@ import {
   CombinedGraphQLErrors,
   CombinedProtocolErrors,
 } from "@apollo/client/errors";
-import { ApolloProvider, useSubscription } from "@apollo/client/react";
+import {
+  ApolloProvider,
+  skipToken,
+  useSubscription,
+} from "@apollo/client/react";
 import { MockSubscriptionLink } from "@apollo/client/testing";
 import {
   mockMultipartSubscriptionStream,
@@ -456,6 +460,62 @@ describe("useSubscription Hook", () => {
     unmount();
   });
 
+  it("should never execute a subscription when skipToken is passed", async () => {
+    const subscription = gql`
+      subscription {
+        car {
+          make
+        }
+      }
+    `;
+
+    const onSetup = jest.fn();
+    const link = new MockSubscriptionLink();
+    link.onSetup(onSetup);
+    const client = new ApolloClient({
+      link,
+      cache: new Cache(),
+    });
+
+    const onData = jest.fn();
+
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, unmount, rerender } =
+      await renderHookToSnapshotStream(
+        ({ variables }) => useSubscription(subscription, skipToken),
+        {
+          initialProps: {
+            variables: {
+              foo: "bar",
+            },
+          },
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        }
+      );
+
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+      data: undefined,
+      error: undefined,
+      loading: false,
+    });
+
+    await rerender({ variables: { foo: "bar2" } });
+
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+      data: undefined,
+      error: undefined,
+      loading: false,
+    });
+
+    await expect(takeSnapshot).not.toRerender();
+
+    expect(onSetup).toHaveBeenCalledTimes(0);
+    expect(onData).toHaveBeenCalledTimes(0);
+    unmount();
+  });
+
   it("should create a subscription after skip has changed from true to a falsy value", async () => {
     const subscription = gql`
       subscription {
@@ -534,6 +594,96 @@ describe("useSubscription Hook", () => {
 
     // ensure state persists across rerenders
     await rerender({ skip: false });
+
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+      data: undefined,
+      error: undefined,
+      loading: true,
+    });
+
+    link.simulateResult(results[1]);
+
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+      data: results[1].result.data,
+      error: undefined,
+      loading: false,
+    });
+
+    await expect(takeSnapshot).not.toRerender();
+  });
+
+  it("should flip flop skipToken from true to false to true to false", async () => {
+    const subscription = gql`
+      subscription {
+        car {
+          make
+        }
+      }
+    `;
+
+    const results = [
+      {
+        result: { data: { car: { make: "Pagani" } } },
+      },
+      {
+        result: { data: { car: { make: "Scoop" } } },
+      },
+    ];
+
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      link,
+      cache: new Cache(),
+    });
+
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
+      ({ options }) => useSubscription(subscription, options),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+        initialProps: {
+          options: skipToken as typeof skipToken | undefined,
+        },
+      }
+    );
+
+    // Start with skipToken (skipped)
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+      data: undefined,
+      error: undefined,
+      loading: false,
+    });
+
+    // Flip to active
+    await rerender({ options: undefined });
+
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+      data: undefined,
+      error: undefined,
+      loading: true,
+    });
+
+    link.simulateResult(results[0]);
+
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+      data: results[0].result.data,
+      error: undefined,
+      loading: false,
+    });
+
+    // Flop back to skipToken
+    await rerender({ options: skipToken });
+
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+      data: undefined,
+      error: undefined,
+      loading: false,
+    });
+
+    // Flip to active again
+    await rerender({ options: undefined });
 
     await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: undefined,
@@ -3770,5 +3920,66 @@ describe.skip("Type Tests", () => {
         foo: "bar",
       },
     });
+  });
+
+  test("accepts skipToken when TVariables includes required variables", () => {
+    const subscription: TypedDocumentNode<
+      { character: string },
+      { id: string }
+    > = gql``;
+
+    useSubscription(subscription, skipToken);
+    useSubscription(subscription, {
+      variables: { id: "1" },
+    });
+    // @ts-expect-error skipToken does not replace the required options object
+    useSubscription(subscription);
+  });
+
+  test("accepts skipToken when variables are optional (2nd arg not required)", () => {
+    const subscription: TypedDocumentNode<
+      { posts: string[] },
+      { limit?: number }
+    > = gql``;
+
+    useSubscription(subscription, skipToken);
+    useSubscription(subscription);
+    useSubscription(subscription, { variables: { limit: 10 } });
+  });
+
+  test("accepts skipToken with mixed required + optional variables", () => {
+    const subscription: TypedDocumentNode<
+      { character: string },
+      { id: string; language?: string }
+    > = gql``;
+
+    useSubscription(subscription, skipToken);
+    useSubscription(subscription, { variables: { id: "1" } });
+    useSubscription(subscription, {
+      variables: { id: "1", language: "en" },
+    });
+    // @ts-expect-error missing required variable
+    useSubscription(subscription);
+  });
+
+  test("accepts skipToken with empty variables (Record<string, never>)", () => {
+    const subscription: TypedDocumentNode<
+      { greeting: string },
+      Record<string, never>
+    > = gql``;
+
+    useSubscription(subscription, skipToken);
+    useSubscription(subscription);
+    useSubscription(subscription, { variables: {} });
+  });
+
+  test("accepts skipToken when variables type is never", () => {
+    const subscription: TypedDocumentNode<{ greeting: string }, never> = gql``;
+
+    useSubscription(subscription, skipToken);
+    // @ts-expect-error
+    useSubscription(subscription);
+    // @ts-expect-error
+    useSubscription(subscription, {});
   });
 });

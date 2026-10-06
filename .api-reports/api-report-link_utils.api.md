@@ -8,7 +8,7 @@ import type { ApolloLink } from '@apollo/client/link';
 import type { DocumentNode } from 'graphql';
 
 // @public (undocumented)
-export function createOperation(request: ApolloLink.Request, { client }: ApolloLink.ExecuteContext): ApolloLink.Operation;
+export function createOperation(request: ApolloLink.Request, input: ApolloLink.ExecuteContext): ApolloLink.Operation;
 
 // @public (undocumented)
 export function filterOperationVariables(variables: Record<string, any>, query: DocumentNode): {

@@ -40,11 +40,15 @@ export interface CacheSizes {
     "inMemoryCache.executeSelectionSet": number;
     "inMemoryCache.executeSubSelectedArray": number;
     "inMemoryCache.maybeBroadcastWatch": number;
+    "inMemoryCache.prunePartialBoundaries": number;
+    "inMemoryCache.prunePartialStreamArray": number;
     "PersistedQueryLink.persistedQueryHashes": number;
     "queryManager.getDocumentInfo": number;
     "removeTypenameFromVariables.getVariableDefinitions": number;
     canonicalStringify: number;
     checkDocument: number;
+    isDeferredFragment: number;
+    isStreamField: number;
     print: number;
 }
 

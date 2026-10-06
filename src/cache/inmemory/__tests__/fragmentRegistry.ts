@@ -220,6 +220,140 @@ describe("FragmentRegistry", () => {
     });
   });
 
+  it("does not reuse a cached fragment-resolution error across queries with differing available fragments", () => {
+    const cache = new InMemoryCache({
+      fragments: createFragmentRegistry(gql`
+        fragment RegisteredWithHole on Person {
+          __typename
+          id
+          ...ProvidedByQuery
+        }
+      `),
+    });
+
+    cache.writeQuery({
+      query: gql`
+        query {
+          me {
+            __typename
+            id
+            name
+          }
+        }
+      `,
+      data: {
+        me: {
+          __typename: "Person",
+          id: 12345,
+          name: "Ada",
+        },
+      },
+    });
+
+    const queryMissingFragment = gql`
+      query MissingFragment {
+        me {
+          ...RegisteredWithHole
+        }
+      }
+    `;
+
+    const queryProvidingFragment = gql`
+      query ProvidingFragment {
+        me {
+          ...RegisteredWithHole
+        }
+      }
+
+      fragment ProvidedByQuery on Person {
+        name
+      }
+    `;
+
+    // Reading the registered fragment without a definition for its
+    // `...ProvidedByQuery` spread throws. Critically, this must not poison the
+    // cache entry for the shared registry fragment node.
+    expect(() => {
+      cache.readQuery({ query: queryMissingFragment });
+    }).toThrow(/No fragment named ProvidedByQuery/);
+
+    // Reading the same registry fragment from a query that *does* define
+    // `ProvidedByQuery` must succeed rather than re-throwing the error cached
+    // from the previous read.
+    expect(cache.readQuery({ query: queryProvidingFragment })).toEqual({
+      me: {
+        __typename: "Person",
+        id: 12345,
+        name: "Ada",
+      },
+    });
+  });
+
+  it("does not reuse a cached result across queries that bind a registry fragment's unbound spread to different fields", () => {
+    const cache = new InMemoryCache({
+      fragments: createFragmentRegistry(gql`
+        fragment PersonFields on Person {
+          __typename
+          id
+          ...Extra
+        }
+      `),
+    });
+
+    cache.writeQuery({
+      query: gql`
+        query {
+          me {
+            __typename
+            id
+            name
+            email
+          }
+        }
+      `,
+      data: {
+        me: {
+          __typename: "Person",
+          id: 12345,
+          name: "Ada",
+          email: "ada@example.com",
+        },
+      },
+    });
+
+    const queryName = gql`
+      query WithName {
+        me {
+          ...PersonFields
+        }
+      }
+
+      fragment Extra on Person {
+        name
+      }
+    `;
+
+    const queryEmail = gql`
+      query WithEmail {
+        me {
+          ...PersonFields
+        }
+      }
+
+      fragment Extra on Person {
+        email
+      }
+    `;
+
+    expect(cache.readQuery({ query: queryName })).toEqual({
+      me: { __typename: "Person", id: 12345, name: "Ada" },
+    });
+
+    expect(cache.readQuery({ query: queryEmail })).toEqual({
+      me: { __typename: "Person", id: 12345, email: "ada@example.com" },
+    });
+  });
+
   it("can register fragments with unbound ...spreads", () => {
     const cache = new InMemoryCache({
       fragments: createFragmentRegistry(gql`

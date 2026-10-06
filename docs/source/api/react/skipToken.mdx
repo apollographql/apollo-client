@@ -7,8 +7,11 @@ description: Apollo Client API reference
 
 ## `skipToken`
 
-`skipToken` provides a type-safe mechanism to skip query execution. It is currently supported with `useQuery`, `useSuspenseQuery` and `useBackgroundQuery`.
-When you pass a `skipToken` to one of the supported hooks instead of the `options` object, the hook will not cause any requests or suspenseful behavior and keeps the last `data` available. It is typically used conditionally to start query execution when the input data is available.
+`skipToken` provides a type-safe mechanism to skip query execution. Use it with `useQuery`, `useSuspenseQuery`, `useBackgroundQuery`, and `useSubscription`.
+
+For the query hooks, passing `skipToken` instead of the `options` object prevents the hook from making requests or triggering suspenseful behavior while keeping the last `data` available. Use it conditionally to start query execution when the input data is available.
+
+For `useSubscription`, passing `skipToken` prevents the subscription from executing. The hook returns an idle result with `data: undefined` instead of keeping prior subscription data, because a skipped subscription never establishes a connection to receive results. Use it conditionally to start the subscription when the input data is available.
 
 ```js title="Recommended usage of skipToken with useQuery"
 import { skipToken, useQuery } from "@apollo/client/react";
@@ -32,9 +35,14 @@ const [queryRef] = useBackgroundQuery(
 );
 ```
 
+```js title="Recommended usage of skipToken with useSubscription"
+import { skipToken, useSubscription } from "@apollo/client/react";
+const { data } = useSubscription(query, id ? { variables: { id } } : skipToken);
+```
+
 ### Why do we recommend `skipToken` over `{ skip: true }`?
 
-Imagine this very common scenario for `skip`: You want to skip your query if a certain required variable is not set. You might be tempted to write something like this:
+Imagine this very common scenario for `skip`: you want to skip your query if a certain required variable is not set. You might be tempted to write something like this:
 
 ```ts
 const { data } = useSuspenseQuery(query, {
@@ -70,7 +78,7 @@ const { data } = useSuspenseQuery(query, {
 
 Both of these solutions hide a potential bug. If your `skip` logic becomes more complex, you might accidentally introduce a bug that causes your query to execute, even when `id` is still `undefined`. In that case, TypeScript cannot warn you about it.
 
-Instead we recommend using `skipToken`. It provides type safety without the need for an obscure default value:
+Instead, we recommend using `skipToken`. It provides type safety without the need for an obscure default value:
 
 ```ts
 const { data } = useSuspenseQuery(
@@ -79,4 +87,4 @@ const { data } = useSuspenseQuery(
 );
 ```
 
-Here it becomes apparent for TypeScript that there is a direct connection between skipping and the `variables` option - and it will work without unsafe workarounds.
+Here it becomes apparent for TypeScript that there is a direct connection between skipping and the `variables` option, and it works without unsafe workarounds.

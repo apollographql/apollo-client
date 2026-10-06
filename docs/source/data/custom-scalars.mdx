@@ -1,0 +1,848 @@
+---
+title: Custom scalars
+description: Parse and serialize GraphQL scalar values in Apollo Client
+minVersion: 4.3
+---
+
+{/* @import {MDXProvidedComponents} from '../../shared/MdxProvidedComponents.js' */}
+
+GraphQL schemas often define custom scalar types to add semantic meaning to a field that a built-in type can't convey. For example, a `createdAt` field might be defined as a `DateTime` scalar instead of a `String`. Apollo Client can parse those values into types that are easier to work with in your application, such as `Date` objects.
+
+This guide walks through using custom scalars in your own applications.
+
+## Define a `Scalar`
+
+Define custom scalars with the `Scalar` class. A `Scalar` describes how to convert a value between the JSON serialized value and the parsed value:
+
+```ts
+import { Scalar } from "@apollo/client";
+
+const dateTimeScalar = new Scalar<string, Date>({
+  parse: (dateString) => new Date(dateString),
+  serialize: (date) => date.toISOString(),
+  is: (value) => value instanceof Date,
+});
+```
+
+`Scalar` accepts the following options:
+
+<PropertySignatureTable
+  canonicalReference="@apollo/client/cache!Scalar.Options:interface"
+  idPrefix="scalaroptions-interface"
+/>
+
+### The `is` function
+
+The `is` function determines whether a value is in its parsed or serialized form. Apollo Client uses this method to coerce values as needed during the lifetime of your application. When `is` returns `true`, Apollo Client treats the value as the parsed type. When `is` returns `false`, Apollo Client treats the value as the serialized type.
+
+<Note>
+
+If you omit `is`, Apollo Client treats any non-null object as a parsed value. That default might be enough, but it is typically better to pass your own `is`.
+
+</Note>
+
+### Create a `Scalar` from a GraphQL.js `GraphQLScalarType`
+
+If you have a [`GraphQLScalarType`](https://graphql.org/graphql-js/type/#graphqlscalartype) instance from `graphql`, you can use it to create an Apollo Client compatible `Scalar` using `Scalar.fromGraphQLScalarType`. Apollo Client uses `parseValue` and `serialize` from the GraphQL.js scalar.
+
+```ts
+import { GraphQLScalarType } from "graphql";
+import { Scalar } from "@apollo/client";
+
+const dateTime = new GraphQLScalarType({
+  name: "DateTime",
+  parseValue: (value) => new Date(value),
+  serialize: (value) => value.toISOString(),
+});
+
+const dateTimeScalar = Scalar.fromGraphQLScalarType(dateTime, {
+  is: (value) => value instanceof Date,
+});
+```
+
+This is most useful when you want to use scalar types from shared NPM packages such as [`graphql-scalars`](https://the-guild.dev/graphql/scalars), which provide many useful scalar implementations out of the box:
+
+```ts
+import { GraphQLDateTimeISO } from "graphql-scalars";
+
+const dateTimeScalar = Scalar.fromGraphQLScalarType(GraphQLDateTimeISO, {
+  is: (value) => value instanceof Date,
+});
+```
+
+<Note>
+
+`graphql-scalars` is published primarily for GraphQL servers, but you can use it on the client. Some scalars may depend on Node APIs. Use only scalars that work in your environment, such as the browser or React Native.
+
+</Note>
+
+## Configure the cache
+
+Pass your `Scalar` instances to the `scalars` option on `InMemoryCache`. Map each instance to the name of the scalar in your schema:
+
+```ts
+new InMemoryCache({
+  scalars: {
+    DateTime: dateTimeScalar,
+    URL: urlScalar,
+    // ...
+  },
+});
+```
+
+The `scalars` option registers the implementations. You still need to tell the cache which fields and input object fields use those scalars.
+
+<Note>
+
+To type-check this configuration, see the [TypeScript](#typescript) section to declare your custom scalar types.
+
+</Note>
+
+### Map fields to scalars
+
+Passing `scalars` to `InMemoryCache` isn't enough for the cache to know which fields should be associated with the scalars because `InMemoryCache` has no schema knowledge. Set the `scalar` property on a field policy to associate the field with the scalar type:
+
+```ts
+new InMemoryCache({
+  scalars: {
+    DateTime: dateTimeScalar,
+    URL: urlScalar,
+  },
+  typePolicies: {
+    Event: {
+      fields: {
+        createdAt: {
+          scalar: "DateTime",
+        },
+        updatedAt: {
+          scalar: "DateTime",
+        },
+        siteLink: {
+          scalar: "URL",
+        },
+      },
+    },
+  },
+});
+```
+
+<Caution>
+
+If a field policy sets `scalar`, Apollo Client ignores `read` and `merge` functions on that field and emits a development-only warning.
+
+</Caution>
+
+Each field associated with a custom scalar needs a field policy with a `scalar` property. If you want to avoid writing these by hand, see the [generate scalar configuration](#generate-scalar-configuration) section to generate this configuration from your schema.
+
+With the field policies in place, query, mutation, and subscription results return parsed values for mapped fields.
+
+```ts
+const QUERY = gql`
+  query GetEvent($id: ID!) {
+    event(id: $id) {
+      id
+      name
+      siteLink
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+const { data } = useQuery(QUERY, { variables: { id } });
+// => {
+//   event: {
+//     id: "1",
+//     name: "GraphQL Conf",
+//     siteLink: URL,
+//     createdAt: Date,
+//     updatedAt: Date,
+//   },
+// }
+
+const MUTATION = gql`
+  mutation CreateEvent($input: CreateEventInput!) {
+    createEvent(input: $input) {
+      id
+      createdAt
+    }
+  }
+`;
+
+const { data } = client.mutate({
+  mutation: MUTATION,
+  variables: {
+    /*...*/
+  },
+});
+// => {
+//   createEvent: {
+//     id: "1",
+//     createdAt: Date,
+//   },
+// }
+```
+
+<Note>
+
+Even though scalar configuration is defined in the cache, you can safely use `no-cache` fetch policies. Apollo Client converts scalar fields before returning the result.
+
+</Note>
+
+Cache read and write APIs also use parsed values, including `readQuery`, `readFragment`, `writeQuery`, and `writeFragment`:
+
+```ts
+const data = client.readQuery({ query: QUERY, variables: { id } });
+// => {
+//   event: {
+//     id: "1",
+//     name: "GraphQL Conf",
+//     siteLink: URL,
+//     createdAt: Date,
+//     updatedAt: Date,
+//   },
+// }
+```
+
+### Lists of scalars
+
+Some fields return a list of custom scalar values, such as `[DateTime!]`. Use GraphQL list syntax so Apollo Client parses and serializes each element as that scalar:
+
+```ts
+new InMemoryCache({
+  scalars: {
+    DateTime: dateTimeScalar,
+  },
+  typePolicies: {
+    Event: {
+      fields: {
+        createdAt: {
+          scalar: "DateTime",
+        },
+        meetingTimes: {
+          scalar: "[DateTime]",
+        },
+        availabilitySlots: {
+          scalar: "[[DateTime]]",
+        },
+      },
+    },
+  },
+});
+```
+
+Use one pair of brackets per list level so Apollo Client iterates each item at the right depth.
+
+<Caution>
+
+Do not include the GraphQL non-null marker (`!`) in the value because it won't match. Write `"[DateTime]"`, not `"[DateTime!]!"`
+
+</Caution>
+
+Query results then return parsed values for each element:
+
+```ts
+const QUERY = gql`
+  query GetEvent($id: ID!) {
+    event(id: $id) {
+      id
+      createdAt
+      meetingTimes
+      availabilitySlots
+    }
+  }
+`;
+
+const { data } = useQuery(QUERY, { variables: { id } });
+// => {
+//   event: {
+//     id: "1",
+//     createdAt: Date,
+//     meetingTimes: [Date, Date],
+//     availabilitySlots: [[Date, Date], [Date]],
+//   },
+// }
+```
+
+The same list syntax applies to [`inputObjects`](#input-objects) field mappings.
+
+<Note>
+
+If a field is configured as a list type such as `"[DateTime]"` but the value is not an array, Apollo Client still coerces the value as `DateTime` and emits a development-only warning.
+
+</Note>
+
+#### Scalars that serialize as arrays
+
+Some custom scalars use a JSON array as the serialized form, even though the GraphQL field is not a list. For example, a `DateTimeRange` scalar might serialize as `["2026-01-01T00:00:00.000Z", "2026-06-01T00:00:00.000Z"]`.
+
+Do not wrap that scalar in list syntax. Pass the scalar name so Apollo Client gives the whole array to `parse` and `serialize`:
+
+```ts
+const dateTimeRangeScalar = new Scalar<
+  [string, string],
+  { start: Date; end: Date }
+>({
+  parse: ([start, end]) => ({
+    start: new Date(start),
+    end: new Date(end),
+  }),
+  serialize: (range) => [range.start.toISOString(), range.end.toISOString()],
+  is: (value) => !Array.isArray(value),
+});
+
+new InMemoryCache({
+  scalars: {
+    DateTimeRange: dateTimeRangeScalar,
+  },
+  typePolicies: {
+    Event: {
+      fields: {
+        dateRange: {
+          scalar: "DateTimeRange",
+        },
+        dateRanges: {
+          scalar: "[DateTimeRange]",
+        },
+      },
+    },
+  },
+});
+```
+
+`"[DateTimeRange]"` is a list of `DateTimeRange` values. Apollo Client iterates the outer array, then passes each inner array to the `DateTimeRange` `Scalar` instance.
+
+<Caution>
+
+If you omit `is`, Apollo Client treats any non-null object as a parsed value, including JSON arrays. Provide an `is` function that returns `false` for the serialized array so Apollo Client still calls `parse`.
+
+</Caution>
+
+## Variable serialization
+
+Apollo Client serializes parsed scalar values in `variables` before it sends the request to your server and before it reads or writes the cache with those variables. You can pass parsed values in any API that accepts a `variables` option:
+
+```ts
+const QUERY = gql`
+  query GetEventsOnDate($date: DateTime!) {
+    events(on: $date) {
+      id
+      name
+    }
+  }
+`;
+
+const { data } = useQuery(QUERY, {
+  variables: { date: new Date("2026-01-01T00:00:00.000Z") },
+});
+
+// The link receives `{ date: "2026-01-01T00:00:00.000Z" }`
+```
+
+Cache APIs that take `variables` serialize them the same way:
+
+```ts
+client.readQuery({
+  query: QUERY,
+  variables: { date: new Date("2026-01-01T00:00:00.000Z") },
+});
+
+client.writeQuery({
+  query: QUERY,
+  data: {
+    /* ... */
+  },
+  variables: { date: new Date("2026-01-01T00:00:00.000Z") },
+});
+```
+
+Apollo Client reads the GraphQL type from the variable definition (`$date: DateTime!`) and calls `serialize` on the configured `DateTime` scalar.
+
+Apollo Client also reads list types from the variable definition. You do not need extra cache configuration for a `[DateTime]` variable. Apollo Client serializes each element:
+
+```ts
+const QUERY = gql`
+  query GetEventsOnDates($dates: [DateTime!]!) {
+    events(on: $dates) {
+      id
+      name
+    }
+  }
+`;
+
+const { data } = useQuery(QUERY, {
+  variables: {
+    dates: [
+      new Date("2026-01-01T00:00:00.000Z"),
+      new Date("2026-01-02T00:00:00.000Z"),
+    ],
+  },
+});
+
+// The link receives `{ dates: ["2026-01-01T00:00:00.000Z", "2026-01-02T00:00:00.000Z"] }`
+```
+
+### Input objects
+
+Input objects can contain custom scalar fields. Those nested fields are not visible from the variable definition alone. For example, the following query has a `$dateRange` variable of type `DateRangeFilter`:
+
+```graphql
+query GetEventsInRange($dateRange: DateRangeFilter!) {
+  events(filter: $dateRange) {
+    id
+    name
+  }
+}
+```
+
+To serialize custom scalars in input objects, pass an `inputObjects` option that maps each input object's fields to the associated custom scalar type:
+
+```ts
+new InMemoryCache({
+  inputObjects: {
+    DateRangeFilter: {
+      fields: {
+        start: "DateTime",
+        end: "DateTime",
+      },
+    },
+  },
+});
+```
+
+You can then pass parsed scalar values in `variables`:
+
+```ts
+const QUERY = gql`
+  query GetEventsInRange($dateRange: DateRangeFilter!) {
+    events(filter: $dateRange) {
+      id
+      name
+    }
+  }
+`;
+
+const { data } = useQuery(QUERY, {
+  variables: {
+    dateRange: {
+      start: new Date("2026-01-01T00:00:00.000Z"),
+      end: new Date("2026-02-01T00:00:00.000Z"),
+    },
+  },
+});
+```
+
+Input object fields can also be lists of custom scalars. Use the same GraphQL list syntax described in [Lists of scalars](#lists-of-scalars):
+
+```ts
+new InMemoryCache({
+  inputObjects: {
+    AvailabilityInput: {
+      fields: {
+        dates: "[DateTime]",
+        slots: "[[DateTime]]",
+      },
+    },
+  },
+});
+```
+
+#### Deeply nested input objects
+
+Input objects can contain other input objects that map their own custom scalars. When the input object is more than one level deep, pass the name of the nested input object for the field that references it:
+
+```ts
+new InMemoryCache({
+  inputObjects: {
+    DateRangeFilter: {
+      fields: {
+        start: "DateTime",
+        end: "DateTime",
+      },
+    },
+    EventFilter: {
+      fields: {
+        dateRange: "DateRangeFilter",
+      },
+    },
+    ConferenceFilter: {
+      fields: {
+        when: "DateRangeFilter",
+      },
+    },
+  },
+});
+```
+
+You can then pass parsed scalar values in `variables`:
+
+```ts
+const QUERY = gql`
+  query GetData(
+    $eventFilter: EventFilter!
+    $conferenceFilter: ConferenceFilter!
+  ) {
+    events(filter: $eventFilter) {
+      id
+      name
+    }
+    conferences(filter: $conferenceFilter) {
+      id
+      name
+    }
+  }
+`;
+
+const { data } = useQuery(QUERY, {
+  variables: {
+    eventFilter: {
+      dateRange: {
+        start: new Date("2026-01-01T00:00:00.000Z"),
+        end: new Date("2026-02-01T00:00:00.000Z"),
+      },
+    },
+    conferenceFilter: {
+      when: {
+        start: new Date("2026-01-01T00:00:00.000Z"),
+        end: new Date("2026-02-01T00:00:00.000Z"),
+      },
+    },
+  },
+});
+```
+
+<Tip>
+
+Instead of writing this configuration by hand, you can generate it with GraphQL Codegen. See the [generate scalar configuration](#generate-scalar-configuration) section.
+
+</Tip>
+
+## Convert values outside of Apollo Client
+
+Sometimes you need to convert a value with a `Scalar` you already configured. You can access the scalar instance with `cache.getScalar()`, which takes a key that matches a scalar you passed to the `scalars` option and returns the `Scalar` instance that matches that name.
+
+Use it when you have a raw value from outside Apollo Client that you want to transform with that `Scalar`. For example, a query param:
+
+```ts
+const dateTime = client.cache.getScalar("DateTime");
+
+const start = dateTime.parse(searchParams.get("start"));
+
+url.searchParams.set("start", dateTime.serialize(event.createdAt));
+```
+
+<Note>
+
+You do not need `cache.getScalar()` for values provided to Apollo Client APIs. Apollo Client already parses or serializes scalar values as needed.
+
+</Note>
+
+### Coerce parsed and serialized values
+
+If you aren't sure whether a value is parsed or serialized, use `coerceToParsed` or `coerceToSerialized`. These methods use `is` to check the form of the value, then parse or serialize only when needed.
+
+```ts
+function formatDate(date: string | Date) {
+  const dateTimeScalar = client.cache.getScalar("DateTime");
+
+  return dateTimeScalar.coerceToParsed(date).toLocaleDateString();
+}
+```
+
+## A note about server-side rendering
+
+Custom scalars are safe to use with [server-side rendering](../performance/server-side-rendering). `cache.extract()` serializes parsed values to JSON so you can send the cache to the client. `cache.restore()` parses those values again, so both the server and the client keep working with the parsed types.
+
+```ts
+// On the server
+const initialState = cache.extract();
+// => {
+//   ROOT_QUERY: {
+//     __typename: "Query",
+//     event: { __ref: "Event:1" },
+//   },
+//   "Event:1": {
+//     __typename: "Event",
+//     id: "1",
+//     name: "GraphQL Conf",
+//     siteLink: "https://graphqlconf.org/",
+//     createdAt: "2026-01-01T00:00:00.000Z",
+//     updatedAt: "2026-01-01T00:00:00.000Z",
+//   },
+// }
+
+// On the client
+new InMemoryCache({
+  scalars: {
+    DateTime: dateTimeScalar,
+    URL: urlScalar,
+  },
+}).restore(initialState);
+```
+
+## TypeScript
+
+Register custom scalars with TypeScript to add type safety for the `scalars` option on `InMemoryCache` and the `cache.getScalar()` API. Declare your custom scalars using TypeScript's [declaration merging](https://www.typescriptlang.org/docs/handbook/declaration-merging.html) with the `ApolloCache.Scalars` interface.
+
+```ts title="apollo.d.ts"
+// This import is necessary to ensure all Apollo Client imports
+// are still available to the rest of the application.
+import "@apollo/client";
+
+declare module "@apollo/client" {
+  namespace ApolloCache {
+    interface Scalars {
+      DateTime: { serialized: string; parsed: Date };
+    }
+  }
+}
+```
+
+<Note>
+
+You don't need to declare built-in GraphQL scalars such as `String`, `Int`, `Float`, `Boolean`, or `ID`. Apollo Client already handles those types.
+
+</Note>
+
+TypeScript checks the `scalars` option when you create `InMemoryCache`:
+
+```ts
+// ❌ invalid: missing `scalars` option
+new InMemoryCache();
+// ❌ invalid: missing `DateTime` scalar
+new InMemoryCache({ scalars: {} });
+
+new InMemoryCache({
+  scalars: {
+    // ❌ invalid: unknown scalar "Unknown"
+    Unknown: new Scalar(/*...*/),
+
+    // ❌ invalid: Scalar<number, string> not assignable to Scalar<string, Date>
+    DateTime: new Scalar<number, string>(/*...*/),
+
+    // ✅ valid
+    DateTime: new Scalar<string, Date>(/*...*/),
+  },
+});
+```
+
+<Note>
+
+When `serialized` and `parsed` are the same type, the entry in `scalars` is optional. For example, a `Year` scalar might define both the `parsed` and `serialized` types as a `number`. In that case, your app doesn't need a `Scalar` instance for it.
+
+</Note>
+
+<Note>
+
+This declaration types the `scalars` option on `InMemoryCache`. It doesn't affect the types set for scalar fields returned by operation `data`. See the [Generate scalar configuration](#generate-scalar-configuration) section for more information.
+
+</Note>
+
+## Generate scalar configuration
+
+Writing a field policy or input object entry for every custom scalar field is tedious and error prone. Use the `@apollo/client-graphql-codegen/custom-scalars` plugin to generate the type policies and input objects configuration from your schema.
+
+### Installation
+
+Install the Apollo Client GraphQL Codegen package:
+
+```sh showLineNumbers=false
+npm install -D @apollo/client-graphql-codegen
+```
+
+<Tip>
+
+See the [GraphQL Codegen](../development-testing/graphql-codegen) guide to learn how to use GraphQL Codegen with Apollo Client if you don't have it set up.
+
+</Tip>
+
+### Configuration
+
+Add the `custom-scalars` plugin to your `codegen.ts` configuration:
+
+```ts title="codegen.ts"
+import type { CodegenConfig } from "@graphql-codegen/cli";
+import type { CustomScalarsPluginConfig } from "@apollo/client-graphql-codegen/custom-scalars";
+
+const config: CodegenConfig = {
+  // ... your existing configuration
+  generates: {
+    // ... your existing generates
+    "./src/__generated__/custom-scalars.ts": {
+      plugins: ["@apollo/client-graphql-codegen/custom-scalars"],
+      config: {
+        // Optional. See plugin options below.
+      } satisfies CustomScalarsPluginConfig,
+    },
+  },
+};
+
+export default config;
+```
+
+The generated file exports `inputObjects` and `scalarTypePolicies`.
+
+<details>
+<summary>Example generated file</summary>
+
+```ts
+import type { InputObjectsOption, TypePolicies } from "@apollo/client/cache";
+
+export const inputObjects: InputObjectsOption = {
+  DateRangeFilter: {
+    fields: {
+      start: "DateTime",
+      end: "DateTime",
+    },
+  },
+  AvailabilityInput: {
+    fields: {
+      dates: "[DateTime]",
+    },
+  },
+};
+
+export const scalarTypePolicies: TypePolicies = {
+  Event: {
+    fields: {
+      createdAt: {
+        scalar: "DateTime",
+      },
+      updatedAt: {
+        scalar: "DateTime",
+      },
+      meetingTimes: {
+        scalar: "[DateTime]",
+      },
+      availabilitySlots: {
+        scalar: "[[DateTime]]",
+      },
+      siteLink: {
+        scalar: "URL",
+      },
+    },
+  },
+};
+```
+
+</details>
+<br/>
+
+This plugin generates cache configuration only. It does not change the TypeScript types for your operations. To type operation results as parsed values, add a `scalars` mapping to the configuration that creates your operation types:
+
+```ts title="codegen.ts"
+const config: CodegenConfig = {
+  generates: {
+    "./src/types/__generated__/graphql.ts": {
+      plugins: ["typescript-operations"],
+      config: {
+        scalars: {
+          DateTime: "Date",
+          URL: "URL",
+        },
+        // ...other options
+      },
+    },
+  },
+};
+```
+
+See the [GraphQL Codegen scalars documentation](https://the-guild.dev/graphql/codegen/plugins/typescript/typescript#scalars) for more information.
+
+### Configure `InMemoryCache` from codegen
+
+Import the generated `inputObjects` and `scalarTypePolicies` objects and pass them to `InMemoryCache`.
+
+```ts
+import {
+  inputObjects,
+  scalarTypePolicies,
+} from "./path/to/__generated__/custom-scalars";
+
+const cache = new InMemoryCache({
+  scalars: {
+    DateTime: dateTimeScalar,
+    URL: urlScalar,
+  },
+  inputObjects,
+});
+
+cache.policies.addTypePolicies(scalarTypePolicies);
+```
+
+<Tip>
+
+We recommend passing `scalarTypePolicies` to `cache.policies.addTypePolicies()`, which merges the generated `scalar` options with any other field policies you define, such as `keyArgs` or `keyFields`.
+
+</Tip>
+
+### Plugin options
+
+By default, the plugin includes only custom scalar fields and input objects that your GraphQL documents use. You can change this behavior with the following plugin options:
+
+<table class="field-table api-ref">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+
+<tr>
+<td>
+
+###### `filterByDocuments`
+
+`boolean`
+
+</td>
+<td>
+
+If `true`, the generated config includes only custom scalar fields selected by your documents and input objects reachable from those documents' variables.<br/><br/>
+
+The default value is `true`. Set this option to `false` to generate config for every custom scalar field in the schema.
+
+</td>
+</tr>
+<tr>
+<td>
+
+###### `includeScalars`
+
+`string[]`
+
+</td>
+<td>
+
+Allowed list of scalars that should be included in the config objects. You can reduce the size of the config objects by omitting fields with scalars that won't have an associated scalar transform.<br/><br/>
+
+This option is mutually exclusive with `ignoreScalars`.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `ignoreScalars`
+
+`string[]`
+
+</td>
+<td>
+
+List of scalars that should be ignored when generating the config objects. You can reduce the size of the config objects by omitting fields with scalars that won't have an associated scalar transform.<br/><br/>
+
+This option is mutually exclusive with `includeScalars`.
+
+</td>
+</tr>
+</tbody>
+</table>
+
+## See also
+
+- [TypeScript with Apollo Client](./typescript#declaring-custom-scalar-types)
+- [Customizing field behavior](../caching/cache-field-behavior)
+- [GraphQL Codegen](../development-testing/graphql-codegen#custom-scalars)

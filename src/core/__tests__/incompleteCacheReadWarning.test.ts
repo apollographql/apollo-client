@@ -389,7 +389,7 @@ test("does not warn while a deferred result is still streaming", async () => {
   expect(console.warn).not.toHaveBeenCalled();
 });
 
-test("does not warn again when the cache write is skipped because the identical result was already written", async () => {
+test("warns again when a refetched network result reads back from the cache as partial", async () => {
   using _ = spyOnConsole("warn");
 
   const query = gql`
@@ -427,20 +427,33 @@ test("does not warn again when the cache write is skipped because the identical 
     ]),
   });
 
-  const observable = client.watchQuery({ query, pollInterval: 10 });
+  const observable = client.watchQuery({ query });
   using stream = new ObservableStream(observable);
 
+  // loading
   await stream.takeNext();
+  // result
   await stream.takeNext();
 
   expect(console.warn).toHaveBeenCalledTimes(1);
 
-  // Each poll returns the identical result, so the cache write is skipped and
-  // the warning must not repeat.
-  await wait(60);
-  observable.stopPolling();
+  client.writeQuery({
+    query: gql`
+      query {
+        user {
+          name
+        }
+      }
+    `,
+    data: { user: { __typename: "User", name: "Alice (updated)" } },
+  });
 
-  expect(console.warn).toHaveBeenCalledTimes(1);
+  // loading
+  await stream.takeNext();
+  // result
+  await stream.takeNext();
+
+  expect(console.warn).toHaveBeenCalledTimes(2);
 });
 
 // https://github.com/apollographql/apollo-client/issues/9293

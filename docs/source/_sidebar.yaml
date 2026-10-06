@@ -29,6 +29,8 @@ items:
         href: ./data/typescript
       - label: Refetching
         href: ./data/refetching
+      - label: Custom scalars
+        href: ./data/custom-scalars
       - label: Event-based refetching
         href: ./data/event-based-refetching
       - label: Subscriptions

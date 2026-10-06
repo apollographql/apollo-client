@@ -3,6 +3,7 @@ import type {
   DocumentNode,
   OperationVariables,
   TypedDocumentNode,
+  TypeOverrides,
 } from "@apollo/client";
 import type { Unmasked } from "@apollo/client/masking";
 import type { ExtensionsWithStreamInfo } from "@apollo/client/utilities/internal";
@@ -19,6 +20,13 @@ export declare namespace Cache {
     diff: Cache.DiffResult<TData>,
     lastDiff?: Cache.DiffResult<TData>
   ) => void;
+
+  export type Implementation =
+    TypeOverrides extends { cache: infer TCache } ?
+      TCache extends ApolloCache ?
+        TCache
+      : "The cache type declared in TypeOverrides does not extend `ApolloCache` and cannot be used with Apollo Client. See https://www.apollographql.com/docs/react/data/typescript#declaring-the-cache-type."
+    : ApolloCache;
 
   export interface ReadOptions<
     TData = unknown,
@@ -128,7 +136,7 @@ export declare namespace Cache {
   }
 
   export interface BatchOptions<
-    TCache extends ApolloCache,
+    TCache extends Cache.Implementation,
     TUpdateResult = void,
   > {
     /**
@@ -365,6 +373,36 @@ export declare namespace Cache {
         result: DataValue.Partial<TData> | null;
         complete: false;
         missing?: MissingFieldError;
+        fromOptimisticTransaction?: boolean;
+      };
+
+  export type InternalDiffResultWithDataState<TData> =
+    | {
+        result: DataValue.Complete<TData>;
+        complete: true;
+        missing?: never;
+        dataState: "complete";
+        fromOptimisticTransaction?: boolean;
+      }
+    | {
+        result: DataValue.Streaming<TData>;
+        complete: false;
+        missing?: never;
+        dataState: "streaming";
+        fromOptimisticTransaction?: boolean;
+      }
+    | {
+        result: DataValue.Partial<TData>;
+        complete: false;
+        missing?: MissingFieldError;
+        dataState: "partial";
+        fromOptimisticTransaction?: boolean;
+      }
+    | {
+        result: null;
+        complete: false;
+        missing?: MissingFieldError;
+        dataState: "empty";
         fromOptimisticTransaction?: boolean;
       };
 

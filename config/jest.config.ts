@@ -42,7 +42,9 @@ const reactSharedTestFileIgnoreList = [
   ignoreDTSFiles,
   ignoreTSFiles,
   "src/react/hooks/__tests__/useBackgroundQuery/testUtils.tsx",
+  "src/react/hooks/__tests__/useLoadableQuery/testUtils.tsx",
   "src/react/hooks/__tests__/useSuspenseQuery/testUtils.tsx",
+  "src/react/query-preloader/__tests__/createQueryPreloader/testUtils.tsx",
 ];
 
 const react17TestFileIgnoreList = [
@@ -60,6 +62,7 @@ const react17TestFileIgnoreList = [
   "src/react/hooks/__tests__/useLoadableQuery/*",
   "src/react/hooks/__tests__/useQueryRefHandlers.test.tsx",
   "src/react/query-preloader/__tests__/createQueryPreloader.test.tsx",
+  "src/react/query-preloader/__tests__/createQueryPreloader/*",
   "src/react/ssr/__tests__/prerenderStatic.test.tsx",
   "src/react/ssr/__tests__/useQueryEndToEnd.test.tsx",
 ];
@@ -130,8 +133,32 @@ const standardReact17Config = {
   },
 };
 
+const codegen = {
+  displayName: "GraphQL Codegen Plugins",
+  rootDir: "codegen",
+  preset: "ts-jest",
+  snapshotFormat: {
+    escapeString: true,
+    printBasicPrototype: true,
+  },
+  transform: {
+    "(dist/.+\\.js|\\.tsx?)$": [
+      "ts-jest",
+      {
+        // just transpile, no type checking. We type-check in CI by running `tsc` directly.
+        tsconfig: join(import.meta.dirname, "../codegen/tsconfig.json"),
+      },
+    ],
+  },
+  testPathIgnorePatterns: ["/dist/"],
+  transformIgnorePatterns: [],
+  prettierPath: null,
+  resolver: join(import.meta.dirname, "../src/config/jest/resolver.ts"),
+};
+
 export default {
   projects: [
+    codegen,
     tsStandardConfig,
     tsRxJSMinConfig,
     tsGraphql16Config,

@@ -49,7 +49,7 @@ export default defineConfig([
   {
     files: ["**/*.ts", "**/*.tsx"],
     plugins: tsPlugins,
-    ignores: ["tests.codegen.ts"],
+    ignores: [],
 
     languageOptions: {
       globals: {
@@ -158,6 +158,7 @@ export default defineConfig([
       sourceType: "script",
 
       parserOptions: {
+        tsconfigRootDir: import.meta.dirname,
         project: [
           "./tsconfig.json",
           "./codegen/tsconfig.json",
@@ -232,8 +233,10 @@ export default defineConfig([
       sourceType: "script",
 
       parserOptions: {
+        tsconfigRootDir: import.meta.dirname,
         project: [
           "./tsconfig.tests.json",
+          "./codegen/tsconfig.json",
           "./eslint-local-rules/tsconfig.json",
           "./scripts/codemods/ac3-to-ac4/tsconfig.tests.json",
         ],
@@ -263,7 +266,10 @@ export default defineConfig([
     },
   },
   {
-    files: ["scripts/codemods/ac3-to-ac4/**/__tests__/**/*.ts"],
+    files: [
+      "scripts/codemods/ac3-to-ac4/**/__tests__/**/*.ts",
+      "codegen/**/__tests__/**/*.ts",
+    ],
     // rules for tests only
     rules: {
       "local-rules/no-relative-imports": "off",

@@ -245,10 +245,46 @@ export interface CacheSizes {
    */
   "inMemoryCache.executeSubSelectedArray": number;
   /**
+   * Cache size for the `prunePartialBoundaries` method on [`StoreReader`](https://github.com/apollographql/apollo-client/blob/main/src/cache/inmemory/readFromStore.ts).
+   *
+   * @defaultValue
+   * Defaults to `20000`.
+   *
+   * @remarks
+   * Every object that is read from the cache for `@defer` and `@stream`
+   * queries will be cached here, so it is recommended to set this to a
+   * relatively high value.
+   */
+  "inMemoryCache.prunePartialBoundaries": number;
+  /**
+   * Cache size for the `prunePartialStreamArray` method on [`StoreReader`](https://github.com/apollographql/apollo-client/blob/main/src/cache/inmemory/readFromStore.ts).
+   *
+   * @defaultValue
+   * Defaults to `20000`.
+   *
+   * @remarks
+   * Every array that is read from the cache for `@defer` and `@stream`
+   * queries will be cached here, so it is recommended to set this to a
+   * relatively high value.
+   */
+  "inMemoryCache.prunePartialStreamArray": number;
+  /**
    * Used by the internal `checkDocument` that traverses GraphQL documents and throws an error if the document is invalid.
    * if they are not valid.
    */
   checkDocument: number;
+
+  /**
+   * Used by the internal `isDeferredFragment` utility that determines whether a
+   * fragment selection node is a deferred fragment.
+   */
+  isDeferredFragment: number;
+
+  /**
+   * Used by the internal `isStreamField` utility that determines whether a
+   * field selection node is a streamed field.
+   */
+  isStreamField: number;
 }
 
 const cacheSizeSymbol = Symbol.for("apollo.cacheSize");
@@ -278,6 +314,8 @@ export const cacheSizes: Partial<CacheSizes> = { ...global[cacheSizeSymbol] };
 
 export const enum defaultCacheSizes {
   checkDocument = 2000,
+  isDeferredFragment = 2000,
+  isStreamField = 2000,
   canonicalStringify = 1000,
   print = 2000,
   "documentTransform.cache" = 2000,
@@ -291,4 +329,6 @@ export const enum defaultCacheSizes {
   "inMemoryCache.maybeBroadcastWatch" = 5000,
   "inMemoryCache.executeSelectionSet" = 50000,
   "inMemoryCache.executeSubSelectedArray" = 10000,
+  "inMemoryCache.prunePartialBoundaries" = 20000,
+  "inMemoryCache.prunePartialStreamArray" = 20000,
 }

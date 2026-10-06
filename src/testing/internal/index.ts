@@ -42,3 +42,11 @@ export { wait } from "./wait.js";
 
 export { friendListSchemaGraphQL17Alpha2 } from "./schemas/friendList.graphql17Alpha2.js";
 export { friendListSchemaGraphQL17Alpha9 } from "./schemas/friendList.graphql17Alpha9.js";
+
+export {
+  dateScalar,
+  dateTimeRangeScalar,
+  dateTimeScalar,
+  jsonObjectScalar,
+  priceScalar,
+} from "./scalars.js";

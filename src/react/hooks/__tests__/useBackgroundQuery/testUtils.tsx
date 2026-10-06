@@ -4,6 +4,7 @@ import {
   useTrackRenders,
 } from "@testing-library/react-render-stream";
 import React, { Suspense } from "react";
+import { flushSync } from "react-dom";
 import { ErrorBoundary } from "react-error-boundary";
 
 import type { DataState, ErrorLike, OperationVariables } from "@apollo/client";
@@ -45,9 +46,13 @@ export async function renderUseBackgroundQuery<
     return null;
   }
 
+  let currentRefetch!: useBackgroundQuery.Result<TData, TVariables>["refetch"];
+
   function App({ props }: { props: Props | undefined }) {
     useTrackRenders({ name: "useBackgroundQuery" });
-    const [queryRef] = renderHook(props as any);
+    const [queryRef, { refetch }] = renderHook(props as any);
+
+    currentRefetch = refetch;
 
     return (
       <Suspense fallback={<SuspenseFallback />}>
@@ -71,5 +76,13 @@ export async function renderUseBackgroundQuery<
     return utils.rerender(<App props={props} />);
   }
 
-  return { takeRender, rerender };
+  // React 18 skips committing the suspense fallback when refetch is triggered
+  // as a default-priority update, so the fallback render is missed and tests
+  // may fail. flushSync forces a synchronous commit so the fallback renders in
+  // both React 18 and 19, while returning the refetch promise.
+  const refetch: typeof currentRefetch = (...args) => {
+    return flushSync(() => currentRefetch(...args));
+  };
+
+  return { takeRender, rerender, refetch };
 }

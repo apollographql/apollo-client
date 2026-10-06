@@ -10,7 +10,6 @@ import type { DocumentNode } from 'graphql';
 import type { FieldNode } from 'graphql';
 import type { FormattedExecutionResult } from 'graphql';
 import type { FragmentMap } from '@apollo/client/utilities/internal';
-import type { NoInfer as NoInfer_2 } from '@apollo/client/utilities/internal';
 import type { OperationVariables } from '@apollo/client';
 import type { RemoveIndexSignature } from '@apollo/client/utilities/internal';
 import type { TypedDocumentNode } from '@apollo/client';
@@ -83,16 +82,16 @@ export namespace LocalState {
 //
 // @public
 export class LocalState<TResolvers extends LocalState.Resolvers = LocalState.Resolvers<DefaultContext>, TContext = InferContextValueFromResolvers<TResolvers>> {
-    constructor(...[options]: {} extends TResolvers ? [
-    options?: LocalState.Options<TResolvers, NoInfer_2<TContext>>
+    constructor(...input: {} extends TResolvers ? [
+    options?: LocalState.Options<TResolvers, NoInfer<TContext>>
     ] : [
-    options: LocalState.Options<TResolvers, NoInfer_2<TContext>> & {
+    options: LocalState.Options<TResolvers, NoInfer<TContext>> & {
         resolvers: TResolvers;
     }
     ]);
     addResolvers(resolvers: TResolvers): void;
     // (undocumented)
-    execute<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ document, client, context, remoteResult, variables, onlyRunForcedResolvers, returnPartialData, fetchPolicy, }: {
+    execute<TData = unknown, TVariables extends OperationVariables = OperationVariables>(input: {
         document: DocumentNode | TypedDocumentNode<TData, TVariables>;
         client: ApolloClient;
         context: DefaultContext | undefined;
@@ -103,11 +102,11 @@ export class LocalState<TResolvers extends LocalState.Resolvers = LocalState.Res
         fetchPolicy: WatchQueryFetchPolicy;
     }): Promise<FormattedExecutionResult<TData>>;
     // (undocumented)
-    getExportedVariables<TVariables extends OperationVariables = OperationVariables>({ document, client, context, variables, }: {
+    getExportedVariables<TVariables extends OperationVariables = OperationVariables>(input: {
         document: DocumentNode | TypedDocumentNode<any, TVariables>;
         client: ApolloClient;
         context: DefaultContext | undefined;
-        variables: Partial<NoInfer_2<TVariables>>;
+        variables: Partial<NoInfer<TVariables>>;
     }): Promise<TVariables>;
 }
 

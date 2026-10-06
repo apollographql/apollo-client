@@ -1,4 +1,4 @@
-import type { ApolloCache } from "@apollo/client/cache";
+import type { Cache } from "@apollo/client/cache";
 
 import type { ApolloClient } from "./ApolloClient.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
@@ -23,7 +23,7 @@ export type DevtoolsOptions = ApolloClient.DevtoolsOptions;
 export type MutationOptions<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
-  TCache extends ApolloCache = ApolloCache,
+  TCache extends Cache.Implementation = Cache.Implementation,
 > = ApolloClient.MutateOptions<TData, TVariables, TCache>;
 
 /** @deprecated Use `ApolloClient.MutateResult` instead */
@@ -38,7 +38,7 @@ export type QueryOptions<
 
 /** @deprecated Use `ApolloClient.RefetchQueriesOptions` instead */
 export type RefetchQueriesOptions<
-  TCache extends ApolloCache,
+  TCache extends Cache.Implementation,
   TResult,
 > = ApolloClient.RefetchQueriesOptions<TCache, TResult>;
 

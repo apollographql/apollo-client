@@ -31,6 +31,7 @@ import {
   newInvariantError,
 } from "@apollo/client/utilities/invariant";
 
+import type { ApolloCache } from "../core/cache.js";
 import type {
   CanReadFunction,
   FieldSpecifier,
@@ -59,6 +60,7 @@ import type {
   MergeInfo,
   NormalizedCache,
   ReadMergeModifyContext,
+  ScalarType,
 } from "./types.js";
 import type { WriteContext } from "./writeToStore.js";
 
@@ -173,6 +175,7 @@ export type FieldPolicy<
   keyArgs?: KeySpecifier | KeyArgsFunction | false;
   read?: FieldReadFunction<TExisting, TReadResult, TReadOptions>;
   merge?: FieldMergeFunction<TExisting, TIncoming, TMergeOptions> | boolean;
+  scalar?: ScalarType;
 };
 
 export type StorageType = Record<string, any>;
@@ -354,6 +357,7 @@ type InternalFieldPolicy = {
   keyFn?: KeyArgsFunction;
   read?: FieldReadFunction<any>;
   merge?: FieldMergeFunction<any>;
+  scalar?: keyof ApolloCache.Scalars & string;
 };
 
 export class Policies {
@@ -563,9 +567,49 @@ export class Policies {
         const incoming = fields[fieldName];
 
         if (typeof incoming === "function") {
-          existing.read = incoming;
+          if (existing.scalar) {
+            if (__DEV__) {
+              warnAboutScalarConfig(
+                typename,
+                fieldName,
+                existing.scalar,
+                "read"
+              );
+            }
+          } else {
+            existing.read = incoming;
+          }
         } else {
-          const { keyArgs, read, merge } = incoming;
+          let { keyArgs, read, merge, scalar } = incoming;
+
+          if (scalar) {
+            existing.scalar = scalar;
+          }
+
+          if (existing.scalar) {
+            if (__DEV__) {
+              if (read !== undefined || existing.read !== undefined) {
+                warnAboutScalarConfig(
+                  typename,
+                  fieldName,
+                  existing.scalar,
+                  "read"
+                );
+              }
+
+              if (merge !== undefined || existing.merge !== undefined) {
+                warnAboutScalarConfig(
+                  typename,
+                  fieldName,
+                  existing.scalar,
+                  "merge"
+                );
+              }
+            }
+
+            existing.read = read = undefined;
+            existing.merge = merge = undefined;
+          }
 
           existing.keyFn =
             // Pass false to disable argument-based differentiation of
@@ -885,6 +929,13 @@ export class Policies {
     // StoreObject correspond to which original field names.
     return fieldName === fieldNameFromStoreName(storeFieldName) ? storeFieldName
       : fieldName + ":" + storeFieldName;
+  }
+
+  public getScalarTypeForField(
+    typename: string,
+    fieldName: string
+  ): ScalarType | undefined {
+    return this.getFieldPolicy(typename, fieldName)?.scalar;
   }
 
   public readField<V = StoreValue>(
@@ -1213,4 +1264,18 @@ function makeMergeObjectsFunction(
 
     return incoming;
   };
+}
+
+function warnAboutScalarConfig(
+  typename: string,
+  fieldName: string,
+  scalar: string,
+  kind: "read" | "merge"
+) {
+  invariant.warn(
+    "The field policy for '%s' is configured with the '%s' scalar, so its '%s' function is ignored. Scalar configuration cannot be used with custom read or merge functions.",
+    `${typename}.${fieldName}`,
+    scalar,
+    kind
+  );
 }

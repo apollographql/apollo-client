@@ -209,7 +209,7 @@ test('does not suspend deferred queries with data in the cache and using a "cach
           recipient: { __typename: "Person", name: "Cached Alice" },
         },
       },
-      dataState: "streaming",
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.streaming,
     });
@@ -363,7 +363,7 @@ test('does not suspend deferred queries with partial data in the cache and using
           recipient: { __typename: "Person", name: "Cached Alice" },
         },
       },
-      dataState: "streaming",
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.streaming,
     });

@@ -79,6 +79,8 @@ export type {
   IdGetter,
   IdGetterObj,
   InMemoryCacheConfig,
+  InputObjectConfig,
+  InputObjectsOption,
   MergeInfo,
   MergeTree,
   NormalizedCache,
@@ -88,6 +90,7 @@ export type {
   ReactiveVar,
   ReadMergeModifyContext,
   ReadQueryOptions,
+  ScalarType,
   StoreValue,
   // All the exports (types) from ../cache, minus cacheSlot,
   // which we want to keep semi-private.
@@ -104,6 +107,7 @@ export {
   InMemoryCache,
   makeVar,
   MissingFieldError,
+  Scalar,
 } from "@apollo/client/cache";
 
 /* Link */
@@ -196,12 +200,14 @@ import type {
   PossibleDefaultOptions,
 } from "./defaultOptions.js";
 import type { QueryManager } from "./QueryManager.js";
+import type { OverridableTypes } from "./types.js";
 import type { NextFetchPolicyContext } from "./watchQueryOptions.js";
 /** @internal */
 export declare namespace InternalTypes {
   export type {
     DefaultOptionsParentObject,
     NextFetchPolicyContext,
+    OverridableTypes,
     PossibleDefaultOptions,
     QueryManager,
   };

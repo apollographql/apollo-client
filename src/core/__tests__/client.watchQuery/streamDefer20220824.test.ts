@@ -62,13 +62,13 @@ test("handles streamed scalar lists", async () => {
   });
 
   await expect(observableStream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       scalarList: ["apple"],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitTypedValue({
@@ -112,13 +112,13 @@ test("handles streamed multi-dimensional lists", async () => {
   });
 
   await expect(observableStream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       scalarListList: [["apple", "apple", "apple"]],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitTypedValue({
@@ -171,13 +171,13 @@ test("merges cache updates that happen concurrently", async () => {
   });
 
   await expect(observableStream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   client.cache.writeFragment({
@@ -263,29 +263,29 @@ test("handles errors from items before initialCount is reached", async () => {
   });
 
   await expect(observableStream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [{ __typename: "Friend", id: "1", name: "Luke" }, null],
-    }),
+    },
     error: new CombinedGraphQLErrors({
       data: {
         friendList: [{ __typename: "Friend", id: "1", name: "Luke" }, null],
       },
       errors: [{ message: "bad", path: ["friendList", 1] }],
     }),
-    dataState: "streaming",
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [
         { __typename: "Friend", id: "1", name: "Luke" },
         null,
         { __typename: "Friend", id: "3", name: "Leia" },
       ],
-    }),
+    },
     error: new CombinedGraphQLErrors({
       data: {
         friendList: [
@@ -343,23 +343,23 @@ test("handles errors from items after initialCount is reached", async () => {
   });
 
   await expect(observableStream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [
         { __typename: "Friend", id: "1", name: "Luke" },
         null,
         { __typename: "Friend", id: "3", name: "Leia" },
       ],
-    }),
+    },
     error: new CombinedGraphQLErrors({
       data: {
         friendList: [
@@ -412,50 +412,50 @@ test("handles final chunk without incremental value", async () => {
   });
 
   await expect(observableStream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [
         { __typename: "Friend", id: "1", name: "Luke" },
         { __typename: "Friend", id: "2", name: "Han" },
       ],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [
         { __typename: "Friend", id: "1", name: "Luke" },
         { __typename: "Friend", id: "2", name: "Han" },
         { __typename: "Friend", id: "3", name: "Leia" },
       ],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitSimilarValue({
@@ -562,13 +562,13 @@ test("handles errors thrown after initialCount is reached", async () => {
   });
 
   await expect(observableStream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitTypedValue({
@@ -640,13 +640,13 @@ test("handles errors thrown due to null returned in non-null list items after in
   });
 
   await expect(observableStream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       nonNullFriendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitTypedValue({
@@ -716,21 +716,21 @@ test("ensures all chunks are streamed even when another non-null list returns an
   });
 
   await expect(observableStream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
       nonNullFriendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
       nonNullFriendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
-    }),
+    },
     error: new CombinedGraphQLErrors({
       data: {
         friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
@@ -744,20 +744,20 @@ test("ensures all chunks are streamed even when another non-null list returns an
         },
       ],
     }),
-    dataState: "streaming",
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [
         { __typename: "Friend", id: "1", name: "Luke" },
         { __typename: "Friend", id: "2", name: "Han" },
       ],
       nonNullFriendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
-    }),
+    },
     error: new CombinedGraphQLErrors({
       data: {
         friendList: [
@@ -774,21 +774,21 @@ test("ensures all chunks are streamed even when another non-null list returns an
         },
       ],
     }),
-    dataState: "streaming",
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [
         { __typename: "Friend", id: "1", name: "Luke" },
         { __typename: "Friend", id: "2", name: "Han" },
         { __typename: "Friend", id: "3", name: "Leia" },
       ],
       nonNullFriendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
-    }),
+    },
     error: new CombinedGraphQLErrors({
       data: {
         friendList: [
@@ -806,10 +806,10 @@ test("ensures all chunks are streamed even when another non-null list returns an
         },
       ],
     }),
-    dataState: "streaming",
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitSimilarValue({
@@ -865,21 +865,21 @@ test("combines errors from other streamed fields with null items from non-null s
   });
 
   await expect(observableStream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
       nonNullFriendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
       nonNullFriendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
-    }),
+    },
     error: new CombinedGraphQLErrors({
       data: {
         friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
@@ -893,17 +893,17 @@ test("combines errors from other streamed fields with null items from non-null s
         },
       ],
     }),
-    dataState: "streaming",
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [{ __typename: "Friend", id: "1", name: "Luke" }, null],
       nonNullFriendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
-    }),
+    },
     error: new CombinedGraphQLErrors({
       data: {
         friendList: [{ __typename: "Friend", id: "1", name: "Luke" }, null],
@@ -988,35 +988,35 @@ it("handles stream when in parent deferred fragment", async () => {
   resolveSlowField("slow");
 
   await expect(observableStream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       nestedObject: {
         __typename: "NestedObject",
         scalarField: "slow",
         nestedFriendList: [],
       },
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       nestedObject: {
         __typename: "NestedObject",
         scalarField: "slow",
         nestedFriendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
       },
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       nestedObject: {
         __typename: "NestedObject",
         scalarField: "slow",
@@ -1025,11 +1025,11 @@ it("handles stream when in parent deferred fragment", async () => {
           { __typename: "Friend", id: "2", name: "Han" },
         ],
       },
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitSimilarValue({
@@ -1091,13 +1091,13 @@ test("handles @defer inside @stream", async () => {
   });
 
   await expect(observableStream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   resolveIterableCompletion(null);
@@ -1109,6 +1109,7 @@ test("handles @defer inside @stream", async () => {
         friendList: [{ __typename: "Friend", id: "1" }],
       }),
       dataState: "streaming",
+      partial: true,
     }),
   });
 
@@ -1124,6 +1125,7 @@ test("handles @defer inside @stream", async () => {
         ],
       }),
       dataState: "streaming",
+      partial: true,
     }),
   });
 
@@ -1220,27 +1222,27 @@ test("can use custom merge function to combine cached and streamed lists", async
   });
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [
         { __typename: "Friend", id: "1", name: "Luke" },
         { __typename: "Friend", id: "2", name: "Cached Han" },
         { __typename: "Friend", id: "3", name: "Cached Leia" },
       ],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [
         { __typename: "Friend", id: "1", name: "Luke" },
         { __typename: "Friend", id: "2", name: "Han" },
         { __typename: "Friend", id: "3", name: "Leia" },
       ],
-    }),
+    },
     dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,

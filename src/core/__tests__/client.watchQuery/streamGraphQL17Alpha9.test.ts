@@ -18,6 +18,7 @@ import {
   mockDeferStreamGraphQL17Alpha9,
   ObservableStream,
   promiseWithResolvers,
+  spyOnConsole,
   wait,
 } from "@apollo/client/testing/internal";
 import { hasDirectives } from "@apollo/client/utilities/internal";
@@ -40,6 +41,10 @@ function createLink(rootValue?: Record<string, unknown>) {
       )
     );
   });
+}
+
+function uppercaseRead(existing: unknown) {
+  return typeof existing === "string" ? existing.toUpperCase() : existing;
 }
 
 test("handles streamed scalar lists", async () => {
@@ -66,13 +71,13 @@ test("handles streamed scalar lists", async () => {
   });
 
   await expect(observableStream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       scalarList: ["apple"],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitTypedValue({
@@ -116,13 +121,13 @@ test("handles streamed multi-dimensional lists", async () => {
   });
 
   await expect(observableStream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       scalarListList: [["apple", "apple", "apple"]],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitTypedValue({
@@ -176,13 +181,13 @@ test("merges cache updates that happen concurrently", async () => {
   });
 
   await expect(observableStream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   client.cache.writeFragment({
@@ -268,29 +273,29 @@ test("handles errors from items before initialCount is reached", async () => {
   });
 
   await expect(observableStream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [{ __typename: "Friend", id: "1", name: "Luke" }, null],
-    }),
+    },
     error: new CombinedGraphQLErrors({
       data: {
         friendList: [{ __typename: "Friend", id: "1", name: "Luke" }, null],
       },
       errors: [{ message: "bad", path: ["friendList", 1] }],
     }),
-    dataState: "streaming",
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [
         { __typename: "Friend", id: "1", name: "Luke" },
         null,
         { __typename: "Friend", id: "3", name: "Leia" },
       ],
-    }),
+    },
     error: new CombinedGraphQLErrors({
       data: {
         friendList: [
@@ -348,39 +353,39 @@ test("handles errors from items after initialCount is reached", async () => {
   });
 
   await expect(observableStream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [{ __typename: "Friend", id: "1", name: "Luke" }, null],
-    }),
+    },
     error: new CombinedGraphQLErrors({
       data: {
         friendList: [{ __typename: "Friend", id: "1", name: "Luke" }, null],
       },
       errors: [{ message: "bad", path: ["friendList", 1] }],
     }),
-    dataState: "streaming",
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [
         { __typename: "Friend", id: "1", name: "Luke" },
         null,
         { __typename: "Friend", id: "3", name: "Leia" },
       ],
-    }),
+    },
     error: new CombinedGraphQLErrors({
       data: {
         friendList: [
@@ -433,50 +438,50 @@ test("handles final chunk without incremental value", async () => {
   });
 
   await expect(observableStream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [
         { __typename: "Friend", id: "1", name: "Luke" },
         { __typename: "Friend", id: "2", name: "Han" },
       ],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [
         { __typename: "Friend", id: "1", name: "Luke" },
         { __typename: "Friend", id: "2", name: "Han" },
         { __typename: "Friend", id: "3", name: "Leia" },
       ],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitSimilarValue({
@@ -581,13 +586,13 @@ test("handles errors thrown after initialCount is reached", async () => {
   });
 
   await expect(observableStream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitTypedValue({
@@ -643,13 +648,13 @@ it("handles errors thrown due to null returned in non-null list items after init
   });
 
   await expect(observableStream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       nonNullFriendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitTypedValue({
@@ -735,35 +740,35 @@ it("handles stream when in parent deferred fragment", async () => {
   resolveSlowField("slow");
 
   await expect(observableStream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       nestedObject: {
         __typename: "NestedObject",
         scalarField: "slow",
         nestedFriendList: [],
       },
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       nestedObject: {
         __typename: "NestedObject",
         scalarField: "slow",
         nestedFriendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
       },
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       nestedObject: {
         __typename: "NestedObject",
         scalarField: "slow",
@@ -772,11 +777,11 @@ it("handles stream when in parent deferred fragment", async () => {
           { __typename: "Friend", id: "2", name: "Han" },
         ],
       },
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitSimilarValue({
@@ -838,13 +843,13 @@ test("handles @defer inside @stream", async () => {
   });
 
   await expect(observableStream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   resolveIterableCompletion();
@@ -852,10 +857,10 @@ test("handles @defer inside @stream", async () => {
   await expect(observableStream).toEmitSimilarValue({
     expected: (previous) => ({
       ...previous,
-      data: markAsStreaming({
+      data: {
         friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
-      }),
-      dataState: "streaming",
+      },
+      dataState: "complete",
     }),
   });
 
@@ -871,6 +876,7 @@ test("handles @defer inside @stream", async () => {
         ],
       }),
       dataState: "streaming",
+      partial: true,
     }),
   });
 
@@ -880,6 +886,100 @@ test("handles @defer inside @stream", async () => {
         { __typename: "Friend", id: "1", name: "Luke" },
         { __typename: "Friend", id: "2", name: "Han" },
       ],
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(observableStream).not.toEmitAnything();
+});
+
+test('reports "complete" once a sibling @defer boundary resolves while a @stream is still streaming with a "no-cache" fetch policy', async () => {
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+  const client = new ApolloClient({
+    link: httpLink,
+    cache: new InMemoryCache(),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 1) {
+        id
+        name
+      }
+      ... @defer {
+        someScalar
+      }
+    }
+  `;
+
+  const observableStream = new ObservableStream(
+    client.watchQuery({ query, fetchPolicy: "no-cache" })
+  );
+
+  await expect(observableStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: { friendList: [{ __typename: "Friend", id: "1", name: "Luke" }] },
+    pending: [
+      { id: "0", path: [] },
+      { id: "1", path: ["friendList"] },
+    ],
+    hasNext: true,
+  } as any);
+
+  await expect(observableStream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [{ id: "0", data: { someScalar: "resolved" } }],
+    completed: [{ id: "0" }],
+    hasNext: true,
+  } as any);
+
+  await expect(observableStream).toEmitTypedValue({
+    data: {
+      friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+      someScalar: "resolved",
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      { id: "1", items: [{ __typename: "Friend", id: "2", name: "Han" }] },
+    ],
+    completed: [{ id: "1" }],
+    hasNext: false,
+  } as any);
+
+  await expect(observableStream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+      ],
+      someScalar: "resolved",
     },
     dataState: "complete",
     loading: false,
@@ -967,31 +1067,31 @@ test("can use custom merge function to combine cached and streamed lists", async
   });
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [
         { __typename: "Friend", id: "1", name: "Luke" },
         { __typename: "Friend", id: "2", name: "Cached Han" },
         { __typename: "Friend", id: "3", name: "Cached Leia" },
       ],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [
         { __typename: "Friend", id: "1", name: "Luke" },
         { __typename: "Friend", id: "2", name: "Han" },
         { __typename: "Friend", id: "3", name: "Cached Leia" },
       ],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(stream).toEmitTypedValue({
@@ -1054,36 +1154,36 @@ test("provides streamFieldInfo to merge functions", async () => {
   });
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [
         { __typename: "Friend", id: "1", name: "Luke" },
         { __typename: "Friend", id: "2", name: "Han" },
       ],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [
         { __typename: "Friend", id: "1", name: "Luke" },
         { __typename: "Friend", id: "2", name: "Han" },
         { __typename: "Friend", id: "3", name: "Leia" },
       ],
-    }),
+    },
     dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
@@ -1165,56 +1265,56 @@ test("returns correct streamFieldInfo when final chunk is only hasNext: false", 
   subject.next(friends[0]);
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   subject.next(friends[1]);
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [
         { __typename: "Friend", id: "1", name: "Luke" },
         { __typename: "Friend", id: "2", name: "Han" },
       ],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   subject.next(friends[2]);
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [
         { __typename: "Friend", id: "1", name: "Luke" },
         { __typename: "Friend", id: "2", name: "Han" },
         { __typename: "Friend", id: "3", name: "Leia" },
       ],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   subject.complete();
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [
         { __typename: "Friend", id: "1", name: "Luke" },
         { __typename: "Friend", id: "2", name: "Han" },
         { __typename: "Friend", id: "3", name: "Leia" },
       ],
-    }),
+    },
     dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
@@ -1306,20 +1406,20 @@ test("provides streamFieldInfo to merge functions in nested stream fields", asyn
   });
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       nestedObject: {
         __typename: "NestedObject",
         nestedFriendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
       },
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       nestedObject: {
         __typename: "NestedObject",
         nestedFriendList: [
@@ -1327,15 +1427,15 @@ test("provides streamFieldInfo to merge functions in nested stream fields", asyn
           { __typename: "Friend", id: "2", name: "Han" },
         ],
       },
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       nestedObject: {
         __typename: "NestedObject",
         nestedFriendList: [
@@ -1344,7 +1444,7 @@ test("provides streamFieldInfo to merge functions in nested stream fields", asyn
           { __typename: "Friend", id: "3", name: "Leia" },
         ],
       },
-    }),
+    },
     dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
@@ -1430,18 +1530,18 @@ test("provides streamFieldInfo to merge functions in sibling stream fields", asy
   });
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
       nonNullFriendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [
         { __typename: "Friend", id: "1", name: "Luke" },
         { __typename: "Friend", id: "2", name: "Han" },
@@ -1450,15 +1550,15 @@ test("provides streamFieldInfo to merge functions in sibling stream fields", asy
         { __typename: "Friend", id: "1", name: "Luke" },
         { __typename: "Friend", id: "2", name: "Han" },
       ],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [
         { __typename: "Friend", id: "1", name: "Luke" },
         { __typename: "Friend", id: "2", name: "Han" },
@@ -1468,15 +1568,15 @@ test("provides streamFieldInfo to merge functions in sibling stream fields", asy
         { __typename: "Friend", id: "1", name: "Luke" },
         { __typename: "Friend", id: "2", name: "Han" },
       ],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [
         { __typename: "Friend", id: "1", name: "Luke" },
         { __typename: "Friend", id: "2", name: "Han" },
@@ -1487,7 +1587,7 @@ test("provides streamFieldInfo to merge functions in sibling stream fields", asy
         { __typename: "Friend", id: "2", name: "Han" },
         { __typename: "Friend", id: "3", name: "Leia" },
       ],
-    }),
+    },
     dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
@@ -1692,46 +1792,46 @@ test("sets correct streamFieldInfo when field name is same in different location
   });
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       scalarList: ["one"],
       nestedObject: { __typename: "NestedObject", scalarList: ["one"] },
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       scalarList: ["one", "two"],
       nestedObject: { __typename: "NestedObject", scalarList: ["one", "two"] },
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       scalarList: ["one", "two", "three"],
       nestedObject: { __typename: "NestedObject", scalarList: ["one", "two"] },
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       scalarList: ["one", "two", "three"],
       nestedObject: {
         __typename: "NestedObject",
         scalarList: ["one", "two", "three"],
       },
-    }),
+    },
     dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
@@ -1845,20 +1945,20 @@ test("sets correct streamFieldInfo when stream field is inside another list", as
   });
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [
         { __typename: "Friend", id: "1", name: "Luke", scalarList: ["one"] },
         { __typename: "Friend", id: "2", name: "Han", scalarList: ["one"] },
       ],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [
         {
           __typename: "Friend",
@@ -1873,15 +1973,15 @@ test("sets correct streamFieldInfo when stream field is inside another list", as
           scalarList: ["one"],
         },
       ],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [
         {
           __typename: "Friend",
@@ -1896,15 +1996,15 @@ test("sets correct streamFieldInfo when stream field is inside another list", as
           scalarList: ["one"],
         },
       ],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [
         {
           __typename: "Friend",
@@ -1919,15 +2019,15 @@ test("sets correct streamFieldInfo when stream field is inside another list", as
           scalarList: ["one", "two"],
         },
       ],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [
         {
           __typename: "Friend",
@@ -1942,7 +2042,7 @@ test("sets correct streamFieldInfo when stream field is inside another list", as
           scalarList: ["one", "two", "three"],
         },
       ],
-    }),
+    },
     dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
@@ -2042,56 +2142,56 @@ test("truncates array with default merge function on refetch when last chunk is 
   subject.next(friends[0]);
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   subject.next(friends[1]);
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [
         { __typename: "Friend", id: "1", name: "Luke" },
         { __typename: "Friend", id: "2", name: "Han" },
       ],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   subject.next(friends[2]);
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [
         { __typename: "Friend", id: "1", name: "Luke" },
         { __typename: "Friend", id: "2", name: "Han" },
         { __typename: "Friend", id: "3", name: "Leia" },
       ],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   subject.complete();
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [
         { __typename: "Friend", id: "1", name: "Luke" },
         { __typename: "Friend", id: "2", name: "Han" },
         { __typename: "Friend", id: "3", name: "Leia" },
       ],
-    }),
+    },
     dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
@@ -2107,13 +2207,13 @@ test("truncates array with default merge function on refetch when last chunk is 
   subject.next({ ...friends[0], name: `${friends[0].name} (refetch)` });
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [
         { __typename: "Friend", id: "1", name: "Luke" },
         { __typename: "Friend", id: "2", name: "Han" },
         { __typename: "Friend", id: "3", name: "Leia" },
       ],
-    }),
+    },
     dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.refetch,
@@ -2121,43 +2221,43 @@ test("truncates array with default merge function on refetch when last chunk is 
   });
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [
         { __typename: "Friend", id: "1", name: "Luke (refetch)" },
         { __typename: "Friend", id: "2", name: "Han" },
         { __typename: "Friend", id: "3", name: "Leia" },
       ],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   subject.next({ ...friends[1], name: `${friends[1].name} (refetch)` });
   subject.complete();
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [
         { __typename: "Friend", id: "1", name: "Luke (refetch)" },
         { __typename: "Friend", id: "2", name: "Han (refetch)" },
         { __typename: "Friend", id: "3", name: "Leia" },
       ],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [
         { __typename: "Friend", id: "1", name: "Luke (refetch)" },
         { __typename: "Friend", id: "2", name: "Han (refetch)" },
       ],
-    }),
+    },
     dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
@@ -2227,28 +2327,1450 @@ test("truncates array when fetched array is shorter than cached array with cache
   subject.next(friends[0]);
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [
         { __typename: "Friend", id: "1", name: "Luke" },
         { __typename: "Friend", id: "2", name: "Cached Han" },
         { __typename: "Friend", id: "3", name: "Cached Leia" },
       ],
-    }),
-    dataState: "streaming",
+    },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   subject.next(friends[1]);
   subject.complete();
 
   await expect(stream).toEmitTypedValue({
-    data: markAsStreaming({
+    data: {
       friendList: [
         { __typename: "Friend", id: "1", name: "Luke" },
         { __typename: "Friend", id: "2", name: "Han" },
         { __typename: "Friend", id: "3", name: "Cached Leia" },
+      ],
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+      ],
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test('returns partial cached stream list data as "partial" while streaming with a "cache-first" fetch policy and returnPartialData', async () => {
+  const { subject, stream: iterableStream } = asyncIterableSubject();
+
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 1) {
+        id
+        name
+      }
+    }
+  `;
+
+  const cache = new InMemoryCache();
+
+  // We are intentionally writing partial data to the cache. Suppress console
+  // warnings to avoid unnecessary noise in the test.
+  {
+    using _consoleSpy = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        friendList: friends.map((friend) => ({
+          __typename: "Friend",
+          id: String(friend.id),
+        })),
+      },
+    });
+  }
+
+  const client = new ApolloClient({
+    cache,
+    link: createLink({ friendList: () => iterableStream }),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({
+      query,
+      fetchPolicy: "cache-first",
+      returnPartialData: true,
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1" },
+        { __typename: "Friend", id: "2" },
+        { __typename: "Friend", id: "3" },
+      ],
+    },
+    dataState: "partial",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  subject.next(friends[0]);
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2" },
+        { __typename: "Friend", id: "3" },
+      ],
+    },
+    dataState: "partial",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  subject.next(friends[1]);
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+        { __typename: "Friend", id: "3" },
+      ],
+    },
+    dataState: "partial",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  subject.next(friends[2]);
+  subject.complete();
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+        { __typename: "Friend", id: "3", name: "Leia" },
+      ],
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+        { __typename: "Friend", id: "3", name: "Leia" },
+      ],
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("reports data as partial if a cache merge function returns partial data", async () => {
+  const { subject, stream: iterableStream } = asyncIterableSubject();
+
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 1) {
+        id
+        name
+      }
+    }
+  `;
+
+  const cache = new InMemoryCache({
+    typePolicies: {
+      Query: {
+        fields: {
+          friendList: {
+            merge: (existing = [], incoming) => {
+              const max = Math.max(existing.length, incoming.length);
+              const results = [];
+
+              for (let i = 0; i < max; i++) {
+                results[i] = incoming[i] ? incoming[i] : existing[i];
+              }
+
+              return results;
+            },
+          },
+        },
+      },
+    },
+  });
+
+  // We are intentionally writing partial data to the cache. Suppress console
+  // warnings to avoid unnecessary noise in the test.
+  {
+    using _consoleSpy = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        friendList: friends.map((friend) => ({
+          __typename: "Friend",
+          id: String(friend.id),
+        })),
+      },
+    });
+  }
+
+  const client = new ApolloClient({
+    cache,
+    link: createLink({ friendList: () => iterableStream }),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({
+      query,
+      fetchPolicy: "cache-first",
+      returnPartialData: true,
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1" },
+        { __typename: "Friend", id: "2" },
+        { __typename: "Friend", id: "3" },
+      ],
+    },
+    dataState: "partial",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  subject.next(friends[0]);
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2" },
+        { __typename: "Friend", id: "3" },
+      ],
+    },
+    dataState: "partial",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  subject.next(friends[1]);
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+        { __typename: "Friend", id: "3" },
+      ],
+    },
+    dataState: "partial",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  subject.next(friends[2]);
+  subject.complete();
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+        { __typename: "Friend", id: "3", name: "Leia" },
+      ],
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+        { __typename: "Friend", id: "3", name: "Leia" },
+      ],
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("does not surface incomplete cached stream list items with returnPartialData: false", async () => {
+  const { subject, stream: iterableStream } = asyncIterableSubject();
+
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 1) {
+        id
+        name
+      }
+    }
+  `;
+
+  const cache = new InMemoryCache();
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        friendList: friends.map((friend) => ({
+          __typename: "Friend",
+          id: String(friend.id),
+        })),
+      },
+    });
+  }
+
+  const client = new ApolloClient({
+    cache,
+    link: createLink({ friendList: () => iterableStream }),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(client.watchQuery({ query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  subject.next(friends[0]);
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  subject.next(friends[1]);
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+      ],
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  subject.next(friends[2]);
+  subject.complete();
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+        { __typename: "Friend", id: "3", name: "Leia" },
+      ],
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+        { __typename: "Friend", id: "3", name: "Leia" },
+      ],
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("emits stream items when network chunks are deeply equal to partial cached data", async () => {
+  const { subject, stream: iterableStream } = asyncIterableSubject();
+
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 1) {
+        id
+        name
+      }
+    }
+  `;
+
+  const cache = new InMemoryCache();
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        friendList: [
+          { __typename: "Friend", id: "1", name: "Luke" },
+          { __typename: "Friend", id: "2", name: "Han" },
+          { __typename: "Friend", id: "3" },
+        ],
+      },
+    });
+  }
+
+  const client = new ApolloClient({
+    cache,
+    link: createLink({ friendList: () => iterableStream }),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(client.watchQuery({ query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  subject.next(friends[0]);
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  subject.next(friends[1]);
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+      ],
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  subject.complete();
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+      ],
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("hides a partial cached stream array until the network supplies stream items with returnPartialData: false", async () => {
+  const { subject, stream: iterableStream } = asyncIterableSubject();
+
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 1) {
+        id
+        name
+      }
+    }
+  `;
+
+  const cache = new InMemoryCache();
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        friendList: [
+          {
+            __typename: "Friend",
+            id: "1",
+            name: "Cached Luke",
+          },
+          {
+            __typename: "Friend",
+            id: "2",
+            name: "Cached Han",
+          },
+          {
+            __typename: "Friend",
+            id: "3",
+          },
+          {
+            __typename: "Friend",
+            id: "4",
+            name: "Cached Chewbacca",
+          },
+        ],
+      },
+    });
+  }
+
+  const client = new ApolloClient({
+    cache,
+    link: createLink({ friendList: () => iterableStream }),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(client.watchQuery({ query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  subject.next(friends[0]);
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  subject.next(friends[1]);
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+      ],
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  subject.next(friends[2]);
+  subject.complete();
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+        { __typename: "Friend", id: "3", name: "Leia" },
+      ],
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+        { __typename: "Friend", id: "3", name: "Leia" },
+      ],
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("fetches a partial stream array with a cache-first fetch policy", async () => {
+  const { subject, stream: iterableStream } = asyncIterableSubject<Friend>();
+
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 1) {
+        id
+        name
+      }
+    }
+  `;
+
+  const cache = new InMemoryCache();
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        friendList: [
+          { __typename: "Friend", id: "1", name: "Cached Luke" },
+          { __typename: "Friend", id: "2" },
+          { __typename: "Friend", id: "3", name: "Cached Leia" },
+        ],
+      },
+    });
+  }
+
+  const client = new ApolloClient({
+    cache,
+    link: createLink({ friendList: () => iterableStream }),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({ query, fetchPolicy: "cache-first" })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  subject.next(friends[0]);
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  subject.complete();
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("does not fetch a complete stream array with a cache-first fetch policy", async () => {
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 1) {
+        id
+        name
+      }
+    }
+  `;
+
+  const cache = new InMemoryCache();
+  cache.writeQuery({
+    query,
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Cached Luke" },
+        { __typename: "Friend", id: "2", name: "Cached Han" },
+      ],
+    },
+  });
+
+  const client = new ApolloClient({
+    cache,
+    link: createLink({
+      friendList: () => friends,
+    }),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({ query, fetchPolicy: "cache-first" })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Cached Luke" },
+        { __typename: "Friend", id: "2", name: "Cached Han" },
+      ],
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("returns empty for partial stream array for cache-only fetch policy", async () => {
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 1) {
+        id
+        name
+      }
+    }
+  `;
+
+  const cache = new InMemoryCache();
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        friendList: [
+          { __typename: "Friend", id: "1", name: "Cached Luke" },
+          { __typename: "Friend", id: "2" },
+          { __typename: "Friend", id: "3", name: "Cached Leia" },
+        ],
+      },
+    });
+  }
+
+  const client = new ApolloClient({
+    cache,
+    link: createLink(),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({ query, fetchPolicy: "cache-only" })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: true,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("returns stream items with complete stream array for cache-only fetch policy", async () => {
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 1) {
+        id
+        name
+      }
+    }
+  `;
+
+  const cache = new InMemoryCache();
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        friendList: [
+          { __typename: "Friend", id: "1", name: "Cached Luke" },
+          { __typename: "Friend", id: "2", name: "Cached Han" },
+          { __typename: "Friend", id: "3", name: "Cached Leia" },
+        ],
+      },
+    });
+  }
+
+  const client = new ApolloClient({
+    cache,
+    link: createLink(),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({ query, fetchPolicy: "cache-only" })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Cached Luke" },
+        { __typename: "Friend", id: "2", name: "Cached Han" },
+        { __typename: "Friend", id: "3", name: "Cached Leia" },
+      ],
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("returns only streamed items with applied field read functions using a network-only fetch policy", async () => {
+  const { subject, stream: iterableStream } = asyncIterableSubject<Friend>();
+
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 1) {
+        id
+        name
+      }
+    }
+  `;
+
+  const cache = new InMemoryCache({
+    typePolicies: {
+      Friend: {
+        fields: {
+          name: { read: uppercaseRead },
+        },
+      },
+    },
+  });
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        friendList: [
+          { __typename: "Friend", id: "1", name: "Luke" },
+          { __typename: "Friend", id: "2", name: "Han" },
+          { __typename: "Friend", id: "3" },
+          { __typename: "Friend", id: "4", name: "Cached Chewbacca" },
+        ],
+      },
+    });
+  }
+
+  const client = new ApolloClient({
+    cache,
+    link: createLink({ friendList: () => iterableStream }),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({ query, fetchPolicy: "network-only" })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  subject.next(friends[0]);
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [{ __typename: "Friend", id: "1", name: "LUKE" }],
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  subject.next(friends[1]);
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "LUKE" },
+        { __typename: "Friend", id: "2", name: "HAN" },
+      ],
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  subject.complete();
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "LUKE" },
+        { __typename: "Friend", id: "2", name: "HAN" },
+      ],
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("only returns streamed items with field read functions with complete array and a network-only fetch policy", async () => {
+  const { subject, stream: iterableStream } = asyncIterableSubject<Friend>();
+
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 1) {
+        id
+        name
+      }
+    }
+  `;
+
+  const cache = new InMemoryCache({
+    typePolicies: {
+      Friend: {
+        fields: {
+          name: { read: uppercaseRead },
+        },
+      },
+    },
+  });
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        friendList: [
+          { __typename: "Friend", id: "1", name: "Cached Luke" },
+          { __typename: "Friend", id: "2", name: "Cached Han" },
+          { __typename: "Friend", id: "3", name: "Cached Leia" },
+        ],
+      },
+    });
+  }
+
+  const client = new ApolloClient({
+    cache,
+    link: createLink({ friendList: () => iterableStream }),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({ query, fetchPolicy: "network-only" })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  subject.next(friends[0]);
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [{ __typename: "Friend", id: "1", name: "LUKE" }],
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  subject.next(friends[1]);
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "LUKE" },
+        { __typename: "Friend", id: "2", name: "HAN" },
+      ],
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  subject.next(friends[2]);
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "LUKE" },
+        { __typename: "Friend", id: "2", name: "HAN" },
+        { __typename: "Friend", id: "3", name: "LEIA" },
+      ],
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  subject.complete();
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "LUKE" },
+        { __typename: "Friend", id: "2", name: "HAN" },
+        { __typename: "Friend", id: "3", name: "LEIA" },
+      ],
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("only returns streamed items from a partial array with a cache-and-network fetch policy", async () => {
+  const { subject, stream: iterableStream } = asyncIterableSubject<Friend>();
+
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 1) {
+        id
+        name
+      }
+    }
+  `;
+
+  const cache = new InMemoryCache({
+    typePolicies: {
+      Friend: {
+        fields: {
+          name: { read: uppercaseRead },
+        },
+      },
+    },
+  });
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        friendList: [
+          { __typename: "Friend", id: "1", name: "Cached Luke" },
+          { __typename: "Friend", id: "2", name: "Cached Han" },
+          { __typename: "Friend", id: "3" },
+          { __typename: "Friend", id: "4", name: "Cached Chewbacca" },
+        ],
+      },
+    });
+  }
+
+  const client = new ApolloClient({
+    cache,
+    link: createLink({ friendList: () => iterableStream }),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({ query, fetchPolicy: "cache-and-network" })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  subject.next(friends[0]);
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [{ __typename: "Friend", id: "1", name: "LUKE" }],
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  subject.complete();
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [{ __typename: "Friend", id: "1", name: "LUKE" }],
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("keeps all cached stream items including incomplete ones until the last chunk with returnPartialData: true", async () => {
+  const { subject, stream: iterableStream } = asyncIterableSubject();
+
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 1) {
+        id
+        name
+      }
+    }
+  `;
+
+  const cache = new InMemoryCache();
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        friendList: [
+          { __typename: "Friend", id: "1", name: "Cached Luke" },
+          { __typename: "Friend", id: "2", name: "Cached Han" },
+          { __typename: "Friend", id: "3" },
+          { __typename: "Friend", id: "4", name: "Cached Chewbacca" },
+        ],
+      },
+    });
+  }
+
+  const client = new ApolloClient({
+    cache,
+    link: createLink({ friendList: () => iterableStream }),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({ query, returnPartialData: true })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Cached Luke" },
+        { __typename: "Friend", id: "2", name: "Cached Han" },
+        { __typename: "Friend", id: "3" },
+        { __typename: "Friend", id: "4", name: "Cached Chewbacca" },
+      ],
+    },
+    dataState: "partial",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  subject.next(friends[0]);
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Cached Han" },
+        { __typename: "Friend", id: "3" },
+        { __typename: "Friend", id: "4", name: "Cached Chewbacca" },
+      ],
+    }),
+    dataState: "partial",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  subject.next(friends[1]);
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+        { __typename: "Friend", id: "3" },
+        { __typename: "Friend", id: "4", name: "Cached Chewbacca" },
+      ],
+    }),
+    dataState: "partial",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  subject.next(friends[2]);
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+        { __typename: "Friend", id: "3", name: "Leia" },
+        { __typename: "Friend", id: "4", name: "Cached Chewbacca" },
+      ],
+    }),
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  subject.complete();
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+        { __typename: "Friend", id: "3", name: "Leia" },
+      ],
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("does not surface incomplete cached fields on a streamed item after the network fills that item with returnPartialData: false", async () => {
+  const { subject, stream: iterableStream } = asyncIterableSubject();
+
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 1) {
+        id
+        name
+      }
+    }
+  `;
+
+  const cache = new InMemoryCache();
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        friendList: [
+          {
+            __typename: "Friend",
+            id: "1",
+          },
+          {
+            __typename: "Friend",
+            id: "2",
+            name: "Cached Han",
+          },
+        ],
+      },
+    });
+  }
+
+  const client = new ApolloClient({
+    cache,
+    link: createLink({ friendList: () => iterableStream }),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(client.watchQuery({ query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  subject.next(friends[0]);
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  subject.next(friends[1]);
+  subject.complete();
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+      ],
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+      ],
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("prunes undelivered defer fragments from partial cached fields inside a `@defer` boundary on streamed list items with returnPartialData: false", async () => {
+  const mock = mockDeferStreamGraphQL17Alpha9();
+
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 1) {
+        id
+        name
+        ... on Friend @defer {
+          email
+          phone
+        }
+      }
+    }
+  `;
+
+  const cache = new InMemoryCache();
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        friendList: [
+          {
+            __typename: "Friend",
+            id: "1",
+            name: "Cached Luke",
+            email: "cached-luke@example.com",
+          },
+          {
+            __typename: "Friend",
+            id: "2",
+            name: "Cached Han",
+          },
+        ],
+      },
+    });
+  }
+
+  const client = new ApolloClient({
+    cache,
+    link: mock.httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(client.watchQuery({ query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  mock.enqueueInitialChunk({
+    data: {
+      friendList: [
+        {
+          __typename: "Friend",
+          id: "1",
+          name: "Luke",
+        },
+      ],
+    },
+    pending: [
+      { id: "0", path: ["friendList", 0] },
+      { id: "1", path: ["friendList"] },
+    ],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [
+        {
+          __typename: "Friend",
+          id: "1",
+          name: "Luke",
+        },
       ],
     }),
     dataState: "streaming",
@@ -2257,13 +3779,1410 @@ test("truncates array when fetched array is shorter than cached array with cache
     partial: true,
   });
 
+  mock.enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          __typename: "Friend",
+          email: "luke@example.com",
+          phone: "555-0101",
+        },
+        id: "0",
+      },
+    ],
+    completed: [{ id: "0" }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        {
+          __typename: "Friend",
+          id: "1",
+          name: "Luke",
+          email: "luke@example.com",
+          phone: "555-0101",
+        },
+      ],
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  mock.enqueueSubsequentChunk({
+    incremental: [
+      {
+        items: [
+          {
+            __typename: "Friend",
+            id: "2",
+            name: "Han",
+          },
+        ] as any,
+        id: "1",
+      },
+    ],
+    pending: [{ id: "2", path: ["friendList", 1] }],
+    hasNext: true,
+  });
+
   await expect(stream).toEmitTypedValue({
     data: markAsStreaming({
+      friendList: [
+        {
+          __typename: "Friend",
+          id: "1",
+          name: "Luke",
+          email: "luke@example.com",
+          phone: "555-0101",
+        },
+        {
+          __typename: "Friend",
+          id: "2",
+          name: "Han",
+        },
+      ],
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  mock.enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          __typename: "Friend",
+          email: "han@example.com",
+          phone: "555-0102",
+        },
+        id: "2",
+      },
+    ],
+    completed: [{ id: "1" }, { id: "2" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        {
+          __typename: "Friend",
+          id: "1",
+          name: "Luke",
+          email: "luke@example.com",
+          phone: "555-0101",
+        },
+        {
+          __typename: "Friend",
+          id: "2",
+          name: "Han",
+          email: "han@example.com",
+          phone: "555-0102",
+        },
+      ],
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("prunes each streamed list item's sibling `@defer` boundaries independently by label", async () => {
+  const mock = mockDeferStreamGraphQL17Alpha9();
+
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 1) {
+        id
+        ... on Friend @defer {
+          name
+        }
+        ... on Friend @defer {
+          email
+        }
+      }
+    }
+  `;
+
+  const cache = new InMemoryCache();
+
+  cache.writeQuery({
+    query,
+    data: {
+      friendList: [
+        {
+          __typename: "Friend",
+          id: "1",
+          name: "Cached Luke",
+          email: "cached-luke@example.com",
+        },
+        {
+          __typename: "Friend",
+          id: "2",
+          name: "Cached Han",
+          email: "cached-han@example.com",
+        },
+      ],
+    },
+  });
+
+  const client = new ApolloClient({
+    cache,
+    link: mock.httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({ query, fetchPolicy: "network-only" })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  mock.enqueueInitialChunk({
+    data: { friendList: [{ __typename: "Friend", id: "1" }] },
+    pending: [
+      { id: "0", path: ["friendList", 0], label: "ac_0" },
+      { id: "1", path: ["friendList", 0], label: "ac_1" },
+      // The `@stream` boundary doesn't get a label
+      { id: "2", path: ["friendList"] },
+    ],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [{ __typename: "Friend", id: "1" }],
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  mock.enqueueSubsequentChunk({
+    incremental: [{ data: { __typename: "Friend", name: "Luke" }, id: "0" }],
+    completed: [{ id: "0" }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  mock.enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: { __typename: "Friend", email: "luke@example.com" },
+        id: "1",
+      },
+    ],
+    completed: [{ id: "1" }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        {
+          __typename: "Friend",
+          id: "1",
+          name: "Luke",
+          email: "luke@example.com",
+        },
+      ],
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  mock.enqueueSubsequentChunk({
+    incremental: [
+      { items: [{ __typename: "Friend", id: "2" }] as any, id: "2" },
+    ],
+    pending: [
+      { id: "3", path: ["friendList", 1], label: "ac_0" },
+      { id: "4", path: ["friendList", 1], label: "ac_1" },
+    ],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [
+        {
+          __typename: "Friend",
+          id: "1",
+          name: "Luke",
+          email: "luke@example.com",
+        },
+        { __typename: "Friend", id: "2" },
+      ],
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  mock.enqueueSubsequentChunk({
+    incremental: [
+      { data: { __typename: "Friend", email: "han@example.com" }, id: "4" },
+    ],
+    completed: [{ id: "4" }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [
+        {
+          __typename: "Friend",
+          id: "1",
+          name: "Luke",
+          email: "luke@example.com",
+        },
+        { __typename: "Friend", id: "2", email: "han@example.com" },
+      ],
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  mock.enqueueSubsequentChunk({
+    incremental: [{ data: { __typename: "Friend", name: "Han" }, id: "3" }],
+    completed: [{ id: "2" }, { id: "3" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        {
+          __typename: "Friend",
+          id: "1",
+          name: "Luke",
+          email: "luke@example.com",
+        },
+        {
+          __typename: "Friend",
+          id: "2",
+          name: "Han",
+          email: "han@example.com",
+        },
+      ],
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("does not surface complete cached `@defer` boundaries on streamed list items with returnPartialData: false", async () => {
+  const mock = mockDeferStreamGraphQL17Alpha9();
+
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 1) {
+        id
+        name
+        ... on Friend @defer {
+          email
+          phone
+        }
+      }
+    }
+  `;
+
+  const cache = new InMemoryCache();
+
+  // We are intentionally writing partial data to the cache. Suppress console
+  // warnings to avoid unnecessary noise in the test.
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        friendList: [
+          {
+            __typename: "Friend",
+            id: "1",
+            email: "cached-luke@example.com",
+            phone: "555-9101",
+          },
+        ],
+      },
+    });
+  }
+
+  const client = new ApolloClient({
+    cache,
+    link: mock.httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(client.watchQuery({ query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  mock.enqueueInitialChunk({
+    data: {
+      friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+    },
+    pending: [
+      { id: "0", path: ["friendList", 0], label: "ac_0" },
+      { id: "1", path: ["friendList"] },
+    ],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  mock.enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          __typename: "Friend",
+          email: "luke@example.com",
+          phone: "555-0101",
+        },
+        id: "0",
+      },
+    ],
+    completed: [{ id: "0" }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [
+        {
+          __typename: "Friend",
+          id: "1",
+          name: "Luke",
+          email: "luke@example.com",
+          phone: "555-0101",
+        },
+      ],
+    }),
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  mock.enqueueSubsequentChunk({
+    incremental: [
+      {
+        items: [{ __typename: "Friend", id: "2", name: "Han" }] as any,
+        id: "1",
+      },
+    ],
+    pending: [{ id: "2", path: ["friendList", 1], label: "ac_0" }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [
+        {
+          __typename: "Friend",
+          id: "1",
+          name: "Luke",
+          email: "luke@example.com",
+          phone: "555-0101",
+        },
+        { __typename: "Friend", id: "2", name: "Han" },
+      ],
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  mock.enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          __typename: "Friend",
+          email: "han@example.com",
+          phone: "555-0102",
+        },
+        id: "2",
+      },
+    ],
+    completed: [{ id: "1" }, { id: "2" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        {
+          __typename: "Friend",
+          id: "1",
+          name: "Luke",
+          email: "luke@example.com",
+          phone: "555-0101",
+        },
+        {
+          __typename: "Friend",
+          id: "2",
+          name: "Han",
+          email: "han@example.com",
+          phone: "555-0102",
+        },
+      ],
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("applies field read functions to streamed list items on intermediate and final results", async () => {
+  const { subject, stream: iterableStream } = asyncIterableSubject<Friend>();
+
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 1) {
+        id
+        name
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      typePolicies: {
+        Friend: {
+          fields: {
+            name: { read: uppercaseRead },
+          },
+        },
+      },
+    }),
+    link: createLink({ friendList: async () => iterableStream }),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(client.watchQuery({ query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  subject.next({ name: "Luke", id: 1 });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [{ __typename: "Friend", id: "1", name: "LUKE" }],
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  subject.next({ name: "Han", id: 2 });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "LUKE" },
+        { __typename: "Friend", id: "2", name: "HAN" },
+      ],
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  subject.next({ name: "Leia", id: 3 });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "LUKE" },
+        { __typename: "Friend", id: "2", name: "HAN" },
+        { __typename: "Friend", id: "3", name: "LEIA" },
+      ],
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  subject.complete();
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "LUKE" },
+        { __typename: "Friend", id: "2", name: "HAN" },
+        { __typename: "Friend", id: "3", name: "LEIA" },
+      ],
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("applies field read functions to streamed items while truncating length with an incomplete stream item with returnPartialData: false", async () => {
+  const { subject, stream: iterableStream } = asyncIterableSubject();
+
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 1) {
+        id
+        name
+      }
+    }
+  `;
+
+  const cache = new InMemoryCache({
+    typePolicies: {
+      Friend: {
+        fields: {
+          name: { read: uppercaseRead },
+        },
+      },
+    },
+  });
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        friendList: [
+          { __typename: "Friend", id: "1", name: "Cached Luke" },
+          { __typename: "Friend", id: "2", name: "Cached Han" },
+          { __typename: "Friend", id: "3" },
+          { __typename: "Friend", id: "4", name: "Cached Chewbacca" },
+        ],
+      },
+    });
+  }
+
+  const client = new ApolloClient({
+    cache,
+    link: createLink({ friendList: () => iterableStream }),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(client.watchQuery({ query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  subject.next(friends[0]);
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [{ __typename: "Friend", id: "1", name: "LUKE" }],
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  subject.next(friends[1]);
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "LUKE" },
+        { __typename: "Friend", id: "2", name: "HAN" },
+      ],
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  subject.next(friends[2]);
+  subject.complete();
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "LUKE" },
+        { __typename: "Friend", id: "2", name: "HAN" },
+        { __typename: "Friend", id: "3", name: "LEIA" },
+      ],
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "LUKE" },
+        { __typename: "Friend", id: "2", name: "HAN" },
+        { __typename: "Friend", id: "3", name: "LEIA" },
+      ],
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("applies field read functions to partial cached stream list data before and during streaming", async () => {
+  const { subject, stream: iterableStream } = asyncIterableSubject<Friend>();
+
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 1) {
+        id
+        name
+      }
+    }
+  `;
+
+  const cache = new InMemoryCache({
+    typePolicies: {
+      Query: {
+        fields: {
+          friendList: {
+            merge(existing = [], incoming, { field }) {
+              if (field && hasDirectives(["stream"], field)) {
+                const merged: any[] = [];
+
+                for (
+                  let i = 0;
+                  i < Math.max(existing.length, incoming.length);
+                  i++
+                ) {
+                  merged[i] =
+                    incoming[i] === undefined ? existing[i] : incoming[i];
+                }
+
+                return merged;
+              }
+
+              return incoming;
+            },
+          },
+        },
+      },
+      Friend: {
+        fields: {
+          name: { read: uppercaseRead },
+        },
+      },
+    },
+  });
+
+  {
+    using _consoleSpy = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        friendList: [
+          { __typename: "Friend", id: "1", name: "Cached Luke" },
+          { __typename: "Friend", id: "2" },
+          { __typename: "Friend", id: "3" },
+        ],
+      },
+    });
+  }
+
+  const client = new ApolloClient({
+    cache,
+    link: createLink({ friendList: async () => iterableStream }),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({ query, returnPartialData: true })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "CACHED LUKE" },
+        { __typename: "Friend", id: "2" },
+        { __typename: "Friend", id: "3" },
+      ],
+    },
+    dataState: "partial",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  subject.next({ name: "Luke", id: 1 });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [
+        { __typename: "Friend", id: "1", name: "LUKE" },
+        { __typename: "Friend", id: "2" },
+        { __typename: "Friend", id: "3" },
+      ],
+    }),
+    dataState: "partial",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  subject.next({ name: "Han", id: 2 });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [
+        { __typename: "Friend", id: "1", name: "LUKE" },
+        { __typename: "Friend", id: "2", name: "HAN" },
+        { __typename: "Friend", id: "3" },
+      ],
+    }),
+    dataState: "partial",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  subject.next({ name: "Leia", id: 3 });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [
+        { __typename: "Friend", id: "1", name: "LUKE" },
+        { __typename: "Friend", id: "2", name: "HAN" },
+        { __typename: "Friend", id: "3", name: "LEIA" },
+      ],
+    }),
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  subject.complete();
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "LUKE" },
+        { __typename: "Friend", id: "2", name: "HAN" },
+        { __typename: "Friend", id: "3", name: "LEIA" },
+      ],
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("only reports streamed items from a partial stream array with a cache-first fetch policy", async () => {
+  const { subject, stream: iterableStream } = asyncIterableSubject<Friend>();
+
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 1) {
+        id
+        name
+      }
+    }
+  `;
+
+  const cache = new InMemoryCache();
+
+  // We are intentionally writing partial data to the cache. Suppress console
+  // warnings to avoid unnecessary noise in the test.
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        friendList: [
+          { __typename: "Friend", id: "1" },
+          { __typename: "Friend", id: "2", name: "Cached Han" },
+          { __typename: "Friend", id: "3", name: "Cached Leia" },
+        ],
+      },
+    });
+  }
+
+  const client = new ApolloClient({
+    cache,
+    link: createLink({ friendList: () => iterableStream }),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({ query, fetchPolicy: "cache-first" })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  subject.next(friends[0]);
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  subject.next(friends[1]);
+
+  await expect(stream).toEmitTypedValue({
+    data: {
       friendList: [
         { __typename: "Friend", id: "1", name: "Luke" },
         { __typename: "Friend", id: "2", name: "Han" },
       ],
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  subject.next(friends[2]);
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+        { __typename: "Friend", id: "3", name: "Leia" },
+      ],
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  subject.complete();
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+        { __typename: "Friend", id: "3", name: "Leia" },
+      ],
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("only reports streamed items from a partial stream array with a cache-and-network fetch policy", async () => {
+  const { subject, stream: iterableStream } = asyncIterableSubject<Friend>();
+
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 1) {
+        id
+        name
+      }
+    }
+  `;
+
+  const cache = new InMemoryCache();
+
+  // We are intentionally writing partial data to the cache. Suppress console
+  // warnings to avoid unnecessary noise in the test.
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        friendList: [
+          { __typename: "Friend", id: "1" },
+          { __typename: "Friend", id: "2", name: "Cached Han" },
+          { __typename: "Friend", id: "3", name: "Cached Leia" },
+        ],
+      },
+    });
+  }
+
+  const client = new ApolloClient({
+    cache,
+    link: createLink({ friendList: () => iterableStream }),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({ query, fetchPolicy: "cache-and-network" })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  subject.next(friends[0]);
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [{ __typename: "Friend", id: "1", name: "Luke" }],
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  subject.next(friends[1]);
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+      ],
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  subject.next(friends[2]);
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+        { __typename: "Friend", id: "3", name: "Leia" },
+      ],
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  subject.complete();
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Luke" },
+        { __typename: "Friend", id: "2", name: "Han" },
+        { __typename: "Friend", id: "3", name: "Leia" },
+      ],
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("applies field read functions to residual complete stream list items while later items are still streaming", async () => {
+  const { subject, stream: iterableStream } = asyncIterableSubject<Friend>();
+
+  const query = gql`
+    query {
+      friendList @stream(initialCount: 1) {
+        id
+        name
+      }
+    }
+  `;
+
+  const cache = new InMemoryCache({
+    typePolicies: {
+      Friend: {
+        fields: {
+          name: { read: uppercaseRead },
+        },
+      },
+    },
+  });
+
+  cache.writeQuery({
+    query,
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "Cached Luke" },
+        { __typename: "Friend", id: "2", name: "Cached Han" },
+        { __typename: "Friend", id: "3", name: "Cached Leia" },
+      ],
+    },
+  });
+
+  const client = new ApolloClient({
+    cache,
+    link: createLink({ friendList: async () => iterableStream }),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({ query, fetchPolicy: "cache-and-network" })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "CACHED LUKE" },
+        { __typename: "Friend", id: "2", name: "CACHED HAN" },
+        { __typename: "Friend", id: "3", name: "CACHED LEIA" },
+      ],
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: false,
+  });
+
+  subject.next({ name: "Luke", id: 1 });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [
+        { __typename: "Friend", id: "1", name: "LUKE" },
+        { __typename: "Friend", id: "2", name: "CACHED HAN" },
+        { __typename: "Friend", id: "3", name: "CACHED LEIA" },
+      ],
     }),
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  subject.next({ name: "Han", id: 2 });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [
+        { __typename: "Friend", id: "1", name: "LUKE" },
+        { __typename: "Friend", id: "2", name: "HAN" },
+        { __typename: "Friend", id: "3", name: "CACHED LEIA" },
+      ],
+    }),
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  subject.next({ name: "Leia", id: 3 });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      friendList: [
+        { __typename: "Friend", id: "1", name: "LUKE" },
+        { __typename: "Friend", id: "2", name: "HAN" },
+        { __typename: "Friend", id: "3", name: "LEIA" },
+      ],
+    }),
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  subject.complete();
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      friendList: [
+        { __typename: "Friend", id: "1", name: "LUKE" },
+        { __typename: "Friend", id: "2", name: "HAN" },
+        { __typename: "Friend", id: "3", name: "LEIA" },
+      ],
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("applies field read functions when @stream delivers nested objects with overlapping non-stream fields", async () => {
+  const query = gql`
+    query {
+      book {
+        title
+        author {
+          name
+        }
+        reviews @stream(initialCount: 0) {
+          id
+          body
+          author {
+            name
+          }
+        }
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      typePolicies: {
+        Book: {
+          fields: {
+            title: { read: uppercaseRead },
+          },
+        },
+        Person: {
+          fields: {
+            name: { read: uppercaseRead },
+          },
+        },
+        Review: {
+          fields: {
+            body: {
+              read: uppercaseRead,
+            },
+          },
+        },
+      },
+    }),
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(client.watchQuery({ query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: {
+      book: {
+        __typename: "Book",
+        title: "The Information",
+        author: {
+          __typename: "Person",
+          name: "James Gleick",
+        },
+        reviews: [],
+      },
+    },
+    pending: [{ id: "0", path: ["book", "reviews"] }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      book: {
+        __typename: "Book",
+        title: "THE INFORMATION",
+        author: {
+          __typename: "Person",
+          name: "JAMES GLEICK",
+        },
+        reviews: [],
+      },
+    }),
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        items: [
+          {
+            __typename: "Review",
+            id: "1",
+            body: "Great book",
+            author: {
+              __typename: "Person",
+              name: "Ada",
+            },
+          },
+        ] as any,
+        id: "0",
+      },
+    ],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      book: {
+        __typename: "Book",
+        title: "THE INFORMATION",
+        author: {
+          __typename: "Person",
+          name: "JAMES GLEICK",
+        },
+        reviews: [
+          {
+            __typename: "Review",
+            id: "1",
+            body: "GREAT BOOK",
+            author: {
+              __typename: "Person",
+              name: "ADA",
+            },
+          },
+        ],
+      },
+    }),
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: false,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        items: [
+          {
+            __typename: "Review",
+            id: "2",
+            body: "Still great",
+            author: {
+              __typename: "Person",
+              name: "Grace",
+            },
+          },
+        ] as any,
+        id: "0",
+      },
+    ],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      book: {
+        __typename: "Book",
+        title: "THE INFORMATION",
+        author: {
+          __typename: "Person",
+          name: "JAMES GLEICK",
+        },
+        reviews: [
+          {
+            __typename: "Review",
+            id: "1",
+            body: "GREAT BOOK",
+            author: {
+              __typename: "Person",
+              name: "ADA",
+            },
+          },
+          {
+            __typename: "Review",
+            id: "2",
+            body: "STILL GREAT",
+            author: {
+              __typename: "Person",
+              name: "GRACE",
+            },
+          },
+        ],
+      },
+    },
     dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
@@ -2288,3 +5207,128 @@ function createMockStreamMergeFn() {
     return result;
   });
 }
+
+test("does not emit when no data added when a `@stream` completes while a `@defer` boundary is still pending", async () => {
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+          }
+        }
+      }
+      friendList @stream(initialCount: 1) {
+        name
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+  const cache = new InMemoryCache();
+
+  const client = new ApolloClient({
+    cache,
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({ query, fetchPolicy: "network-only" })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: {
+      greeting: { __typename: "Greeting", message: "Hello world" },
+      friendList: [{ __typename: "Friend", name: "Luke" }],
+    },
+    pending: [
+      { id: "0", path: ["greeting"] },
+      { id: "1", path: ["friendList"] },
+    ],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      greeting: { __typename: "Greeting", message: "Hello world" },
+      friendList: [{ __typename: "Friend", name: "Luke" }],
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [
+      { id: "1", items: [{ __typename: "Friend", name: "Han" }] as any },
+    ],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      greeting: { __typename: "Greeting", message: "Hello world" },
+      friendList: [
+        { __typename: "Friend", name: "Luke" },
+        { __typename: "Friend", name: "Han" },
+      ],
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    completed: [{ id: "1" }],
+    hasNext: true,
+  });
+
+  await expect(stream).not.toEmitAnything();
+
+  enqueueSubsequentChunk({
+    incremental: [
+      {
+        id: "0",
+        data: {
+          __typename: "Greeting",
+          recipient: { __typename: "Person", name: "Alice" },
+        },
+      },
+    ],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Alice" },
+      },
+      friendList: [
+        { __typename: "Friend", name: "Luke" },
+        { __typename: "Friend", name: "Han" },
+      ],
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});

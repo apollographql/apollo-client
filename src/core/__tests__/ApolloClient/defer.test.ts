@@ -281,4 +281,132 @@ describe("@defer", () => {
       expect.anything()
     );
   });
+
+  test("deeply nested defer in mutations doesn't cause cache to log errors about missing fields", async () => {
+    using spy = spyOnConsole("error");
+
+    const mutation = gql`
+      mutation M {
+        post {
+          id
+          __typename
+          comments {
+            id
+            __typename
+            text
+            author {
+              id
+              __typename
+              name
+            }
+          }
+          ...CommentDetails @defer
+        }
+      }
+      fragment CommentDetails on Post {
+        id
+        __typename
+        comments {
+          id
+          __typename
+          likes
+          author {
+            id
+            __typename
+            badge {
+              id
+              __typename
+            }
+          }
+        }
+      }
+    `;
+
+    const link = new MockSubscriptionLink();
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+    const promise = client.mutate({ mutation });
+
+    link.simulateResult({
+      result: {
+        data: {
+          post: {
+            __typename: "Post",
+            id: "p1",
+            comments: [
+              {
+                __typename: "Comment",
+                id: "c1",
+                text: "first!",
+                author: {
+                  __typename: "Author",
+                  id: "a1",
+                  name: "x",
+                },
+              },
+            ],
+          },
+        },
+        hasNext: true,
+      },
+    });
+
+    link.simulateResult(
+      {
+        result: {
+          hasNext: false,
+          incremental: [
+            {
+              path: ["post"],
+              data: {
+                __typename: "Post",
+                id: "p1",
+                comments: [
+                  {
+                    __typename: "Comment",
+                    id: "c1",
+                    likes: 42,
+                    author: {
+                      __typename: "Author",
+                      id: "a1",
+                      badge: { __typename: "Badge", id: "b1" },
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      },
+      true
+    );
+
+    const { data } = await promise;
+
+    expect(data).toEqual({
+      post: {
+        __typename: "Post",
+        id: "p1",
+        comments: [
+          {
+            __typename: "Comment",
+            id: "c1",
+            text: "first!",
+            likes: 42,
+            author: {
+              __typename: "Author",
+              id: "a1",
+              name: "x",
+              badge: { __typename: "Badge", id: "b1" },
+            },
+          },
+        ],
+      },
+    });
+
+    expect(spy.error).not.toHaveBeenCalled();
+  });
 });

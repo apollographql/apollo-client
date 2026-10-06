@@ -82,6 +82,7 @@ import type { IgnoreModifier } from "../cache/core/types/common.js";
 import type { TODO } from "../utilities/types/TODO.js";
 
 const { hasOwnProperty } = Object.prototype;
+const fromNetworkSymbol = Symbol.for("apollo.fromNetwork");
 
 const IGNORE: IgnoreModifier = Object.create(null);
 
@@ -423,12 +424,15 @@ export class QueryManager<TStore> {
     cache = this.cache
   ): Promise<FetchResult<TData>> {
     let { result } = mutation;
-    const cacheWrites: Cache.WriteOptions[] = [];
+    const cacheWrites: Array<
+      Cache.WriteOptions & { [fromNetworkSymbol]?: boolean }
+    > = [];
     const skipCache = mutation.fetchPolicy === "no-cache";
 
     if (!skipCache && shouldWriteResult(result, mutation.errorPolicy)) {
       if (!isExecutionPatchIncrementalResult(result)) {
         cacheWrites.push({
+          [fromNetworkSymbol]: true,
           result: result.data,
           dataId: "ROOT_MUTATION",
           query: mutation.document,
@@ -458,6 +462,7 @@ export class QueryManager<TStore> {
           // ExecutionPatchResult never has `data` when returned from the server
           (result as FetchResult).data = mergedData;
           cacheWrites.push({
+            [fromNetworkSymbol]: true,
             result: mergedData,
             dataId: "ROOT_MUTATION",
             query: mutation.document,

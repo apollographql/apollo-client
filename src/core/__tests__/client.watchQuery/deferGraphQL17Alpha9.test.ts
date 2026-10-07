@@ -37,6 +37,78 @@ function createSchemaLink(rootValue?: Record<string, unknown>) {
   );
 }
 
+test("reports streaming after a failed alpha9 defer finishes with no-cache", async () => {
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+          }
+        }
+      }
+    }
+  `;
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+  const client = new ApolloClient({
+    link: httpLink,
+    cache: new InMemoryCache(),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+  const stream = new ObservableStream(
+    client.watchQuery({ query, fetchPolicy: "no-cache", errorPolicy: "all" })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  const data = {
+    greeting: { __typename: "Greeting", message: "Hello world" },
+  };
+  enqueueInitialChunk({
+    data,
+    pending: [{ id: "0", path: ["greeting"], label: "ac_0" }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming(data),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  const errors = [
+    {
+      message: "Could not fetch recipient",
+      path: ["greeting", "recipient"],
+    },
+  ];
+  enqueueSubsequentChunk({
+    completed: [{ id: "0", errors }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming(data),
+    dataState: "streaming",
+    error: new CombinedGraphQLErrors({ data, errors }),
+    loading: false,
+    networkStatus: NetworkStatus.error,
+    partial: true,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
 test("deduplicates queries as long as a query still has deferred chunks", async () => {
   const query = gql`
     query LazyLoadLuke {

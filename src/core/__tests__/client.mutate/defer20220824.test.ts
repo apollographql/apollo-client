@@ -206,8 +206,6 @@ test("does not suppress warnings for missing deferred mutation fields after comp
   };
 
   // Deliberately omit the selected badge from the completed response.
-  // Mutation writes do not pass isDeferPending, so the cache still
-  // suppresses missing-field errors for this completed boundary.
   enqueueSubsequentChunk({
     incremental: [{ path: ["createPost"], data: deferredData }],
     hasNext: false,

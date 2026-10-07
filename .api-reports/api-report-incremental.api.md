@@ -99,13 +99,14 @@ class Defer20220824Handler implements Incremental.Handler<Defer20220824Handler.C
     // Warning: (ae-forgotten-export) The symbol "DeferRequest" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    startRequest<TData extends Record<string, unknown>>(_: Incremental.StartRequestOptions): DeferRequest<TData>;
+    startRequest<TData extends Record<string, unknown>>(opts: Incremental.StartRequestOptions): DeferRequest<TData>;
 }
 export { Defer20220824Handler }
 export { Defer20220824Handler as GraphQL17Alpha2Handler }
 
 // @public (undocumented)
 class DeferRequest<TData extends Record<string, unknown>> implements Incremental.IncrementalRequest<Defer20220824Handler.Chunk<TData>, TData> {
+    constructor(input: Incremental.StartRequestOptions);
     // (undocumented)
     handle(cacheData: TData | DeepPartial<TData> | null | undefined, chunk: Defer20220824Handler.Chunk<TData>): FormattedExecutionResult<TData>;
     // (undocumented)
@@ -207,7 +208,7 @@ export class GraphQL17Alpha9Handler implements Incremental.Handler<GraphQL17Alph
     // Warning: (ae-forgotten-export) The symbol "IncrementalRequest" needs to be exported by the entry point index.d.ts
     //
     // @internal @deprecated (undocumented)
-    startRequest<TData>(_: Incremental.StartRequestOptions): IncrementalRequest<TData>;
+    startRequest<TData>(opts: Incremental.StartRequestOptions): IncrementalRequest<TData>;
 }
 
 // @public (undocumented)
@@ -273,16 +274,20 @@ export namespace Incremental {
     }
     // (undocumented)
     export interface IncrementalRequest<Chunk extends Record<string, unknown>, TData> {
-        // @internal @deprecated (undocumented)
-        getPendingWithInfo?: () => Array<PendingItemWithInfo>;
         // (undocumented)
         handle: (cacheData: TData | DeepPartial<TData> | undefined | null, chunk: Chunk) => FormattedExecutionResult<TData>;
         // (undocumented)
         hasNext: boolean;
-        // @internal @deprecated (undocumented)
+        // @internal @deprecated
+        isDeferPending(): boolean;
+        // @internal @deprecated
         isDeferPending(path: Incremental.Path, label: string | undefined): boolean;
         // @internal @deprecated (undocumented)
+        markStreamedPendingForTruncation?: () => void;
+        // @internal @deprecated (undocumented)
         readonly streamInfo?: StreamInfoTrie;
+        // @internal @deprecated
+        tracksPending?: boolean;
     }
     // (undocumented)
     export type Path = ReadonlyArray<string | number>;
@@ -331,26 +336,19 @@ export namespace Incremental {
 
 // @public (undocumented)
 class IncrementalRequest<TData> implements Incremental.IncrementalRequest<GraphQL17Alpha9Handler.Chunk<TData>, TData> {
-    // @internal @deprecated (undocumented)
-    getPendingWithInfo(): ({
-        type: "stream";
-        path: Incremental.Path;
-        delivered?: undefined;
-        label?: undefined;
-    } | {
-        type: "defer";
-        delivered: boolean;
-        path: Incremental.Path;
-        label: string | undefined;
-    })[];
+    constructor(input: Incremental.StartRequestOptions);
     // (undocumented)
     handle(cacheData: TData | DeepPartial<TData> | null | undefined, chunk: GraphQL17Alpha9Handler.Chunk<TData>): FormattedExecutionResult<TData>;
     // (undocumented)
     hasNext: boolean;
+    // @internal @deprecated
+    isDeferPending: (path?: Incremental.Path, label?: string | undefined) => boolean;
     // @internal @deprecated (undocumented)
-    isDeferPending: (path: Incremental.Path, label: string | undefined) => boolean;
+    markStreamedPendingForTruncation(): void;
     // @internal @deprecated (undocumented)
     get streamInfo(): StreamInfoTrie | undefined;
+    // @internal @deprecated (undocumented)
+    tracksPending: boolean;
 }
 
 // Warning: (ae-forgotten-export) The symbol "ScalarType" needs to be exported by the entry point index.d.ts

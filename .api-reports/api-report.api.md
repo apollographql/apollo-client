@@ -1637,18 +1637,20 @@ namespace Incremental {
     }
     // (undocumented)
     interface IncrementalRequest<Chunk extends Record<string, unknown>, TData> {
-        // Warning: (ae-forgotten-export) The symbol "Incremental" needs to be exported by the entry point index.d.ts
-        //
-        // @internal @deprecated (undocumented)
-        getPendingWithInfo?: () => Array<PendingItemWithInfo>;
         // (undocumented)
         handle: (cacheData: TData | DeepPartial<TData> | undefined | null, chunk: Chunk) => FormattedExecutionResult<TData>;
         // (undocumented)
         hasNext: boolean;
-        // @internal @deprecated (undocumented)
+        // @internal @deprecated
+        isDeferPending(): boolean;
+        // @internal @deprecated
         isDeferPending(path: Incremental.Path, label: string | undefined): boolean;
         // @internal @deprecated (undocumented)
+        markStreamedPendingForTruncation?: () => void;
+        // @internal @deprecated (undocumented)
         readonly streamInfo?: StreamInfoTrie;
+        // @internal @deprecated
+        tracksPending?: boolean;
     }
     // (undocumented)
     type Path = ReadonlyArray<string | number>;

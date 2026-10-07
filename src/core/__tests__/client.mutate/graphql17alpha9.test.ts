@@ -127,7 +127,7 @@ test("merges nested deferred mutation fields without missing-field errors", asyn
   expect(consoleSpy.error).not.toHaveBeenCalled();
 });
 
-test("still suppresses warnings for missing deferred mutation fields after completion", async () => {
+test("does not suppress warnings for missing deferred mutation fields after completion", async () => {
   const mutation = gql`
     mutation {
       createPost {
@@ -241,5 +241,10 @@ test("still suppresses warnings for missing deferred mutation fields after compl
   expect(writeSpy).toHaveBeenCalledTimes(2);
   expect(cache.extract()["Comment:c1"]).toHaveProperty("likes", 42);
   expect(cache.extract()["Author:a1"]).not.toHaveProperty("badge");
-  expect(consoleSpy.error).not.toHaveBeenCalled();
+  expect(consoleSpy.error).toHaveBeenCalledTimes(1);
+  expect(consoleSpy.error).toHaveBeenLastCalledWith(
+    "Missing field '%s' while writing result %o",
+    "badge",
+    { __typename: "Author", id: "a1", name: "Alice" }
+  );
 });

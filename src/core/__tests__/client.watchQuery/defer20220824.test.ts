@@ -1,7 +1,11 @@
 import { gql } from "graphql-tag";
 
 import type { ObservableQuery } from "@apollo/client";
-import { ApolloClient, NetworkStatus } from "@apollo/client";
+import {
+  ApolloClient,
+  CombinedGraphQLErrors,
+  NetworkStatus,
+} from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { Defer20220824Handler } from "@apollo/client/incremental";
 import { ApolloLink } from "@apollo/client/link";
@@ -11,6 +15,74 @@ import {
   ObservableStream,
   spyOnConsole,
 } from "@apollo/client/testing/internal";
+
+test("reports complete after a failed legacy defer finishes with no-cache", async () => {
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+          }
+        }
+      }
+    }
+  `;
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDefer20220824();
+  const client = new ApolloClient({
+    link: httpLink,
+    cache: new InMemoryCache(),
+    incrementalHandler: new Defer20220824Handler(),
+  });
+  const stream = new ObservableStream(
+    client.watchQuery({ query, fetchPolicy: "no-cache", errorPolicy: "all" })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  const data = {
+    greeting: { __typename: "Greeting", message: "Hello world" },
+  };
+  enqueueInitialChunk({ data, hasNext: true });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming(data),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  const errors = [
+    {
+      message: "Could not fetch recipient",
+      path: ["greeting", "recipient"],
+    },
+  ];
+  enqueueSubsequentChunk({
+    incremental: [{ path: ["greeting"], data: null, errors }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data,
+    dataState: "complete",
+    error: new CombinedGraphQLErrors({ data, errors }),
+    loading: false,
+    networkStatus: NetworkStatus.error,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
 
 test("deduplicates queries as long as a query still has deferred chunks", async () => {
   const query = gql`

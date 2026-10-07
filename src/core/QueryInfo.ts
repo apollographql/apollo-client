@@ -15,7 +15,6 @@ import {
   getOperationName,
   graphQLResultHasError,
   handleIncrementalSymbol,
-  hasDirectives,
   toDiffWithDataState,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";

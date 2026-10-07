@@ -43,6 +43,8 @@ export declare namespace Incremental {
   > {
     hasNext: boolean;
 
+    /** @internal Whether this request granularly tracks pending boundaries. */
+    tracksPending?: boolean;
     /** @internal */
     readonly streamInfo?: StreamInfoTrie;
     /** @internal */

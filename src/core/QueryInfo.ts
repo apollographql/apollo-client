@@ -288,18 +288,9 @@ export class QueryInfo<
     // for a network-only request if they haven't yet streamed from the
     // network. We record all the still-pending paths so that cache.diff
     // can prune complete defer/stream boundaries at those paths.
-    if (prune) {
+    if (prune && this.incremental?.tracksPending) {
       const isDeferPending = this.incremental?.isDeferPending;
-      if (
-        isDeferPending?.() &&
-        // this was never reached for the defer20220824 handler, as it was previously
-        // done in a loop that was always empty for it
-        // isDeferPending never reached the pruning stage.
-        // it has to be decided if we want to go that route or not
-        // keeping inside the check for markStreamedPendingForTruncation ensures
-        // we don't execute this with the 20220824 handler right now.
-        this.incremental?.markStreamedPendingForTruncation
-      ) {
+      if (isDeferPending?.()) {
         incrementalInfo.isDeferPending ||= (path, label) =>
           isDeferPending(path, label);
       }

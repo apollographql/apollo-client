@@ -115,6 +115,9 @@ class IncrementalRequest<TData>
 
   private deferLabels = new Set<string>();
 
+  /** @internal */
+  tracksPending = true;
+
   constructor({ query }: Incremental.StartRequestOptions) {
     visit(query, {
       Directive: (node) => {

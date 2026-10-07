@@ -205,29 +205,7 @@ export class QueryInfo<
       dataState: incrementalResult.data == null ? "empty" : "complete",
     };
 
-    const hasPendingDefer = this.incremental
-      ?.getPendingWithInfo?.()
-      .some((pending) => pending.type === "defer" && !pending.delivered);
-
-    if (
-      hasPendingDefer ||
-      // The Defer20220824Handler cannot track pending/completed incremental
-      // chunks due to its data format so we naively set dataState to
-      // streaming if we are still processing chunks. The only case where
-      // streaming is incorrect and should actually be complete is when
-      // both a @defer and @stream boundary is present and the @defer chunk
-      // has completed before the `@stream` array.
-      //
-      // Assigning the naive "streaming" value avoids a much more expensive
-      // pass over `result.data` that would otherwise need to traverse the
-      // selection sets and evaluate the data object at each defer boundary
-      // to see if it fulfills the selection set. For such a narrow case where
-      // its incorrect on a format that is now outdated is not worth the
-      // fix so we are ok with reporting a `streaming` here.
-      (!this.incremental?.getPendingWithInfo &&
-        this.hasNext &&
-        hasDirectives(["defer"], query))
-    ) {
+    if (this.incremental?.isDeferPending()) {
       result.dataState = "streaming";
     }
 
@@ -312,22 +290,20 @@ export class QueryInfo<
     // network. We record all the still-pending paths so that cache.diff
     // can prune complete defer/stream boundaries at those paths.
     if (prune) {
+      const isDeferPending = this.incremental?.isDeferPending;
+      if (
+        // this was never reached for the defer20220824 handler, as it was previously
+        // done in a loop that was always empty for it
+        // isDeferPending never reached the pruning stage.
+        // it has to be decided if we want to go that route or not
+        pending.length &&
+        isDeferPending?.()
+      ) {
+        incrementalInfo.isDeferPending ||= (path, label) =>
+          isDeferPending(path, label);
+      }
       for (const item of pending) {
-        if (item.type === "defer" && !item.delivered) {
-          // Deliberately a new closure on every call, NOT
-          // `this.incremental.isDeferPending` itself. `context.isDeferPending`
-          // is part of the memoization key of
-          // `prunePartialBoundaries`/`prunePartialStreamArray` in
-          // readFromStore.ts. A stable function reference would let a prune
-          // result computed while a boundary was pending be served again
-          // after it was delivered. A fresh identity per read (like the
-          // fresh Trie it replaces) keeps those results from being reused
-          // across chunks, while `undefined` (nothing pending) still allows
-          // reuse. Do not "optimize" this into a cached reference.
-          const isDeferPending = this.incremental!.isDeferPending;
-          incrementalInfo.isDeferPending ||= (path, label) =>
-            isDeferPending(path, label);
-        } else if (streamInfo && item.type === "stream") {
+        if (streamInfo && item.type === "stream") {
           streamInfo.lookupArray(item.path as any[]).state.truncate = true;
         }
       }

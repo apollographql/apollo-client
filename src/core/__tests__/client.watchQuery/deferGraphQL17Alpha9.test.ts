@@ -37,6 +37,78 @@ function createSchemaLink(rootValue?: Record<string, unknown>) {
   );
 }
 
+test("reports streaming after a failed alpha9 defer finishes with no-cache", async () => {
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+          }
+        }
+      }
+    }
+  `;
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+  const client = new ApolloClient({
+    link: httpLink,
+    cache: new InMemoryCache(),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+  const stream = new ObservableStream(
+    client.watchQuery({ query, fetchPolicy: "no-cache", errorPolicy: "all" })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  const data = {
+    greeting: { __typename: "Greeting", message: "Hello world" },
+  };
+  enqueueInitialChunk({
+    data,
+    pending: [{ id: "0", path: ["greeting"], label: "ac_0" }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming(data),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  const errors = [
+    {
+      message: "Could not fetch recipient",
+      path: ["greeting", "recipient"],
+    },
+  ];
+  enqueueSubsequentChunk({
+    completed: [{ id: "0", errors }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming(data),
+    dataState: "streaming",
+    error: new CombinedGraphQLErrors({ data, errors }),
+    loading: false,
+    networkStatus: NetworkStatus.error,
+    partial: true,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
 test("deduplicates queries as long as a query still has deferred chunks", async () => {
   const query = gql`
     query LazyLoadLuke {
@@ -98,8 +170,8 @@ test("deduplicates queries as long as a query still has deferred chunks", async 
   defer.enqueueInitialChunk({
     data: initialData,
     pending: [
-      { id: "0", path: ["people", "friends", 0] },
-      { id: "1", path: ["people", "friends", 1] },
+      { id: "0", label: "ac_0", path: ["people", "friends", 0] },
+      { id: "1", label: "ac_0", path: ["people", "friends", 1] },
     ],
     hasNext: true,
   });
@@ -244,9 +316,9 @@ it.each([["cache-first"], ["no-cache"]] as const)(
         ],
       },
       pending: [
-        { id: "0", path: ["characters", 0] },
-        { id: "1", path: ["characters", 1] },
-        { id: "2", path: ["characters", 2] },
+        { id: "0", label: "ac_0", path: ["characters", 0] },
+        { id: "1", label: "ac_0", path: ["characters", 1] },
+        { id: "2", label: "ac_0", path: ["characters", 2] },
       ],
       hasNext: true,
     });
@@ -333,8 +405,8 @@ it.each([["cache-first"], ["no-cache"]] as const)(
         ],
       },
       pending: [
-        { id: "0", path: ["characters", 0] },
-        { id: "1", path: ["characters", 1] },
+        { id: "0", label: "ac_0", path: ["characters", 0] },
+        { id: "1", label: "ac_0", path: ["characters", 1] },
       ],
       hasNext: true,
     });
@@ -450,7 +522,7 @@ test('returns non-deferred cached data with a "cache-first" fetch policy and ret
 
   enqueueInitialChunk({
     data: { greeting: { message: "Hello world", __typename: "Greeting" } },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -558,7 +630,7 @@ test("does not return incomplete cached fields inside a deferred named fragment 
 
   enqueueInitialChunk({
     data: { greeting: { message: "Hello world", __typename: "Greeting" } },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -665,7 +737,7 @@ test("does not surface incomplete cached fields from nested fragments inside a `
 
   enqueueInitialChunk({
     data: { greeting: { message: "Hello world", __typename: "Greeting" } },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -768,7 +840,7 @@ test("does not surface incomplete cached fields from a named fragment spread ins
 
   enqueueInitialChunk({
     data: { greeting: { message: "Hello world", __typename: "Greeting" } },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -881,7 +953,7 @@ test("does not surface incomplete cached defer-only fields under an overlapping 
         recipient: { __typename: "Person", name: "Alice" },
       },
     },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -1009,8 +1081,8 @@ test("does not surface incomplete cached fields inside a list item `@defer` boun
       },
     },
     pending: [
-      { id: "0", path: ["person", "friends", 0] },
-      { id: "1", path: ["person", "friends", 1] },
+      { id: "0", label: "ac_0", path: ["person", "friends", 0] },
+      { id: "1", label: "ac_0", path: ["person", "friends", 1] },
     ],
     hasNext: true,
   });
@@ -1302,7 +1374,7 @@ test("does not surface incomplete cached deep defer-only fields under an overlap
         },
       },
     },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -1432,7 +1504,7 @@ test("does not treat cached `__typename`-only data inside a `@defer` boundary as
         message: "Hello world",
       },
     },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -1549,7 +1621,7 @@ test('returns partial non-deferred cached data with a "cache-first" fetch policy
 
   enqueueInitialChunk({
     data: { greeting: { message: "Hello world", __typename: "Greeting" } },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -1713,7 +1785,7 @@ test('returns partial deferred cached data as "partial" while streaming with a "
 
   enqueueInitialChunk({
     data: { greeting: { message: "Hello world", __typename: "Greeting" } },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -1831,7 +1903,7 @@ test('reports partial cached data inside a defer boundary as "partial" when the 
 
   enqueueInitialChunk({
     data: { greeting: { message: "Hello world", __typename: "Greeting" } },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -1946,7 +2018,7 @@ test("reports partial data correctly when a mid-stream request is abandoned and 
 
   const initialChunk = {
     data: { greeting: { __typename: "Greeting", message: "Hello world" } },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   };
 
@@ -2096,7 +2168,7 @@ test("emits empty then streaming results for deferred queries with no data in th
 
   enqueueInitialChunk({
     data: { greeting: { message: "Hello world", __typename: "Greeting" } },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -2201,7 +2273,7 @@ test('reports overlapping deferred and non-deferred fields as "streaming" when o
         recipient: { __typename: "Person", name: "Alice" },
       },
     },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -2319,7 +2391,7 @@ test('reports "streaming" when non-deferred fields for the same response key are
         },
       },
     },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -2441,7 +2513,7 @@ test('reports "streaming" when non-deferred fields for the same response key com
         },
       },
     },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -2577,7 +2649,7 @@ test('reports "streaming" when nested non-deferred fields are split across sibli
         },
       },
     },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -3257,7 +3329,7 @@ test('reports "streaming" instead of "partial" when the only unfulfilled field o
 
   enqueueInitialChunk({
     data: { greeting: { message: "Hello world", __typename: "Greeting" } },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -3371,7 +3443,7 @@ test("reports the correct data state for `@defer` on a named fragment spread wit
 
   enqueueInitialChunk({
     data: { greeting: { message: "Hello world", __typename: "Greeting" } },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -3481,7 +3553,7 @@ test('reports overlapping fields contributed by a non-deferred fragment spread a
         recipient: { __typename: "Person", name: "Alice" },
       },
     },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -3587,7 +3659,7 @@ test('reports overlapping fields contributed by a non-deferred inline fragment a
         recipient: { __typename: "Person", name: "Alice" },
       },
     },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -3701,7 +3773,7 @@ test("treats nested fragments inside a `@defer` boundary when deciding if the fr
 
   enqueueInitialChunk({
     data: { greeting: { message: "Hello world", __typename: "Greeting" } },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -3813,7 +3885,7 @@ test("treats a named fragment spread inside a `@defer` boundary when deciding if
 
   enqueueInitialChunk({
     data: { greeting: { message: "Hello world", __typename: "Greeting" } },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -3942,7 +4014,7 @@ test('reports "partial" when a nested defer-only field is present under an overl
         recipient: { __typename: "Person", name: "Alice" },
       },
     },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -4067,7 +4139,7 @@ test("merges non-deferred selections that contribute different subfields under t
         recipient: { __typename: "Person", id: "1", name: "Alice" },
       },
     },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -4181,7 +4253,7 @@ test('reports overlapping fields from a fragment spread repeated at the same sel
         recipient: { __typename: "Person", id: "1", name: "Alice" },
       },
     },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -4306,7 +4378,7 @@ test('reports overlapping fields from the same fragment spread used at different
         },
       },
     },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -4425,8 +4497,8 @@ test('reports per-item `@defer` gaps on a list as "streaming" when every item is
       },
     },
     pending: [
-      { id: "0", path: ["person", "friends", 0] },
-      { id: "1", path: ["person", "friends", 1] },
+      { id: "0", label: "ac_0", path: ["person", "friends", 0] },
+      { id: "1", label: "ac_0", path: ["person", "friends", 1] },
     ],
     hasNext: true,
   });
@@ -4531,8 +4603,8 @@ test('reports "streaming" when one list item\'s `@defer` has arrived and another
       },
     },
     pending: [
-      { id: "0", path: ["person", "friends", 0] },
-      { id: "1", path: ["person", "friends", 1] },
+      { id: "0", label: "ac_0", path: ["person", "friends", 0] },
+      { id: "1", label: "ac_0", path: ["person", "friends", 1] },
     ],
     hasNext: true,
   });
@@ -4668,7 +4740,7 @@ test('reports overlapping deferred and non-deferred list fields as "streaming" w
         ],
       },
     },
-    pending: [{ id: "0", path: ["person"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["person"] }],
     hasNext: true,
   });
 
@@ -4835,8 +4907,8 @@ test('reports "partial" when one list item has a started `@defer` that is still 
       },
     },
     pending: [
-      { id: "0", path: ["person", "friends", 0] },
-      { id: "1", path: ["person", "friends", 1] },
+      { id: "0", label: "ac_0", path: ["person", "friends", 0] },
+      { id: "1", label: "ac_0", path: ["person", "friends", 1] },
     ],
     hasNext: true,
   });
@@ -4965,7 +5037,7 @@ test('reports `@defer` nested under a field as "streaming" when only the nested 
         recipient: { __typename: "Person", name: "Alice" },
       },
     },
-    pending: [{ id: "0", path: ["greeting", "recipient"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting", "recipient"] }],
     hasNext: true,
   });
 
@@ -5517,7 +5589,7 @@ test('reports "partial" when a deep defer-only field is present under an overlap
         },
       },
     },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -5637,7 +5709,7 @@ test('reports overlapping fields gated by `@include` as "streaming" when the inc
         recipient: { __typename: "Person", name: "Alice" },
       },
     },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -5842,7 +5914,7 @@ test("uses response aliases when matching overlapping non-deferred and deferred 
         user: { __typename: "Person", name: "Alice" },
       },
     },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -5939,7 +6011,7 @@ test('reports "streaming" for nested `@defer` when the outer fragment has arrive
 
   enqueueInitialChunk({
     data: { greeting: { message: "Hello world", __typename: "Greeting" } },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -5967,7 +6039,7 @@ test('reports "streaming" for nested `@defer` when the outer fragment has arrive
         id: "0",
       },
     ],
-    pending: [{ id: "1", path: ["greeting", "recipient"] }],
+    pending: [{ id: "1", label: "ac_1", path: ["greeting", "recipient"] }],
     completed: [{ id: "0" }],
     hasNext: true,
   });
@@ -6094,7 +6166,7 @@ test("does not treat `__typename`-only presence under a `@defer` as the fragment
         message: "Hello world",
       },
     },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -6212,7 +6284,7 @@ test('reports residual deferred cached data as "complete" while streaming with a
 
   enqueueInitialChunk({
     data: { greeting: { message: "Hello world", __typename: "Greeting" } },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -6317,7 +6389,7 @@ test('reports complete cached deferred data as "complete" while streaming with a
 
   enqueueInitialChunk({
     data: { greeting: { __typename: "Greeting", message: "Hello world" } },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -6427,7 +6499,7 @@ test('keeps complete cached deferred data when a defer boundary completes with e
 
   enqueueInitialChunk({
     data: { greeting: { __typename: "Greeting", message: "Hello world" } },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -6967,7 +7039,7 @@ test('reports residual deferred cached data as "complete" while streaming with a
 
   enqueueInitialChunk({
     data: { greeting: { __typename: "Greeting", message: "Hello world" } },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -7619,7 +7691,7 @@ test('does not return a partial cached defer boundary while streaming with a "ne
     using _consoleSpy = spyOnConsole("error");
     enqueueInitialChunk({
       data: { greeting: { __typename: "Greeting", message: "Hello world" } },
-      pending: [{ id: "0", path: ["greeting"] }],
+      pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
       hasNext: true,
     });
 
@@ -7724,7 +7796,7 @@ test('does not return cached non-deferred data through a clean defer boundary wh
 
   enqueueInitialChunk({
     data: { greeting: { __typename: "Greeting", message: "Hello world" } },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -9112,7 +9184,7 @@ test('keeps residual deferred cache data as "complete" while streaming after a r
 
   enqueueInitialChunk({
     data: { greeting: { __typename: "Greeting", message: "Hello world" } },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -9185,7 +9257,7 @@ test('keeps residual deferred cache data as "complete" while streaming after a r
         message: "Goodbye",
       },
     },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -9301,8 +9373,8 @@ test('keeps residual deferred cache data as "complete" while streaming after a r
       },
     },
     pending: [
-      { id: "0", path: ["hero", "heroFriends", 0] },
-      { id: "1", path: ["hero", "heroFriends", 1] },
+      { id: "0", label: "ac_0", path: ["hero", "heroFriends", 0] },
+      { id: "1", label: "ac_0", path: ["hero", "heroFriends", 1] },
     ],
     hasNext: true,
   });
@@ -9411,8 +9483,8 @@ test('keeps residual deferred cache data as "complete" while streaming after a r
       },
     },
     pending: [
-      { id: "0", path: ["hero", "heroFriends", 0] },
-      { id: "1", path: ["hero", "heroFriends", 1] },
+      { id: "0", label: "ac_0", path: ["hero", "heroFriends", 0] },
+      { id: "1", label: "ac_0", path: ["hero", "heroFriends", 1] },
     ],
     hasNext: true,
   });
@@ -9522,7 +9594,7 @@ test("treats a deferred field delivered as null as fulfilled rather than still m
 
   enqueueInitialChunk({
     data: { greeting: { message: "Hello world", __typename: "Greeting" } },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -9729,7 +9801,7 @@ test("applies field read functions to non-deferred fields while streaming deferr
         message: "Hello world",
       },
     },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -9853,7 +9925,7 @@ test("applies field read functions to partial non-deferred cached data before an
         message: "Hello world",
       },
     },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -9983,7 +10055,7 @@ test("applies field read functions when partial cache data in a defer boundary i
         message: "Hello world",
       },
     },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -10098,7 +10170,7 @@ test("applies field read functions with overlapping non-deferred and deferred fi
         },
       },
     },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -10236,7 +10308,7 @@ test("applies field read functions when complete cache data inside a defer bound
         message: "Hello world",
       },
     },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -10338,7 +10410,7 @@ test("delivers cache updates written while a deferred response is still streamin
 
   enqueueInitialChunk({
     data: { post: { __typename: "Post", id: "1", title: "title from server" } },
-    pending: [{ id: "0", path: ["post"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["post"] }],
     hasNext: true,
   });
 
@@ -10452,7 +10524,7 @@ test("keeps dataState streaming for an optimistic cache write while a deferred r
 
   enqueueInitialChunk({
     data: { post: { __typename: "Post", id: "1", title: "title from server" } },
-    pending: [{ id: "0", path: ["post"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["post"] }],
     hasNext: true,
   });
 
@@ -10567,7 +10639,7 @@ test("delivers an optimistic cache write while a deferred response is still stre
 
   enqueueInitialChunk({
     data: { post: { __typename: "Post", id: "1", title: "title from server" } },
-    pending: [{ id: "0", path: ["post"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["post"] }],
     hasNext: true,
   });
 
@@ -10695,7 +10767,7 @@ test("delivers cache updates written while a deferred response is still streamin
 
   enqueueInitialChunk({
     data: { post: { __typename: "Post", id: "1", title: "title from server" } },
-    pending: [{ id: "0", path: ["post"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["post"] }],
     hasNext: true,
   });
 
@@ -10857,3 +10929,293 @@ test.failing(
     await expect(stream).not.toEmitAnything();
   }
 );
+test("deeply nested defer doesn't cause cache to log errors about missing fields", async () => {
+  const query = gql`
+    query Q {
+      post {
+        id
+        __typename
+        comments {
+          id
+          __typename
+          text
+          author {
+            id
+            __typename
+            name
+          }
+        }
+        ...CommentDetails @defer
+      }
+    }
+    fragment CommentDetails on Post {
+      id
+      __typename
+      comments {
+        id
+        __typename
+        likes
+        author {
+          id
+          __typename
+          badge {
+            id
+            __typename
+          }
+        }
+      }
+    }
+  `;
+
+  using spy = spyOnConsole("error");
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+
+  const client = new ApolloClient({
+    link: httpLink,
+    cache: new InMemoryCache(),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+  const stream = new ObservableStream(client.watchQuery({ query }));
+
+  enqueueInitialChunk({
+    data: {
+      post: {
+        __typename: "Post",
+        id: "p1",
+        comments: [
+          {
+            __typename: "Comment",
+            id: "c1",
+            text: "first!",
+            author: {
+              __typename: "Author",
+              id: "a1",
+              name: "x",
+            },
+          },
+        ],
+      },
+    },
+    pending: [{ id: "0", path: ["post"], label: "ac_0" }],
+    hasNext: true,
+  });
+  enqueueSubsequentChunk({
+    hasNext: false,
+    incremental: [
+      {
+        id: "0",
+        data: {
+          __typename: "Post",
+          id: "p1",
+          comments: [
+            {
+              __typename: "Comment",
+              id: "c1",
+              likes: 42,
+              author: {
+                __typename: "Author",
+                id: "a1",
+                badge: { __typename: "Badge", id: "b1" },
+              },
+            },
+          ],
+        },
+      },
+    ],
+    completed: [{ id: "0" }],
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      post: {
+        __typename: "Post",
+        id: "p1",
+        comments: [
+          {
+            __typename: "Comment",
+            author: {
+              __typename: "Author",
+              id: "a1",
+              name: "x",
+            },
+            id: "c1",
+            text: "first!",
+          },
+        ],
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      post: {
+        __typename: "Post",
+        id: "p1",
+        comments: [
+          {
+            __typename: "Comment",
+            author: {
+              __typename: "Author",
+              id: "a1",
+              badge: {
+                __typename: "Badge",
+                id: "b1",
+              },
+              name: "x",
+            },
+            id: "c1",
+            likes: 42,
+            text: "first!",
+          },
+        ],
+      },
+    }),
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  expect(spy.error).not.toHaveBeenCalled();
+});
+
+test("deeply nested defer still logs errors about missing non-deferred fields under shared parents", async () => {
+  const query = gql`
+    query Q {
+      post {
+        id
+        __typename
+        comments {
+          id
+          __typename
+          text
+          author {
+            id
+            __typename
+            name
+          }
+        }
+        ...CommentDetails @defer
+      }
+    }
+    fragment CommentDetails on Post {
+      id
+      __typename
+      comments {
+        id
+        __typename
+        likes
+        author {
+          id
+          __typename
+          badge {
+            id
+            __typename
+          }
+        }
+      }
+    }
+  `;
+
+  using spy = spyOnConsole("error");
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+
+  const client = new ApolloClient({
+    link: httpLink,
+    cache: new InMemoryCache(),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+  const stream = new ObservableStream(client.watchQuery({ query }));
+
+  // `text` and `name` are missing, but not deferred
+  enqueueInitialChunk({
+    data: {
+      post: {
+        __typename: "Post",
+        id: "p1",
+        comments: [
+          {
+            __typename: "Comment",
+            id: "c1",
+            author: {
+              __typename: "Author",
+              id: "a1",
+            },
+          },
+        ],
+      },
+    },
+    pending: [{ id: "0", path: ["post"], label: "ac_0" }],
+    hasNext: true,
+  });
+
+  await stream.takeNext();
+  await stream.takeNext();
+
+  expect(spy.error).toHaveBeenCalledTimes(2);
+  expect(spy.error).toHaveBeenCalledWith(
+    expect.stringContaining("Missing field"),
+    "text",
+    expect.anything()
+  );
+  expect(spy.error).toHaveBeenCalledWith(
+    expect.stringContaining("Missing field"),
+    "name",
+    expect.anything()
+  );
+
+  enqueueSubsequentChunk({
+    hasNext: false,
+    incremental: [
+      {
+        id: "0",
+        data: {
+          __typename: "Post",
+          id: "p1",
+          comments: [
+            {
+              __typename: "Comment",
+              id: "c1",
+              likes: 42,
+              author: {
+                __typename: "Author",
+                id: "a1",
+                badge: { __typename: "Badge", id: "b1" },
+              },
+            },
+          ],
+        },
+      },
+    ],
+    completed: [{ id: "0" }],
+  });
+
+  await stream.takeNext();
+
+  expect(spy.error).not.toHaveBeenCalledWith(
+    expect.anything(),
+    "likes",
+    expect.anything()
+  );
+  expect(spy.error).not.toHaveBeenCalledWith(
+    expect.anything(),
+    "badge",
+    expect.anything()
+  );
+});

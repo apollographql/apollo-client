@@ -43,10 +43,16 @@ export declare namespace Incremental {
   > {
     hasNext: boolean;
 
+    /** @internal Whether this request granularly tracks pending boundaries. */
+    tracksPending?: boolean;
     /** @internal */
     readonly streamInfo?: StreamInfoTrie;
     /** @internal */
-    getPendingWithInfo?: () => Array<PendingItemWithInfo>;
+    markStreamedPendingForTruncation?: () => void;
+    /** @internal returns if any defer is pending */
+    isDeferPending(): boolean;
+    /** @internal returns if a specific defer is pending */
+    isDeferPending(path: Incremental.Path, label: string | undefined): boolean;
 
     handle: (
       cacheData: TData | DeepPartial<TData> | undefined | null,

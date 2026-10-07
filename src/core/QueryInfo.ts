@@ -1,4 +1,3 @@
-import { Trie } from "@wry/trie";
 import type { DocumentNode, FormattedExecutionResult } from "graphql";
 
 import type {
@@ -16,7 +15,6 @@ import {
   getOperationName,
   graphQLResultHasError,
   handleIncrementalSymbol,
-  hasDirectives,
   toDiffWithDataState,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
@@ -206,29 +204,7 @@ export class QueryInfo<
       dataState: incrementalResult.data == null ? "empty" : "complete",
     };
 
-    const hasPendingDefer = this.incremental
-      ?.getPendingWithInfo?.()
-      .some((pending) => pending.type === "defer" && !pending.delivered);
-
-    if (
-      hasPendingDefer ||
-      // The Defer20220824Handler cannot track pending/completed incremental
-      // chunks due to its data format so we naively set dataState to
-      // streaming if we are still processing chunks. The only case where
-      // streaming is incorrect and should actually be complete is when
-      // both a @defer and @stream boundary is present and the @defer chunk
-      // has completed before the `@stream` array.
-      //
-      // Assigning the naive "streaming" value avoids a much more expensive
-      // pass over `result.data` that would otherwise need to traverse the
-      // selection sets and evaluate the data object at each defer boundary
-      // to see if it fulfills the selection set. For such a narrow case where
-      // its incorrect on a format that is now outdated is not worth the
-      // fix so we are ok with reporting a `streaming` here.
-      (!this.incremental?.getPendingWithInfo &&
-        this.hasNext &&
-        hasDirectives(["defer"], query))
-    ) {
+    if (this.incremental?.isDeferPending()) {
       result.dataState = "streaming";
     }
 
@@ -259,6 +235,9 @@ export class QueryInfo<
           variables,
           overwrite: cacheWriteBehavior === CacheWriteBehavior.OVERWRITE,
           extensions: result.extensions,
+          [handleIncrementalSymbol]: {
+            isDeferPending: this.incremental?.isDeferPending,
+          },
         });
 
         const { dataState, result: diffResult } = this.getDiff(
@@ -301,7 +280,6 @@ export class QueryInfo<
   }
 
   private getIncrementalInfo({ prune }: { prune: boolean }) {
-    const pending = this.incremental?.getPendingWithInfo?.() ?? [];
     const streamInfo = this.incremental?.streamInfo;
     const incrementalInfo: DiffIncrementalInfo = { streamInfo };
 
@@ -309,17 +287,13 @@ export class QueryInfo<
     // for a network-only request if they haven't yet streamed from the
     // network. We record all the still-pending paths so that cache.diff
     // can prune complete defer/stream boundaries at those paths.
-    if (prune) {
-      for (const item of pending) {
-        if (item.type === "defer" && !item.delivered) {
-          incrementalInfo.deferInfo ||= new Trie(true, () => true);
-          incrementalInfo.deferInfo.lookupArray(
-            item.path.concat(item.label || [])
-          );
-        } else if (streamInfo && item.type === "stream") {
-          streamInfo.lookupArray(item.path as any[]).state.truncate = true;
-        }
+    if (prune && this.incremental?.tracksPending) {
+      const isDeferPending = this.incremental?.isDeferPending;
+      if (isDeferPending?.()) {
+        incrementalInfo.isDeferPending ||= (path, label) =>
+          isDeferPending(path, label);
       }
+      this.incremental?.markStreamedPendingForTruncation?.();
     }
 
     return incrementalInfo;
@@ -364,7 +338,7 @@ export class QueryInfo<
       ExtensionsWithStreamInfo
     >
   > {
-    const cacheWrites: Cache.WriteOptions[] = [];
+    const cacheWrites: Array<Parameters<typeof cache.write>[0]> = [];
     const skipCache = mutation.cacheWriteBehavior === CacheWriteBehavior.FORBID;
 
     let result = this.maybeHandleIncrementalResult(
@@ -405,6 +379,9 @@ export class QueryInfo<
         query: mutation.document,
         variables: mutation.variables,
         extensions: result.extensions,
+        [handleIncrementalSymbol]: {
+          isDeferPending: this.incremental?.isDeferPending,
+        },
       });
 
       const { updateQueries } = mutation;

@@ -1,7 +1,11 @@
 import { gql } from "graphql-tag";
 
 import type { ObservableQuery } from "@apollo/client";
-import { ApolloClient, NetworkStatus } from "@apollo/client";
+import {
+  ApolloClient,
+  CombinedGraphQLErrors,
+  NetworkStatus,
+} from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { Defer20220824Handler } from "@apollo/client/incremental";
 import { ApolloLink } from "@apollo/client/link";
@@ -9,7 +13,76 @@ import {
   markAsStreaming,
   mockDefer20220824,
   ObservableStream,
+  spyOnConsole,
 } from "@apollo/client/testing/internal";
+
+test("reports complete after a failed legacy defer finishes with no-cache", async () => {
+  const query = gql`
+    query {
+      greeting {
+        message
+        ... on Greeting @defer {
+          recipient {
+            name
+          }
+        }
+      }
+    }
+  `;
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDefer20220824();
+  const client = new ApolloClient({
+    link: httpLink,
+    cache: new InMemoryCache(),
+    incrementalHandler: new Defer20220824Handler(),
+  });
+  const stream = new ObservableStream(
+    client.watchQuery({ query, fetchPolicy: "no-cache", errorPolicy: "all" })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  const data = {
+    greeting: { __typename: "Greeting", message: "Hello world" },
+  };
+  enqueueInitialChunk({ data, hasNext: true });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming(data),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  const errors = [
+    {
+      message: "Could not fetch recipient",
+      path: ["greeting", "recipient"],
+    },
+  ];
+  enqueueSubsequentChunk({
+    incremental: [{ path: ["greeting"], data: null, errors }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming(data),
+    dataState: "streaming",
+    error: new CombinedGraphQLErrors({ data, errors }),
+    loading: false,
+    networkStatus: NetworkStatus.error,
+    partial: true,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
 
 test("deduplicates queries as long as a query still has deferred chunks", async () => {
   const query = gql`
@@ -577,4 +650,166 @@ test("delivers cache updates written while a deferred response is still streamin
 
   await expect(stream).not.toEmitAnything();
   expect(outgoingRequestSpy).toHaveBeenCalledTimes(1);
+});
+
+test("deeply nested defer doesn't cause cache to log errors about missing fields", async () => {
+  const query = gql`
+    query Q {
+      post {
+        id
+        __typename
+        comments {
+          id
+          __typename
+          text
+          author {
+            id
+            __typename
+            name
+          }
+        }
+        ...CommentDetails @defer
+      }
+    }
+    fragment CommentDetails on Post {
+      id
+      __typename
+      comments {
+        id
+        __typename
+        likes
+        author {
+          id
+          __typename
+          badge {
+            id
+            __typename
+          }
+        }
+      }
+    }
+  `;
+
+  using spy = spyOnConsole("error");
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDefer20220824();
+
+  const client = new ApolloClient({
+    link: httpLink,
+    cache: new InMemoryCache(),
+    incrementalHandler: new Defer20220824Handler(),
+  });
+  const stream = new ObservableStream(client.watchQuery({ query }));
+
+  enqueueInitialChunk({
+    data: {
+      post: {
+        __typename: "Post",
+        id: "p1",
+        comments: [
+          {
+            __typename: "Comment",
+            id: "c1",
+            text: "first!",
+            author: {
+              __typename: "Author",
+              id: "a1",
+              name: "x",
+            },
+          },
+        ],
+      },
+    },
+    hasNext: true,
+  });
+  enqueueSubsequentChunk({
+    hasNext: false,
+    incremental: [
+      {
+        path: ["post"],
+        data: {
+          __typename: "Post",
+          id: "p1",
+          comments: [
+            {
+              __typename: "Comment",
+              id: "c1",
+              likes: 42,
+              author: {
+                __typename: "Author",
+                id: "a1",
+                badge: { __typename: "Badge", id: "b1" },
+              },
+            },
+          ],
+        },
+      },
+    ],
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      post: {
+        __typename: "Post",
+        id: "p1",
+        comments: [
+          {
+            __typename: "Comment",
+            author: {
+              __typename: "Author",
+              id: "a1",
+              name: "x",
+            },
+            id: "c1",
+            text: "first!",
+          },
+        ],
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      post: {
+        __typename: "Post",
+        id: "p1",
+        comments: [
+          {
+            __typename: "Comment",
+            author: {
+              __typename: "Author",
+              id: "a1",
+              badge: {
+                __typename: "Badge",
+                id: "b1",
+              },
+              name: "x",
+            },
+            id: "c1",
+            likes: 42,
+            text: "first!",
+          },
+        ],
+      },
+    }),
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  expect(spy.error).not.toHaveBeenCalled();
 });

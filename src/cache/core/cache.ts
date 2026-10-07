@@ -233,7 +233,11 @@ export abstract class ApolloCache {
   public abstract write<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
-  >(write: Cache.WriteOptions<TData, TVariables>): Reference | undefined;
+  >(
+    write: Cache.WriteOptions<TData, TVariables> & {
+      [handleIncrementalSymbol]?: DiffIncrementalInfo | undefined;
+    }
+  ): Reference | undefined;
 
   /**
    * Returns data read from the cache for a given query along with information
@@ -934,6 +938,12 @@ export abstract class ApolloCache {
     id,
     broadcast,
   }: Cache.WriteQueryOptions<TData, TVariables>): Reference | undefined;
+  public writeQuery<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: Cache.WriteQueryOptions.WithIncremental<TData, TVariables>
+  ): Reference | undefined;
   public writeQuery<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,

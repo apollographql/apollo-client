@@ -1396,7 +1396,7 @@ test("parses custom scalar fields across `@defer` payloads (graphql17Alpha9)", a
         startDate: "2026-01-01",
       },
     },
-    pending: [{ id: "0", path: ["event"] }],
+    pending: [{ id: "0", path: ["event"], label: "ac_0" }],
     hasNext: true,
   });
 
@@ -1648,7 +1648,7 @@ test("parses custom scalar fields across `@defer` payloads when refetching (grap
         startDate: "2026-01-01",
       },
     },
-    pending: [{ id: "0", path: ["event"] }],
+    pending: [{ id: "0", path: ["event"], label: "ac_0" }],
     hasNext: true,
   });
 
@@ -1712,7 +1712,7 @@ test("parses custom scalar fields across `@defer` payloads when refetching (grap
         startDate: "2027-01-01",
       },
     },
-    pending: [{ id: "0", path: ["event"] }],
+    pending: [{ id: "0", path: ["event"], label: "ac_0" }],
     hasNext: true,
   });
 

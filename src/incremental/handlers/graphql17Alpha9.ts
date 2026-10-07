@@ -1,5 +1,6 @@
-import { equal } from "@wry/equality";
+import { Trie } from "@wry/trie";
 import type { FormattedExecutionResult, GraphQLFormattedError } from "graphql";
+import { visit } from "graphql";
 
 import type { ApolloLink } from "@apollo/client/link";
 import type { DeepPartial, HKT } from "@apollo/client/utilities";
@@ -90,6 +91,14 @@ class IncrementalRequest<TData>
   private errors: GraphQLFormattedError[] = [];
   private extensions: Record<string, any> = {};
   private pendingMap = new Map<string, GraphQL17Alpha9Handler.PendingResult>();
+  private deferredByPathAndLabel = new Trie(
+    false,
+    () =>
+      ({}) as {
+        /** id needs to be set immediately on any lookup call to ensure it's always present */
+        id: string;
+      }
+  );
   private completedMap = new Map<
     /* pendingId */ string,
     /* delivered */ boolean
@@ -103,6 +112,26 @@ class IncrementalRequest<TData>
   // updated by the cache between a streamed chunk aren't overwritten by merges
   // of future stream items from already merged stream items.
   private streamPositions: Record<string, number> = {};
+
+  private deferLabels = new Set<string>();
+
+  constructor({ query }: Incremental.StartRequestOptions) {
+    visit(query, {
+      Directive: (node) => {
+        const name = node.name.value;
+        if (name === "defer") {
+          const labelNode = node.arguments?.find(
+            (arg) => arg.name.value === "label"
+          );
+          invariant(
+            labelNode && labelNode.value.kind === "StringValue",
+            "Expected a label for @defer directive"
+          );
+          this.deferLabels.add(labelNode.value.value);
+        }
+      },
+    });
+  }
 
   /** @internal */
   get streamInfo() {
@@ -125,6 +154,8 @@ class IncrementalRequest<TData>
     });
   }
 
+  private pendingDeferCount = 0;
+
   /**
    * @internal
    * Important: this function is used as a reactivity dependency in the `readFromStore.prune*` methods.
@@ -132,20 +163,14 @@ class IncrementalRequest<TData>
    * so it cannot be a normal class/prototype method, but it has to be an instance property.
    */
   isDeferPending = (
-    path: Incremental.Path,
-    label: string | undefined
+    path?: Incremental.Path,
+    label?: string | undefined
   ): boolean => {
-    for (const pending of this.pendingMap.values()) {
-      if (pending.id in this.streamPositions) {
-        continue;
-      }
-
-      if (pending.label === label && equal(pending.path, path)) {
-        return this.completedMap.get(pending.id) !== true;
-      }
+    if (!path) {
+      return !!this.pendingDeferCount;
     }
-
-    return false;
+    const found = this.deferredByPathAndLabel.peek(...path, label);
+    return !!found && this.completedMap.get(found.id) !== true;
   };
 
   handle(
@@ -157,7 +182,17 @@ class IncrementalRequest<TData>
 
     if (chunk.pending) {
       for (const pending of chunk.pending) {
-        this.pendingMap.set(pending.id, pending);
+        this.pendingMap.set(
+          pending.id,
+          pending as typeof pending & { label: string }
+        );
+        if (pending.label != null && this.deferLabels.has(pending.label)) {
+          this.deferredByPathAndLabel.lookup(
+            ...pending.path,
+            pending.label
+          ).id = pending.id;
+          this.pendingDeferCount++;
+        }
 
         if ("data" in chunk) {
           const dataAtPath = pending.path.reduce(
@@ -252,9 +287,12 @@ class IncrementalRequest<TData>
 
     if ("completed" in chunk && chunk.completed) {
       for (const completed of chunk.completed) {
-        const { path } = this.pendingMap.get(completed.id)!;
+        const { path, label } = this.pendingMap.get(completed.id)!;
         const streamPosition = this.streamPositions[completed.id];
         this.completedMap.set(completed.id, !completed.errors);
+        if (label != null && this.deferLabels.has(label) && !completed.errors) {
+          this.pendingDeferCount--;
+        }
 
         // Truncate any stream arrays in case the chunk only contains `hasNext`
         // and `completed`.
@@ -396,8 +434,8 @@ export class GraphQL17Alpha9Handler
   }
 
   /** @internal */
-  startRequest<TData>(_: Incremental.StartRequestOptions) {
-    return new IncrementalRequest<TData>();
+  startRequest<TData>(opts: Incremental.StartRequestOptions) {
+    return new IncrementalRequest<TData>(opts);
   }
 }
 

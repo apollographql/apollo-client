@@ -73,12 +73,12 @@ test("reports complete after a failed legacy defer finishes with no-cache", asyn
   });
 
   await expect(stream).toEmitTypedValue({
-    data,
-    dataState: "complete",
+    data: markAsStreaming(data),
+    dataState: "streaming",
     error: new CombinedGraphQLErrors({ data, errors }),
     loading: false,
     networkStatus: NetworkStatus.error,
-    partial: false,
+    partial: true,
   });
 
   await expect(stream).not.toEmitAnything();

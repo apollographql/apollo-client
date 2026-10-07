@@ -139,19 +139,14 @@ class IncrementalRequest<TData>
   }
 
   /** @internal */
-  getPendingWithInfo() {
-    return Array.from(this.pendingMap.values()).map((pending) => {
+  markStreamedPendingForTruncation() {
+    const streamInfo = this.streamInfo;
+    if (!streamInfo) return;
+    for (const pending of this.pendingMap.values()) {
       if (pending.id in this.streamPositions) {
-        return { type: "stream" as const, path: pending.path };
+        streamInfo.lookupArray(pending.path as any[]).state.truncate = true;
       }
-
-      return {
-        type: "defer" as const,
-        delivered: !!this.completedMap.get(pending.id),
-        path: pending.path,
-        label: pending.label,
-      };
-    });
+    }
   }
 
   private pendingDeferCount = 0;

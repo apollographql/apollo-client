@@ -46,7 +46,7 @@ export declare namespace Incremental {
     /** @internal */
     readonly streamInfo?: StreamInfoTrie;
     /** @internal */
-    getPendingWithInfo?: () => Array<PendingItemWithInfo>;
+    markStreamedPendingForTruncation?: () => void;
     /** @internal returns if any defer is pending */
     isDeferPending(): boolean;
     /** @internal returns if a specific defer is pending */

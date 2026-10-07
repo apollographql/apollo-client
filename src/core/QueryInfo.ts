@@ -281,7 +281,6 @@ export class QueryInfo<
   }
 
   private getIncrementalInfo({ prune }: { prune: boolean }) {
-    const pending = this.incremental?.getPendingWithInfo?.() ?? [];
     const streamInfo = this.incremental?.streamInfo;
     const incrementalInfo: DiffIncrementalInfo = { streamInfo };
 
@@ -292,21 +291,19 @@ export class QueryInfo<
     if (prune) {
       const isDeferPending = this.incremental?.isDeferPending;
       if (
+        isDeferPending?.() &&
         // this was never reached for the defer20220824 handler, as it was previously
         // done in a loop that was always empty for it
         // isDeferPending never reached the pruning stage.
         // it has to be decided if we want to go that route or not
-        pending.length &&
-        isDeferPending?.()
+        // keeping inside the check for markStreamedPendingForTruncation ensures
+        // we don't execute this with the 20220824 handler right now.
+        this.incremental?.markStreamedPendingForTruncation
       ) {
         incrementalInfo.isDeferPending ||= (path, label) =>
           isDeferPending(path, label);
       }
-      for (const item of pending) {
-        if (streamInfo && item.type === "stream") {
-          streamInfo.lookupArray(item.path as any[]).state.truncate = true;
-        }
-      }
+      this.incremental?.markStreamedPendingForTruncation?.();
     }
 
     return incrementalInfo;

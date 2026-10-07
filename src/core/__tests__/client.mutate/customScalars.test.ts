@@ -965,7 +965,7 @@ test("parses custom scalar fields across `@defer` payloads (graphql17Alpha9)", a
         startDate: "2026-01-01",
       },
     },
-    pending: [{ id: "0", path: ["createEvent"] }],
+    pending: [{ id: "0", path: ["createEvent"], label: "ac_0" }],
     hasNext: true,
   });
 

@@ -1364,7 +1364,7 @@ describe("HttpLink", () => {
         "Content-Type: application/json; charset=utf-8",
         "Content-Length: 43",
         "",
-        '{"data":{"stub":{"id":"0"}},"pending":[{"id":"0","path":["stub"]}],"hasNext":true}',
+        '{"data":{"stub":{"id":"0"}},"pending":[{"id":"0","path":["stub"],"label":"ac_0"}],"hasNext":true}',
         "---",
         "Content-Type: application/json; charset=utf-8",
         "Content-Length: 58",
@@ -1618,7 +1618,7 @@ describe("HttpLink", () => {
         await expect(observableStream).toEmitTypedValue({
           data: { stub: { id: "0" } },
           // @ts-ignore
-          pending: [{ id: "0", path: ["stub"] }],
+          pending: [{ id: "0", path: ["stub"], label: "ac_0" }],
           hasNext: true,
         });
 

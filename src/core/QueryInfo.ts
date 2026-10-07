@@ -338,7 +338,7 @@ export class QueryInfo<
       ExtensionsWithStreamInfo
     >
   > {
-    const cacheWrites: Cache.WriteOptions[] = [];
+    const cacheWrites: Array<Parameters<typeof cache.write>[0]> = [];
     const skipCache = mutation.cacheWriteBehavior === CacheWriteBehavior.FORBID;
 
     let result = this.maybeHandleIncrementalResult(
@@ -379,6 +379,9 @@ export class QueryInfo<
         query: mutation.document,
         variables: mutation.variables,
         extensions: result.extensions,
+        [handleIncrementalSymbol]: {
+          isDeferPending: this.incremental?.isDeferPending,
+        },
       });
 
       const { updateQueries } = mutation;

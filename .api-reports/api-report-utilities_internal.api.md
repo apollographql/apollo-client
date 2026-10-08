@@ -395,7 +395,7 @@ export type IsAny<T> = 0 extends 1 & T ? true : false;
 export const isArray: (a: any) => a is any[] | readonly any[];
 
 // @internal @deprecated (undocumented)
-export const isDeferredFragment: (fragmentSelection: FragmentSpreadNode | InlineFragmentNode, variables: OperationVariables | undefined) => boolean;
+export function isDeferredFragment(fragmentSelection: InlineFragmentNode | FragmentSpreadNode, variables: OperationVariables | undefined): boolean;
 
 // @internal @deprecated (undocumented)
 export function isDocumentNode(value: unknown): value is DocumentNode;
@@ -425,7 +425,7 @@ export function isNonNullObject(obj: unknown): obj is Record<string | number, an
 export function isPlainObject(obj: unknown): obj is Record<string | number, any>;
 
 // @internal @deprecated (undocumented)
-export const isStreamField: (field: FieldNode, variables: OperationVariables | undefined) => boolean;
+export function isStreamField(field: FieldNode, variables: OperationVariables | undefined): boolean;
 
 // @public (undocumented)
 export function isTypenameField(field: FieldNode): boolean;

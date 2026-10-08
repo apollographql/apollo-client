@@ -41,6 +41,14 @@ export declare namespace BaseBatchHttpLink {
       BaseHttpLink.Shared.Options {
     /** {@inheritDoc @apollo/client/link/batch!BatchLink.Shared.Options#batchMax:member {"defaultValue": 10}} */
     batchMax?: number;
+
+    /**
+     * If differently-shaped operations (with/without `includeExtensions` or `includeQuery`) should be combined into a single batch request.
+     * In most applications this will determine if persisted and non-persisted queries should be combined within the same batch.
+     *
+     * @defaultValue false
+     */
+    batchDifferentlyShapedOperations?: boolean;
   }
 }
 
@@ -115,23 +123,22 @@ export class BaseBatchHttpLink extends ApolloLink {
     const batchHandler: BatchLink.BatchHandler = (operations) => {
       const chosenURI = selectURI(operations[0], uri);
 
-      const context = operations[0].getContext();
-
-      const contextConfig = {
-        http: context.http,
-        options: context.fetchOptions,
-        credentials: context.credentials,
-        headers: context.headers,
-      };
-
       //uses fallback, link, and then context to build options
       const optsAndBody = operations.map((operation) => {
+        const context = operation.getContext();
+
+        const operationConfig = {
+          http: context.http,
+          options: context.fetchOptions,
+          credentials: context.credentials,
+          headers: context.headers,
+        };
         const result = selectHttpOptionsAndBodyInternal(
           operation,
           print,
           fallbackHttpConfig,
           linkConfig,
-          contextConfig
+          operationConfig
         );
 
         if (result.body.variables && !includeUnusedVariables) {
@@ -212,7 +219,17 @@ export class BaseBatchHttpLink extends ApolloLink {
         const context = operation.getContext();
 
         const contextConfig = {
-          http: context.http,
+          http:
+            options.batchDifferentlyShapedOperations ?
+              {
+                ...context.http,
+                // omit includeExtensions and includeQuery from the HTTP options
+                // they only influence body creation, not the HTTP request itself
+                // so they should be grouped together
+                includeExtensions: undefined,
+                includeQuery: undefined,
+              }
+            : context.http,
           options: context.fetchOptions,
           credentials: context.credentials,
           headers: context.headers,

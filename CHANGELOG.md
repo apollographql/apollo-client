@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 4.3.3
+
+### Patch Changes
+
+- [#13479](https://github.com/apollographql/apollo-client/pull/13479) [`0ab2579`](https://github.com/apollographql/apollo-client/commit/0ab25794ad88a2f7755323c5218ae64f933f287f) Thanks [@phryneas](https://github.com/phryneas)! - Fix a memory leak in `isDeferredFragment`/`isStreamField`
+
 ## 4.3.2
 
 ### Patch Changes

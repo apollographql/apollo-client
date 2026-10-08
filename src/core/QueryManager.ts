@@ -882,7 +882,8 @@ export class QueryManager {
   // @apollo/experimental-nextjs-app-support can access type info.
   protected inFlightLinkObservables = new Trie<{
     observable?: Observable<ApolloLink.Result<any>>;
-    restart?: () => void;
+    restart?: (source?: Observable<ApolloLink.Result<any>>) => void;
+    restartOnRefetch?: boolean;
   }>(false);
 
   private getObservableFromLink<TData = unknown>(
@@ -893,7 +894,8 @@ export class QueryManager {
     extensions?: Record<string, any>,
     // Prefer context.queryDeduplication if specified.
     deduplication: boolean = context?.queryDeduplication ??
-      this.queryDeduplication
+      this.queryDeduplication,
+    networkStatus = NetworkStatus.loading
   ): {
     restart: () => void;
     observable: Observable<ApolloLink.Result<TData>>;
@@ -904,7 +906,8 @@ export class QueryManager {
       // client.subscribe() calls are made before the first one subscribes to
       // the observable, the `restart` function can be updated for all
       // deduplicated client.subscribe() calls.
-      restart?: () => void;
+      restart?: (source?: Observable<ApolloLink.Result>) => void;
+      restartOnRefetch?: boolean;
     } = {};
 
     const { serverQuery, clientQuery, operationType, hasIncrementalDirective } =
@@ -944,8 +947,9 @@ export class QueryManager {
             }
             let subscription = subscribe();
 
-            entry.restart ||= () => {
+            entry.restart ||= (nextSource = source) => {
               subscription.unsubscribe();
+              source = nextSource;
               subscription = subscribe();
             };
 
@@ -963,8 +967,12 @@ export class QueryManager {
           entry = inFlightLinkObservables.lookup(printedServerQuery, varJson);
 
           if (!entry.observable) {
+            entry.restartOnRefetch =
+              operationType === OperationTypeNode.QUERY &&
+              networkStatus === NetworkStatus.loading;
             entry.observable = execute(link, operation, executeContext).pipe(
               withRestart,
+              tap(() => (entry.restartOnRefetch = false)),
               finalize(() => {
                 if (
                   inFlightLinkObservables.peek(printedServerQuery, varJson) ===
@@ -980,6 +988,15 @@ export class QueryManager {
                 share()
               : shareReplay({ refCount: true })
             ) as Observable<ApolloLink.Result<TData>>;
+          } else if (
+            networkStatus === NetworkStatus.refetch &&
+            entry.restartOnRefetch
+          ) {
+            // Restart the shared request before its first result so all consumers
+            // receive fresh data. Keep concurrent refetches deduplicated and never
+            // restart a stream whose incremental results are already being parsed.
+            entry.restartOnRefetch = false;
+            entry.restart?.(execute(link, operation, executeContext));
           }
         } else {
           entry.observable = execute(link, operation, executeContext).pipe(
@@ -1074,7 +1091,10 @@ export class QueryManager {
       linkDocument,
       options.context,
       options.variables,
-      options.fetchPolicy
+      options.fetchPolicy,
+      undefined,
+      undefined,
+      options.networkStatus
     ).observable.pipe(
       map((incoming) => {
         // Use linkDocument rather than queryInfo.document so the

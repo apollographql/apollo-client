@@ -1089,7 +1089,8 @@ class QueryManager {
     // (undocumented)
     protected inFlightLinkObservables: Trie<{
         observable?: Observable_2<ApolloLink.Result<any>>;
-        restart?: () => void;
+        restart?: (source?: Observable_2<ApolloLink.Result<any>>) => void;
+        restartOnRefetch?: boolean;
     }>;
     // (undocumented)
     get link(): ApolloLink;

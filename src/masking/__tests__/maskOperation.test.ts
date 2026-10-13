@@ -1829,6 +1829,7 @@ test("masks child fragments of @unmask", () => {
       email: "test@example.com",
     },
   });
+  expect(console.warn).not.toHaveBeenCalled();
 });
 
 test("warns when accessing unmasked fields with complex selections with mode: 'migrate'", () => {
@@ -2041,7 +2042,7 @@ test("does not warn accessing fields with `@unmask` without mode argument", () =
 
 // https://github.com/apollographql/apollo-client/issues/12127
 test('handles interface types when using @unmask(mode: "migrate")', async () => {
-  using _ = spyOnConsole("warn");
+  using consoleSpy = spyOnConsole("warn");
   const query = gql`
     query PlaybackStateSubscriberQuery {
       playbackState {
@@ -2094,6 +2095,7 @@ test('handles interface types when using @unmask(mode: "migrate")', async () => 
     })
   );
 
+  expect(console.warn).not.toHaveBeenCalled();
   expect(data).toEqual({
     playbackState: {
       __typename: "PlaybackState",
@@ -2107,6 +2109,18 @@ test('handles interface types when using @unmask(mode: "migrate")', async () => 
       },
     },
   });
+  expect(consoleSpy.warn.mock.calls).toEqual(
+    [
+      "playbackState.item",
+      "playbackState.item.id",
+      "playbackState.item.album",
+      "playbackState.item.album.id",
+    ].map((path) => [
+      "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+      "query 'PlaybackStateSubscriberQuery'",
+      path,
+    ])
+  );
 });
 
 test('handles overlapping types when subtype has accessor warnings with @unmask(mode: "migrate")', async () => {

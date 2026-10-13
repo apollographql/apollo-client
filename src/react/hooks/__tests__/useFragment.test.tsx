@@ -1853,6 +1853,7 @@ describe("useFragment", () => {
       dataState: "complete",
       complete: true,
     });
+    expect(console.warn).not.toHaveBeenCalled();
   });
 
   describe("tests with incomplete data", () => {

@@ -703,6 +703,7 @@ test("masks child fragments of @unmask", () => {
     age: 30,
     email: "test@example.com",
   });
+  expect(console.warn).not.toHaveBeenCalled();
 });
 
 test("masks partial data", () => {

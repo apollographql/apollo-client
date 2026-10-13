@@ -908,7 +908,7 @@ it("does not rerender when fields with @nonreactive on nested fragment change", 
 it.failing(
   "warns and suspends when passing parent object to `from` when key fields are missing",
   async () => {
-    using _ = spyOnConsole("warn");
+    using consoleSpy = spyOnConsole("warn");
 
     interface Fragment {
       age: number;
@@ -957,10 +957,12 @@ it.failing(
       "Could not identify object passed to `from` for '%s' fragment, either because the object is non-normalized or the key fields are missing. If you are masking this object, please ensure the key fields are requested by the parent object.",
       "UserFields"
     );
+    consoleSpy.warn.mockReset();
 
     {
       const { renderedComponents } = await takeRender();
 
+      expect(console.warn).not.toHaveBeenCalled();
       expect(renderedComponents).toStrictEqual([SuspenseFallback]);
     }
   }

@@ -1,10 +1,12 @@
 import { equal } from "@wry/equality";
+import { Trie } from "@wry/trie";
 import type {
   FieldNode,
   FragmentDefinitionNode,
   InlineFragmentNode,
   SelectionSetNode,
 } from "graphql";
+import { Kind } from "graphql";
 
 import type { OperationVariables } from "@apollo/client";
 import type { Incremental } from "@apollo/client/incremental";
@@ -361,6 +363,8 @@ type InternalFieldPolicy = {
 };
 
 export class Policies {
+  private warnedForMissingPossibleTypes = new Trie(true);
+
   private typePolicies: {
     [__typename: string]: {
       keyFn?: KeyFieldsFunction;
@@ -873,6 +877,21 @@ export class Policies {
             }
           });
         }
+      }
+    } else {
+      const warned = this.warnedForMissingPossibleTypes;
+      const path = [fragment, typename];
+      if (!warned.peekArray(path)) {
+        warned.lookupArray(path);
+        invariant.warn(
+          "Cannot match %s on `%s` against `%s`. This indicates a missing `possibleTypes` entry for the supertype of %s. Data might be lost.",
+          fragment.kind === Kind.FRAGMENT_DEFINITION ?
+            "fragment `" + fragment.name.value + "`"
+          : "inline fragment",
+          supertype,
+          typename,
+          typename
+        );
       }
     }
 

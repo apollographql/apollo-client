@@ -225,7 +225,11 @@ test("does not traverse fragment when fragment spread type condition does not ma
   `;
 
   const client = new ApolloClient({
-    cache: new InMemoryCache(),
+    cache: new InMemoryCache({
+      possibleTypes: {
+        FooOrBar: ["Foo", "Bar"],
+      },
+    }),
     link: ApolloLink.empty(),
   });
 

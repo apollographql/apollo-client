@@ -647,7 +647,7 @@ export abstract class ApolloCache {
         }
       }
 
-      return id as string | null;
+      return id === undefined ? null : id;
     });
 
     if (!Array.isArray(from)) {

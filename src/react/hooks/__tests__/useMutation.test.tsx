@@ -2104,9 +2104,10 @@ describe("useMutation Hook", () => {
         mutate({
           update(cache, { data }) {
             expect(data).toStrictEqualTyped({
+              __typename: "Mutation",
               doSomething: {
                 __typename: "MutationPayload",
-                time: new Date(startTime),
+                time: startTime,
               },
             });
 
@@ -2128,9 +2129,10 @@ describe("useMutation Hook", () => {
         })
       ).resolves.toStrictEqualTyped({
         data: {
+          __typename: "Mutation",
           doSomething: {
             __typename: "MutationPayload",
-            time: new Date(startTime),
+            time: startTime,
           },
         },
       });
@@ -2162,9 +2164,10 @@ describe("useMutation Hook", () => {
 
         expect(result).toStrictEqualTyped({
           data: {
+            __typename: "Mutation",
             doSomething: {
               __typename: "MutationPayload",
-              time: new Date(startTime),
+              time: startTime,
             },
           },
           error: undefined,
@@ -2234,9 +2237,10 @@ describe("useMutation Hook", () => {
         mutate({
           update(cache, { data }) {
             expect(data).toStrictEqualTyped({
+              __typename: "Mutation",
               doSomething: {
                 __typename: "MutationPayload",
-                time: new Date(startTime),
+                time: startTime,
               },
             });
             expect(timeReadCount).toBe(1);
@@ -2254,9 +2258,10 @@ describe("useMutation Hook", () => {
         })
       ).resolves.toStrictEqualTyped({
         data: {
+          __typename: "Mutation",
           doSomething: {
             __typename: "MutationPayload",
-            time: new Date(startTime),
+            time: startTime,
           },
         },
       });
@@ -2289,9 +2294,10 @@ describe("useMutation Hook", () => {
 
         expect(result).toStrictEqualTyped({
           data: {
+            __typename: "Mutation",
             doSomething: {
               __typename: "MutationPayload",
-              time: new Date(startTime),
+              time: startTime,
             },
           },
           error: undefined,
@@ -3675,6 +3681,7 @@ describe("useMutation Hook", () => {
         data: {
           removeLastNumber: {
             id: "7",
+            value: 222,
           },
         },
       });
@@ -3710,7 +3717,9 @@ describe("useMutation Hook", () => {
 
         expect(mutationResult.loading).toBe(false);
         expect(mutationResult.called).toBe(true);
-        expect(mutationResult.data).toEqual({ removeLastNumber: { id: "7" } });
+        expect(mutationResult.data).toEqual({
+          removeLastNumber: { id: "7", value: 222 },
+        });
       }
 
       promise = mutate({
@@ -3744,6 +3753,7 @@ describe("useMutation Hook", () => {
         data: {
           removeLastNumber: {
             id: "6",
+            value: 899,
           },
         },
       });
@@ -3779,7 +3789,9 @@ describe("useMutation Hook", () => {
 
         expect(mutationResult.loading).toBe(false);
         expect(mutationResult.called).toBe(true);
-        expect(mutationResult.data).toEqual({ removeLastNumber: { id: "6" } });
+        expect(mutationResult.data).toEqual({
+          removeLastNumber: { id: "6", value: 899 },
+        });
       }
 
       promise = mutate({
@@ -3812,6 +3824,7 @@ describe("useMutation Hook", () => {
         data: {
           removeLastNumber: {
             id: "5",
+            value: 72,
           },
         },
       });
@@ -3833,7 +3846,9 @@ describe("useMutation Hook", () => {
 
         expect(mutationResult.loading).toBe(false);
         expect(mutationResult.called).toBe(true);
-        expect(mutationResult.data).toEqual({ removeLastNumber: { id: "5" } });
+        expect(mutationResult.data).toEqual({
+          removeLastNumber: { id: "5", value: 72 },
+        });
       }
 
       await expect(renderStream).not.toRerender();

@@ -801,6 +801,7 @@ describe("mutation results", () => {
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache({
+          scalars: {},
           typePolicies: {
             MutationPayload: {
               fields: {
@@ -877,6 +878,7 @@ describe("mutation results", () => {
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache({
+          scalars: {},
           typePolicies: {
             MutationPayload: {
               fields: {

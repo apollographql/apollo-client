@@ -6,7 +6,7 @@
     "moduleResolution": "nodenext",
     "lib": ["DOM", "ES2022"],
     "paths": {},
-    "types": [],
+    "types": ["jest", "node"],
     "rootDir": "./",
     "outDir": "./dist",
     "declaration": true,
@@ -15,5 +15,5 @@
     "strict": true
   },
   "include": ["**/*.ts"],
-  "exclude": ["node_modules", "dist"]
+  "exclude": ["node_modules", "dist", "**/__tests__/**/*"]
 }

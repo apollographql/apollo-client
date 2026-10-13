@@ -42,7 +42,6 @@ import type {
 import type {
   DocumentationTypes as UtilityDocumentationTypes,
   LazyType,
-  NoInfer,
   OptionWithFallback,
   Prettify,
   SignatureStyle,
@@ -109,7 +108,17 @@ export declare namespace useQuery {
       /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
       context?: DefaultContext;
 
-      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#skip:member} */
+      /**
+       * {@inheritDoc @apollo/client!QueryOptionsDocumentation#skip_deprecated:member}
+       *
+       * @example Recommended usage of `skipToken`:
+       *
+       * ```ts
+       * import { skipToken, useQuery } from "@apollo/client/react";
+       *
+       * const { data } = useQuery(query, id ? { variables: { id } } : skipToken);
+       * ```
+       */
       skip?: boolean;
 
       /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchOn:member} */

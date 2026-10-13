@@ -8,13 +8,15 @@ import {
   GraphQLString,
 } from "graphql-17-alpha9";
 
-const friendType = new GraphQLObjectType({
-  fields: {
+const friendType: GraphQLObjectType = new GraphQLObjectType({
+  fields: () => ({
     id: { type: GraphQLID },
     name: { type: GraphQLString },
+    email: { type: GraphQLString },
     nonNullName: { type: new GraphQLNonNull(GraphQLString) },
     scalarList: { type: new GraphQLList(GraphQLString) },
-  },
+    bestFriend: { type: friendType },
+  }),
   name: "Friend",
 });
 

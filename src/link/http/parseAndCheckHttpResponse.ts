@@ -106,7 +106,7 @@ async function* consumeMultipartBody(
     }
     throw new Error("premature end of multipart body");
   } finally {
-    reader.cancel();
+    reader.cancel().catch(() => {});
   }
 }
 

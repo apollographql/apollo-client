@@ -1,8 +1,8 @@
 import { equal } from "@wry/equality";
-import type { DocumentNode } from "graphql";
+import { Kind, visit } from "graphql";
 import { asapScheduler, Observable, observeOn, throwError } from "rxjs";
 
-import type { OperationVariables } from "@apollo/client";
+import type { DocumentNode, OperationVariables } from "@apollo/client";
 import { ApolloLink } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
 import { addTypenameToDocument, print } from "@apollo/client/utilities";
@@ -229,7 +229,7 @@ export class MockLink extends ApolloLink {
 
   private getMockedResponses(request: MockLink.MockedRequest) {
     const key = JSON.stringify({
-      query: print(addTypenameToDocument(request.query)),
+      query: print(removeAutoDeferLabels(addTypenameToDocument(request.query))),
     });
 
     let mockedResponses = this.mockedResponsesByKey[key];
@@ -365,4 +365,27 @@ function stringifyForDebugging(value: any, space = 0): string {
   )
     .replace(new RegExp(JSON.stringify(undefId), "g"), "<undefined>")
     .replace(new RegExp(JSON.stringify(nanId), "g"), "NaN");
+}
+
+// We remove the autogen labels on the document rather than using the transform
+// to add labels so that it handles all incremental handlers. Only
+// GraphQL17Alpha9Handler adds the document transform, so we don't want to
+// accidentally mismatch when Defer20220824Handler is used.
+function removeAutoDeferLabels(document: DocumentNode) {
+  return visit(document, {
+    Directive(node) {
+      if (node.name.value !== "defer") return;
+
+      return {
+        ...node,
+        arguments: node.arguments?.filter((arg) => {
+          return (
+            arg.name.value !== "label" ||
+            arg.value.kind !== Kind.STRING ||
+            !arg.value.value.match(/^ac_\d+$/)
+          );
+        }),
+      };
+    },
+  });
 }

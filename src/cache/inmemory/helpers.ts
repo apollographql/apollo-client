@@ -2,7 +2,9 @@ import type {
   DocumentNode,
   FragmentDefinitionNode,
   SelectionSetNode,
+  TypeNode,
 } from "graphql";
+import { Kind } from "graphql";
 
 import type {
   Reference,
@@ -148,4 +150,15 @@ export function extractFragmentContext(
       return def || null;
     },
   };
+}
+
+export function getScalarTypeFromTypeNode(node: TypeNode): string {
+  switch (node.kind) {
+    case Kind.NAMED_TYPE:
+      return node.name.value;
+    case Kind.LIST_TYPE:
+      return `[${getScalarTypeFromTypeNode(node.type)}]`;
+    case Kind.NON_NULL_TYPE:
+      return getScalarTypeFromTypeNode(node.type);
+  }
 }

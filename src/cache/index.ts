@@ -4,6 +4,7 @@ export type {
   WatchFragmentResult,
 } from "./deprecated.js";
 export { ApolloCache } from "./core/cache.js";
+export { Scalar } from "./core/Scalar.js";
 export type { Cache } from "./core/types/Cache.js";
 export type {
   IgnoreModifier,
@@ -48,10 +49,13 @@ export { createFragmentRegistry } from "./inmemory/fragmentRegistry.js";
 
 export type {
   ApolloReducerConfig,
+  DiffIncrementalInfo,
   DiffQueryAgainstStoreOptions,
   IdGetter,
   IdGetterObj,
   InMemoryCacheConfig,
+  InputObjectConfig,
+  InputObjectsOption,
   MergeInfo,
   MergeTree,
   NormalizedCache,
@@ -59,6 +63,7 @@ export type {
   OptimisticStoreItem,
   ReadMergeModifyContext,
   ReadQueryOptions,
+  ScalarType,
   StoreObject,
   StoreValue,
 } from "./inmemory/types.js";

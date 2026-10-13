@@ -10,7 +10,6 @@ import type {
 } from "@apollo/client";
 import type { ApolloCache, MissingTree } from "@apollo/client/cache";
 import type { MaybeMasked } from "@apollo/client/masking";
-import type { NoInfer } from "@apollo/client/utilities/internal";
 
 import { useDeepMemo, wrapHook } from "./internal/index.js";
 import { useApolloClient } from "./useApolloClient.js";

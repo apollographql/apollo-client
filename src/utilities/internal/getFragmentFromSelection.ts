@@ -24,7 +24,7 @@ export function getFragmentFromSelection(
       }
       const fragment = fragmentMap && fragmentMap[fragmentName];
       invariant(fragment, `No fragment named %s`, fragmentName);
-      return fragment || null;
+      return fragment;
     }
     default:
       return null;

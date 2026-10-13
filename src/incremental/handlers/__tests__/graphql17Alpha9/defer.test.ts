@@ -2506,13 +2506,13 @@ test("stream that returns an error but continues to stream", async () => {
 
   await expect(observableStream).toEmitTypedValue({
     loading: false,
-    data: {
+    data: markAsStreaming({
       hero: {
         __typename: "Hero",
         id: "1",
         name: "slow",
       },
-    },
+    }),
     error: new CombinedGraphQLErrors({
       data: {
         hero: {
@@ -2529,9 +2529,9 @@ test("stream that returns an error but continues to stream", async () => {
         },
       ],
     }),
-    dataState: "complete",
+    dataState: "streaming",
     networkStatus: NetworkStatus.error,
-    partial: false,
+    partial: true,
   });
 });
 
@@ -2591,9 +2591,9 @@ test("handles final chunk of { hasNext: false } correctly in usage with Apollo C
 
   await expect(observableStream).toEmitTypedValue({
     loading: true,
-    data: markAsStreaming({
+    data: {
       allProducts: [null, null, null],
-    }),
+    },
     error: new CombinedGraphQLErrors({
       data: {
         allProducts: [null, null, null],
@@ -2613,9 +2613,9 @@ test("handles final chunk of { hasNext: false } correctly in usage with Apollo C
         },
       ],
     }),
-    dataState: "streaming",
+    dataState: "complete",
     networkStatus: NetworkStatus.streaming,
-    partial: true,
+    partial: false,
   });
 
   await expect(observableStream).toEmitSimilarValue({
@@ -2704,4 +2704,88 @@ test("ignores `data` property added to subsequent chunks by misbehaving servers"
     networkStatus: NetworkStatus.ready,
     partial: false,
   });
+});
+
+test("handles an incremental payload for a defer id that already completed with errors", async () => {
+  // `hero.name` is selected by both deferred fragments, so the server executes
+  // it as a single unit shared between them and reports it with the id of the
+  // fragment with the deepest path (`inner`). Since `nonNullName` errors,
+  // `inner` completes with errors before that shared unit resolves, which means
+  // an `incremental` payload arrives for an id that has already been completed.
+  const query = gql`
+    query {
+      ... @defer(label: "outer") {
+        hero {
+          name
+        }
+      }
+      hero {
+        ... on Hero @defer(label: "inner") {
+          name
+          nonNullName
+        }
+      }
+    }
+  `;
+
+  const handler = new GraphQL17Alpha9Handler();
+  const request = handler.startRequest({ query });
+
+  const incoming = run(query, {
+    hero: {
+      ...hero,
+      name: async () => {
+        await wait(10);
+        return "Luke";
+      },
+      nonNullName: () => null,
+    },
+  });
+
+  {
+    const { value: chunk, done } = await incoming.next();
+
+    assert(!done);
+    assert(handler.isIncrementalResult(chunk));
+    expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      data: { hero: {} },
+    });
+    expect(request.hasNext).toBe(true);
+  }
+
+  {
+    const { value: chunk, done } = await incoming.next();
+
+    assert(!done);
+    assert(handler.isIncrementalResult(chunk));
+    expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      data: { hero: {} },
+      errors: [
+        {
+          message:
+            "Cannot return null for non-nullable field Hero.nonNullName.",
+          path: ["hero", "nonNullName"],
+        },
+      ],
+    });
+    expect(request.hasNext).toBe(true);
+  }
+
+  {
+    const { value: chunk, done } = await incoming.next();
+
+    assert(!done);
+    assert(handler.isIncrementalResult(chunk));
+    expect(request.handle(undefined, chunk)).toStrictEqualTyped({
+      data: { hero: { name: "Luke" } },
+      errors: [
+        {
+          message:
+            "Cannot return null for non-nullable field Hero.nonNullName.",
+          path: ["hero", "nonNullName"],
+        },
+      ],
+    });
+    expect(request.hasNext).toBe(false);
+  }
 });

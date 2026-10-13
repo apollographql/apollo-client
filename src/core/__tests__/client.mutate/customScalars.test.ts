@@ -228,61 +228,58 @@ test("parses custom scalar fields with a network-only fetch policy", async () =>
   });
 });
 
-test.failing(
-  "parses custom scalar fields with a no-cache fetch policy",
-  async () => {
-    const mutation = gql`
-      mutation CreateEvent {
-        createEvent {
-          id
-          startDate
-        }
+test("parses custom scalar fields with a no-cache fetch policy", async () => {
+  const mutation = gql`
+    mutation CreateEvent {
+      createEvent {
+        id
+        startDate
       }
-    `;
-    const client = new ApolloClient({
-      cache: new InMemoryCache({
-        scalars: {
-          Date: dateScalar,
-        },
-        typePolicies: {
-          Event: {
-            fields: {
-              startDate: {
-                scalar: "Date",
-              },
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: {
+        Date: dateScalar,
+      },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: {
+              scalar: "Date",
             },
           },
-        },
-      }),
-      link: new ApolloLink(() =>
-        of({
-          data: {
-            createEvent: {
-              __typename: "Event",
-              id: "1",
-              startDate: "2026-01-01",
-            },
-          },
-        }).pipe(delay(20))
-      ),
-    });
-
-    await expect(
-      client.mutate({
-        mutation,
-        fetchPolicy: "no-cache",
-      })
-    ).resolves.toStrictEqualTyped({
-      data: {
-        createEvent: {
-          __typename: "Event",
-          id: "1",
-          startDate: new Date(2026, 0, 1),
         },
       },
-    });
-  }
-);
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          createEvent: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+          },
+        },
+      }).pipe(delay(20))
+    ),
+  });
+
+  await expect(
+    client.mutate({
+      mutation,
+      fetchPolicy: "no-cache",
+    })
+  ).resolves.toStrictEqualTyped({
+    data: {
+      createEvent: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+      },
+    },
+  });
+});
 
 test("parses parsed custom scalar fields in optimistic responses", async () => {
   const mutation = gql`
@@ -724,7 +721,7 @@ test("serializes scalar fields in the error with a `none` error policy", async (
         createEvent: {
           __typename: "Event",
           id: "1",
-          startDate: "2026-01-01",
+          startDate: new Date(2026, 0, 1),
           endDate: null,
         },
       },

@@ -944,6 +944,9 @@ test("does not parse fields selected by a fragment on a supertype missing from p
 test("ignores fields from inline fragments that don't match the returned type", () => {
   const cache = new InMemoryCache({
     scalars: { Date: dateScalar },
+    possibleTypes: {
+      Pet: ["Dog", "Cat"],
+    },
     typePolicies: {
       Dog: {
         fields: {
@@ -993,6 +996,9 @@ test("ignores fields from inline fragments that don't match the returned type", 
 test("does not coerce an overlapping alias using a non-matching fragment field", () => {
   const cache = new InMemoryCache({
     scalars: { Date: dateScalar, Price: priceScalar },
+    possibleTypes: {
+      Pet: ["Dog", "Cat"],
+    },
     typePolicies: {
       Dog: {
         fields: {

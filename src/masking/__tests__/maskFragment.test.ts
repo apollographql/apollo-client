@@ -351,7 +351,17 @@ test("maintains referential equality on fragment subtrees that did not change", 
     drinks,
   });
 
-  const data = maskFragment(user, fragment, new InMemoryCache(), "UserFields");
+  const data = maskFragment(
+    user,
+    fragment,
+    new InMemoryCache({
+      possibleTypes: {
+        Industry: ["TechIndustry", "FinanceIndustry", "TradeIndustry"],
+        Drink: ["SportsDrink", "Espresso"],
+      },
+    }),
+    "UserFields"
+  );
 
   expect(data).toEqual({
     __typename: "User",
@@ -555,7 +565,17 @@ test("maintains referential equality on `@unmask` fragment subtrees", () => {
     drinks,
   });
 
-  const data = maskFragment(user, fragment, new InMemoryCache(), "UserFields");
+  const data = maskFragment(
+    user,
+    fragment,
+    new InMemoryCache({
+      possibleTypes: {
+        Industry: ["TechIndustry", "FinanceIndustry", "TradeIndustry"],
+        Drink: ["SportsDrink", "Espresso"],
+      },
+    }),
+    "UserFields"
+  );
 
   expect(data).toEqual({
     __typename: "User",

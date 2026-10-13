@@ -1228,7 +1228,16 @@ test("maintains referential equality on subtrees that did not change", () => {
   const drink = { __typename: "Espresso" };
   const originalData = deepFreeze({ user, post, authors, industries, drink });
 
-  const data = maskOperation(originalData, query, new InMemoryCache());
+  const data = maskOperation(
+    originalData,
+    query,
+    new InMemoryCache({
+      possibleTypes: {
+        Industry: ["TechIndustry", "FinanceIndustry", "TradeIndustry"],
+        Drink: ["SportsDrink", "Espresso"],
+      },
+    })
+  );
 
   expect(data).toEqual({
     user: {
@@ -1402,7 +1411,15 @@ test("maintains referential equality on subtrees that contain @unmask", () => {
   ];
   const originalData = deepFreeze({ user, post, authors, industries });
 
-  const data = maskOperation(originalData, query, new InMemoryCache());
+  const data = maskOperation(
+    originalData,
+    query,
+    new InMemoryCache({
+      possibleTypes: {
+        Industry: ["TechIndustry", "FinanceIndustry", "TradeIndustry"],
+      },
+    })
+  );
 
   expect(data).toEqual({
     user: {
@@ -2070,7 +2087,11 @@ test('handles interface types when using @unmask(mode: "migrate")', async () => 
       },
     },
     query,
-    new InMemoryCache()
+    new InMemoryCache({
+      possibleTypes: {
+        PlaybackItem: ["Track", "Episode"],
+      },
+    })
   );
 
   expect(data).toEqual({

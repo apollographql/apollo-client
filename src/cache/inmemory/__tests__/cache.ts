@@ -2395,6 +2395,55 @@ describe("resultCacheMaxSize", () => {
   });
 });
 
+describe("InMemoryCache#watch", () => {
+  it("does not leave the watch registered when an immediate broadcast throws", () => {
+    const unreadable = gql`
+      query {
+        unreadable
+      }
+    `;
+    const readable = gql`
+      query {
+        readable
+      }
+    `;
+
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            unreadable: {
+              read() {
+                throw new Error("read failed");
+              },
+            },
+          },
+        },
+      },
+    });
+
+    cache.writeQuery({ query: readable, data: { readable: "hello" } });
+
+    expect(() =>
+      cache.watch({
+        query: unreadable,
+        optimistic: false,
+        immediate: true,
+        callback() {},
+      })
+    ).toThrow("read failed");
+
+    // `watch` threw before it could return its unsubscribe function, so anything left in the set here can
+    // never be removed by the caller.
+    expect(cache["watches"].size).toBe(0);
+
+    // ...and every later broadcast would run into the same failing read.
+    expect(() =>
+      cache.writeQuery({ query: readable, data: { readable: "goodbye" } })
+    ).not.toThrow();
+  });
+});
+
 describe("InMemoryCache#broadcastWatches", function () {
   it("should keep distinct consumers distinct (issue #5733)", function () {
     const cache = new InMemoryCache();

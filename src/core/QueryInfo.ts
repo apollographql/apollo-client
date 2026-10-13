@@ -494,7 +494,7 @@ export class QueryInfo<
                 returnPartialData: true,
               });
 
-              if (diff.complete) {
+              if (diff.complete && cache.configuresScalars()) {
                 result = {
                   ...result,
                   data: diff.result,

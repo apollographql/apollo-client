@@ -125,9 +125,10 @@ test("drops interface/union type fragments in mutation results if `possibleTypes
         cart: {
           __typename: "Cart",
           items: [
-            // @ts-expect-error - CartItem fields will be dropped in this case
             {
               __typename: "VerySpecificCartItem",
+              key: "item1",
+              quantity: 1,
             },
           ],
         },

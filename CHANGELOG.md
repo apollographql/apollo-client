@@ -483,6 +483,11 @@
 
   This may add one network request in these cache-feud scenarios.
 
+- [#13275](https://github.com/apollographql/apollo-client/pull/13275) [`263f987`](https://github.com/apollographql/apollo-client/commit/263f987bf8a604412baf4d54140f6978bd8d9afe) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Make sure scalars are correctly returned for mutations and subscriptions.
+
+> [!NOTE]
+> This change affects cache reads after mutations as mutations now reread from the cache after each execution that writes a result to the cache. Previously mutations only reread from the cache when an `update` function was provided. This can have an effect on the result if you have union or interface types in the mutation but forget to include `possibleTypes` which might return a result that doesn't include the interface/union fields.
+
 ### Patch Changes
 
 - [#13408](https://github.com/apollographql/apollo-client/pull/13408) [`7a5164d`](https://github.com/apollographql/apollo-client/commit/7a5164d3ce21b7f88f625588ec72dbce8ea33810) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix `dataState` to report `"streaming"` instead of `"partial"` when `returnPartialData` is `true` and the cache result is missing only `@defer` fields.

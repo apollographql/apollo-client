@@ -180,10 +180,7 @@ class IncrementalRequest<TData>
 
     if (chunk.pending) {
       for (const pending of chunk.pending) {
-        this.pendingMap.set(
-          pending.id,
-          pending as typeof pending & { label: string }
-        );
+        this.pendingMap.set(pending.id, pending);
         if (pending.label != null && this.deferLabels.has(pending.label)) {
           this.deferredByPathAndLabel.lookup(
             ...pending.path,

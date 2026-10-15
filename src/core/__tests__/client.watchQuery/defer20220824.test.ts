@@ -16,7 +16,7 @@ import {
   spyOnConsole,
 } from "@apollo/client/testing/internal";
 
-test("reports complete after a failed legacy defer finishes with no-cache", async () => {
+test("reports streaming after a failed legacy defer finishes with no-cache", async () => {
   const query = gql`
     query {
       greeting {

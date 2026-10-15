@@ -341,7 +341,7 @@ class IncrementalRequest<TData> implements Incremental.IncrementalRequest<GraphQ
     handle(cacheData: TData | DeepPartial<TData> | null | undefined, chunk: GraphQL17Alpha9Handler.Chunk<TData>): FormattedExecutionResult<TData>;
     // (undocumented)
     hasNext: boolean;
-    // @internal @deprecated
+    // @internal @deprecated (undocumented)
     isDeferPending: (path?: Incremental.Path, label?: string | undefined) => boolean;
     // @internal @deprecated (undocumented)
     markStreamedPendingForTruncation(): void;

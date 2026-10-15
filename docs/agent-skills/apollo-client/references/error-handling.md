@@ -78,9 +78,9 @@ Represents GraphQL errors returned by the server. Most common error type in appl
 ```tsx
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 
-function UserProfile({ userId }: { userId: string }) {
-  const { data, error } = useQuery(GET_USER, {
-    variables: { id: userId },
+export function UserPage({ params }: { params: { id: string } }) {
+  const { data, dataState, loading, error } = useQuery(USER_PAGE_QUERY, {
+    variables: { id: params.id },
   });
 
   // no need to check for nullishness of error, CombinedGraphQLErrors.is handles that
@@ -95,7 +95,10 @@ function UserProfile({ userId }: { userId: string }) {
     );
   }
 
-  return data ? <Profile user={data.user} /> : null;
+  if (error) return <p>Error: {error.message}</p>;
+  if (dataState === "empty") return loading ? <p>Loading...</p> : null;
+
+  return <UserProfile user={data.user} />;
 }
 ```
 
@@ -205,21 +208,30 @@ Keep the default `none` unless the component must render partial data. `ignore` 
 ### Setting an Error Policy
 
 ```tsx
-const MY_QUERY = gql`
-  query WillFail {
+const DASHBOARD_PAGE_QUERY: TypedDocumentNode<
+  DashboardPageQuery,
+  DashboardPageQueryVariables
+> = gql`
+  query DashboardPage {
     badField # This field's resolver produces an error
     goodField # This field is populated successfully
   }
 `;
 
-function ShowingSomeErrors() {
-  const { loading, error, data } = useQuery(MY_QUERY, { errorPolicy: "all" });
+export function DashboardPage() {
+  const { data, dataState, loading, error } = useQuery(DASHBOARD_PAGE_QUERY, {
+    errorPolicy: "all",
+  });
 
-  if (loading) return <span>loading...</span>;
+  if (dataState === "empty") {
+    if (error) return <p>Error: {error.message}</p>;
+    return loading ? <p>Loading...</p> : null;
+  }
 
+  // With `errorPolicy: "all"`, `data` and `error` can both be set
   return (
     <div>
-      <h2>Good: {data?.goodField}</h2>
+      <h2>Good: {data.goodField}</h2>
       {error && <pre>Bad: {error.message}</pre>}
     </div>
   );
@@ -319,10 +331,9 @@ import {
   ServerParseError,
 } from "@apollo/client/errors";
 
-function SafeUserList() {
-  const { data, error, loading, refetch } = useQuery(GET_USERS, {
+export function UsersPage() {
+  const { data, error, loading, refetch } = useQuery(USERS_PAGE_QUERY, {
     errorPolicy: "all",
-    notifyOnNetworkStatusChange: true,
   });
 
   // Handle network errors

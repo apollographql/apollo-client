@@ -1,5 +1,7 @@
 # Mutations Reference
 
+> **Where mutations go**: Call `useMutation` in the component where the user interaction happens (the form, the button, the menu item). Do not wrap `useMutation` in a custom hook (such as `useCreateUser()`), and avoid sharing one mutation between components. Different components usually need different logic: different variables, `update` functions, optimistic responses, error handling, and fields in the mutation response. A shared wrapper collects options for every caller and couples components that change for different reasons. Each component defines its own mutation document and calls `useMutation` directly.
+
 ## Table of Contents
 
 - [useMutation Hook](#usemutation-hook)
@@ -51,22 +53,6 @@ function AddTodo() {
     </form>
   );
 }
-```
-
-### Return Tuple
-
-```typescript
-const [
-  mutateFunction, // Function to call to execute mutation
-  {
-    data, // Mutation result data
-    loading, // True while mutation is in flight
-    error, // ApolloError if mutation failed
-    called, // True if mutation has been called
-    reset, // Reset mutation state
-    client, // Apollo Client instance
-  },
-] = useMutation(MUTATION);
 ```
 
 ## Mutation Variables

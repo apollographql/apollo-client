@@ -198,6 +198,10 @@ By default, Apollo Client throws away partial data and populates the `error` fie
 | `ignore` | Errors are ignored (`error` is not populated), and any returned `data` is cached and rendered as if no errors occurred. `data` may be `undefined` if a network error occurs. |
 | `all`    | Both `data` and `error` are populated and any returned `data` is cached, enabling you to render both partial results and error information.                                  |
 
+### Choosing an Error Policy
+
+Keep the default `none` unless the component must render partial data. `ignore` and `all` write the returned `data` to the cache even when the response has errors. A field that failed is written as `null`, and it replaces good data in the cache for every component that reads that field. Only the component that set the error policy sees the error. Other components only see the `null`. With `none`, a result with errors is not written to the cache, so the rest of the UI keeps the last good data. This is why `none` is the default.
+
 ### Setting an Error Policy
 
 ```tsx

@@ -51,7 +51,20 @@ export default config;
 
 ## Enable Data Masking
 
-To enable data masking with GraphQL Code Generator, create a type declaration file to inform Apollo Client about the generated types:
+To enable data masking with GraphQL Code Generator, first add these options to the `config` of the `typescript-operations` plugin so that the generated types are masked:
+
+```typescript
+// codegen.ts
+config: {
+  // ...existing options
+  inlineFragmentTypes: "mask",
+  customDirectives: {
+    apolloUnmask: true,
+  },
+},
+```
+
+Then create a type declaration file to inform Apollo Client about the generated types:
 
 ```typescript
 // apollo-client.d.ts

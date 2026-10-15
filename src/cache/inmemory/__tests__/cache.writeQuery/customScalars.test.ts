@@ -1,6 +1,6 @@
 import { gql } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
-import { dateScalar } from "@apollo/client/testing/internal";
+import { bigIntScalar, dateScalar } from "@apollo/client/testing/internal";
 
 test("serializes scalar variables used in field arguments", () => {
   const cache = new InMemoryCache({
@@ -133,6 +133,142 @@ test("serializes scalar fields in input object variables", () => {
         __typename: "Event",
         name: "GraphQL Summit",
       },
+    },
+  });
+});
+
+// https://github.com/apollographql/apollo-client/issues/13494
+test("identifies entities with parsed non-JSON-serializable scalar key fields", () => {
+  const cache = new InMemoryCache({
+    scalars: { BigInt: bigIntScalar },
+    typePolicies: {
+      Product: {
+        keyFields: ["id"],
+        fields: {
+          id: { scalar: "BigInt" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query Product {
+      product {
+        id
+        name
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      product: { __typename: "Product", id: 5n, name: "GraphQL Hoodie" },
+    },
+  });
+
+  expect(cache.extract()).toStrictEqualTyped({
+    ROOT_QUERY: {
+      __typename: "Query",
+      product: { __ref: 'Product:{"id":"5"}' },
+    },
+    'Product:{"id":"5"}': {
+      __typename: "Product",
+      id: "5",
+      name: "GraphQL Hoodie",
+    },
+  });
+});
+
+// https://github.com/apollographql/apollo-client/issues/13494
+test("identifies entities with a parsed non-JSON-serializable scalar default id field", () => {
+  const cache = new InMemoryCache({
+    scalars: { BigInt: bigIntScalar },
+    typePolicies: {
+      Product: {
+        fields: {
+          id: { scalar: "BigInt" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query Product {
+      product {
+        id
+        name
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      product: { __typename: "Product", id: 5n, name: "GraphQL Hoodie" },
+    },
+  });
+
+  expect(cache.extract()).toStrictEqualTyped({
+    ROOT_QUERY: {
+      __typename: "Query",
+      product: { __ref: "Product:5" },
+    },
+    "Product:5": {
+      __typename: "Product",
+      id: "5",
+      name: "GraphQL Hoodie",
+    },
+  });
+});
+
+// https://github.com/apollographql/apollo-client/issues/13494
+test("identifies entities with parsed nested non-JSON-serializable scalar key fields", () => {
+  const cache = new InMemoryCache({
+    scalars: { BigInt: bigIntScalar },
+    typePolicies: {
+      Order: {
+        keyFields: ["product", ["sku"]],
+      },
+      Product: {
+        fields: {
+          sku: { scalar: "BigInt" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query Order {
+      order {
+        product {
+          sku
+        }
+        quantity
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      order: {
+        __typename: "Order",
+        product: { __typename: "Product", sku: 5n },
+        quantity: 2,
+      },
+    },
+  });
+
+  expect(cache.extract()).toStrictEqualTyped({
+    ROOT_QUERY: {
+      __typename: "Query",
+      order: { __ref: 'Order:{"product":{"sku":"5"}}' },
+    },
+    'Order:{"product":{"sku":"5"}}': {
+      __typename: "Order",
+      product: { __typename: "Product", sku: "5" },
+      quantity: 2,
     },
   });
 });

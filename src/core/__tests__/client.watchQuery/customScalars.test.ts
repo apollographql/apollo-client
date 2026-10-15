@@ -15,6 +15,7 @@ import {
 } from "@apollo/client/incremental";
 import { MockLink } from "@apollo/client/testing";
 import {
+  bigIntScalar,
   dateScalar,
   markAsStreaming,
   mockDefer20220824,
@@ -197,6 +198,193 @@ test("serializes scalar fields in input object variables", async () => {
   expect(requestVariables).toStrictEqualTyped({
     filter: {
       date: "2026-01-01",
+    },
+  });
+});
+
+// https://github.com/apollographql/apollo-client/issues/13494
+test("serializes non-JSON-serializable scalar variables", async () => {
+  let requestVariables!: OperationVariables;
+
+  const link = new ApolloLink((operation) => {
+    requestVariables = operation.variables;
+
+    return of({
+      data: {
+        products: [{ __typename: "Product", name: "GraphQL Hoodie" }],
+      },
+    });
+  });
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: {
+        BigInt: bigIntScalar,
+      },
+    }),
+    link,
+  });
+
+  const query = gql`
+    query Products($ids: [BigInt!]!) {
+      products(ids: $ids) {
+        name
+      }
+    }
+  `;
+
+  using stream = new ObservableStream(
+    client.watchQuery({
+      query,
+      variables: {
+        ids: [5n],
+      },
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      products: [{ __typename: "Product", name: "GraphQL Hoodie" }],
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+
+  expect(requestVariables).toStrictEqualTyped({ ids: ["5"] });
+  expect(client.extract()).toStrictEqualTyped({
+    ROOT_QUERY: {
+      __typename: "Query",
+      'products({"ids":["5"]})': [
+        { __typename: "Product", name: "GraphQL Hoodie" },
+      ],
+    },
+  });
+});
+
+// https://github.com/apollographql/apollo-client/issues/13494
+test("serializes non-JSON-serializable scalar variables passed to refetch", async () => {
+  let requestVariables!: OperationVariables;
+
+  const link = new ApolloLink((operation) => {
+    requestVariables = operation.variables;
+
+    return of({
+      data: {
+        products: operation.variables.ids.map((id: string) => ({
+          __typename: "Product",
+          name: `Product ${id}`,
+        })),
+      },
+    });
+  });
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache({ scalars: { BigInt: bigIntScalar } }),
+    link,
+  });
+  const query = gql`
+    query Products($ids: [BigInt!]!) {
+      products(ids: $ids) {
+        name
+      }
+    }
+  `;
+  const observable = client.watchQuery({
+    query,
+    variables: { ids: ["1"] },
+    notifyOnNetworkStatusChange: false,
+  });
+  using stream = new ObservableStream(observable);
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      products: [{ __typename: "Product", name: "Product 1" }],
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(observable.refetch({ ids: [5n] })).resolves.toStrictEqualTyped({
+    data: {
+      products: [{ __typename: "Product", name: "Product 5" }],
+    },
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      products: [{ __typename: "Product", name: "Product 5" }],
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+  await expect(stream).not.toEmitAnything();
+
+  expect(requestVariables).toStrictEqualTyped({ ids: ["5"] });
+});
+
+// https://github.com/apollographql/apollo-client/issues/13494
+test("identifies entities with non-JSON-serializable scalar key fields", async () => {
+  const query = gql`
+    query Product {
+      product {
+        id
+        name
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { BigInt: bigIntScalar },
+      typePolicies: {
+        Product: {
+          keyFields: ["id"],
+          fields: {
+            id: { scalar: "BigInt" },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          product: { __typename: "Product", id: "5", name: "GraphQL Hoodie" },
+        },
+      })
+    ),
+  });
+
+  using stream = new ObservableStream(client.watchQuery({ query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      product: { __typename: "Product", id: 5n, name: "GraphQL Hoodie" },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+
+  expect(client.extract()).toStrictEqualTyped({
+    ROOT_QUERY: {
+      __typename: "Query",
+      product: { __ref: 'Product:{"id":"5"}' },
+    },
+    'Product:{"id":"5"}': {
+      __typename: "Product",
+      id: "5",
+      name: "GraphQL Hoodie",
     },
   });
 });

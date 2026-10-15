@@ -4,6 +4,7 @@ import type { TypedDocumentNode } from "@apollo/client";
 import { gql } from "@apollo/client";
 import { InMemoryCache, Scalar } from "@apollo/client/cache";
 import {
+  bigIntScalar,
   dateTimeRangeScalar,
   dateTimeScalar,
   jsonObjectScalar,
@@ -1443,6 +1444,110 @@ test("stores parsed scalar values across a complex nested write", () => {
       metadata: new Map([["venue", "The Workshop Building"]]),
     },
   });
+});
+
+// https://github.com/apollographql/apollo-client/issues/13494
+test("cache.identify identifies non-JSON-serializable scalar key fields in parsed or serialized form", () => {
+  const cache = new InMemoryCache({
+    scalars: { BigInt: bigIntScalar },
+    typePolicies: {
+      Product: {
+        keyFields: ["id"],
+        fields: {
+          id: { scalar: "BigInt" },
+        },
+      },
+    },
+  });
+
+  expect(cache.identify({ __typename: "Product", id: "5" })).toBe(
+    'Product:{"id":"5"}'
+  );
+  expect(cache.identify({ __typename: "Product", id: 5n })).toBe(
+    'Product:{"id":"5"}'
+  );
+});
+
+// https://github.com/apollographql/apollo-client/issues/13494
+test("cache.identify ignores parsed scalar fields that are not key fields", () => {
+  const cache = new InMemoryCache({
+    scalars: { BigInt: bigIntScalar, DateTime: dateTimeScalar },
+    typePolicies: {
+      Product: {
+        fields: {
+          id: { scalar: "BigInt" },
+          availableSince: { scalar: "DateTime" },
+        },
+      },
+    },
+  });
+
+  expect(
+    cache.identify({
+      __typename: "Product",
+      id: "5",
+      availableSince: new Date("2026-01-01T00:00:00.000Z"),
+    })
+  ).toBe("Product:5");
+  expect(
+    cache.identify({
+      __typename: "Product",
+      id: 5n,
+      availableSince: new Date("2026-01-01T00:00:00.000Z"),
+    })
+  ).toBe("Product:5");
+});
+
+// https://github.com/apollographql/apollo-client/issues/13494
+test("cache.identify identifies nested non-JSON-serializable scalar key fields in parsed or serialized form", () => {
+  const cache = new InMemoryCache({
+    scalars: { BigInt: bigIntScalar },
+    typePolicies: {
+      Order: {
+        keyFields: ["product", ["sku"]],
+      },
+      Product: {
+        fields: {
+          sku: { scalar: "BigInt" },
+        },
+      },
+    },
+  });
+
+  expect(
+    cache.identify({
+      __typename: "Order",
+      product: { __typename: "Product", sku: "5" },
+    })
+  ).toBe('Order:{"product":{"sku":"5"}}');
+  expect(
+    cache.identify({
+      __typename: "Order",
+      product: { __typename: "Product", sku: 5n },
+    })
+  ).toBe('Order:{"product":{"sku":"5"}}');
+});
+
+// https://github.com/apollographql/apollo-client/issues/13494
+test("cache.identify serializes only scalar key fields when there are multiple key fields", () => {
+  const cache = new InMemoryCache({
+    scalars: { BigInt: bigIntScalar },
+    typePolicies: {
+      Attribute: {
+        keyFields: ["name", "value"],
+        fields: {
+          value: { scalar: "BigInt" },
+        },
+      },
+    },
+  });
+
+  expect(
+    cache.identify({ __typename: "Attribute", name: "weight", value: "5" })
+  ).toBe('Attribute:{"name":"weight","value":"5"}');
+  expect(
+    cache.identify({ __typename: "Attribute", name: "weight", value: 5n })
+  ).toBe('Attribute:{"name":"weight","value":"5"}');
 });
 
 test("stores parsed scalar value in the cache when modifying via cache.modify", () => {

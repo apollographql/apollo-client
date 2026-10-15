@@ -1,5 +1,20 @@
 # @apollo/client
 
+## 4.3.4
+
+### Patch Changes
+
+- [#13497](https://github.com/apollographql/apollo-client/pull/13497) [`41d604c`](https://github.com/apollographql/apollo-client/commit/41d604c6cc33582571739b8cd35b9feac21f26b2) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where a list field selected more than once with different selection sets lost the fields that only one of the selections included while a `@defer` boundary elsewhere in the query was still pending when using the `GraphQL17Alpha9Handler`. The results of all selections of the list field are now merged.
+
+- [#13457](https://github.com/apollographql/apollo-client/pull/13457) [`22746bb`](https://github.com/apollographql/apollo-client/commit/22746bb03a8c45a2a1919d3c5804b3b74fb8d871) Thanks [@phryneas](https://github.com/phryneas)! - Fixed a bug where `streamFieldInfo` might not have been passed into custom merge functions for
+  `@stream` directives that had an aliased field in the path.
+
+- [#13457](https://github.com/apollographql/apollo-client/pull/13457) [`22746bb`](https://github.com/apollographql/apollo-client/commit/22746bb03a8c45a2a1919d3c5804b3b74fb8d871) Thanks [@phryneas](https://github.com/phryneas)! - Fix `Missing field` errors being logged when writing `@defer` results where a parent field is selected both inside and outside of a deferred fragment. Fields whose `@defer` boundary has not been delivered from the network are no longer reported as missing.
+
+- [#13453](https://github.com/apollographql/apollo-client/pull/13453) [`9bb3a41`](https://github.com/apollographql/apollo-client/commit/9bb3a416e2b343650a6a5faf62a17e65509421ae) Thanks [@wassim-k](https://github.com/wassim-k)! - Unregister the watch when an immediate `cache.watch` broadcast throws. Previously the watch was added to the cache before its first read, and a read that threw left the watch registered while the caller never received the unsubscribe function, so it could not be removed and every later broadcast ran into the same failing read.
+
+- [#13457](https://github.com/apollographql/apollo-client/pull/13457) [`22746bb`](https://github.com/apollographql/apollo-client/commit/22746bb03a8c45a2a1919d3c5804b3b74fb8d871) Thanks [@phryneas](https://github.com/phryneas)! - `Defer20220824Handler`: fix a situation where `dataState` would show up as `completed` with incremental errors instead of staying `streaming`.
+
 ## 4.3.3
 
 ### Patch Changes

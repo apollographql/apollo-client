@@ -30,6 +30,7 @@ import {
   getDefaultValues,
   getFragmentFromSelection,
   getOperationDefinition,
+  handleIncrementalSymbol,
   isArray,
   isField,
   isNonEmptyArray,
@@ -60,6 +61,7 @@ import {
 } from "./policies.js";
 import type { StoreReader } from "./readFromStore.js";
 import type {
+  DiffIncrementalInfo,
   InMemoryCacheConfig,
   MergeTree,
   NormalizedCache,
@@ -153,7 +155,10 @@ export class StoreWriter {
       variables,
       overwrite,
       extensions,
-    }: Cache.WriteOptions<TData, TVariables>
+      [handleIncrementalSymbol]: incrementalInfo,
+    }: Cache.WriteOptions<TData, TVariables> & {
+      [handleIncrementalSymbol]?: DiffIncrementalInfo;
+    }
   ): Reference | undefined {
     const operationDefinition = getOperationDefinition(query)!;
     const merger = makeProcessedFieldsMerger();
@@ -178,6 +183,7 @@ export class StoreWriter {
       deferred: false,
       flavors: new Map(),
       extensions,
+      isDeferPending: incrementalInfo?.isDeferPending,
     };
 
     const ref = this.processSelectionSet({
@@ -339,11 +345,12 @@ export class StoreWriter {
       // by the flattenFields method, but some fields may be assigned a modified
       // context, depending on the presence of @client and other directives.
       context,
+      currentPath,
       typename
     ).forEach((context, field) => {
       const resultFieldKey = resultKeyNameFromField(field);
       const value = result[resultFieldKey];
-      const path = [...currentPath, field.name.value];
+      const path = [...currentPath, resultFieldKey];
 
       fieldNodeSet.add(field);
 
@@ -360,10 +367,15 @@ export class StoreWriter {
         let incomingValue = this.processFieldValue(
           value,
           field,
-          // Reset context.clientOnly and context.deferred to their default
-          // values before processing nested selection sets.
+          // Reset context.clientOnly to its default value before processing
+          // nested selection sets, but inherit context.deferred: a resolved
+          // parent field must not erase the fact that an ancestor @defer
+          // boundary is still pending, or nested fields reached only through
+          // that ancestor will incorrectly be treated as complete and report
+          // spurious "Missing field" errors when their own boundary hasn't
+          // arrived yet.
           field.selectionSet ?
-            getContextFlavor(context, false, false)
+            getContextFlavor(context, false, context.deferred)
           : context,
           childTree,
           path
@@ -551,6 +563,7 @@ export class StoreWriter {
       | "deferred"
       | "flavors"
       | "fragmentMap"
+      | "isDeferPending"
       | "lookupFragment"
       | "variables"
     >,
@@ -558,6 +571,7 @@ export class StoreWriter {
     selectionSet: SelectionSetNode,
     result: Record<string, any>,
     context: TContext,
+    path: Array<string | number>,
     typename = getTypenameFromResult(result, selectionSet, context.fragmentMap)
   ): Map<FieldNode, TContext> {
     const fieldMap = new Map<FieldNode, TContext>();
@@ -613,10 +627,22 @@ export class StoreWriter {
               // @defer(if: false) does not make context.deferred false, but
               // instead behaves as if there was no @defer directive.
               if (!args || (args as { if?: boolean }).if !== false) {
-                deferred = true;
+                // If we know (via context.isDeferPending) that this specific
+                // boundary has already been delivered, we don't need to mark
+                // it deferred, which allows fields under it to be validated
+                // normally instead of being silently exempted from the
+                // "Missing field" check below. When we can't determine
+                // whether the boundary is still pending (no callback, or the
+                // handler can't identify individual boundaries),
+                // conservatively assume it's still pending (`?? true`).
+                // `||=` (rather than `=`) preserves `deferred` if it was
+                // already true from an ancestor boundary.
+                deferred ||=
+                  context.isDeferPending?.(
+                    path,
+                    (args as { label?: string } | null)?.label
+                  ) ?? true;
               }
-              // TODO In the future, we may want to record args.label using
-              // context.deferred, if a label is specified.
             }
           });
         }

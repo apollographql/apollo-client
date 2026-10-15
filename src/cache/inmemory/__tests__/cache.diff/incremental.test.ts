@@ -1,4 +1,4 @@
-import { Trie } from "@wry/trie";
+import { equal } from "@wry/equality";
 
 import { gql } from "@apollo/client";
 import {
@@ -9,7 +9,6 @@ import {
 } from "@apollo/client/cache";
 import { markAsStreaming, spyOnConsole } from "@apollo/client/testing/internal";
 import { addTypenameToDocument } from "@apollo/client/utilities";
-import type { DeferInfoTrie } from "@apollo/client/utilities/internal";
 import {
   handleIncrementalSymbol,
   makeStreamInfoTrie,
@@ -9226,7 +9225,7 @@ test("without handleIncrementalSymbol, a fully satisfied deferred query is compl
   });
 });
 
-test("prunes a complete cached @defer boundary when deferInfo marks it as pending", () => {
+test("prunes a complete cached @defer boundary when isDeferPending marks it as pending", () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -9252,15 +9251,14 @@ test("prunes a complete cached @defer boundary when deferInfo marks it as pendin
     },
   });
 
-  const deferInfo: DeferInfoTrie = new Trie();
-  deferInfo.lookup("greeting");
+  const isDeferPending = getIsDeferPending({ path: ["greeting"] });
 
   expect(
     cache.diff({
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: { deferInfo },
+      [handleIncrementalSymbol]: { isDeferPending },
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -9275,7 +9273,7 @@ test("prunes a complete cached @defer boundary when deferInfo marks it as pendin
   });
 });
 
-test("keeps a cached @defer boundary that deferInfo does not mark as pending while pruning a sibling boundary that it does", () => {
+test("keeps a cached @defer boundary that isDeferPending does not mark as pending while pruning a sibling boundary that it does", () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -9308,15 +9306,14 @@ test("keeps a cached @defer boundary that deferInfo does not mark as pending whi
     },
   });
 
-  const deferInfo: DeferInfoTrie = new Trie();
-  deferInfo.lookup("greeting");
+  const isDeferPending = getIsDeferPending({ path: ["greeting"] });
 
   expect(
     cache.diff({
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: { deferInfo },
+      [handleIncrementalSymbol]: { isDeferPending },
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -9332,7 +9329,7 @@ test("keeps a cached @defer boundary that deferInfo does not mark as pending whi
   });
 });
 
-test("keeps a non-deferred fragment's fields at a path that deferInfo marks as pending", () => {
+test("keeps a non-deferred fragment's fields at a path that isDeferPending marks as pending", () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -9362,15 +9359,14 @@ test("keeps a non-deferred fragment's fields at a path that deferInfo marks as p
     },
   });
 
-  const deferInfo: DeferInfoTrie = new Trie();
-  deferInfo.lookup("greeting");
+  const isDeferPending = getIsDeferPending({ path: ["greeting"] });
 
   expect(
     cache.diff({
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: { deferInfo },
+      [handleIncrementalSymbol]: { isDeferPending },
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -9386,7 +9382,7 @@ test("keeps a non-deferred fragment's fields at a path that deferInfo marks as p
   });
 });
 
-test("prunes only the labeled @defer boundary that deferInfo marks as pending when siblings share a path", () => {
+test("prunes only the labeled @defer boundary that isDeferPending marks as pending when siblings share a path", () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -9416,15 +9412,17 @@ test("prunes only the labeled @defer boundary that deferInfo marks as pending wh
     },
   });
 
-  const deferInfo: DeferInfoTrie = new Trie();
-  deferInfo.lookup("greeting", "ac_1");
+  const isDeferPending = getIsDeferPending({
+    path: ["greeting"],
+    label: "ac_1",
+  });
 
   expect(
     cache.diff({
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: { deferInfo },
+      [handleIncrementalSymbol]: { isDeferPending },
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -9440,7 +9438,7 @@ test("prunes only the labeled @defer boundary that deferInfo marks as pending wh
   });
 });
 
-test("prunes a labeled @defer boundary on a fragment spread that deferInfo marks as pending", () => {
+test("prunes a labeled @defer boundary on a fragment spread that isDeferPending marks as pending", () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -9468,15 +9466,17 @@ test("prunes a labeled @defer boundary on a fragment spread that deferInfo marks
     },
   });
 
-  const deferInfo: DeferInfoTrie = new Trie();
-  deferInfo.lookup("greeting", "ac_0");
+  const isDeferPending = getIsDeferPending({
+    path: ["greeting"],
+    label: "ac_0",
+  });
 
   expect(
     cache.diff({
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: { deferInfo },
+      [handleIncrementalSymbol]: { isDeferPending },
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -9491,7 +9491,7 @@ test("prunes a labeled @defer boundary on a fragment spread that deferInfo marks
   });
 });
 
-test("prunes only the labeled @defer boundary that deferInfo marks as pending when sibling fragment spreads share a path", () => {
+test("prunes only the labeled @defer boundary that isDeferPending marks as pending when sibling fragment spreads share a path", () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -9527,15 +9527,17 @@ test("prunes only the labeled @defer boundary that deferInfo marks as pending wh
     },
   });
 
-  const deferInfo: DeferInfoTrie = new Trie();
-  deferInfo.lookup("greeting", "ac_1");
+  const isDeferPending = getIsDeferPending({
+    path: ["greeting"],
+    label: "ac_1",
+  });
 
   expect(
     cache.diff({
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: { deferInfo },
+      [handleIncrementalSymbol]: { isDeferPending },
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -9551,7 +9553,7 @@ test("prunes only the labeled @defer boundary that deferInfo marks as pending wh
   });
 });
 
-test("does not apply deferInfo pruning when returnPartialData is true", () => {
+test("does not apply isDeferPending pruning when returnPartialData is true", () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -9577,15 +9579,14 @@ test("does not apply deferInfo pruning when returnPartialData is true", () => {
     },
   });
 
-  const deferInfo: DeferInfoTrie = new Trie();
-  deferInfo.lookup("greeting");
+  const isDeferPending = getIsDeferPending({ path: ["greeting"] });
 
   expect(
     cache.diff({
       query,
       optimistic: true,
       returnPartialData: true,
-      [handleIncrementalSymbol]: { deferInfo },
+      [handleIncrementalSymbol]: { isDeferPending },
     })
   ).toStrictEqualTyped({
     result: {
@@ -9601,7 +9602,7 @@ test("does not apply deferInfo pruning when returnPartialData is true", () => {
   });
 });
 
-test("prunes cached @defer boundaries for list items marked pending in deferInfo", () => {
+test("prunes cached @defer boundaries for list items marked pending in isDeferPending", () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -9631,16 +9632,17 @@ test("prunes cached @defer boundaries for list items marked pending in deferInfo
     },
   });
 
-  const deferInfo: DeferInfoTrie = new Trie();
-  deferInfo.lookup("person", "friends", 0);
-  deferInfo.lookup("person", "friends", 1);
+  const isDeferPending = getIsDeferPending(
+    { path: ["person", "friends", 0] },
+    { path: ["person", "friends", 1] }
+  );
 
   expect(
     cache.diff({
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: { deferInfo },
+      [handleIncrementalSymbol]: { isDeferPending },
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -9689,15 +9691,14 @@ test("keeps a delivered list item's @defer boundary while pruning a still-pendin
     },
   });
 
-  const deferInfo: DeferInfoTrie = new Trie();
-  deferInfo.lookup("person", "friends", 1);
+  const isDeferPending = getIsDeferPending({ path: ["person", "friends", 1] });
 
   expect(
     cache.diff({
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: { deferInfo },
+      [handleIncrementalSymbol]: { isDeferPending },
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -9716,7 +9717,7 @@ test("keeps a delivered list item's @defer boundary while pruning a still-pendin
   });
 });
 
-test("does not reuse a deferInfo-pruned result when deferInfo is later omitted", () => {
+test("does not reuse an isDeferPending-pruned result when isDeferPending is later omitted", () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -9742,15 +9743,14 @@ test("does not reuse a deferInfo-pruned result when deferInfo is later omitted",
     },
   });
 
-  const deferInfo: DeferInfoTrie = new Trie();
-  deferInfo.lookup("greeting");
+  const isDeferPending = getIsDeferPending({ path: ["greeting"] });
 
   expect(
     cache.diff({
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: { deferInfo },
+      [handleIncrementalSymbol]: { isDeferPending },
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -9785,7 +9785,7 @@ test("does not reuse a deferInfo-pruned result when deferInfo is later omitted",
   });
 });
 
-test("does not reuse a deferInfo-pruned result when a sibling boundary is delivered on a later read", () => {
+test("does not reuse an isDeferPending-pruned result when a sibling boundary is delivered on a later read", () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -9819,16 +9819,17 @@ test("does not reuse a deferInfo-pruned result when a sibling boundary is delive
   });
 
   {
-    const deferInfo: DeferInfoTrie = new Trie();
-    deferInfo.lookup("greeting");
-    deferInfo.lookup("hero");
+    const isDeferPending = getIsDeferPending(
+      { path: ["greeting"] },
+      { path: ["hero"] }
+    );
 
     expect(
       cache.diff({
         query,
         optimistic: true,
         returnPartialData: false,
-        [handleIncrementalSymbol]: { deferInfo },
+        [handleIncrementalSymbol]: { isDeferPending },
       })
     ).toStrictEqualTyped({
       result: markAsStreaming({
@@ -9845,15 +9846,14 @@ test("does not reuse a deferInfo-pruned result when a sibling boundary is delive
   }
 
   {
-    const deferInfo: DeferInfoTrie = new Trie();
-    deferInfo.lookup("hero");
+    const isDeferPending = getIsDeferPending({ path: ["hero"] });
 
     expect(
       cache.diff({
         query,
         optimistic: true,
         returnPartialData: false,
-        [handleIncrementalSymbol]: { deferInfo },
+        [handleIncrementalSymbol]: { isDeferPending },
       })
     ).toStrictEqualTyped({
       result: markAsStreaming({
@@ -9908,15 +9908,14 @@ test("strips a partial pending @defer boundary while keeping a complete delivere
     });
   }
 
-  const deferInfo: DeferInfoTrie = new Trie();
-  deferInfo.lookup("greeting");
+  const isDeferPending = getIsDeferPending({ path: ["greeting"] });
 
   expect(
     cache.diff({
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: { deferInfo },
+      [handleIncrementalSymbol]: { isDeferPending },
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -9969,16 +9968,17 @@ test("strips both a partial pending @defer boundary and a complete pending sibli
     });
   }
 
-  const deferInfo: DeferInfoTrie = new Trie();
-  deferInfo.lookup("greeting");
-  deferInfo.lookup("hero");
+  const isDeferPending = getIsDeferPending(
+    { path: ["greeting"] },
+    { path: ["hero"] }
+  );
 
   expect(
     cache.diff({
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: { deferInfo },
+      [handleIncrementalSymbol]: { isDeferPending },
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -10025,15 +10025,14 @@ test("keeps fields shared with a delivered @defer boundary while pruning a pendi
     },
   });
 
-  const deferInfo: DeferInfoTrie = new Trie();
-  deferInfo.lookup("hero");
+  const isDeferPending = getIsDeferPending({ path: ["hero"] });
 
   expect(
     cache.diff({
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: { deferInfo },
+      [handleIncrementalSymbol]: { isDeferPending },
     })
   ).toStrictEqualTyped({
     result: markAsStreaming({
@@ -10045,7 +10044,7 @@ test("keeps fields shared with a delivered @defer boundary while pruning a pendi
   });
 });
 
-test('returns dataState "partial" when a non-deferred field is missing and deferInfo marks a boundary as pending with returnPartialData: true', () => {
+test('returns dataState "partial" when a non-deferred field is missing and isDeferPending marks a boundary as pending with returnPartialData: true', () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -10079,15 +10078,14 @@ test('returns dataState "partial" when a non-deferred field is missing and defer
   const missingObject = { __typename: "Greeting", message: "Hello world" };
   const missingRoot = { __ref: "ROOT_QUERY" };
 
-  const deferInfo: DeferInfoTrie = new Trie();
-  deferInfo.lookup("greeting");
+  const isDeferPending = getIsDeferPending({ path: ["greeting"] });
 
   expect(
     cache.diff({
       query,
       optimistic: true,
       returnPartialData: true,
-      [handleIncrementalSymbol]: { deferInfo },
+      [handleIncrementalSymbol]: { isDeferPending },
     })
   ).toStrictEqualTyped({
     result: {
@@ -10109,7 +10107,7 @@ test('returns dataState "partial" when a non-deferred field is missing and defer
   });
 });
 
-test('returns dataState "empty" when a non-deferred field is missing and deferInfo marks a boundary as pending with returnPartialData: false', () => {
+test('returns dataState "empty" when a non-deferred field is missing and isDeferPending marks a boundary as pending with returnPartialData: false', () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -10143,15 +10141,14 @@ test('returns dataState "empty" when a non-deferred field is missing and deferIn
   const missingObject = { __typename: "Greeting", message: "Hello world" };
   const missingRoot = { __ref: "ROOT_QUERY" };
 
-  const deferInfo: DeferInfoTrie = new Trie();
-  deferInfo.lookup("greeting");
+  const isDeferPending = getIsDeferPending({ path: ["greeting"] });
 
   expect(
     cache.diff({
       query,
       optimistic: true,
       returnPartialData: false,
-      [handleIncrementalSymbol]: { deferInfo },
+      [handleIncrementalSymbol]: { isDeferPending },
     })
   ).toStrictEqualTyped({
     result: null,
@@ -10171,7 +10168,7 @@ test('returns dataState "empty" when a non-deferred field is missing and deferIn
   });
 });
 
-test('returns dataState "empty" when the cache is empty and deferInfo marks a boundary as pending', () => {
+test('returns dataState "empty" when the cache is empty and isDeferPending marks a boundary as pending', () => {
   const cache = new InMemoryCache();
   const query = gql`
     query {
@@ -10188,15 +10185,14 @@ test('returns dataState "empty" when the cache is empty and deferInfo marks a bo
 
   const missingRoot = { __ref: "ROOT_QUERY" };
 
-  const deferInfo: DeferInfoTrie = new Trie();
-  deferInfo.lookup("greeting");
+  const isDeferPending = getIsDeferPending({ path: ["greeting"] });
 
   expect(
     cache.diff({
       query,
       optimistic: true,
       returnPartialData: true,
-      [handleIncrementalSymbol]: { deferInfo },
+      [handleIncrementalSymbol]: { isDeferPending },
     })
   ).toStrictEqualTyped({
     result: null,
@@ -10217,4 +10213,11 @@ function getMissingMessage(fieldName: string, obj: Record<string, unknown>) {
       obj.__ref + " object"
     : "object " + JSON.stringify(obj, null, 2)
   }`;
+}
+
+function getIsDeferPending(
+  ...entries: Array<{ path: Array<string | number>; label?: string }>
+) {
+  return (path: ReadonlyArray<string | number>, label: string | undefined) =>
+    entries.some((entry) => equal(entry.path, path) && entry.label === label);
 }

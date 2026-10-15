@@ -462,7 +462,11 @@ export class InMemoryCache extends ApolloCache {
   public write<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
-  >(options: Cache.WriteOptions<TData, TVariables>): Reference | undefined {
+  >(
+    options: Cache.WriteOptions<TData, TVariables> & {
+      [handleIncrementalSymbol]?: DiffIncrementalInfo | undefined;
+    }
+  ): Reference | undefined {
     const { query, variables } = options;
 
     try {

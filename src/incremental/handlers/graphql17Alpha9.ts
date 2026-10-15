@@ -156,6 +156,8 @@ class IncrementalRequest<TData>
 
   /**
    * @internal
+   *
+   * @privateRemarks
    * Important: this function is used as a reactivity dependency in the `readFromStore.prune*` methods.
    * It needs to be a different instance for each instance of `IncrementalRequest`,
    * so it cannot be a normal class/prototype method, but it has to be an instance property.

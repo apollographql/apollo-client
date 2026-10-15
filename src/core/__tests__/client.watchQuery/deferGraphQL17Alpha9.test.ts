@@ -11093,6 +11093,96 @@ test("deeply nested defer doesn't cause cache to log errors about missing fields
   expect(spy.error).not.toHaveBeenCalled();
 });
 
+test("keeps fields from all selections of a list field selected by both a field and a fragment while a sibling `@defer` is pending", async () => {
+  const query = gql`
+    query {
+      greeting {
+        recipients {
+          name
+        }
+        ... on Greeting {
+          recipients {
+            email
+          }
+        }
+        ... on Greeting @defer {
+          message
+        }
+      }
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+
+  const client = new ApolloClient({
+    link: httpLink,
+    cache: new InMemoryCache(),
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+  const stream = new ObservableStream(client.watchQuery({ query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        recipients: [
+          { __typename: "Person", name: "Alice", email: "alice@example.com" },
+        ],
+      },
+    },
+    pending: [{ id: "0", path: ["greeting"], label: "ac_0" }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        recipients: [
+          { __typename: "Person", name: "Alice", email: "alice@example.com" },
+        ],
+      },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [{ id: "0", data: { message: "Hello world" } }],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        recipients: [
+          { __typename: "Person", name: "Alice", email: "alice@example.com" },
+        ],
+        message: "Hello world",
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
 test("deeply nested defer still logs errors about missing non-deferred fields under shared parents", async () => {
   const query = gql`
     query Q {

@@ -3208,6 +3208,122 @@ test('returns dataState "complete" with an empty list when every stream list ite
   });
 });
 
+// NOTE: This is only valid for Defer20220824 format. GraphQL 17 doesn't allow
+// `@stream` on the same field with multiple selection sets. Its safe to remove
+// this test when we stop supporting the old format.
+test('returns dataState "complete" with an empty list without streamInfo when a stream list item is incomplete for only the fragment\'s selection of a list field also selected directly', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        recipients @stream(initialCount: 1) {
+          name
+        }
+        ... on Greeting {
+          recipients @stream(initialCount: 1) {
+            name
+            email
+          }
+        }
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          recipients: [
+            { __typename: "Person", name: "Alice", email: "alice@example.com" },
+            { __typename: "Person", name: "Bob", email: "bob@example.com" },
+            { __typename: "Person", name: "Carol" },
+          ],
+        },
+      },
+    });
+  }
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: undefined,
+    })
+  ).toStrictEqualTyped({
+    result: {
+      greeting: {
+        __typename: "Greeting",
+        recipients: [],
+      },
+    },
+    dataState: "complete",
+    complete: true,
+    missing: undefined,
+  });
+});
+
+// NOTE: This is only valid for Defer20220824 format. GraphQL 17 doesn't allow
+// `@stream` on the same field with multiple selection sets. Its safe to remove
+// this test when we stop supporting the old format.
+test('returns dataState "complete" with an empty list without streamInfo when a stream list item is incomplete for only the direct selection of a list field also selected by a fragment', () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        recipients @stream(initialCount: 1) {
+          name
+          email
+        }
+        ... on Greeting {
+          recipients @stream(initialCount: 1) {
+            name
+          }
+        }
+      }
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          recipients: [
+            { __typename: "Person", name: "Alice", email: "alice@example.com" },
+            { __typename: "Person", name: "Bob", email: "bob@example.com" },
+            { __typename: "Person", name: "Carol" },
+          ],
+        },
+      },
+    });
+  }
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: undefined,
+    })
+  ).toStrictEqualTyped({
+    result: {
+      greeting: {
+        __typename: "Greeting",
+        recipients: [],
+      },
+    },
+    dataState: "complete",
+    complete: true,
+    missing: undefined,
+  });
+});
+
 test('keeps incomplete stream list items when returnPartialData is true and reports dataState "partial"', () => {
   const cache = new InMemoryCache();
   const query = gql`
@@ -9374,6 +9490,169 @@ test("keeps a non-deferred fragment's fields at a path that isDeferPending marks
         __typename: "Greeting",
         message: "Hello world",
         tone: "warm",
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
+test("keeps fields from all selections of a list field selected by both a field and a fragment while isDeferPending marks a sibling boundary as pending", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        recipients {
+          name
+        }
+        ... on Greeting {
+          recipients {
+            email
+          }
+        }
+        ... on Greeting @defer {
+          message
+        }
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        recipients: [
+          { __typename: "Person", name: "Alice", email: "alice@example.com" },
+        ],
+        message: "Hello world",
+      },
+    },
+  });
+
+  const isDeferPending = getIsDeferPending({ path: ["greeting"] });
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: { isDeferPending },
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        recipients: [
+          { __typename: "Person", name: "Alice", email: "alice@example.com" },
+        ],
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
+test("prunes the fields of a list field selected only by a deferred fragment that isDeferPending marks as pending when the list field is also selected directly", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        recipients {
+          name
+        }
+        ... on Greeting @defer {
+          recipients {
+            email
+          }
+        }
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        recipients: [
+          { __typename: "Person", name: "Alice", email: "alice@example.com" },
+        ],
+      },
+    },
+  });
+
+  const isDeferPending = getIsDeferPending({ path: ["greeting"] });
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: { isDeferPending },
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        recipients: [{ __typename: "Person", name: "Alice" }],
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});
+
+test("prunes a pending @defer boundary inside the list items of a fragment's selection of a list field that is also selected directly", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query {
+      greeting {
+        recipients {
+          name
+        }
+        ... on Greeting {
+          recipients {
+            ... on Person @defer {
+              email
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      greeting: {
+        __typename: "Greeting",
+        recipients: [
+          { __typename: "Person", name: "Alice", email: "alice@example.com" },
+        ],
+      },
+    },
+  });
+
+  const isDeferPending = getIsDeferPending({
+    path: ["greeting", "recipients", 0],
+  });
+
+  expect(
+    cache.diff({
+      query,
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: { isDeferPending },
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        recipients: [{ __typename: "Person", name: "Alice" }],
       },
     }),
     dataState: "streaming",

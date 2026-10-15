@@ -149,7 +149,7 @@ const cache = new InMemoryCache({
 **Solution 2:** Update cache after mutations:
 
 ```tsx
-const [deleteProduct] = useMutation(DELETE_PRODUCT, {
+const [deleteProduct, { loading }] = useMutation(DELETE_PRODUCT, {
   update: (cache, { data }) => {
     cache.evict({ id: cache.identify(data.deleteProduct) });
     cache.gc();
@@ -183,7 +183,7 @@ Do not change `fetchPolicy` to fix data that a mutation in this app changed. Fix
 **Solution:** Manually update the cache:
 
 ```tsx
-const [createProduct] = useMutation(CREATE_PRODUCT, {
+const [createProduct, { loading }] = useMutation(CREATE_PRODUCT, {
   update: (cache, { data }) => {
     const existing = cache.readQuery<{ products: Product[] }>({
       query: GET_PRODUCTS,

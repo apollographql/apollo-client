@@ -60,7 +60,7 @@ function AddTodo() {
 ### Variables in Options
 
 ```tsx
-const [createUser] = useMutation(CREATE_USER, {
+const [createUser, { loading }] = useMutation(CREATE_USER, {
   variables: {
     input: {
       name: "Default User",
@@ -250,7 +250,7 @@ Optimistic UI immediately reflects the expected result of a mutation before the 
 **Important**: `optimisticResponse` needs to be a full valid response for the mutation. A partial result might result in subtle errors.
 
 ```tsx
-const [addTodo] = useMutation(ADD_TODO, {
+const [addTodo, { loading }] = useMutation(ADD_TODO, {
   optimisticResponse: {
     addTodo: {
       __typename: "Todo",
@@ -266,7 +266,7 @@ const [addTodo] = useMutation(ADD_TODO, {
 
 ```tsx
 function TodoList() {
-  const [addTodo] = useMutation(ADD_TODO);
+  const [addTodo, { loading }] = useMutation(ADD_TODO);
 
   const handleAdd = (text: string) => {
     addTodo({
@@ -282,14 +282,14 @@ function TodoList() {
     });
   };
 
-  return <AddTodoForm onAdd={handleAdd} />;
+  return <AddTodoForm onAdd={handleAdd} disabled={loading} />;
 }
 ```
 
 ### Optimistic Response with Cache Update
 
 ```tsx
-const [toggleTodo] = useMutation(TOGGLE_TODO, {
+const [toggleTodo, { loading }] = useMutation(TOGGLE_TODO, {
   optimisticResponse: ({ id }) => ({
     toggleTodo: {
       __typename: "Todo",
@@ -314,7 +314,7 @@ const [toggleTodo] = useMutation(TOGGLE_TODO, {
 ### Using update Function
 
 ```tsx
-const [addTodo] = useMutation(ADD_TODO, {
+const [addTodo, { loading }] = useMutation(ADD_TODO, {
   update: (cache, { data }) => {
     // Read existing todos from cache
     const existingTodos = cache.readQuery<{ todos: Todo[] }>({
@@ -335,7 +335,7 @@ const [addTodo] = useMutation(ADD_TODO, {
 ### cache.modify
 
 ```tsx
-const [deleteTodo] = useMutation(DELETE_TODO, {
+const [deleteTodo, { loading }] = useMutation(DELETE_TODO, {
   update: (cache, { data }) => {
     cache.modify({
       fields: {
@@ -353,7 +353,7 @@ const [deleteTodo] = useMutation(DELETE_TODO, {
 ### cache.evict
 
 ```tsx
-const [deleteUser] = useMutation(DELETE_USER, {
+const [deleteUser, { loading }] = useMutation(DELETE_USER, {
   update: (cache, { data }) => {
     // Remove the user object from cache entirely
     cache.evict({ id: cache.identify(data.deleteUser) });
@@ -366,7 +366,7 @@ const [deleteUser] = useMutation(DELETE_USER, {
 ### Updating Related Queries
 
 ```tsx
-const [createPost] = useMutation(CREATE_POST, {
+const [createPost, { loading }] = useMutation(CREATE_POST, {
   update: (cache, { data }) => {
     // Update author's post count
     cache.modify({
@@ -404,14 +404,14 @@ There are three refetch notations:
 - **Object**: `refetchQueries: [{ query: GET_TODOS }, { query: GET_TODOS, variables: { page: 25 } }]` - **fetches** the query, regardless if it's actively used in the UI
 
 ```tsx
-const [addTodo] = useMutation(ADD_TODO, {
+const [addTodo, { loading }] = useMutation(ADD_TODO, {
   // Refetch all active GET_TODOS queries
   refetchQueries: ["getTodos"],
   // Or: refetchQueries: [GET_TODOS],
 });
 
 // Fetch specific query with variables (even if not active)
-const [addTodo] = useMutation(ADD_TODO, {
+const [addTodo, { loading }] = useMutation(ADD_TODO, {
   refetchQueries: [{ query: GET_TODOS }, { query: GET_TODO_COUNT }],
 });
 ```
@@ -419,7 +419,7 @@ const [addTodo] = useMutation(ADD_TODO, {
 ### Conditional Refetch
 
 ```tsx
-const [addTodo] = useMutation(ADD_TODO, {
+const [addTodo, { loading }] = useMutation(ADD_TODO, {
   refetchQueries: (result) => {
     if (result.data?.addTodo.priority === "HIGH") {
       return [{ query: GET_HIGH_PRIORITY_TODOS }];
@@ -432,7 +432,7 @@ const [addTodo] = useMutation(ADD_TODO, {
 ### Refetch Active Queries
 
 ```tsx
-const [addTodo] = useMutation(ADD_TODO, {
+const [addTodo, { loading }] = useMutation(ADD_TODO, {
   refetchQueries: "active", // Refetch all active queries
   // Or: 'all' to refetch all queries (including inactive)
 });
@@ -441,7 +441,7 @@ const [addTodo] = useMutation(ADD_TODO, {
 ### awaitRefetchQueries
 
 ```tsx
-const [addTodo] = useMutation(ADD_TODO, {
+const [addTodo, { loading }] = useMutation(ADD_TODO, {
   refetchQueries: [{ query: GET_TODOS }],
   awaitRefetchQueries: true, // Wait for refetch before resolving mutation
 });
@@ -452,7 +452,7 @@ const [addTodo] = useMutation(ADD_TODO, {
 Returning `true` from `onQueryUpdated` causes a refetch. Don't call `refetch()` manually inside `onQueryUpdated`, as it won't retain the query and might cancel it early.
 
 ```tsx
-const [addTodo] = useMutation(ADD_TODO, {
+const [addTodo, { loading }] = useMutation(ADD_TODO, {
   update: (cache, { data }) => {
     // Update cache...
   },
@@ -490,7 +490,7 @@ if (errors) {
 ### onError Callback
 
 ```tsx
-const [createUser] = useMutation(CREATE_USER, {
+const [createUser, { loading }] = useMutation(CREATE_USER, {
   onError: (error) => {
     // Handle error globally
     toast.error(`Failed to create user: ${error.message}`);
@@ -507,7 +507,7 @@ const [createUser] = useMutation(CREATE_USER, {
 ### Field-Level Errors
 
 ```tsx
-const [createUser] = useMutation(CREATE_USER, {
+const [createUser, { loading }] = useMutation(CREATE_USER, {
   errorPolicy: "all",
 });
 

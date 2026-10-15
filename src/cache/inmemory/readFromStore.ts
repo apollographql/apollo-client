@@ -818,7 +818,10 @@ export class StoreReader {
       return { result: data, dataState: "complete" };
     }
 
-    const merger = new DeepMerger();
+    // `truncate` is only necessary for the Defer20220824 protocol. the
+    // `arrayMerge` option can be removed when we stop supporting the old
+    // protocol. See the comment below on array merging for more info.
+    const merger = new DeepMerger({ arrayMerge: "truncate" });
 
     let changed = false;
     let dataState: DataState = "complete";
@@ -854,7 +857,22 @@ export class StoreReader {
           });
 
           changed ||= pruned.result !== fieldValue;
-          result[resultName] = pruned.result;
+          const previous = result[resultName];
+          let merged = merger.merge(previous, pruned.result);
+          // The Defer20220824 protocol allows more than one selection of a
+          // list field with `@stream` when the `@stream` arguments are the
+          // same. Each selection can prune the list to a different length, so
+          // we keep the shortest length. The `truncate` option of the merger
+          // handles a shorter later visit, and this check handles a shorter
+          // earlier visit. GraphQL 17 rejects any overlapping `@stream` field,
+          // so all visits give the same length. When we no longer support the
+          // older protocol, we can remove this check and the `truncate` option,
+          // and simplify to:
+          // result[resultName] = merger.merge(result[resultName], pruned.result);
+          if (previous && previous.length < merged.length) {
+            merged = merged.slice(0, previous.length);
+          }
+          result[resultName] = merged;
           dataState = mergeDataState(dataState, pruned.dataState);
         } else if (!selection.selectionSet) {
           result[resultName] = fieldValue;

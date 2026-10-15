@@ -289,7 +289,7 @@ export class QueryInfo<
     // can prune complete defer/stream boundaries at those paths.
     if (prune && this.incremental?.tracksPending) {
       const isDeferPending = this.incremental.isDeferPending;
-      if (isDeferPending?.()) {
+      if (isDeferPending()) {
         incrementalInfo.isDeferPending ||= (path, label) =>
           isDeferPending(path, label);
       }

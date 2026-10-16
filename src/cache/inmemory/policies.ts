@@ -17,7 +17,11 @@ import type {
 import { isReference } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type { FragmentMap } from "@apollo/client/utilities/internal";
-import { streamInfoSymbol } from "@apollo/client/utilities/internal";
+import {
+  matchScalarList,
+  streamInfoSymbol,
+  unwrapScalarType,
+} from "@apollo/client/utilities/internal";
 import {
   argumentsObjectFromField,
   getStoreKeyName,
@@ -105,6 +109,12 @@ export type KeyFieldsContext = {
   // Internal. May be set by the KeyFieldsFunction to report fields that were
   // involved in computing the ID. Never passed in by the caller.
   keyObject?: Record<string, any>;
+
+  serializeKeyField?: (
+    typename: string,
+    fieldName: string,
+    value: unknown
+  ) => unknown;
 };
 
 export type KeyFieldsFunction = (
@@ -460,6 +470,15 @@ export class Policies {
           });
         }) satisfies ReadFieldFunction),
     };
+
+    if (this.cache.configuresScalars()) {
+      context.serializeKeyField = (typename, fieldName, value) => {
+        return this.serializeScalarValue(
+          value,
+          this.getScalarTypeForField(typename, fieldName)
+        );
+      };
+    }
 
     let id: KeyFieldsResult;
 
@@ -936,6 +955,24 @@ export class Policies {
     fieldName: string
   ): ScalarType | undefined {
     return this.getFieldPolicy(typename, fieldName)?.scalar;
+  }
+
+  private serializeScalarValue(
+    value: unknown,
+    scalarType: ScalarType | undefined
+  ): unknown {
+    if (value == null || !scalarType) {
+      return value;
+    }
+
+    const match = matchScalarList(scalarType);
+
+    if (match && Array.isArray(value)) {
+      return value.map((item) => this.serializeScalarValue(item, match[1]));
+    }
+
+    const scalar = this.cache.getScalar(unwrapScalarType(scalarType));
+    return scalar ? scalar.coerceToSerialized(value) : value;
   }
 
   public readField<V = StoreValue>(

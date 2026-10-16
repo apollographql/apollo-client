@@ -2897,7 +2897,7 @@ describe.skip("Type Tests", () => {
   test("UseFragmentOptions interface shape", <TData, TVariables extends
     OperationVariables>() => {
     expectTypeOf<
-      useFragment.Options<TData, TVariables>
+      useFragment.Base.Options<TData, TVariables>
     >().branded.toEqualTypeOf<{
       from:
         | string
@@ -2909,7 +2909,6 @@ describe.skip("Type Tests", () => {
       fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
       fragmentName?: string;
       optimistic?: boolean;
-      variables?: TVariables;
       client?: ApolloClient;
     }>();
   });

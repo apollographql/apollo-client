@@ -134,6 +134,79 @@ test("serializes scalar variables used in directive arguments", async () => {
   expect(requestVariables).toStrictEqualTyped({ date: "2026-01-01" });
 });
 
+test("serializes scalar variables used in field arguments with keyArgs", async () => {
+  let requestVariables!: OperationVariables;
+
+  const link = new ApolloLink((operation) => {
+    requestVariables = operation.variables;
+
+    return of({
+      data: { event: { __typename: "Event", name: "GraphQL Summit" } },
+    });
+  });
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: {
+        Date: dateScalar,
+      },
+      typePolicies: {
+        Query: {
+          fields: {
+            event: {
+              keyArgs: ["date"],
+            },
+          },
+        },
+      },
+    }),
+    link,
+  });
+
+  const query = gql`
+    query Event($date: Date!) {
+      event(date: $date) {
+        name
+      }
+    }
+  `;
+
+  using stream = new ObservableStream(
+    client.watchQuery({
+      query,
+      variables: {
+        date: new Date(2026, 0, 1),
+      },
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      event: {
+        __typename: "Event",
+        name: "GraphQL Summit",
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+
+  expect(requestVariables).toStrictEqualTyped({ date: "2026-01-01" });
+  expect(client.extract()).toStrictEqualTyped({
+    ROOT_QUERY: {
+      __typename: "Query",
+      'event:{"date":"2026-01-01"}': {
+        __typename: "Event",
+        name: "GraphQL Summit",
+      },
+    },
+  });
+});
+
 test("serializes scalar fields in input object variables", async () => {
   let requestVariables!: OperationVariables;
 
@@ -260,6 +333,90 @@ test("serializes non-JSON-serializable scalar variables", async () => {
       __typename: "Query",
       'products({"ids":["5"]})': [
         { __typename: "Product", name: "GraphQL Hoodie" },
+      ],
+    },
+  });
+});
+
+// https://github.com/apollographql/apollo-client/issues/13494
+test("serializes non-JSON-serializable scalar variables used in keyArgs", async () => {
+  let requestVariables!: OperationVariables;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { BigInt: bigIntScalar },
+      typePolicies: {
+        Query: {
+          fields: {
+            products: {
+              keyArgs: ["ids", "$after"],
+            },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink((operation) => {
+      requestVariables = operation.variables;
+
+      return of({
+        data: {
+          products: [
+            {
+              __typename: "Product",
+              name: "GraphQL Hoodie",
+              reviews: [{ __typename: "Review", body: "So comfy" }],
+            },
+          ],
+        },
+      });
+    }),
+  });
+
+  const query = gql`
+    query Products($ids: [BigInt!]!, $after: BigInt) {
+      products(ids: $ids) {
+        name
+        reviews(after: $after) {
+          body
+        }
+      }
+    }
+  `;
+
+  using stream = new ObservableStream(
+    client.watchQuery({ query, variables: { ids: [5n], after: 10n } })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      products: [
+        {
+          __typename: "Product",
+          name: "GraphQL Hoodie",
+          reviews: [{ __typename: "Review", body: "So comfy" }],
+        },
+      ],
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+
+  expect(requestVariables).toStrictEqualTyped({ ids: ["5"], after: "10" });
+  expect(client.extract()).toStrictEqualTyped({
+    ROOT_QUERY: {
+      __typename: "Query",
+      'products:{"ids":["5"],"$after":"10"}': [
+        {
+          __typename: "Product",
+          name: "GraphQL Hoodie",
+          'reviews({"after":"10"})': [
+            { __typename: "Review", body: "So comfy" },
+          ],
+        },
       ],
     },
   });

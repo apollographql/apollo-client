@@ -367,6 +367,7 @@ Array [
   "actAsync",
   "addDelayToMocks",
   "asyncIterableSubject",
+  "bigIntScalar",
   "createClientWrapper",
   "createMockWrapper",
   "createOperationWithDefaultContext",

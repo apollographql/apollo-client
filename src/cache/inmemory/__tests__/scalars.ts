@@ -1773,6 +1773,85 @@ test("parses serialized scalar value when modifying via cache.modify", () => {
   });
 });
 
+test("cache.writeQuery stores the written instance of a parsed scalar key field", () => {
+  const cache = new InMemoryCache({
+    scalars: { Date: dateScalar },
+    typePolicies: {
+      Holiday: {
+        keyFields: ["date"],
+        fields: {
+          date: { scalar: "Date" },
+          observedOn: { scalar: "Date" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      holiday {
+        date
+        observedOn
+      }
+    }
+  `;
+
+  const date = new Date(2026, 0, 1);
+  const observedOn = new Date(2026, 0, 2);
+
+  cache.writeQuery({
+    query,
+    data: {
+      holiday: { __typename: "Holiday", date, observedOn },
+    },
+  });
+
+  const holiday = rawCacheData(cache)['Holiday:{"date":"2026-01-01"}']!;
+
+  expect(holiday.observedOn).toBe(observedOn);
+  expect(holiday.date).toBe(date);
+});
+
+test("cache.writeQuery does not lose data in a parsed scalar key field when the scalar serializes with less precision", () => {
+  const cache = new InMemoryCache({
+    scalars: { Date: dateScalar },
+    typePolicies: {
+      Holiday: {
+        keyFields: ["date"],
+        fields: {
+          date: { scalar: "Date" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      holiday {
+        date
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      holiday: { __typename: "Holiday", date: new Date(2026, 0, 1, 15, 30) },
+    },
+  });
+
+  expect(rawCacheData(cache)).toStrictEqual({
+    ROOT_QUERY: {
+      __typename: "Query",
+      holiday: { __ref: 'Holiday:{"date":"2026-01-01"}' },
+    },
+    'Holiday:{"date":"2026-01-01"}': {
+      __typename: "Holiday",
+      date: new Date(2026, 0, 1, 15, 30),
+    },
+  });
+});
+
 test("cache.modify preserves referential identity for deeply equal parsed scalar values", () => {
   const cache = new InMemoryCache({
     scalars: { DateTime: dateTimeScalar },

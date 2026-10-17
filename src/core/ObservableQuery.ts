@@ -825,6 +825,15 @@ export class ObservableQuery<
   ): ObservableQuery.ResultPromise<ApolloClient.QueryResult<TData>> {
     const { fetchPolicy } = this.options;
 
+    // The initial subscription must not deliver a still-loading result before
+    // the refetch subscription delivers the same shared response as ready.
+    if (
+      this.networkStatus === NetworkStatus.loading &&
+      this.getCurrentResult().data === undefined
+    ) {
+      this.linkSubscription?.unsubscribe();
+    }
+
     const reobserveOptions: Partial<
       ObservableQuery.Options<TData, TVariables>
     > = {

@@ -817,7 +817,7 @@ export class QueryManager {
         restart = res;
         return (observable as Observable<FormattedExecutionResult<TData>>).pipe(
           map((rawResult): ApolloClient.SubscribeResult<TData> => {
-            queryInfo.markSubscriptionResult(rawResult, {
+            const data = queryInfo.markSubscriptionResult(rawResult, {
               document: query,
               variables,
               errorPolicy,
@@ -828,11 +828,11 @@ export class QueryManager {
             });
 
             const result: ApolloClient.SubscribeResult<TData> = {
-              data: rawResult.data ?? undefined,
+              data: data ?? undefined,
             };
 
             if (graphQLResultHasError(rawResult)) {
-              result.error = new CombinedGraphQLErrors(rawResult);
+              result.error = new CombinedGraphQLErrors({ ...rawResult, data });
             } else if (graphQLResultHasProtocolErrors(rawResult)) {
               result.error = rawResult.extensions[PROTOCOL_ERRORS_SYMBOL];
               // Don't emit protocol errors added by HttpLink

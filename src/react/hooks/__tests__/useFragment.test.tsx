@@ -1724,7 +1724,7 @@ describe("useFragment", () => {
       age: number;
     }
 
-    const fragment: TypedDocumentNode<Fragment, never> = gql`
+    const fragment: TypedDocumentNode<Fragment, Record<string, never>> = gql`
       fragment UserFields on User {
         age
       }
@@ -1767,7 +1767,7 @@ describe("useFragment", () => {
       age: number;
     }
 
-    const fragment: TypedDocumentNode<Fragment, never> = gql`
+    const fragment: TypedDocumentNode<Fragment, Record<string, never>> = gql`
       fragment UserFields on User {
         age
       }
@@ -2736,10 +2736,168 @@ describe.skip("Type Tests", () => {
     });
   });
 
+  test("variables are optional and can be anything with an untyped DocumentNode", () => {
+    const fragment = gql``;
+
+    useFragment({ fragment, from: null });
+    useFragment({ fragment, from: null, variables: {} });
+    useFragment({ fragment, from: null, variables: { foo: "bar" } });
+    useFragment({ fragment, from: null, variables: { bar: "baz" } });
+  });
+
+  it("variables are optional and can be anything with unspecified TVariables on a TypedDocumentNode", () => {
+    const fragment: TypedDocumentNode<{ greeting: string }> = gql``;
+
+    useFragment({ fragment, from: null });
+    useFragment({ fragment, from: null, variables: {} });
+    useFragment({ fragment, from: null, variables: { foo: "bar" } });
+    useFragment({ fragment, from: null, variables: { bar: "baz" } });
+  });
+
+  it("variables are optional and can be anything with OperationVariables on a TypedDocumentNode", () => {
+    const fragment: TypedDocumentNode<
+      { greeting: string },
+      OperationVariables
+    > = gql``;
+
+    useFragment({ fragment, from: null });
+    useFragment({ fragment, from: null, variables: {} });
+    useFragment({ fragment, from: null, variables: { foo: "bar" } });
+    useFragment({ fragment, from: null, variables: { bar: "baz" } });
+  });
+
+  it("variables are optional when TVariables are empty", () => {
+    const fragment: TypedDocumentNode<
+      { greeting: string },
+      Record<string, never>
+    > = gql``;
+
+    useFragment({ fragment, from: null });
+    useFragment({ fragment, from: null, variables: {} });
+    // @ts-expect-error unknown variable
+    useFragment({ fragment, from: null, variables: { foo: "bar" } });
+  });
+
+  it("is invalid with TVariables as `never`", () => {
+    const fragment: TypedDocumentNode<{ greeting: string }, never> = gql``;
+
+    // @ts-expect-error
+    useFragment({ fragment, from: null });
+    // @ts-expect-error
+    useFragment({ fragment, from: null, variables: {} });
+    // @ts-expect-error no variables argument allowed
+    useFragment({ fragment, from: null, variables: { foo: "bar" } });
+  });
+
+  it("optional variables are optional to useFragment", () => {
+    const fragment: TypedDocumentNode<{ posts: string[] }, { limit?: number }> =
+      gql``;
+
+    useFragment({ fragment, from: null });
+    useFragment({ fragment, from: null, variables: {} });
+    useFragment({ fragment, from: null, variables: { limit: 10 } });
+    useFragment({
+      fragment,
+      from: null,
+      variables: {
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    useFragment({
+      fragment,
+      from: null,
+      variables: {
+        limit: 10,
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+  });
+
+  it("enforces required variables when TVariables includes required variables", () => {
+    const fragment: TypedDocumentNode<{ character: string }, { id: string }> =
+      gql``;
+
+    // @ts-expect-error missing variables argument
+    useFragment({ fragment, from: null });
+    // @ts-expect-error empty variables
+    useFragment({ fragment, from: null, variables: {} });
+    useFragment({ fragment, from: null, variables: { id: "1" } });
+    useFragment({
+      fragment,
+      from: null,
+      variables: {
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    useFragment({
+      fragment,
+      from: null,
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+  });
+
+  it("requires variables with mixed TVariables", () => {
+    const fragment: TypedDocumentNode<
+      { character: string },
+      { id: string; language?: string }
+    > = gql``;
+
+    // @ts-expect-error missing variables argument
+    useFragment({ fragment, from: null });
+    // @ts-expect-error empty variables
+    useFragment({ fragment, from: null, variables: {} });
+    useFragment({ fragment, from: null, variables: { id: "1" } });
+    useFragment({
+      fragment,
+      from: null,
+      // @ts-expect-error missing required variable
+      variables: { language: "en" },
+    });
+    useFragment({
+      fragment,
+      from: null,
+      variables: { id: "1", language: "en" },
+    });
+    useFragment({
+      fragment,
+      from: null,
+      variables: {
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    useFragment({
+      fragment,
+      from: null,
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    useFragment({
+      fragment,
+      from: null,
+      variables: {
+        id: "1",
+        language: "en",
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+  });
+
   test("UseFragmentOptions interface shape", <TData, TVariables extends
     OperationVariables>() => {
     expectTypeOf<
-      useFragment.Options<TData, TVariables>
+      useFragment.Base.Options<TData, TVariables>
     >().branded.toEqualTypeOf<{
       from:
         | string
@@ -2751,7 +2909,6 @@ describe.skip("Type Tests", () => {
       fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
       fragmentName?: string;
       optimistic?: boolean;
-      variables?: TVariables;
       client?: ApolloClient;
     }>();
   });

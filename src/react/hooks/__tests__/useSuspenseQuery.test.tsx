@@ -751,7 +751,7 @@ describe("useSuspenseQuery", () => {
 
     expect(screen.queryByText("Loading greeting...")).not.toBeInTheDocument();
 
-    await act(() => {
+    await act(async () => {
       link.simulateResult({ result: { data: { greeting: "Hello" } } }, true);
       // Ensure simulateResult will deliver the result since its wrapped with
       // setTimeout
@@ -817,7 +817,7 @@ describe("useSuspenseQuery", () => {
 
     expect(screen.queryByText("Loading greeting...")).not.toBeInTheDocument();
 
-    await act(() => {
+    await act(async () => {
       link.simulateResult({ result: { data: { greeting: "Hello" } } }, true);
       // Ensure simulateResult will deliver the result since its wrapped with
       // setTimeout

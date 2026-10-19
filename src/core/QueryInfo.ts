@@ -577,7 +577,7 @@ export class QueryInfo<
       TVariables,
       CacheWriteBehavior.FORBID | CacheWriteBehavior.MERGE
     >
-  ) {
+  ): TData | null | undefined {
     if (cacheWriteBehavior !== CacheWriteBehavior.FORBID) {
       if (shouldWriteResult(result, errorPolicy)) {
         this.cache.write({
@@ -601,7 +601,7 @@ export class QueryInfo<
         });
 
         if (diff.complete) {
-          result.data = diff.result as any;
+          return diff.result as any;
         }
       }
 
@@ -613,12 +613,14 @@ export class QueryInfo<
     ) {
       // The result is not written to the cache, so parse scalar values
       // directly from the network result.
-      result.data = coerceScalarFieldsToParsed(
+      return coerceScalarFieldsToParsed(
         result.data,
         document,
         this.cache
       ) as TData;
     }
+
+    return result.data;
   }
 }
 

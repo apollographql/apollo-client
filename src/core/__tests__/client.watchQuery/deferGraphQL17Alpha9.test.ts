@@ -11221,7 +11221,11 @@ test("deeply nested defer still logs errors about missing non-deferred fields un
     }
   `;
 
-  using spy = spyOnConsole("error");
+  using _ = spyOnConsole(
+    "error",
+    // Silence partial cache read warning from missing non-deferred fields
+    "warn"
+  );
 
   const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
     mockDeferStreamGraphQL17Alpha9();
@@ -11258,13 +11262,13 @@ test("deeply nested defer still logs errors about missing non-deferred fields un
   await stream.takeNext();
   await stream.takeNext();
 
-  expect(spy.error).toHaveBeenCalledTimes(2);
-  expect(spy.error).toHaveBeenCalledWith(
+  expect(console.error).toHaveBeenCalledTimes(2);
+  expect(console.error).toHaveBeenCalledWith(
     expect.stringContaining("Missing field"),
     "text",
     expect.anything()
   );
-  expect(spy.error).toHaveBeenCalledWith(
+  expect(console.error).toHaveBeenCalledWith(
     expect.stringContaining("Missing field"),
     "name",
     expect.anything()
@@ -11298,12 +11302,12 @@ test("deeply nested defer still logs errors about missing non-deferred fields un
 
   await stream.takeNext();
 
-  expect(spy.error).not.toHaveBeenCalledWith(
+  expect(console.error).not.toHaveBeenCalledWith(
     expect.anything(),
     "likes",
     expect.anything()
   );
-  expect(spy.error).not.toHaveBeenCalledWith(
+  expect(console.error).not.toHaveBeenCalledWith(
     expect.anything(),
     "badge",
     expect.anything()

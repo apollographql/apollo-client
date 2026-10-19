@@ -40,8 +40,25 @@ export function keyFieldsFnFromSpecifier(
   return (
     info.keyFieldsFn ||
     (info.keyFieldsFn = (object, context) => {
-      const extract: typeof extractKey = (from, key) =>
-        context.readField(key, from);
+      const { serializeKeyField } = context;
+
+      const serialized = (read: typeof extractKey): typeof extractKey =>
+        serializeKeyField ?
+          (from, key) => {
+            const value = read(from, key);
+
+            const typename =
+              from === context.storeObject || from === object ?
+                context.typename
+              : read(from, "__typename");
+
+            return typeof typename === "string" ?
+                (serializeKeyField(typename, key, value) as typeof value)
+              : value;
+          }
+        : read;
+
+      const extract = serialized((from, key) => context.readField(key, from));
 
       const keyObject = (context.keyObject = collectSpecifierPaths(
         specifier,
@@ -69,7 +86,11 @@ export function keyFieldsFnFromSpecifier(
             // since it means these extra fields cannot be affected by field
             // aliasing, which is why we can use extractKey instead of
             // context.readField for this extraction.
-            extracted = extractKeyPath(object, schemaKeyPath, extractKey);
+            extracted = extractKeyPath(
+              object,
+              schemaKeyPath,
+              serialized(extractKey)
+            );
           }
 
           invariant(

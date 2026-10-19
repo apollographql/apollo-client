@@ -12,6 +12,7 @@ import type { DeepPartial } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type { ExtensionsWithStreamInfo } from "@apollo/client/utilities/internal";
 import {
+  coerceScalarFieldsToParsed,
   getOperationName,
   graphQLResultHasError,
   handleIncrementalSymbol,
@@ -605,6 +606,18 @@ export class QueryInfo<
       }
 
       this.queryManager.broadcastQueries();
+    } else if (
+      result.data != null &&
+      this.cache.configuresScalars() &&
+      shouldWriteResult(result, errorPolicy)
+    ) {
+      // The result is not written to the cache, so parse scalar values
+      // directly from the network result.
+      result.data = coerceScalarFieldsToParsed(
+        result.data,
+        document,
+        this.cache
+      ) as TData;
     }
   }
 }

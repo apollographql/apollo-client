@@ -42,24 +42,21 @@ export function keyFieldsFnFromSpecifier(
     (info.keyFieldsFn = (object, context) => {
       const { serializeKeyField } = context;
 
-      const serialized =
-        (read: typeof extractKey): typeof extractKey =>
-        (from, key) => {
-          const value = read(from, key);
+      const serialized = (read: typeof extractKey): typeof extractKey =>
+        serializeKeyField ?
+          (from, key) => {
+            const value = read(from, key);
 
-          if (!serializeKeyField) {
-            return value;
+            const typename =
+              from === context.storeObject || from === object ?
+                context.typename
+              : read(from, "__typename");
+
+            return typeof typename === "string" ?
+                (serializeKeyField(typename, key, value) as typeof value)
+              : value;
           }
-
-          const typename =
-            from === context.storeObject || from === object ?
-              context.typename
-            : read(from, "__typename");
-
-          return typeof typename === "string" ?
-              (serializeKeyField(typename, key, value) as typeof value)
-            : value;
-        };
+        : read;
 
       const extract = serialized((from, key) => context.readField(key, from));
 

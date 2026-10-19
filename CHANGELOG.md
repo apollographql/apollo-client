@@ -1,5 +1,15 @@
 # @apollo/client
 
+## 4.3.5
+
+### Patch Changes
+
+- [#13498](https://github.com/apollographql/apollo-client/pull/13498) [`04b12e5`](https://github.com/apollographql/apollo-client/commit/04b12e5f864c83b823b45190ea7d5400ca9951aa) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where custom scalar values that are not JSON-serializable caused errors. These values are properly serialized when used as input for `variables` or when used as a key field value so that cache writes and calls to `cache.identify` succeed.
+
+- [#13500](https://github.com/apollographql/apollo-client/pull/13500) [`a23ea85`](https://github.com/apollographql/apollo-client/commit/a23ea855952cff27469f4c7f2a097c10091a3e0f) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Require the `variables` option in `useFragment` when the fragment has required variables. This matches the behavior of `useSuspenseFragment` and the query hooks.
+
+- [#13501](https://github.com/apollographql/apollo-client/pull/13501) [`303d80f`](https://github.com/apollographql/apollo-client/commit/303d80f5827c05165dacd1e8e8df8728615c8c02) Thanks [@kgssystem](https://github.com/kgssystem)! - Parse custom scalar fields in subscription results when using the `no-cache` fetch policy.
+
 ## 4.3.4
 
 ### Patch Changes

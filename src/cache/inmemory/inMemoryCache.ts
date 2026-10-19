@@ -187,7 +187,8 @@ export class InMemoryCache extends ApolloCache {
           // currently using a data store that can track cache dependencies.
           const store = c.optimistic ? this.optimisticData : this.data;
           if (supportsResultCaching(store)) {
-            const { optimistic, id, variables } = c;
+            const { optimistic, id } = c;
+            const variables = this.serializeVariables(c.query, c.variables);
             return store.makeCacheKey(
               c.query,
               // Different watches can have the same query, optimistic

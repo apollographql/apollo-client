@@ -4,6 +4,8 @@ import type { TypedDocumentNode } from "@apollo/client";
 import { gql } from "@apollo/client";
 import { InMemoryCache, Scalar } from "@apollo/client/cache";
 import {
+  bigIntScalar,
+  dateScalar,
   dateTimeRangeScalar,
   dateTimeScalar,
   jsonObjectScalar,
@@ -1445,6 +1447,234 @@ test("stores parsed scalar values across a complex nested write", () => {
   });
 });
 
+// https://github.com/apollographql/apollo-client/issues/13494
+test("cache.identify identifies non-JSON-serializable scalar key fields in parsed or serialized form", () => {
+  const cache = new InMemoryCache({
+    scalars: { BigInt: bigIntScalar },
+    typePolicies: {
+      Product: {
+        keyFields: ["id"],
+        fields: {
+          id: { scalar: "BigInt" },
+        },
+      },
+    },
+  });
+
+  expect(cache.identify({ __typename: "Product", id: "5" })).toBe(
+    'Product:{"id":"5"}'
+  );
+  expect(cache.identify({ __typename: "Product", id: 5n })).toBe(
+    'Product:{"id":"5"}'
+  );
+});
+
+// https://github.com/apollographql/apollo-client/issues/13494
+test("cache.identify ignores parsed scalar fields that are not key fields", () => {
+  const cache = new InMemoryCache({
+    scalars: { BigInt: bigIntScalar, DateTime: dateTimeScalar },
+    typePolicies: {
+      Product: {
+        fields: {
+          id: { scalar: "BigInt" },
+          availableSince: { scalar: "DateTime" },
+        },
+      },
+    },
+  });
+
+  expect(
+    cache.identify({
+      __typename: "Product",
+      id: "5",
+      availableSince: new Date("2026-01-01T00:00:00.000Z"),
+    })
+  ).toBe("Product:5");
+  expect(
+    cache.identify({
+      __typename: "Product",
+      id: 5n,
+      availableSince: new Date("2026-01-01T00:00:00.000Z"),
+    })
+  ).toBe("Product:5");
+});
+
+// https://github.com/apollographql/apollo-client/issues/13494
+test("cache.identify identifies nested non-JSON-serializable scalar key fields in parsed or serialized form", () => {
+  const cache = new InMemoryCache({
+    scalars: { BigInt: bigIntScalar },
+    typePolicies: {
+      Order: {
+        keyFields: ["product", ["sku"]],
+      },
+      Product: {
+        fields: {
+          sku: { scalar: "BigInt" },
+        },
+      },
+    },
+  });
+
+  expect(
+    cache.identify({
+      __typename: "Order",
+      product: { __typename: "Product", sku: "5" },
+    })
+  ).toBe('Order:{"product":{"sku":"5"}}');
+  expect(
+    cache.identify({
+      __typename: "Order",
+      product: { __typename: "Product", sku: 5n },
+    })
+  ).toBe('Order:{"product":{"sku":"5"}}');
+});
+
+// https://github.com/apollographql/apollo-client/issues/13494
+test("cache.identify serializes only scalar key fields when there are multiple key fields", () => {
+  const cache = new InMemoryCache({
+    scalars: { BigInt: bigIntScalar },
+    typePolicies: {
+      Attribute: {
+        keyFields: ["name", "value"],
+        fields: {
+          value: { scalar: "BigInt" },
+        },
+      },
+    },
+  });
+
+  expect(
+    cache.identify({ __typename: "Attribute", name: "weight", value: "5" })
+  ).toBe('Attribute:{"name":"weight","value":"5"}');
+  expect(
+    cache.identify({ __typename: "Attribute", name: "weight", value: 5n })
+  ).toBe('Attribute:{"name":"weight","value":"5"}');
+});
+
+// https://github.com/apollographql/apollo-client/issues/13494
+test("cache.identify identifies list scalar key fields in parsed or serialized form", () => {
+  const cache = new InMemoryCache({
+    scalars: { BigInt: bigIntScalar },
+    typePolicies: {
+      Bundle: {
+        keyFields: ["productIds"],
+        fields: {
+          productIds: { scalar: "[BigInt]" },
+        },
+      },
+    },
+  });
+
+  expect(cache.identify({ __typename: "Bundle", productIds: ["5", "6"] })).toBe(
+    'Bundle:{"productIds":["5","6"]}'
+  );
+  expect(cache.identify({ __typename: "Bundle", productIds: [5n, 6n] })).toBe(
+    'Bundle:{"productIds":["5","6"]}'
+  );
+  expect(cache.identify({ __typename: "Bundle", productIds: [5n, "6"] })).toBe(
+    'Bundle:{"productIds":["5","6"]}'
+  );
+});
+
+// https://github.com/apollographql/apollo-client/issues/13494
+test("cache.identify identifies JSON-serializable scalar key fields by their serialized value", () => {
+  const cache = new InMemoryCache({
+    scalars: { Date: dateScalar },
+    typePolicies: {
+      Holiday: {
+        keyFields: ["date"],
+        fields: {
+          date: { scalar: "Date" },
+        },
+      },
+    },
+  });
+
+  expect(cache.identify({ __typename: "Holiday", date: "2026-01-01" })).toBe(
+    'Holiday:{"date":"2026-01-01"}'
+  );
+  expect(
+    cache.identify({ __typename: "Holiday", date: new Date(2026, 0, 1) })
+  ).toBe('Holiday:{"date":"2026-01-01"}');
+});
+
+// https://github.com/apollographql/apollo-client/issues/13494
+test("cache.identify identifies object scalar key fields by their serialized value", () => {
+  const cache = new InMemoryCache({
+    scalars: { JSONObject: jsonObjectScalar },
+    typePolicies: {
+      Setting: {
+        keyFields: ["scope"],
+        fields: {
+          scope: { scalar: "JSONObject" },
+        },
+      },
+    },
+  });
+
+  expect(
+    cache.identify({
+      __typename: "Setting",
+      scope: { team: "web", region: "us" },
+    })
+  ).toBe('Setting:{"scope":{"region":"us","team":"web"}}');
+  expect(
+    cache.identify({
+      __typename: "Setting",
+      scope: new Map([
+        ["team", "web"],
+        ["region", "us"],
+      ]),
+    })
+  ).toBe('Setting:{"scope":{"region":"us","team":"web"}}');
+  expect(
+    cache.identify({
+      __typename: "Setting",
+      scope: new Map([
+        ["team", "mobile"],
+        ["region", "eu"],
+      ]),
+    })
+  ).toBe('Setting:{"scope":{"region":"eu","team":"mobile"}}');
+});
+
+// https://github.com/apollographql/apollo-client/issues/13494
+test("cache.identify identifies scalar key fields configured on a supertype", () => {
+  const cache = new InMemoryCache({
+    scalars: { BigInt: bigIntScalar },
+    possibleTypes: {
+      Node: ["Product"],
+    },
+    typePolicies: {
+      Node: {
+        fields: {
+          id: { scalar: "BigInt" },
+        },
+      },
+    },
+  });
+
+  expect(cache.identify({ __typename: "Product", id: "5" })).toBe("Product:5");
+  expect(cache.identify({ __typename: "Product", id: 5n })).toBe("Product:5");
+});
+
+// https://github.com/apollographql/apollo-client/issues/13494
+test("cache.identify identifies scalar _id fields in parsed or serialized form", () => {
+  const cache = new InMemoryCache({
+    scalars: { BigInt: bigIntScalar },
+    typePolicies: {
+      Product: {
+        fields: {
+          _id: { scalar: "BigInt" },
+        },
+      },
+    },
+  });
+
+  expect(cache.identify({ __typename: "Product", _id: "5" })).toBe("Product:5");
+  expect(cache.identify({ __typename: "Product", _id: 5n })).toBe("Product:5");
+});
+
 test("stores parsed scalar value in the cache when modifying via cache.modify", () => {
   const cache = new InMemoryCache({
     scalars: { DateTime: dateTimeScalar },
@@ -1539,6 +1769,85 @@ test("parses serialized scalar value when modifying via cache.modify", () => {
       __typename: "Event",
       id: "1",
       startTime: new Date("2026-06-15T14:30:00.000Z"),
+    },
+  });
+});
+
+test("cache.writeQuery stores the written instance of a parsed scalar key field", () => {
+  const cache = new InMemoryCache({
+    scalars: { Date: dateScalar },
+    typePolicies: {
+      Holiday: {
+        keyFields: ["date"],
+        fields: {
+          date: { scalar: "Date" },
+          observedOn: { scalar: "Date" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      holiday {
+        date
+        observedOn
+      }
+    }
+  `;
+
+  const date = new Date(2026, 0, 1);
+  const observedOn = new Date(2026, 0, 2);
+
+  cache.writeQuery({
+    query,
+    data: {
+      holiday: { __typename: "Holiday", date, observedOn },
+    },
+  });
+
+  const holiday = rawCacheData(cache)['Holiday:{"date":"2026-01-01"}']!;
+
+  expect(holiday.observedOn).toBe(observedOn);
+  expect(holiday.date).toBe(date);
+});
+
+test("cache.writeQuery does not lose data in a parsed scalar key field when the scalar serializes with less precision", () => {
+  const cache = new InMemoryCache({
+    scalars: { Date: dateScalar },
+    typePolicies: {
+      Holiday: {
+        keyFields: ["date"],
+        fields: {
+          date: { scalar: "Date" },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query {
+      holiday {
+        date
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    data: {
+      holiday: { __typename: "Holiday", date: new Date(2026, 0, 1, 15, 30) },
+    },
+  });
+
+  expect(rawCacheData(cache)).toStrictEqual({
+    ROOT_QUERY: {
+      __typename: "Query",
+      holiday: { __ref: 'Holiday:{"date":"2026-01-01"}' },
+    },
+    'Holiday:{"date":"2026-01-01"}': {
+      __typename: "Holiday",
+      date: new Date(2026, 0, 1, 15, 30),
     },
   });
 });

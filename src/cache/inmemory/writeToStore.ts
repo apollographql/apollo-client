@@ -463,8 +463,9 @@ export class StoreWriter {
       // Write any key fields that were used during identification, even if
       // they were not mentioned in the original query.
       if (keyObject) {
-        // TODO Reverse the order of the arguments?
-        incoming = context.merge(incoming, keyObject);
+        // Values in incoming take precedence over keyObject, which may contain
+        // serialized values used to compute the ID.
+        incoming = context.merge(keyObject, incoming);
       }
     } catch (e) {
       // If dataId was provided, tolerate failure of policies.identify.

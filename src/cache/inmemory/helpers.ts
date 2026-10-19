@@ -46,12 +46,19 @@ export function defaultDataIdFromObject(
         : void 0;
     }
 
+    let keyField = "id";
+
     // If there is no object.id, fall back to object._id.
     if (id == null && _id != null) {
       id = _id;
+      keyField = "_id";
     }
 
     if (id != null) {
+      if (context?.serializeKeyField) {
+        id = context.serializeKeyField(__typename, keyField, id) as typeof id;
+      }
+
       return `${__typename}:${
         typeof id === "number" || typeof id === "string" ?
           id

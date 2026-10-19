@@ -77,6 +77,15 @@ test("serializes scalar variables used in field arguments", async () => {
   await expect(stream).not.toEmitAnything();
 
   expect(requestVariables).toStrictEqualTyped({ date: "2026-01-01" });
+  expect(client.extract()).toStrictEqualTyped({
+    ROOT_QUERY: {
+      __typename: "Query",
+      'event({"date":"2026-01-01"})': {
+        __typename: "Event",
+        name: "GraphQL Summit",
+      },
+    },
+  });
 });
 
 test("serializes scalar variables used in directive arguments", async () => {
@@ -271,6 +280,185 @@ test("serializes scalar fields in input object variables", async () => {
   expect(requestVariables).toStrictEqualTyped({
     filter: {
       date: "2026-01-01",
+    },
+  });
+  expect(client.extract()).toStrictEqualTyped({
+    ROOT_QUERY: {
+      __typename: "Query",
+      'event({"filter":{"date":"2026-01-01"}})': {
+        __typename: "Event",
+        name: "GraphQL Summit",
+      },
+    },
+  });
+});
+
+test("serializes scalar fields in input object variables used in keyArgs", async () => {
+  let requestVariables!: OperationVariables;
+
+  const link = new ApolloLink((operation) => {
+    requestVariables = operation.variables;
+
+    return of({
+      data: { events: [{ __typename: "Event", name: "GraphQL Summit" }] },
+    });
+  });
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: {
+        Date: dateScalar,
+      },
+      inputObjects: {
+        EventFilter: {
+          fields: {
+            from: "Date",
+            to: "Date",
+          },
+        },
+      },
+      typePolicies: {
+        Query: {
+          fields: {
+            events: {
+              keyArgs: ["filter"],
+            },
+          },
+        },
+      },
+    }),
+    link,
+  });
+
+  const query = gql`
+    query Events($filter: EventFilter!) {
+      events(filter: $filter) {
+        name
+      }
+    }
+  `;
+
+  using stream = new ObservableStream(
+    client.watchQuery({
+      query,
+      variables: {
+        filter: {
+          from: new Date(2026, 0, 1),
+          to: new Date(2026, 0, 31),
+        },
+      },
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      events: [{ __typename: "Event", name: "GraphQL Summit" }],
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+
+  expect(requestVariables).toStrictEqualTyped({
+    filter: {
+      from: "2026-01-01",
+      to: "2026-01-31",
+    },
+  });
+  expect(client.extract()).toStrictEqualTyped({
+    ROOT_QUERY: {
+      __typename: "Query",
+      'events:{"filter":{"from":"2026-01-01","to":"2026-01-31"}}': [
+        { __typename: "Event", name: "GraphQL Summit" },
+      ],
+    },
+  });
+});
+
+test("serializes nested scalar fields in input object variables used in keyArgs", async () => {
+  let requestVariables!: OperationVariables;
+
+  const link = new ApolloLink((operation) => {
+    requestVariables = operation.variables;
+
+    return of({
+      data: { events: [{ __typename: "Event", name: "GraphQL Summit" }] },
+    });
+  });
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: {
+        Date: dateScalar,
+      },
+      inputObjects: {
+        EventFilter: {
+          fields: {
+            from: "Date",
+            to: "Date",
+          },
+        },
+      },
+      typePolicies: {
+        Query: {
+          fields: {
+            events: {
+              keyArgs: ["filter", ["from"]],
+            },
+          },
+        },
+      },
+    }),
+    link,
+  });
+
+  const query = gql`
+    query Events($filter: EventFilter!) {
+      events(filter: $filter) {
+        name
+      }
+    }
+  `;
+
+  using stream = new ObservableStream(
+    client.watchQuery({
+      query,
+      variables: {
+        filter: {
+          from: new Date(2026, 0, 1),
+          to: new Date(2026, 0, 31),
+        },
+      },
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      events: [{ __typename: "Event", name: "GraphQL Summit" }],
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+
+  expect(requestVariables).toStrictEqualTyped({
+    filter: {
+      from: "2026-01-01",
+      to: "2026-01-31",
+    },
+  });
+  expect(client.extract()).toStrictEqualTyped({
+    ROOT_QUERY: {
+      __typename: "Query",
+      'events:{"filter":{"from":"2026-01-01"}}': [
+        { __typename: "Event", name: "GraphQL Summit" },
+      ],
     },
   });
 });

@@ -3,9 +3,12 @@ import { visit } from "graphql";
 import { gql } from "graphql-tag";
 
 import { InMemoryCache } from "@apollo/client/cache";
+import { spyOnConsole } from "@apollo/client/testing/internal";
 
 describe("fragment matching", () => {
   it("can match exact types with or without possibleTypes", () => {
+    using consoleSpy = spyOnConsole("warn");
+
     const cacheWithoutPossibleTypes = new InMemoryCache();
 
     const cacheWithPossibleTypes = new InMemoryCache({
@@ -45,11 +48,21 @@ describe("fragment matching", () => {
       ],
     };
 
+    expect(consoleSpy.warn).not.toHaveBeenCalled();
     cacheWithoutPossibleTypes.writeQuery({ query, data });
+    expect(consoleSpy.warn).toHaveBeenCalledWith(
+      "Cannot match %s on `%s` against `%s`. This indicates a missing `possibleTypes` entry for the supertype of %s. Data might be lost.",
+      "fragment `CatDetails`",
+      "Cat",
+      "Dog",
+      "Dog"
+    );
+    consoleSpy.warn.mockReset();
     expect(cacheWithoutPossibleTypes.readQuery({ query })).toEqual(data);
 
     cacheWithPossibleTypes.writeQuery({ query, data });
     expect(cacheWithPossibleTypes.readQuery({ query })).toEqual(data);
+    expect(consoleSpy.warn).not.toHaveBeenCalled();
   });
 
   it("can match interface subtypes", () => {

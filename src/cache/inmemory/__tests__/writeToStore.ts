@@ -1907,6 +1907,9 @@ describe("writing to the store", () => {
 
     let mergeCount = 0;
     const cache = new InMemoryCache({
+      possibleTypes: {
+        AuthorResult: ["Author", "Placeholder"],
+      },
       typePolicies: {
         Query: {
           fields: {

@@ -654,10 +654,10 @@ test("hides an operation variable that the fragment declares without a default",
       fragment,
       variables: { size: 96 },
     })
-  ).toStrictEqual({ size: undefined });
+  ).toStrictEqual({});
 });
 
-test("adds a fragment variable that is declared without a default and has no value", () => {
+test("does not add a fragment variable that is declared without a default and has no value", () => {
   const query = gql`
     query {
       user {
@@ -677,7 +677,7 @@ test("adds a fragment variable that is declared without a default and has no val
       fragment,
       variables: {},
     })
-  ).toStrictEqual({ size: undefined });
+  ).toStrictEqual({});
 });
 
 test("resolves a nested spread argument to the parent fragment default", () => {

@@ -822,3 +822,27 @@ test("does not shadow an operation variable with an undeclared spread argument",
     })
   ).toStrictEqual({ other: 99 });
 });
+
+test("does not read fragment variables from the object prototype", () => {
+  const query = gql`
+    query {
+      user {
+        ...UserCard
+      }
+    }
+
+    fragment UserCard($constructor: Int, $toString: Int = 5) on User {
+      first: value(x: $constructor)
+      second: value(x: $toString)
+    }
+  `;
+
+  const { fragment, fragmentSpread } = getFragment(query, "UserCard");
+
+  expect(
+    getFragmentVariables(fragmentSpread, {
+      fragment,
+      variables: {},
+    })
+  ).toStrictEqual({ toString: 5 });
+});

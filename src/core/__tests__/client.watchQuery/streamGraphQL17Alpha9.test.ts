@@ -932,7 +932,7 @@ test('reports "complete" once a sibling @defer boundary resolves while a @stream
   enqueueInitialChunk({
     data: { friendList: [{ __typename: "Friend", id: "1", name: "Luke" }] },
     pending: [
-      { id: "0", path: [] },
+      { id: "0", path: [], label: "ac_0" },
       { id: "1", path: ["friendList"] },
     ],
     hasNext: true,
@@ -3757,7 +3757,7 @@ test("prunes undelivered defer fragments from partial cached fields inside a `@d
       ],
     },
     pending: [
-      { id: "0", path: ["friendList", 0] },
+      { id: "0", path: ["friendList", 0], label: "ac_0" },
       { id: "1", path: ["friendList"] },
     ],
     hasNext: true,
@@ -3825,7 +3825,7 @@ test("prunes undelivered defer fragments from partial cached fields inside a `@d
         id: "1",
       },
     ],
-    pending: [{ id: "2", path: ["friendList", 1] }],
+    pending: [{ id: "2", path: ["friendList", 1], label: "ac_0" }],
     hasNext: true,
   });
 
@@ -5253,7 +5253,7 @@ test("does not emit when no data added when a `@stream` completes while a `@defe
       friendList: [{ __typename: "Friend", name: "Luke" }],
     },
     pending: [
-      { id: "0", path: ["greeting"] },
+      { id: "0", path: ["greeting"], label: "ac_0" },
       { id: "1", path: ["friendList"] },
     ],
     hasNext: true,

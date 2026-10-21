@@ -1999,7 +1999,9 @@ describe("useLazyQuery Hook", () => {
       currentUser: { __typename: "User"; id: string } | null;
     }> = gql`
       query currentUser {
-        id
+        currentUser {
+          id
+        }
       }
     `;
 
@@ -2024,7 +2026,11 @@ describe("useLazyQuery Hook", () => {
 
     using _disabledAct = disableActEnvironment();
     const { takeSnapshot, peekSnapshot } = await renderHookToSnapshotStream(
-      () => useLazyQuery(query, { errorPolicy: "all" }),
+      () =>
+        useLazyQuery(query, {
+          errorPolicy: "all",
+          fetchPolicy: "network-only",
+        }),
       {
         wrapper: ({ children }) => (
           <MockedProvider mocks={mocks}>{children}</MockedProvider>
@@ -2138,7 +2144,9 @@ describe("useLazyQuery Hook", () => {
       currentUser: { __typename: "User"; id: string } | null;
     }> = gql`
       query currentUser {
-        id
+        currentUser {
+          id
+        }
       }
     `;
 
@@ -2166,6 +2174,7 @@ describe("useLazyQuery Hook", () => {
       () =>
         useLazyQuery(query, {
           errorPolicy: "ignore",
+          fetchPolicy: "network-only",
           notifyOnNetworkStatusChange: false,
         }),
       {
@@ -2239,7 +2248,10 @@ describe("useLazyQuery Hook", () => {
       promise2 = execute();
     });
 
-    link.simulateResult({ result: { data: { hello: "Greetings" } } }, true);
+    await act(async () => {
+      link.simulateResult({ result: { data: { hello: "Greetings" } } }, true);
+      await promise2;
+    });
 
     await expect(promise1!).rejects.toStrictEqual(
       new DOMException("The operation was aborted.", "AbortError")

@@ -187,7 +187,8 @@ export class InMemoryCache extends ApolloCache {
           // currently using a data store that can track cache dependencies.
           const store = c.optimistic ? this.optimisticData : this.data;
           if (supportsResultCaching(store)) {
-            const { optimistic, id, variables } = c;
+            const { optimistic, id } = c;
+            const variables = this.serializeVariables(c.query, c.variables);
             return store.makeCacheKey(
               c.query,
               // Different watches can have the same query, optimistic
@@ -462,7 +463,11 @@ export class InMemoryCache extends ApolloCache {
   public write<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
-  >(options: Cache.WriteOptions<TData, TVariables>): Reference | undefined {
+  >(
+    options: Cache.WriteOptions<TData, TVariables> & {
+      [handleIncrementalSymbol]?: DiffIncrementalInfo | undefined;
+    }
+  ): Reference | undefined {
     const { query, variables } = options;
 
     try {
@@ -556,10 +561,8 @@ export class InMemoryCache extends ApolloCache {
       recallCache(this);
     }
     this.watches.add(watch);
-    if (watch.immediate) {
-      this.maybeBroadcastWatch(watch);
-    }
-    return () => {
+
+    const removeWatch = () => {
       // Once we remove the last watch from this.watches, cache.broadcastWatches
       // no longer does anything, so we preemptively tell the reactive variable
       // system to exclude this cache from future broadcasts.
@@ -571,6 +574,20 @@ export class InMemoryCache extends ApolloCache {
       // leaks involving the closure of watch.callback.
       this.maybeBroadcastWatch.forget(watch);
     };
+
+    if (watch.immediate) {
+      try {
+        this.maybeBroadcastWatch(watch);
+      } catch (error) {
+        // The caller never receives removeWatch when this throws, so without
+        // this the watch would stay registered with nothing able to remove it,
+        // and every later broadcast would run into the same failing read.
+        removeWatch();
+        throw error;
+      }
+    }
+
+    return removeWatch;
   }
 
   public gc(options?: {

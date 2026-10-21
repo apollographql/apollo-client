@@ -97,6 +97,67 @@ test("serializes scalar variables used in directive arguments", () => {
   });
 });
 
+test("serializes scalar variables used in field arguments with keyArgs", () => {
+  const cache = new InMemoryCache({
+    scalars: {
+      Date: dateScalar,
+    },
+    typePolicies: {
+      Query: {
+        fields: {
+          event: {
+            keyArgs: ["date"],
+          },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query Event($date: Date!) {
+      event(date: $date) {
+        name
+      }
+    }
+  `;
+
+  cache.writeQuery({
+    query,
+    variables: {
+      date: "2026-01-01",
+    },
+    data: {
+      event: {
+        __typename: "Event",
+        name: "GraphQL Summit",
+      },
+    },
+  });
+
+  expect(
+    cache.readQuery({
+      query,
+      variables: {
+        date: new Date(2026, 0, 1),
+      },
+    })
+  ).toStrictEqualTyped({
+    event: {
+      __typename: "Event",
+      name: "GraphQL Summit",
+    },
+  });
+
+  expect(
+    cache.readQuery({
+      query,
+      variables: {
+        date: new Date(2026, 1, 2),
+      },
+    })
+  ).toBeNull();
+});
+
 test("serializes scalar fields in input object variables", () => {
   const cache = new InMemoryCache({
     scalars: {

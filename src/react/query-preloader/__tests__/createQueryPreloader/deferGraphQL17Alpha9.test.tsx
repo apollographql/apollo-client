@@ -119,7 +119,7 @@ test("suspends deferred queries until initial chunk loads then rerenders with de
 
   enqueueInitialChunk({
     data: { greeting: { message: "Hello world", __typename: "Greeting" } },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 

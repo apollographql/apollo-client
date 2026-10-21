@@ -1,5 +1,30 @@
 # @apollo/client
 
+## 4.3.5
+
+### Patch Changes
+
+- [#13498](https://github.com/apollographql/apollo-client/pull/13498) [`04b12e5`](https://github.com/apollographql/apollo-client/commit/04b12e5f864c83b823b45190ea7d5400ca9951aa) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where custom scalar values that are not JSON-serializable caused errors. These values are properly serialized when used as input for `variables` or when used as a key field value so that cache writes and calls to `cache.identify` succeed.
+
+- [#13500](https://github.com/apollographql/apollo-client/pull/13500) [`a23ea85`](https://github.com/apollographql/apollo-client/commit/a23ea855952cff27469f4c7f2a097c10091a3e0f) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Require the `variables` option in `useFragment` when the fragment has required variables. This matches the behavior of `useSuspenseFragment` and the query hooks.
+
+- [#13501](https://github.com/apollographql/apollo-client/pull/13501) [`303d80f`](https://github.com/apollographql/apollo-client/commit/303d80f5827c05165dacd1e8e8df8728615c8c02) Thanks [@kgssystem](https://github.com/kgssystem)! - Parse custom scalar fields in subscription results when using the `no-cache` fetch policy.
+
+## 4.3.4
+
+### Patch Changes
+
+- [#13497](https://github.com/apollographql/apollo-client/pull/13497) [`41d604c`](https://github.com/apollographql/apollo-client/commit/41d604c6cc33582571739b8cd35b9feac21f26b2) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where a list field selected more than once with different selection sets lost the fields that only one of the selections included while a `@defer` boundary elsewhere in the query was still pending when using the `GraphQL17Alpha9Handler`. The results of all selections of the list field are now merged.
+
+- [#13457](https://github.com/apollographql/apollo-client/pull/13457) [`22746bb`](https://github.com/apollographql/apollo-client/commit/22746bb03a8c45a2a1919d3c5804b3b74fb8d871) Thanks [@phryneas](https://github.com/phryneas)! - Fixed a bug where `streamFieldInfo` might not have been passed into custom merge functions for
+  `@stream` directives that had an aliased field in the path.
+
+- [#13457](https://github.com/apollographql/apollo-client/pull/13457) [`22746bb`](https://github.com/apollographql/apollo-client/commit/22746bb03a8c45a2a1919d3c5804b3b74fb8d871) Thanks [@phryneas](https://github.com/phryneas)! - Fix `Missing field` errors being logged when writing `@defer` results where a parent field is selected both inside and outside of a deferred fragment. Fields whose `@defer` boundary has not been delivered from the network are no longer reported as missing.
+
+- [#13453](https://github.com/apollographql/apollo-client/pull/13453) [`9bb3a41`](https://github.com/apollographql/apollo-client/commit/9bb3a416e2b343650a6a5faf62a17e65509421ae) Thanks [@wassim-k](https://github.com/wassim-k)! - Unregister the watch when an immediate `cache.watch` broadcast throws. Previously the watch was added to the cache before its first read, and a read that threw left the watch registered while the caller never received the unsubscribe function, so it could not be removed and every later broadcast ran into the same failing read.
+
+- [#13457](https://github.com/apollographql/apollo-client/pull/13457) [`22746bb`](https://github.com/apollographql/apollo-client/commit/22746bb03a8c45a2a1919d3c5804b3b74fb8d871) Thanks [@phryneas](https://github.com/phryneas)! - `Defer20220824Handler`: fix a situation where `dataState` would show up as `completed` with incremental errors instead of staying `streaming`.
+
 ## 4.3.3
 
 ### Patch Changes
@@ -482,6 +507,11 @@
   Apollo Client now always writes network results to the cache before delivering them, ensuring custom scalars and field `read` functions are applied. To prevent repeated refetches when competing queries repeatedly make each other's cache results incomplete, Apollo Client stops automatically refetching a query after it sees the same incomplete result again.
 
   This may add one network request in these cache-feud scenarios.
+
+- [#13275](https://github.com/apollographql/apollo-client/pull/13275) [`263f987`](https://github.com/apollographql/apollo-client/commit/263f987bf8a604412baf4d54140f6978bd8d9afe) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Make sure scalars are correctly returned for mutations and subscriptions.
+
+> [!NOTE]
+> This change affects cache reads after mutations as mutations now reread from the cache after each execution that writes a result to the cache. Previously mutations only reread from the cache when an `update` function was provided. This can have an effect on the result if you have union or interface types in the mutation but forget to include `possibleTypes` which might return a result that doesn't include the interface/union fields.
 
 ### Patch Changes
 

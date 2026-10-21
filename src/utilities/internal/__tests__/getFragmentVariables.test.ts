@@ -715,3 +715,39 @@ test("resolves a nested spread argument to the parent fragment default", () => {
     })
   ).toStrictEqual({ size: 96, innerSize: 10 });
 });
+
+test("does not resolve a nested spread argument to an operation variable that the parent declares without a value", () => {
+  const query = gql`
+    query ($size: Int) {
+      user {
+        photo(size: $size)
+        ...Outer
+      }
+    }
+
+    fragment Outer($size: Int) on User {
+      ...Inner(innerSize: $size)
+    }
+
+    fragment Inner($innerSize: Int) on User {
+      avatar(size: $innerSize)
+    }
+  `;
+
+  const outer = getFragment(query, "Outer");
+  const inner = getFragment(query, "Inner");
+  const variables = { size: 96 };
+  const outerScope = getFragmentVariables(outer.fragmentSpread, {
+    fragment: outer.fragment,
+    variables,
+  });
+
+  expect(outerScope).toStrictEqual({});
+  expect(
+    getFragmentVariables(inner.fragmentSpread, {
+      fragment: inner.fragment,
+      variables,
+      parentScope: outerScope,
+    })
+  ).toStrictEqual({ size: 96 });
+});

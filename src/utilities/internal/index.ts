@@ -44,6 +44,7 @@ export { getFragmentFromSelection } from "./getFragmentFromSelection.js";
 export { getFragmentQueryDocument } from "./getFragmentQueryDocument.js";
 export { getFragmentDefinition } from "./getFragmentDefinition.js";
 export { getFragmentDefinitions } from "./getFragmentDefinitions.js";
+export { getFragmentVariables } from "./getFragmentVariables.js";
 export { getGraphQLErrorsFromResult } from "./getGraphQLErrorsFromResult.js";
 export { getMainDefinition } from "./getMainDefinition.js";
 export { getOperationDefinition } from "./getOperationDefinition.js";

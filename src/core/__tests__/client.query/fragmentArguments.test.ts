@@ -328,6 +328,7 @@ test("does not leak a fragment argument into a child fragment that does not decl
 
     fragment Foo($x: Int!) on User {
       id
+      fooValue: value(x: $x)
       ...Bar
     }
 
@@ -346,6 +347,7 @@ test("does not leak a fragment argument into a child fragment that does not decl
             user: {
               __typename: "User",
               id: "1",
+              fooValue: 1,
               value: 99,
             },
           },
@@ -361,6 +363,7 @@ test("does not leak a fragment argument into a child fragment that does not decl
       user: {
         __typename: "User",
         id: "1",
+        fooValue: 1,
         value: 99,
       },
     },
@@ -374,6 +377,7 @@ test("does not leak a fragment argument into a child fragment that does not decl
     "User:1": {
       __typename: "User",
       id: "1",
+      'value({"x":1})': 1,
       'value({"x":99})': 99,
     },
   });

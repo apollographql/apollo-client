@@ -5,7 +5,7 @@ import type {
   FormattedExecutionResult,
 } from "graphql";
 import { BREAK, Kind, OperationTypeNode, visit } from "graphql";
-import { Observable, throwError } from "rxjs";
+import { Observable, Subscription, throwError } from "rxjs";
 import {
   catchError,
   concat,
@@ -889,7 +889,8 @@ export class QueryManager {
   // @apollo/experimental-nextjs-app-support can access type info.
   protected inFlightLinkObservables = new Trie<{
     observable?: Observable<ApolloLink.Result<any>>;
-    restart?: () => void;
+    restart?: (source?: Observable<ApolloLink.Result<any>>) => void;
+    restartOnRefetch?: boolean;
   }>(false);
 
   private getObservableFromLink<TData = unknown>(
@@ -900,7 +901,8 @@ export class QueryManager {
     extensions?: Record<string, any>,
     // Prefer context.queryDeduplication if specified.
     deduplication: boolean = context?.queryDeduplication ??
-      this.queryDeduplication
+      this.queryDeduplication,
+    networkStatus = NetworkStatus.loading
   ): {
     restart: () => void;
     observable: Observable<ApolloLink.Result<TData>>;
@@ -911,7 +913,8 @@ export class QueryManager {
       // client.subscribe() calls are made before the first one subscribes to
       // the observable, the `restart` function can be updated for all
       // deduplicated client.subscribe() calls.
-      restart?: () => void;
+      restart?: (source?: Observable<ApolloLink.Result>) => void;
+      restartOnRefetch?: boolean;
     } = {};
 
     const { serverQuery, clientQuery, operationType, hasIncrementalDirective } =
@@ -941,23 +944,32 @@ export class QueryManager {
         context = operation.context;
 
         function withRestart(source: Observable<ApolloLink.Result>) {
-          return new Observable<ApolloLink.Result>((observer) => {
-            function subscribe() {
-              return source.subscribe({
-                next: observer.next.bind(observer),
-                complete: observer.complete.bind(observer),
-                error: observer.error.bind(observer),
-              });
-            }
-            let subscription = subscribe();
+          // Cache resolvers can delay the first subscription to this source.
+          entry.restart ||= (nextSource = source) => {
+            source = nextSource;
+          };
 
-            entry.restart ||= () => {
-              subscription.unsubscribe();
-              subscription = subscribe();
+          return new Observable<ApolloLink.Result>((observer) => {
+            let subscription: Subscription | undefined;
+            entry.restart = (nextSource = source) => {
+              subscription?.unsubscribe();
+              source = nextSource;
+              // Establish ownership before subscribing: delivery can restart or
+              // unsubscribe synchronously.
+              const current = (subscription = new Subscription());
+              observer.add(current);
+              current.add(
+                source.subscribe({
+                  next: observer.next.bind(observer),
+                  complete: observer.complete.bind(observer),
+                  error: observer.error.bind(observer),
+                })
+              );
             };
+            entry.restart();
 
             return () => {
-              subscription.unsubscribe();
+              subscription?.unsubscribe();
               entry.restart = undefined;
             };
           });
@@ -970,8 +982,12 @@ export class QueryManager {
           entry = inFlightLinkObservables.lookup(printedServerQuery, varJson);
 
           if (!entry.observable) {
+            entry.restartOnRefetch =
+              operationType === OperationTypeNode.QUERY &&
+              networkStatus === NetworkStatus.loading;
             entry.observable = execute(link, operation, executeContext).pipe(
               withRestart,
+              tap(() => (entry.restartOnRefetch = false)),
               finalize(() => {
                 if (
                   inFlightLinkObservables.peek(printedServerQuery, varJson) ===
@@ -987,6 +1003,15 @@ export class QueryManager {
                 share()
               : shareReplay({ refCount: true })
             ) as Observable<ApolloLink.Result<TData>>;
+          } else if (
+            networkStatus === NetworkStatus.refetch &&
+            entry.restartOnRefetch
+          ) {
+            // Restart the shared request before its first result so all consumers
+            // receive fresh data. Keep concurrent refetches deduplicated and never
+            // restart a stream whose incremental results are already being parsed.
+            entry.restartOnRefetch = false;
+            entry.restart?.(execute(link, operation, executeContext));
           }
         } else {
           entry.observable = execute(link, operation, executeContext).pipe(
@@ -994,7 +1019,10 @@ export class QueryManager {
           ) as Observable<ApolloLink.Result<TData>>;
         }
       } catch (error) {
-        entry.observable = throwError(() => error);
+        const observable = throwError(() => error);
+        // A failed restart must also finalize the existing shared request.
+        entry.restart?.(observable);
+        entry.observable ||= observable;
       }
     } else {
       entry.observable = of({ data: {} } as ApolloLink.Result<TData>);
@@ -1081,7 +1109,10 @@ export class QueryManager {
       linkDocument,
       options.context,
       options.variables,
-      options.fetchPolicy
+      options.fetchPolicy,
+      undefined,
+      undefined,
+      options.networkStatus
     ).observable.pipe(
       map((incoming) => {
         // Use linkDocument rather than queryInfo.document so the

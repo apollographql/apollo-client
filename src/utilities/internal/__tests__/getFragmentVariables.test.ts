@@ -2,8 +2,7 @@ import type { DocumentNode, FragmentSpreadNode } from "graphql";
 import { BREAK, visit } from "graphql";
 
 import { enableExperimentalFragmentVariables, gql } from "@apollo/client";
-
-import { getFragmentVariables } from "../getFragmentVariables.js";
+import { getFragmentVariables } from "@apollo/client/utilities/internal";
 
 enableExperimentalFragmentVariables();
 

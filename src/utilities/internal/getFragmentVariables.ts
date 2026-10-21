@@ -17,12 +17,16 @@ export function getFragmentVariables(
     parentScope?: OperationVariables;
   }
 ) {
+  if (!fragment.variableDefinitions) {
+    return variables ?? {};
+  }
+
   const scope = { ...variables };
   const argumentsByName = new Map(
     fragmentSpread.arguments?.map((arg) => [arg.name.value, arg])
   );
 
-  fragment.variableDefinitions?.forEach((def) => {
+  fragment.variableDefinitions.forEach((def) => {
     const name = def.variable.name;
     const argument = argumentsByName.get(name.value);
 

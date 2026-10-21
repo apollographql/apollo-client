@@ -751,3 +751,74 @@ test("does not resolve a nested spread argument to an operation variable that th
     })
   ).toStrictEqual({ size: 96 });
 });
+
+// GraphQL validation rejects arguments that the fragment does not declare, but
+// graphql-js execution ignores them, so the scope ignores them too.
+test("does not add spread arguments that the fragment does not declare", () => {
+  const query = gql`
+    query {
+      user {
+        ...UserCard(size: 1, other: 2)
+      }
+    }
+
+    fragment UserCard($size: Int) on User {
+      avatar(size: $size)
+    }
+  `;
+
+  const { fragment, fragmentSpread } = getFragment(query, "UserCard");
+
+  expect(
+    getFragmentVariables(fragmentSpread, {
+      fragment,
+      variables: {},
+    })
+  ).toStrictEqual({ size: 1 });
+});
+
+test("does not add spread arguments when the fragment declares no variables", () => {
+  const query = gql`
+    query {
+      user {
+        ...Test(one: 1)
+      }
+    }
+
+    fragment Test on User {
+      id
+    }
+  `;
+
+  const { fragment, fragmentSpread } = getFragment(query, "Test");
+
+  expect(
+    getFragmentVariables(fragmentSpread, {
+      fragment,
+      variables: {},
+    })
+  ).toStrictEqual({});
+});
+
+test("does not shadow an operation variable with an undeclared spread argument", () => {
+  const query = gql`
+    query ($other: Int) {
+      user {
+        ...UserCard(other: 2)
+      }
+    }
+
+    fragment UserCard on User {
+      value(x: $other)
+    }
+  `;
+
+  const { fragment, fragmentSpread } = getFragment(query, "UserCard");
+
+  expect(
+    getFragmentVariables(fragmentSpread, {
+      fragment,
+      variables: { other: 99 },
+    })
+  ).toStrictEqual({ other: 99 });
+});

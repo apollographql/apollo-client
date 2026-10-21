@@ -657,6 +657,29 @@ test("hides an operation variable that the fragment declares without a default",
   ).toStrictEqual({ size: undefined });
 });
 
+test("adds a fragment variable that is declared without a default and has no value", () => {
+  const query = gql`
+    query {
+      user {
+        ...UserCard
+      }
+    }
+
+    fragment UserCard($size: Int) on User {
+      avatar(size: $size)
+    }
+  `;
+
+  const { fragment, fragmentSpread } = getFragment(query, "UserCard");
+
+  expect(
+    getFragmentVariables(fragmentSpread, {
+      fragment,
+      variables: {},
+    })
+  ).toStrictEqual({ size: undefined });
+});
+
 test("resolves a nested spread argument to the parent fragment default", () => {
   const query = gql`
     query ($size: Int) {

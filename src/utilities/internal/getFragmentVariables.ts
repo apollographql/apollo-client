@@ -2,9 +2,8 @@ import type { FragmentDefinitionNode, FragmentSpreadNode } from "graphql";
 
 import type { OperationVariables } from "@apollo/client";
 
-import { argumentsObjectFromField } from "./argumentsObjectFromField.js";
 import { compact } from "./compact.js";
-import { getDefaultValues } from "./getDefaultValues.js";
+import { valueToObjectRepresentation } from "./valueToObjectRepresentation.js";
 
 export function getFragmentVariables(
   fragmentSpread: FragmentSpreadNode,
@@ -18,27 +17,33 @@ export function getFragmentVariables(
     parentScope?: OperationVariables;
   }
 ) {
-  const operationVariables = { ...variables };
-  const fragmentArgs: Record<string, any> =
-    argumentsObjectFromField(fragmentSpread, parentScope) ?? {};
-  const declaredArgs: Record<string, any> = {};
+  const scope = { ...variables };
+  const argumentsByName = new Map(
+    fragmentSpread.arguments?.map((arg) => [arg.name.value, arg])
+  );
 
   fragment.variableDefinitions?.forEach((def) => {
-    const name = def.variable.name.value;
+    const name = def.variable.name;
+    const argument = argumentsByName.get(name.value);
 
     // We want to prevent operation variables from leaking into the fragment
     // variables scope for any variables the fragment declares in its fragment
     // definition. If a fragment defines a variable, but no argument is given,
     // that value should be treated as `undefined`, even if it shadows a
     // variable named the same from the operation.
-    delete operationVariables[name];
+    delete scope[name.value];
 
-    // Only keep arguments that the fragment declares via its variable
-    // definitions and throw everything else away since graphql.js ignores them.
-    if (Object.hasOwn(fragmentArgs, name)) {
-      declaredArgs[name] = fragmentArgs[name];
+    if (argument) {
+      valueToObjectRepresentation(scope, name, argument.value, parentScope);
+    }
+
+    if (
+      (!Object.hasOwn(scope, name.value) || scope[name.value] === undefined) &&
+      def.defaultValue
+    ) {
+      valueToObjectRepresentation(scope, name, def.defaultValue);
     }
   });
 
-  return compact(operationVariables, getDefaultValues(fragment), declaredArgs);
+  return compact(scope);
 }

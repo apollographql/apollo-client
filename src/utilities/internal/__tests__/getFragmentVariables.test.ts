@@ -846,3 +846,24 @@ test("does not read fragment variables from the object prototype", () => {
     })
   ).toStrictEqual({ toString: 5 });
 });
+
+test("returns the same variables object when the fragment declares no variables", () => {
+  const query = gql`
+    query ($two: Int) {
+      user {
+        ...Test
+      }
+    }
+
+    fragment Test on User {
+      b(two: $two)
+    }
+  `;
+
+  const { fragment, fragmentSpread } = getFragment(query, "Test");
+  const variables = { two: 2 };
+
+  expect(getFragmentVariables(fragmentSpread, { fragment, variables })).toBe(
+    variables
+  );
+});

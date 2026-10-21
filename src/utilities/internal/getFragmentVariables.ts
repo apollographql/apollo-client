@@ -14,6 +14,9 @@ export function getFragmentVariables(
     parentScope?: OperationVariables;
   }
 ) {
-  const fragmentArgs = argumentsObjectFromField(fragment, variables);
+  const fragmentArgs = argumentsObjectFromField(fragment, {
+    ...variables,
+    ...parentScope,
+  });
   return fragmentArgs ? { ...variables, ...fragmentArgs } : variables || {};
 }

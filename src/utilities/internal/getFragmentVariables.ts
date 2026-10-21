@@ -35,7 +35,9 @@ export function getFragmentVariables(
 
     // Only keep arguments that the fragment declares via its variable
     // definitions and throw everything else away since graphql.js ignores them.
-    declaredArgs[name] = fragmentArgs[name];
+    if (Object.hasOwn(fragmentArgs, name)) {
+      declaredArgs[name] = fragmentArgs[name];
+    }
   });
 
   return compact(operationVariables, getDefaultValues(fragment), declaredArgs);

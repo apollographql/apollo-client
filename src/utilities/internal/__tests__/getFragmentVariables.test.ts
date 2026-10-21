@@ -39,7 +39,9 @@ test("adds literal fragment arguments to the variables scope", () => {
   `;
 
   expect(
-    getFragmentVariables(getFragmentSpread(query, "UserCard"), {})
+    getFragmentVariables(getFragmentSpread(query, "UserCard"), {
+      variables: {},
+    })
   ).toStrictEqual({ size: 32 });
 });
 
@@ -78,7 +80,9 @@ test("adds fragment arguments of each literal kind", () => {
   `;
 
   expect(
-    getFragmentVariables(getFragmentSpread(query, "UserCard"), {})
+    getFragmentVariables(getFragmentSpread(query, "UserCard"), {
+      variables: {},
+    })
   ).toStrictEqual({
     int: 1,
     float: 1.5,
@@ -104,7 +108,9 @@ test("keeps operation variables that the fragment does not declare", () => {
   `;
 
   expect(
-    getFragmentVariables(getFragmentSpread(query, "Test"), { two: 2 })
+    getFragmentVariables(getFragmentSpread(query, "Test"), {
+      variables: { two: 2 },
+    })
   ).toStrictEqual({ one: 1, two: 2 });
 });
 
@@ -122,7 +128,9 @@ test("returns the operation variables when the spread has no arguments", () => {
   `;
 
   expect(
-    getFragmentVariables(getFragmentSpread(query, "Test"), { two: 2 })
+    getFragmentVariables(getFragmentSpread(query, "Test"), {
+      variables: { two: 2 },
+    })
   ).toStrictEqual({ two: 2 });
 });
 
@@ -140,7 +148,9 @@ test("returns an empty object when there are no variables and no arguments", () 
   `;
 
   expect(
-    getFragmentVariables(getFragmentSpread(query, "Test"), undefined)
+    getFragmentVariables(getFragmentSpread(query, "Test"), {
+      variables: undefined,
+    })
   ).toStrictEqual({});
 });
 
@@ -158,7 +168,9 @@ test("adds fragment arguments when the operation variables are undefined", () =>
   `;
 
   expect(
-    getFragmentVariables(getFragmentSpread(query, "UserCard"), undefined)
+    getFragmentVariables(getFragmentSpread(query, "UserCard"), {
+      variables: undefined,
+    })
   ).toStrictEqual({ size: 32 });
 });
 
@@ -177,11 +189,13 @@ test("fragment arguments shadow operation variables with the same name", () => {
   `;
 
   expect(
-    getFragmentVariables(getFragmentSpread(query, "UserCard"), { size: 96 })
+    getFragmentVariables(getFragmentSpread(query, "UserCard"), {
+      variables: { size: 96 },
+    })
   ).toStrictEqual({ size: 32 });
 });
 
-test("resolves variable arguments against the given variables", () => {
+test("resolves variable arguments against the operation variables without a parent scope", () => {
   const query = gql`
     query ($avatarSize: Int) {
       user {
@@ -196,7 +210,7 @@ test("resolves variable arguments against the given variables", () => {
 
   expect(
     getFragmentVariables(getFragmentSpread(query, "UserCard"), {
-      avatarSize: 64,
+      variables: { avatarSize: 64 },
     })
   ).toStrictEqual({ avatarSize: 64, size: 64 });
 });
@@ -216,8 +230,7 @@ test("resolves variables nested in object and list arguments", () => {
 
   expect(
     getFragmentVariables(getFragmentSpread(query, "UserCard"), {
-      width: 5,
-      tag: "a",
+      variables: { width: 5, tag: "a" },
     })
   ).toStrictEqual({
     width: 5,
@@ -227,7 +240,7 @@ test("resolves variables nested in object and list arguments", () => {
   });
 });
 
-test("does not leak parent fragment arguments into a nested fragment scope", () => {
+test("resolves nested spread arguments against the parent scope", () => {
   const query = gql`
     query ($size: Int) {
       user {
@@ -245,14 +258,82 @@ test("does not leak parent fragment arguments into a nested fragment scope", () 
     }
   `;
 
-  const outerVariables = getFragmentVariables(
-    getFragmentSpread(query, "Outer"),
-    { size: 96 }
-  );
+  const variables = { size: 96 };
+  const outerScope = getFragmentVariables(getFragmentSpread(query, "Outer"), {
+    variables,
+  });
 
+  expect(outerScope).toStrictEqual({ size: 32 });
   expect(
-    getFragmentVariables(getFragmentSpread(query, "Inner"), outerVariables)
+    getFragmentVariables(getFragmentSpread(query, "Inner"), {
+      variables,
+      parentScope: outerScope,
+    })
   ).toStrictEqual({ size: 96, innerSize: 32 });
+});
+
+test("resolves nested spread arguments to operation variables that the parent does not declare", () => {
+  const query = gql`
+    query ($n: Int) {
+      user {
+        ...Outer(size: 32)
+      }
+    }
+
+    fragment Outer($size: Int) on User {
+      avatar(size: $size)
+      ...Inner(innerSize: $n)
+    }
+
+    fragment Inner($innerSize: Int) on User {
+      photo(size: $innerSize)
+    }
+  `;
+
+  const variables = { n: 5 };
+  const outerScope = getFragmentVariables(getFragmentSpread(query, "Outer"), {
+    variables,
+  });
+
+  expect(outerScope).toStrictEqual({ n: 5, size: 32 });
+  expect(
+    getFragmentVariables(getFragmentSpread(query, "Inner"), {
+      variables,
+      parentScope: outerScope,
+    })
+  ).toStrictEqual({ n: 5, innerSize: 5 });
+});
+
+test("does not add parent fragment arguments to a nested fragment scope", () => {
+  const query = gql`
+    query ($x: Int) {
+      user {
+        ...Foo(x: 1)
+      }
+    }
+
+    fragment Foo($x: Int) on User {
+      fooValue: value(x: $x)
+      ...Bar
+    }
+
+    fragment Bar on User {
+      value(x: $x)
+    }
+  `;
+
+  const variables = { x: 99 };
+  const fooScope = getFragmentVariables(getFragmentSpread(query, "Foo"), {
+    variables,
+  });
+
+  expect(fooScope).toStrictEqual({ x: 1 });
+  expect(
+    getFragmentVariables(getFragmentSpread(query, "Bar"), {
+      variables,
+      parentScope: fooScope,
+    })
+  ).toStrictEqual({ x: 99 });
 });
 
 test("object arguments replace operation variables with the same name", () => {
@@ -271,7 +352,7 @@ test("object arguments replace operation variables with the same name", () => {
 
   expect(
     getFragmentVariables(getFragmentSpread(query, "UserCard"), {
-      input: { a: 1, b: 2 },
+      variables: { input: { a: 1, b: 2 } },
     })
   ).toStrictEqual({ input: { a: 3 } });
 });
@@ -292,28 +373,38 @@ test("list arguments replace operation variables with the same name", () => {
 
   expect(
     getFragmentVariables(getFragmentSpread(query, "UserCard"), {
-      tags: ["a", "b"],
+      variables: { tags: ["a", "b"] },
     })
   ).toStrictEqual({ tags: ["c"] });
 });
 
-test("does not modify the given variables", () => {
+test("does not modify the given variables or parent scope", () => {
   const query = gql`
     query ($size: Int, $input: Input) {
       user {
         photo(size: $size, input: $input)
-        ...UserCard(size: 32, input: { a: 3 })
+        ...Outer(size: 32)
       }
     }
 
-    fragment UserCard($size: Int, $input: Input) on User {
-      avatar(size: $size, input: $input)
+    fragment Outer($size: Int) on User {
+      avatar(size: $size)
+      ...Inner(innerSize: $size, input: { a: 3 })
+    }
+
+    fragment Inner($innerSize: Int, $input: Input) on User {
+      innerAvatar: avatar(size: $innerSize, input: $input)
     }
   `;
 
   const variables = { size: 96, input: { a: 1, b: 2 } };
+  const parentScope = { size: 32, input: { a: 1, b: 2 } };
 
-  getFragmentVariables(getFragmentSpread(query, "UserCard"), variables);
+  getFragmentVariables(getFragmentSpread(query, "Inner"), {
+    variables,
+    parentScope,
+  });
 
   expect(variables).toStrictEqual({ size: 96, input: { a: 1, b: 2 } });
+  expect(parentScope).toStrictEqual({ size: 32, input: { a: 1, b: 2 } });
 });

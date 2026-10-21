@@ -1,10 +1,14 @@
-import type { OperationDefinitionNode, ValueNode } from "graphql";
+import type {
+  FragmentDefinitionNode,
+  OperationDefinitionNode,
+  ValueNode,
+} from "graphql";
 
 import { valueToObjectRepresentation } from "./valueToObjectRepresentation.js";
 
 /** @internal */
 export function getDefaultValues(
-  definition: OperationDefinitionNode | undefined
+  definition: OperationDefinitionNode | FragmentDefinitionNode | undefined
 ): Record<string, any> {
   const defaultValues = {};
   const defs = definition && definition.variableDefinitions;

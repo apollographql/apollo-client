@@ -167,6 +167,7 @@ test("fragment arguments shadow operation variables with the same name", () => {
   const query = gql`
     query ($size: Int) {
       user {
+        photo(size: $size)
         ...UserCard(size: 32)
       }
     }
@@ -227,10 +228,11 @@ test("resolves variables nested in object and list arguments", () => {
   });
 });
 
-test("resolves nested fragment spreads against the parent fragment scope", () => {
+test("does not leak parent fragment arguments into a nested fragment scope", () => {
   const query = gql`
     query ($size: Int) {
       user {
+        photo(size: $size)
         ...Outer(size: 32)
       }
     }
@@ -251,13 +253,14 @@ test("resolves nested fragment spreads against the parent fragment scope", () =>
 
   expect(
     getFragmentVariables(getFragmentSpread(query, "Inner"), outerVariables)
-  ).toStrictEqual({ size: 32, innerSize: 32 });
+  ).toStrictEqual({ size: 96, innerSize: 32 });
 });
 
 test("object arguments replace operation variables with the same name", () => {
   const query = gql`
     query ($input: Input) {
       user {
+        photo(input: $input)
         ...UserCard(input: { a: 3 })
       }
     }
@@ -278,6 +281,7 @@ test("list arguments replace operation variables with the same name", () => {
   const query = gql`
     query ($tags: [String]) {
       user {
+        photo(tags: $tags)
         ...UserCard(tags: ["c"])
       }
     }
@@ -296,8 +300,9 @@ test("list arguments replace operation variables with the same name", () => {
 
 test("does not modify the given variables", () => {
   const query = gql`
-    query ($input: Input) {
+    query ($size: Int, $input: Input) {
       user {
+        photo(size: $size, input: $input)
         ...UserCard(size: 32, input: { a: 3 })
       }
     }

@@ -97,6 +97,7 @@ const tsGraphql16Config = {
   testPathIgnorePatterns: [
     ...tsStandardConfig.testPathIgnorePatterns,
     "fragmentArguments\\.test\\.tsx?$",
+    "getFragmentVariables\\.test\\.tsx?$",
   ],
 };
 

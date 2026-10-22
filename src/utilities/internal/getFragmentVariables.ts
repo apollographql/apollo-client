@@ -17,7 +17,7 @@ export function getFragmentVariables(
     parentScope?: OperationVariables;
   }
 ) {
-  if (!fragment.variableDefinitions) {
+  if (!fragment.variableDefinitions || !fragment.variableDefinitions.length) {
     return variables ?? {};
   }
 

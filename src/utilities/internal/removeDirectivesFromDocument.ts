@@ -68,12 +68,9 @@ export function removeDirectivesFromDocument(
     return null;
   };
 
-  let operationCount = 0;
-  for (let i = doc.definitions.length - 1; i >= 0; --i) {
-    if (doc.definitions[i].kind === Kind.OPERATION_DEFINITION) {
-      ++operationCount;
-    }
-  }
+  const hasOperation = doc.definitions.some(
+    (def) => def.kind === Kind.OPERATION_DEFINITION
+  );
 
   const directiveMatcher = getDirectiveMatcher(directives);
   const shouldRemoveField = (nodeDirectives: FieldNode["directives"]) =>
@@ -168,7 +165,7 @@ export function removeDirectivesFromDocument(
           // This logic applies only if the document contains one or more
           // operations, since removing all fragments from a document containing
           // only fragments makes the document useless.
-          operationCount > 0 &&
+          hasOperation &&
           node.selectionSet.selections.every(
             (selection) =>
               selection.kind === Kind.FIELD &&
@@ -242,7 +239,7 @@ export function removeDirectivesFromDocument(
       // definitions count as usages of their own fragment names. This heuristic
       // prevents accidentally removing all fragment definitions from the
       // document just because it contains no operations that use the fragments.
-      operationCount === 0 &&
+      !hasOperation &&
       !getInUseByFragmentName(def.name.value).removed
     ) {
       allFragmentNamesUsed.add(def.name.value);

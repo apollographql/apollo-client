@@ -365,13 +365,11 @@ function getDirectiveMatcher(configs: RemoveDirectiveConfig[]) {
     RemoveDirectiveConfig
   >();
 
-  configs.forEach((directive) => {
-    if (directive) {
-      if (directive.name) {
-        names.set(directive.name, directive);
-      } else if (directive.test) {
-        tests.set(directive.test, directive);
-      }
+  configs.forEach((config) => {
+    if (config.name) {
+      names.set(config.name, config);
+    } else if (config.test) {
+      tests.set(config.test, config);
     }
   });
 

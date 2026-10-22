@@ -155,6 +155,11 @@ export function removeDirectivesFromDocument(
     FragmentDefinition: {
       enter(node, _key, _parent, path) {
         originalFragmentDefsByPath.set(JSON.stringify(path), node);
+        node.variableDefinitions?.forEach((def) => {
+          getInUseByFragmentName(node.name.value)?.declaredVariables.add(
+            def.variable.name.value
+          );
+        });
       },
       leave(node, _key, _parent, path) {
         const originalNode = originalFragmentDefsByPath.get(
@@ -343,6 +348,7 @@ interface InternalInUseInfo {
     // ...spread args
     Array<{ name: string; variables: Set<string> }>
   >;
+  declaredVariables: Set<string>;
   // Set to true when we deliberately remove a fragment definition, so we can
   // make sure also to remove dangling ...spreads that refer to it.
   removed?: boolean;
@@ -367,6 +373,7 @@ function makeInUseGetterFunction<TKey>(defaultKey: TKey) {
           // removeDirectivesFromDocument below.
           variables: new Set(),
           fragmentSpreads: new Map(),
+          declaredVariables: new Set(),
         })
       );
     }

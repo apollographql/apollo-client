@@ -75,11 +75,7 @@ export function removeDirectivesFromDocument(
   const directiveMatcher = getDirectiveMatcher(directives);
   const shouldRemoveField = (nodeDirectives: FieldNode["directives"]) =>
     isNonEmptyArray(nodeDirectives) &&
-    nodeDirectives
-      .map(directiveMatcher)
-      .some(
-        (config: RemoveDirectiveConfig | undefined) => config && config.remove
-      );
+    nodeDirectives.map(directiveMatcher).some((config) => config?.remove);
 
   const originalFragmentDefsByPath = new Map<string, FragmentDefinitionNode>();
 
@@ -361,19 +357,12 @@ function makeInUseGetterFunction<TKey>(defaultKey: TKey) {
   };
 }
 
-type GetDirectiveConfig = {
-  name?: string;
-  test?: (node: DirectiveNode) => boolean;
-};
-
-function getDirectiveMatcher(
-  configs: (RemoveDirectiveConfig | GetDirectiveConfig)[]
-) {
-  const names = new Map<string, RemoveDirectiveConfig | GetDirectiveConfig>();
+function getDirectiveMatcher(configs: RemoveDirectiveConfig[]) {
+  const names = new Map<string, RemoveDirectiveConfig>();
 
   const tests = new Map<
     (directive: DirectiveNode) => boolean,
-    RemoveDirectiveConfig | GetDirectiveConfig
+    RemoveDirectiveConfig
   >();
 
   configs.forEach((directive) => {

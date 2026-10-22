@@ -292,6 +292,18 @@ export function removeDirectivesFromDocument(
     !allFragmentNamesUsed.has(fragmentName) ||
     getInUseByFragmentName(fragmentName).removed;
 
+  function isFragmentVariableUsed(varName: string, inUse: InternalInUseInfo) {
+    return inUse.variables.has(varName);
+  }
+
+  function isSpreadArgUsed(argName: string, inUse: InternalInUseInfo) {
+    return (
+      !inUse.removed &&
+      inUse.declaredVariables.has(argName) &&
+      isFragmentVariableUsed(argName, inUse)
+    );
+  }
+
   return nullIfDocIsEmpty(
     visit(docWithoutDirectiveSubtrees, {
       // If the fragment is going to be removed, then leaving any dangling
@@ -303,10 +315,12 @@ export function removeDirectivesFromDocument(
           }
 
           if (node.arguments) {
+            const inUse = getInUseByFragmentName(node.name.value);
+
             return {
               ...node,
-              arguments: node.arguments.filter(() => {
-                return false;
+              arguments: node.arguments.filter((arg) => {
+                return isSpreadArgUsed(arg.name.value, inUse);
               }),
             };
           }
@@ -321,10 +335,12 @@ export function removeDirectivesFromDocument(
           }
 
           if (node.variableDefinitions) {
+            const inUse = getInUseByFragmentName(node.name.value);
+
             return {
               ...node,
-              variableDefinitions: node.variableDefinitions.filter(() => {
-                return false;
+              variableDefinitions: node.variableDefinitions.filter((def) => {
+                return isFragmentVariableUsed(def.variable.name.value, inUse);
               }),
             };
           }

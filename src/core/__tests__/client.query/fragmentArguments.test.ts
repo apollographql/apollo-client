@@ -4,6 +4,7 @@ import {
   gql,
 } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
+import { LocalState } from "@apollo/client/local-state";
 import { MockLink } from "@apollo/client/testing";
 
 enableExperimentalFragmentVariables();
@@ -529,4 +530,261 @@ test("reads bound fragment arguments from the cache without a network request", 
       'avatar({"size":32})': "member.png",
     },
   });
+});
+
+test("binds different fragment arguments for the same entity at different paths", async () => {
+  const query = gql`
+    query Team {
+      lead {
+        ...UserCard(size: 96)
+      }
+      members {
+        ...UserCard(size: 32)
+      }
+    }
+
+    fragment UserCard($size: Int) on User {
+      id
+      avatar(size: $size)
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query },
+        result: {
+          data: {
+            lead: {
+              __typename: "User",
+              id: "1",
+              avatar: "large.png",
+            },
+            members: [
+              {
+                __typename: "User",
+                id: "1",
+                avatar: "small.png",
+              },
+            ],
+          },
+        },
+      },
+    ]),
+  });
+
+  await expect(client.query({ query })).resolves.toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        avatar: "large.png",
+      },
+      members: [
+        {
+          __typename: "User",
+          id: "1",
+          avatar: "small.png",
+        },
+      ],
+    },
+  });
+
+  expect(client.extract()).toStrictEqualTyped({
+    ROOT_QUERY: {
+      __typename: "Query",
+      lead: { __ref: "User:1" },
+      members: [{ __ref: "User:1" }],
+    },
+    "User:1": {
+      __typename: "User",
+      id: "1",
+      'avatar({"size":96})': "large.png",
+      'avatar({"size":32})': "small.png",
+    },
+  });
+
+  await expect(
+    client.query({ query, fetchPolicy: "cache-only" })
+  ).resolves.toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        avatar: "large.png",
+      },
+      members: [
+        {
+          __typename: "User",
+          id: "1",
+          avatar: "small.png",
+        },
+      ],
+    },
+  });
+});
+
+test("uses fragment arguments in child selection sets", async () => {
+  const query = gql`
+    query Team {
+      lead {
+        ...UserCard(size: 96)
+      }
+      members {
+        ...UserCard(size: 32)
+      }
+    }
+
+    fragment UserCard($size: Int) on User {
+      id
+      friends {
+        id
+        avatar(size: $size)
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query },
+        result: {
+          data: {
+            lead: {
+              __typename: "User",
+              id: "1",
+              friends: [{ __typename: "User", id: "3", avatar: "large.png" }],
+            },
+            members: [
+              {
+                __typename: "User",
+                id: "2",
+                friends: [{ __typename: "User", id: "4", avatar: "small.png" }],
+              },
+            ],
+          },
+        },
+      },
+    ]),
+  });
+
+  await expect(client.query({ query })).resolves.toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        friends: [{ __typename: "User", id: "3", avatar: "large.png" }],
+      },
+      members: [
+        {
+          __typename: "User",
+          id: "2",
+          friends: [{ __typename: "User", id: "4", avatar: "small.png" }],
+        },
+      ],
+    },
+  });
+
+  expect(client.extract()).toStrictEqualTyped({
+    ROOT_QUERY: {
+      __typename: "Query",
+      lead: { __ref: "User:1" },
+      members: [{ __ref: "User:2" }],
+    },
+    "User:1": {
+      __typename: "User",
+      id: "1",
+      friends: [{ __ref: "User:3" }],
+    },
+    "User:2": {
+      __typename: "User",
+      id: "2",
+      friends: [{ __ref: "User:4" }],
+    },
+    "User:3": {
+      __typename: "User",
+      id: "3",
+      'avatar({"size":96})': "large.png",
+    },
+    "User:4": {
+      __typename: "User",
+      id: "4",
+      'avatar({"size":32})': "small.png",
+    },
+  });
+});
+
+test("passes fragment arguments to read functions of @client fields", async () => {
+  const query = gql`
+    query Team {
+      lead {
+        ...UserCard(size: 96)
+      }
+      members {
+        ...UserCard(size: 32)
+      }
+    }
+
+    fragment UserCard($size: Int) on User {
+      id
+      localAvatar(size: $size) @client
+    }
+  `;
+
+  const read = jest.fn(
+    (_: unknown, { args }: { args: Record<string, any> | null }) =>
+      `local-${args?.size}.png`
+  );
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      typePolicies: {
+        User: {
+          fields: {
+            localAvatar: { read },
+          },
+        },
+      },
+    }),
+    localState: new LocalState(),
+    link: new MockLink([
+      {
+        request: { query },
+        result: {
+          data: {
+            lead: { __typename: "User", id: "1" },
+            members: [{ __typename: "User", id: "2" }],
+          },
+        },
+      },
+    ]),
+  });
+
+  await expect(client.query({ query })).resolves.toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        localAvatar: "local-96.png",
+      },
+      members: [
+        {
+          __typename: "User",
+          id: "2",
+          localAvatar: "local-32.png",
+        },
+      ],
+    },
+  });
+
+  expect(read).toHaveBeenCalledWith(
+    undefined,
+    expect.objectContaining({ args: { size: 96 }, variables: { size: 96 } })
+  );
+  expect(read).toHaveBeenCalledWith(
+    undefined,
+    expect.objectContaining({ args: { size: 32 }, variables: { size: 32 } })
+  );
 });

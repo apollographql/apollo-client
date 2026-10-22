@@ -112,7 +112,21 @@ export function removeDirectivesFromDocument(
     },
 
     Variable: {
-      enter(node, _key, _parent, _path, ancestors) {
+      enter(node, _key, parent, _path, ancestors) {
+        // Variables in ...spread args are tracked by FragmentSpread below since
+        // its possible the variable might be removed if the spread arg is also
+        // removed.
+        if (
+          [parent, ...ancestors].some(
+            (ancestor) =>
+              ancestor &&
+              !isArray(ancestor) &&
+              ancestor.kind === Kind.FRAGMENT_ARGUMENT
+          )
+        ) {
+          return;
+        }
+
         const inUse = getInUse(ancestors);
         if (inUse) {
           inUse.variables.add(node.name.value);

@@ -35,6 +35,7 @@ import type { ObservableQuery } from '@apollo/client';
 import type { OnQueryUpdated } from '@apollo/client';
 import type { OperationVariables } from '@apollo/client';
 import type { OptionWithFallback } from '@apollo/client/utilities/internal';
+import type { PartialDataState } from '@apollo/client/utilities/internal';
 import { PreloadedQueryRef } from '@apollo/client/react/internal';
 import type { PreloadedQueryRef as PreloadedQueryRef_2 } from '@apollo/client/react';
 import type { Prettify } from '@apollo/client/utilities/internal';
@@ -184,7 +185,7 @@ export namespace PreloadQueryFunction {
     // (undocumented)
     export namespace ResultForOptions {
         // (undocumented)
-        export type States<TOptions, TDefaultOptions extends DefaultOptions = DefaultOptions> = "complete" | "streaming" | (OptionWithFallback<TOptions, TDefaultOptions, "errorPolicy"> extends ("none") ? never : "empty") | (OptionWithFallback<TOptions, TDefaultOptions, "returnPartialData"> extends false ? never : "partial");
+        export type States<TOptions, TDefaultOptions extends DefaultOptions = DefaultOptions> = "complete" | "streaming" | (OptionWithFallback<TOptions, TDefaultOptions, "errorPolicy"> extends ("none") ? never : "empty") | PartialDataState<TOptions, TDefaultOptions>;
     }
     // (undocumented)
     export namespace Signatures {
@@ -367,7 +368,7 @@ export namespace useBackgroundQuery {
     }
     // (undocumented)
     export type ResultForOptions<TData, TVariables extends OperationVariables, TOptions extends Record<string, never> | Base.Options | SkipToken> = [
-    queryRef: TOptions extends any ? TOptions extends SkipToken ? undefined : QueryRef_2<TData, TVariables, "complete" | "streaming" | ((OptionWithFallback<TOptions, DefaultOptions, "errorPolicy"> extends "none" ? never : "empty") | (OptionWithFallback<TOptions, DefaultOptions, "returnPartialData"> extends false ? never : "partial"))> | (OptionWithFallback<TOptions, DefaultOptions, "skip"> extends false ? never : undefined) : never,
+    queryRef: TOptions extends any ? TOptions extends SkipToken ? undefined : QueryRef_2<TData, TVariables, "complete" | "streaming" | ((OptionWithFallback<TOptions, DefaultOptions, "errorPolicy"> extends "none" ? never : "empty") | PartialDataState<TOptions, DefaultOptions>)> | (OptionWithFallback<TOptions, DefaultOptions, "skip"> extends false ? never : undefined) : never,
     result: useBackgroundQuery.Result<TData, TVariables, OptionWithFallback<TOptions, DefaultOptions, "errorPolicy"> & ErrorPolicy>
     ];
     export interface Signature extends Signatures.Evaluated {
@@ -803,7 +804,7 @@ export namespace useLazyQuery {
         dataState: "empty";
     });
     // (undocumented)
-    export type ResultForOptions<TData, TVariables extends OperationVariables, TOptions extends Record<string, never> | Options<TData, TVariables>> = ResultTuple<TData, TVariables, "complete" | "streaming" | "empty" | (OptionWithFallback<TOptions, DefaultOptions, "returnPartialData"> extends false ? never : "partial"), OptionWithFallback<TOptions, DefaultOptions, "errorPolicy"> & ErrorPolicy>;
+    export type ResultForOptions<TData, TVariables extends OperationVariables, TOptions extends Record<string, never> | Options<TData, TVariables>> = ResultTuple<TData, TVariables, "complete" | "streaming" | "empty" | PartialDataState<TOptions, DefaultOptions>, OptionWithFallback<TOptions, DefaultOptions, "errorPolicy"> & ErrorPolicy>;
     // (undocumented)
     export type ResultTuple<TData, TVariables extends OperationVariables, TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"], TErrorPolicy extends ErrorPolicy | undefined = undefined> = [
     execute: ExecFunction<TData, TVariables, TErrorPolicy>,
@@ -901,7 +902,7 @@ export namespace useLoadableQuery {
     handlers: Handlers<TData, TVariables, TErrorPolicy>
     ];
     // (undocumented)
-    export type ResultForOptions<TData, TVariables extends OperationVariables, TOptions extends Record<string, never> | Options> = Result<TData, TVariables, "complete" | "streaming" | (OptionWithFallback<TOptions, DefaultOptions, "errorPolicy"> extends ("none") ? never : "empty") | (OptionWithFallback<TOptions, DefaultOptions, "returnPartialData"> extends false ? never : "partial"), OptionWithFallback<TOptions, DefaultOptions, "errorPolicy"> & ErrorPolicy>;
+    export type ResultForOptions<TData, TVariables extends OperationVariables, TOptions extends Record<string, never> | Options> = Result<TData, TVariables, "complete" | "streaming" | (OptionWithFallback<TOptions, DefaultOptions, "errorPolicy"> extends ("none") ? never : "empty") | PartialDataState<TOptions, DefaultOptions>, OptionWithFallback<TOptions, DefaultOptions, "errorPolicy"> & ErrorPolicy>;
     export interface Signature extends Signatures.Evaluated {
     }
     // (undocumented)
@@ -1194,7 +1195,7 @@ export namespace useQuery {
     // (undocumented)
     export type Result<TData = unknown, TVariables extends OperationVariables = OperationVariables, TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"], TReturnVariables extends OperationVariables = TVariables, TErrorPolicy extends ErrorPolicy | undefined = undefined> = Base.Result<TData, TVariables, TReturnVariables, TErrorPolicy> & GetDataState<MaybeMasked_2<TData>, TStates>;
     // (undocumented)
-    export type ResultForOptions<TData, TVariables extends OperationVariables, TOptions extends Record<string, never> | Base.Options<TData, TVariables> | SkipToken> = LazyType<Result<TData, TVariables, "complete" | "streaming" | "empty" | (TOptions extends any ? TOptions extends SkipToken ? never : OptionWithFallback<TOptions, DefaultOptions, "returnPartialData"> extends false ? never : "partial" : never), TVariables, OptionWithFallback<TOptions, DefaultOptions, "errorPolicy"> & ErrorPolicy>>;
+    export type ResultForOptions<TData, TVariables extends OperationVariables, TOptions extends Record<string, never> | Base.Options<TData, TVariables> | SkipToken> = LazyType<Result<TData, TVariables, "complete" | "streaming" | "empty" | (TOptions extends any ? TOptions extends SkipToken ? never : PartialDataState<TOptions, DefaultOptions> : never), TVariables, OptionWithFallback<TOptions, DefaultOptions, "errorPolicy"> & ErrorPolicy>>;
     export interface Signature extends Signatures.Evaluated {
     }
     // (undocumented)
@@ -1595,7 +1596,7 @@ export namespace useSuspenseQuery {
     // (undocumented)
     export type Result<TData = unknown, TVariables extends OperationVariables = OperationVariables, TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"], TErrorPolicy extends ErrorPolicy | undefined = undefined> = Base.Result<TData, TVariables, TErrorPolicy> & GetDataState<MaybeMasked<TData>, TStates>;
     // (undocumented)
-    export type ResultForOptions<TData, TVariables extends OperationVariables, TOptions extends Record<string, never> | Base.Options<TVariables> | SkipToken> = Result<TData, TVariables, "complete" | "streaming" | (TOptions extends any ? TOptions extends SkipToken ? "empty" : (OptionWithFallback<TOptions, DefaultOptions, "errorPolicy"> extends "none" ? never : "empty") | (OptionWithFallback<TOptions, DefaultOptions, "skip"> extends (false) ? never : "empty") | (OptionWithFallback<TOptions, DefaultOptions, "returnPartialData"> extends false ? never : "partial") : never) | ([TOptions] extends [SkipToken] ? DefaultOptions extends {
+    export type ResultForOptions<TData, TVariables extends OperationVariables, TOptions extends Record<string, never> | Base.Options<TVariables> | SkipToken> = Result<TData, TVariables, "complete" | "streaming" | (TOptions extends any ? TOptions extends SkipToken ? "empty" : (OptionWithFallback<TOptions, DefaultOptions, "errorPolicy"> extends "none" ? never : "empty") | (OptionWithFallback<TOptions, DefaultOptions, "skip"> extends (false) ? never : "empty") | PartialDataState<TOptions, DefaultOptions> : never) | ([TOptions] extends [SkipToken] ? DefaultOptions extends {
         returnPartialData: false;
     } ? never : "partial" : never), OptionWithFallback<TOptions, DefaultOptions, "errorPolicy"> & ErrorPolicy>;
     export interface Signature extends Signatures.Evaluated {

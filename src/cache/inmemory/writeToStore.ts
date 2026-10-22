@@ -29,6 +29,7 @@ import {
   cloneDeep,
   getDefaultValues,
   getFragmentFromSelection,
+  getFragmentVariables,
   getOperationDefinition,
   handleIncrementalSymbol,
   isArray,
@@ -92,6 +93,9 @@ export interface WriteContext extends ReadMergeModifyContext {
   clientOnly: boolean;
   deferred: boolean;
   flavors: Map<string, FlavorableWriteContext>;
+  // Keep a copy of the operation variables. variables reflects the current
+  // scoped variables in fragments that have arguments
+  operationVariables: OperationVariables;
 }
 
 type FlavorableWriteContext = Pick<
@@ -176,6 +180,7 @@ export class StoreWriter {
       },
       variables: variables as OperationVariables,
       varString: canonicalStringify(variables),
+      operationVariables: variables,
       ...extractFragmentContext(query, this.fragments),
       overwrite: !!overwrite,
       incomingById: new Map(),
@@ -567,6 +572,7 @@ export class StoreWriter {
       | "isDeferPending"
       | "lookupFragment"
       | "variables"
+      | "operationVariables"
     >,
   >(
     selectionSet: SelectionSetNode,
@@ -608,7 +614,7 @@ export class StoreWriter {
       visitedNode.visited = true;
 
       selectionSet.selections.forEach((selection) => {
-        if (!shouldInclude(selection, context.variables)) return;
+        if (!shouldInclude(selection, inheritedContext.variables)) return;
 
         let { clientOnly, deferred } = inheritedContext;
         if (
@@ -660,7 +666,7 @@ export class StoreWriter {
 
           fieldMap.set(
             selection,
-            getContextFlavor(context, clientOnly, deferred)
+            getContextFlavor(inheritedContext, clientOnly, deferred)
           );
         } else {
           const fragment = getFragmentFromSelection(
@@ -681,13 +687,35 @@ export class StoreWriter {
               fragment,
               typename,
               result,
-              context.variables
+              inheritedContext.variables
             )
           ) {
-            flatten(
-              fragment.selectionSet,
-              getContextFlavor(context, clientOnly, deferred)
+            let fragmentContext = getContextFlavor(
+              inheritedContext,
+              clientOnly,
+              deferred
             );
+
+            if (
+              selection.kind === Kind.FRAGMENT_SPREAD &&
+              fragment.kind === Kind.FRAGMENT_DEFINITION
+            ) {
+              const variables = getFragmentVariables(selection, {
+                fragment,
+                variables: context.operationVariables,
+                parentScope: inheritedContext.variables,
+              });
+
+              if (variables !== inheritedContext.variables) {
+                fragmentContext = {
+                  ...fragmentContext,
+                  variables,
+                  flavors: new Map(),
+                };
+              }
+            }
+
+            flatten(fragment.selectionSet, fragmentContext);
           }
         }
       });

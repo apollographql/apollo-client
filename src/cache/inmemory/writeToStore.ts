@@ -93,9 +93,6 @@ export interface WriteContext extends ReadMergeModifyContext {
   clientOnly: boolean;
   deferred: boolean;
   flavors: Map<string, FlavorableWriteContext>;
-  // Keep a copy of the operation variables. variables reflects the current
-  // scoped variables in fragments that have arguments
-  operationVariables: OperationVariables;
 }
 
 type FlavorableWriteContext = Pick<

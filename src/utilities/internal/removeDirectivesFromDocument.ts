@@ -155,7 +155,7 @@ export function removeDirectivesFromDocument(
       enter(node, _key, _parent, path) {
         originalFragmentDefsByPath.set(JSON.stringify(path), node);
         node.variableDefinitions?.forEach((def) => {
-          getInUseByFragmentName(node.name.value)?.declaredVariables.add(
+          getInUseByFragmentName(node.name.value).declaredVariables.add(
             def.variable.name.value
           );
         });

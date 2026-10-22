@@ -367,10 +367,27 @@ const cache = new InMemoryCache({
 ### fetchMore for Pagination
 
 ```tsx
-function PostList() {
-  const { data, fetchMore, loading } = useQuery(GET_POSTS, {
-    variables: { offset: 0, limit: 10 },
-  });
+const POSTS_PAGE_QUERY: TypedDocumentNode<
+  PostsPageQuery,
+  PostsPageQueryVariables
+> = gql`
+  query PostsPage($offset: Int!, $limit: Int!) {
+    posts(offset: $offset, limit: $limit) {
+      id
+      ...PostCard_post
+    }
+  }
+  ${POST_CARD_FRAGMENT}
+`;
+
+export function PostsPage() {
+  const { data, dataState, fetchMore, loading, error } = useQuery(
+    POSTS_PAGE_QUERY,
+    { variables: { offset: 0, limit: 10 } }
+  );
+
+  if (error) return <p>Error: {error.message}</p>;
+  if (dataState === "empty") return loading ? <p>Loading...</p> : null;
 
   const loadMore = () => {
     fetchMore({
@@ -383,7 +400,9 @@ function PostList() {
 
   return (
     <div>
-      {data?.posts.map((post) => <PostCard key={post.id} post={post} />)}
+      {data.posts.map((post) => (
+        <PostCard key={post.id} post={post} />
+      ))}
       <button onClick={loadMore} disabled={loading}>
         Load More
       </button>

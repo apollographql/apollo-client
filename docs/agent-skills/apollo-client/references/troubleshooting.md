@@ -149,7 +149,7 @@ const cache = new InMemoryCache({
 **Solution 2:** Update cache after mutations:
 
 ```tsx
-const [deleteProduct] = useMutation(DELETE_PRODUCT, {
+const [deleteProduct, { loading }] = useMutation(DELETE_PRODUCT, {
   update: (cache, { data }) => {
     cache.evict({ id: cache.identify(data.deleteProduct) });
     cache.gc();
@@ -157,13 +157,24 @@ const [deleteProduct] = useMutation(DELETE_PRODUCT, {
 });
 ```
 
-**Solution 3:** Use appropriate fetch policy:
+**Solution 3:** If you cannot update the cache directly, refetch the affected queries after the mutation. Use this only as a last resort, because it sends another request:
 
 ```tsx
-const { data } = useQuery(GET_PRODUCTS, {
-  fetchPolicy: "cache-and-network", // Always fetch fresh data
-});
+function DeleteProductButton({ id }: { id: string }) {
+  const [deleteProduct, { loading }] = useMutation(DELETE_PRODUCT, {
+    variables: { id },
+    refetchQueries: [PRODUCTS_PAGE_QUERY],
+  });
+
+  return (
+    <button onClick={() => deleteProduct()} disabled={loading}>
+      Delete
+    </button>
+  );
+}
 ```
+
+Do not change `fetchPolicy` to fix data that a mutation in this app changed. Fix the cache instead. If the data changes on the server outside this app, see [Fetch Policies](queries.md#fetch-policies) to choose a fetch policy.
 
 ### Missing Cache Updates After Mutation
 
@@ -172,7 +183,7 @@ const { data } = useQuery(GET_PRODUCTS, {
 **Solution:** Manually update the cache:
 
 ```tsx
-const [createProduct] = useMutation(CREATE_PRODUCT, {
+const [createProduct, { loading }] = useMutation(CREATE_PRODUCT, {
   update: (cache, { data }) => {
     const existing = cache.readQuery<{ products: Product[] }>({
       query: GET_PRODUCTS,
@@ -245,15 +256,22 @@ query GetUsers {
 
 ```tsx
 import { useQuery } from "@apollo/client/react";
-import { GetUsersDocument, GetUsersQuery } from "./generated/graphql";
+import { UsersPageDocument } from "./generated/graphql";
 
-function UserList() {
+export function UsersPage() {
   // Fully typed without manual type annotations
-  const { data, loading, error } = useQuery(GetUsersDocument);
+  const { data, dataState, loading, error } = useQuery(UsersPageDocument);
 
-  // data.users is automatically typed as GetUsersQuery['users']
+  if (error) return <p>Error: {error.message}</p>;
+  if (dataState === "empty") return loading ? <p>Loading...</p> : null;
+
+  // data.users is automatically typed as UsersPageQuery['users']
   return (
-    <ul>{data?.users.map((user) => <li key={user.id}>{user.name}</li>)}</ul>
+    <ul>
+      {data.users.map((user) => (
+        <UserListItem key={user.id} user={user} />
+      ))}
+    </ul>
   );
 }
 ```
@@ -335,9 +353,9 @@ const { data } = useFragment({
   from: { __typename: "User", id },
 });
 
-// Alternative: use @nonreactive directive
-const GET_USER = gql`
-  query GetUser($id: ID!) {
+// Alternative: use @nonreactive directive in the route query
+const USER_PAGE_QUERY = gql`
+  query UserPage($id: ID!) {
     user(id: $id) {
       id
       name
@@ -350,8 +368,8 @@ const GET_USER = gql`
   }
 `;
 
-const { data } = useQuery(GET_USER, {
-  variables: { id },
+const { data } = useQuery(USER_PAGE_QUERY, {
+  variables: { id: params.id },
 });
 ```
 
@@ -473,15 +491,18 @@ await client.resetStore();
 **Solution:** Check `dataState` for proper type narrowing:
 
 ```tsx
-const { data, dataState } = useQuery(GET_USER);
+const { data, dataState, loading, error } = useQuery(USER_PAGE_QUERY, {
+  variables: { id: params.id },
+});
+
+if (error) return <p>Error: {error.message}</p>;
 
 // dataState can be "complete", "partial", "streaming", or "empty"
 // It describes the completeness of the data, not a loading state
-if (dataState === "empty") return <Spinner />;
+if (dataState === "empty") return loading ? <Spinner /> : null;
 
 // Now data is guaranteed to exist
-return <div>{data.user.name}</div>;
-
-// Or use optional chaining
-return <div>{data?.user?.name}</div>;
+return <UserProfile user={data.user} />;
 ```
+
+Do not use optional chaining (`data?.user?.name`) to hide this error. It hides the loading and error states, and `data` stays typed as possibly `undefined`. See [Checking dataState](queries.md#checking-datastate).

@@ -5,7 +5,6 @@ import type {
   DocumentNode,
   FieldNode,
   FragmentDefinitionNode,
-  FragmentSpreadNode,
   InlineFragmentNode,
   OperationDefinitionNode,
 } from "graphql";
@@ -288,6 +287,15 @@ export function removeDirectivesFromDocument(
           if (fragmentWillBeRemoved(node.name.value)) {
             return null;
           }
+
+          if (node.arguments) {
+            return {
+              ...node,
+              arguments: node.arguments.filter(() => {
+                return false;
+              }),
+            };
+          }
         },
       },
 
@@ -296,6 +304,15 @@ export function removeDirectivesFromDocument(
         enter(node) {
           if (fragmentWillBeRemoved(node.name.value)) {
             return null;
+          }
+
+          if (node.variableDefinitions) {
+            return {
+              ...node,
+              variableDefinitions: node.variableDefinitions.filter(() => {
+                return false;
+              }),
+            };
           }
         },
       },

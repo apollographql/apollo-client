@@ -1,6 +1,13 @@
-import { gql } from "@apollo/client";
+import { versionInfo } from "graphql";
+
+import { enableExperimentalFragmentVariables, gql } from "@apollo/client";
 import { addTypenameToDocument } from "@apollo/client/utilities";
 import { removeDirectivesFromDocument } from "@apollo/client/utilities/internal";
+
+enableExperimentalFragmentVariables();
+
+// Fragment arguments can only be parsed with GraphQL 17 or later.
+const testWithFragmentArgs = versionInfo.major >= 17 ? test : test.skip;
 
 test("should remove inline fragments using a directive", () => {
   const query = gql`
@@ -454,3 +461,411 @@ test("should not throw in combination with addTypenameToDocument", () => {
     );
   }).not.toThrow();
 });
+
+testWithFragmentArgs(
+  "should remove unused fragment variable definitions and spread arguments associated with the removed directive",
+  () => {
+    const query = gql`
+    query Team {
+      lead {
+        ...UserCard(size: 96)
+      }
+    }
+
+    fragment UserCard($size: Int) on User {
+      id
+      localAvatar(size: $size) @client
+    }
+  `;
+
+    const doc = removeDirectivesFromDocument(
+      [{ name: "client", remove: true }],
+      query
+    );
+
+    expect(doc).toMatchDocument(gql`
+      query Team {
+        lead {
+          ...UserCard
+        }
+      }
+
+      fragment UserCard on User {
+        id
+      }
+    `);
+  }
+);
+
+testWithFragmentArgs(
+  "should remove operation variables that were only used by a removed spread argument",
+  () => {
+    const query = gql`
+    query Team($n: Int) {
+      lead {
+        ...UserCard(size: $n)
+      }
+    }
+
+    fragment UserCard($size: Int) on User {
+      id
+      localAvatar(size: $size) @client
+    }
+  `;
+
+    const doc = removeDirectivesFromDocument(
+      [{ name: "client", remove: true }],
+      query
+    );
+
+    expect(doc).toMatchDocument(gql`
+      query Team {
+        lead {
+          ...UserCard
+        }
+      }
+
+      fragment UserCard on User {
+        id
+      }
+    `);
+  }
+);
+
+testWithFragmentArgs(
+  "should not remove used fragment variable definitions",
+  () => {
+    const query = gql`
+    query Team {
+      lead {
+        ...UserCard(size: 96)
+      }
+    }
+
+    fragment UserCard($size: Int) on User {
+      id
+      avatar(size: $size)
+      localAvatar(size: $size) @client
+    }
+  `;
+
+    const doc = removeDirectivesFromDocument(
+      [{ name: "client", remove: true }],
+      query
+    );
+
+    expect(doc).toMatchDocument(gql`
+    query Team {
+      lead {
+        ...UserCard(size: 96)
+      }
+    }
+
+    fragment UserCard($size: Int) on User {
+      id
+      avatar(size: $size)
+    }
+  `);
+  }
+);
+
+testWithFragmentArgs(
+  "should remove only the spread arguments and variables that are no longer used",
+  () => {
+    const query = gql`
+    query Team($n: Int, $f: String) {
+      lead {
+        ...UserCard(size: $n, format: $f)
+      }
+    }
+
+    fragment UserCard($size: Int, $format: String) on User {
+      id
+      avatar(size: $size)
+      localAvatar(format: $format) @client
+    }
+  `;
+
+    const doc = removeDirectivesFromDocument(
+      [{ name: "client", remove: true }],
+      query
+    );
+
+    expect(doc).toMatchDocument(gql`
+    query Team($n: Int) {
+      lead {
+        ...UserCard(size: $n)
+      }
+    }
+
+    fragment UserCard($size: Int) on User {
+      id
+      avatar(size: $size)
+    }
+  `);
+  }
+);
+
+testWithFragmentArgs(
+  "should remove operation variables that were only used in a removed object spread argument",
+  () => {
+    const query = gql`
+    query Team($width: Int, $height: Int) {
+      lead {
+        ...UserCard(dimensions: { width: $width, height: $height })
+      }
+    }
+
+    fragment UserCard($dimensions: Dimensions) on User {
+      id
+      localAvatar(dimensions: $dimensions) @client
+    }
+  `;
+
+    const doc = removeDirectivesFromDocument(
+      [{ name: "client", remove: true }],
+      query
+    );
+
+    expect(doc).toMatchDocument(gql`
+      query Team {
+        lead {
+          ...UserCard
+        }
+      }
+
+      fragment UserCard on User {
+        id
+      }
+    `);
+  }
+);
+
+testWithFragmentArgs(
+  "should remove operation variables that were only used in a removed list spread argument",
+  () => {
+    const query = gql`
+    query Team($first: String, $second: String) {
+      lead {
+        ...UserCard(tags: [$first, $second])
+      }
+    }
+
+    fragment UserCard($tags: [String]) on User {
+      id
+      localAvatar(tags: $tags) @client
+    }
+  `;
+
+    const doc = removeDirectivesFromDocument(
+      [{ name: "client", remove: true }],
+      query
+    );
+
+    expect(doc).toMatchDocument(gql`
+      query Team {
+        lead {
+          ...UserCard
+        }
+      }
+
+      fragment UserCard on User {
+        id
+      }
+    `);
+  }
+);
+
+testWithFragmentArgs(
+  "should remove variables passed through several nested spreads when the last fragment no longer uses them",
+  () => {
+    const query = gql`
+    query Team($n: Int) {
+      lead {
+        ...Outer(size: $n)
+      }
+    }
+
+    fragment Outer($size: Int) on User {
+      ...Middle(size: $size)
+    }
+
+    fragment Middle($size: Int) on User {
+      ...Inner(size: $size)
+    }
+
+    fragment Inner($size: Int) on User {
+      id
+      localAvatar(size: $size) @client
+    }
+  `;
+
+    const doc = removeDirectivesFromDocument(
+      [{ name: "client", remove: true }],
+      query
+    );
+
+    expect(doc).toMatchDocument(gql`
+      query Team {
+        lead {
+          ...Outer
+        }
+      }
+
+      fragment Outer on User {
+        ...Middle
+      }
+
+      fragment Middle on User {
+        ...Inner
+      }
+
+      fragment Inner on User {
+        id
+      }
+    `);
+  }
+);
+
+testWithFragmentArgs(
+  "should not remove variables passed through several nested spreads when the last fragment still uses them",
+  () => {
+    const query = gql`
+    query Team($n: Int) {
+      lead {
+        ...Outer(size: $n)
+      }
+    }
+
+    fragment Outer($size: Int) on User {
+      ...Middle(size: $size)
+    }
+
+    fragment Middle($size: Int) on User {
+      ...Inner(size: $size)
+    }
+
+    fragment Inner($size: Int) on User {
+      id
+      avatar(size: $size)
+      localAvatar(size: $size) @client
+    }
+  `;
+
+    const doc = removeDirectivesFromDocument(
+      [{ name: "client", remove: true }],
+      query
+    );
+
+    expect(doc).toMatchDocument(gql`
+    query Team($n: Int) {
+      lead {
+        ...Outer(size: $n)
+      }
+    }
+
+    fragment Outer($size: Int) on User {
+      ...Middle(size: $size)
+    }
+
+    fragment Middle($size: Int) on User {
+      ...Inner(size: $size)
+    }
+
+    fragment Inner($size: Int) on User {
+      id
+      avatar(size: $size)
+    }
+  `);
+  }
+);
+
+testWithFragmentArgs(
+  "should only remove variables from the nested spread levels that no longer use them",
+  () => {
+    const query = gql`
+    query Team($n: Int, $f: String) {
+      lead {
+        ...Outer(size: $n, format: $f)
+      }
+    }
+
+    fragment Outer($size: Int, $format: String) on User {
+      avatar(size: $size)
+      ...Inner(format: $format)
+    }
+
+    fragment Inner($format: String) on User {
+      id
+      localAvatar(format: $format) @client
+    }
+  `;
+
+    const doc = removeDirectivesFromDocument(
+      [{ name: "client", remove: true }],
+      query
+    );
+
+    expect(doc).toMatchDocument(gql`
+    query Team($n: Int) {
+      lead {
+        ...Outer(size: $n)
+      }
+    }
+
+    fragment Outer($size: Int) on User {
+      avatar(size: $size)
+      ...Inner
+    }
+
+    fragment Inner on User {
+      id
+    }
+  `);
+  }
+);
+
+testWithFragmentArgs(
+  "should keep an operation variable that another spread still uses",
+  () => {
+    const query = gql`
+    query Team($n: Int) {
+      lead {
+        ...LocalCard(size: $n)
+        ...AvatarCard(size: $n)
+      }
+    }
+
+    fragment LocalCard($size: Int) on User {
+      id
+      localAvatar(size: $size) @client
+    }
+
+    fragment AvatarCard($size: Int) on User {
+      avatar(size: $size)
+    }
+  `;
+
+    const doc = removeDirectivesFromDocument(
+      [{ name: "client", remove: true }],
+      query
+    );
+
+    expect(doc).toMatchDocument(gql`
+    query Team($n: Int) {
+      lead {
+        ...LocalCard
+        ...AvatarCard(size: $n)
+      }
+    }
+
+    fragment LocalCard on User {
+      id
+    }
+
+    fragment AvatarCard($size: Int) on User {
+      avatar(size: $size)
+    }
+  `);
+  }
+);

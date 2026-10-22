@@ -1,6 +1,10 @@
+import type { DocumentNode } from "graphql";
+import { of } from "rxjs";
+
 import type { TypedDocumentNode } from "@apollo/client";
 import {
   ApolloClient,
+  ApolloLink,
   enableExperimentalFragmentVariables,
   gql,
   NetworkStatus,
@@ -929,6 +933,81 @@ test("passes fragment arguments to read functions of @client fields", async () =
     undefined,
     expect.objectContaining({ args: { size: 32 }, variables: { size: 32 } })
   );
+});
+
+test("removes fragment variables that are only used by @client fields from the request", async () => {
+  const query = gql`
+    query Team($n: Int) {
+      lead {
+        ...UserCard(size: $n)
+      }
+    }
+
+    fragment UserCard($size: Int) on User {
+      id
+      localAvatar(size: $size) @client
+    }
+  `;
+
+  let requestQuery!: DocumentNode;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      typePolicies: {
+        User: {
+          fields: {
+            localAvatar: {
+              read: (_, { args }) => `local-${args?.size}.png`,
+            },
+          },
+        },
+      },
+    }),
+    localState: new LocalState(),
+    link: new ApolloLink((operation) => {
+      requestQuery = operation.query;
+
+      return of({ data: { lead: { __typename: "User", id: "1" } } });
+    }),
+  });
+
+  using stream = new ObservableStream(
+    client.watchQuery({ query, variables: { n: 96 } })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      lead: { __typename: "User", id: "1", localAvatar: "local-96.png" },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+
+  expect(requestQuery).toMatchDocument(gql`
+    query Team {
+      lead {
+        ...UserCard
+        __typename
+      }
+    }
+
+    fragment UserCard on User {
+      id
+      __typename
+    }
+  `);
 });
 
 test("reads bound fragment arguments from the cache without a network request", async () => {

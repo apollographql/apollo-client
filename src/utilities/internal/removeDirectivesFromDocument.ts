@@ -273,15 +273,11 @@ export function removeDirectivesFromDocument(
   });
 
   const fragmentWillBeRemoved = (fragmentName: string) =>
-    !!(
-      // A fragment definition will be removed if there are no spreads that refer
-      // to it, or the fragment was explicitly removed because it had no fields
-      // other than __typename.
-      (
-        !allFragmentNamesUsed.has(fragmentName) ||
-        getInUseByFragmentName(fragmentName).removed
-      )
-    );
+    // A fragment definition will be removed if there are no spreads that refer
+    // to it, or the fragment was explicitly removed because it had no fields
+    // other than __typename.
+    !allFragmentNamesUsed.has(fragmentName) ||
+    getInUseByFragmentName(fragmentName).removed;
 
   const enterVisitor: EnterLeaveVisitor<
     FragmentSpreadNode | FragmentDefinitionNode

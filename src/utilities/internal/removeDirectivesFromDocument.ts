@@ -279,24 +279,26 @@ export function removeDirectivesFromDocument(
     !allFragmentNamesUsed.has(fragmentName) ||
     getInUseByFragmentName(fragmentName).removed;
 
-  const enterVisitor: EnterLeaveVisitor<
-    FragmentSpreadNode | FragmentDefinitionNode
-  > = {
-    enter(node) {
-      if (fragmentWillBeRemoved(node.name.value)) {
-        return null;
-      }
-    },
-  };
-
   return nullIfDocIsEmpty(
     visit(docWithoutDirectiveSubtrees, {
       // If the fragment is going to be removed, then leaving any dangling
       // FragmentSpread nodes with the same name would be a mistake.
-      FragmentSpread: enterVisitor,
+      FragmentSpread: {
+        enter(node) {
+          if (fragmentWillBeRemoved(node.name.value)) {
+            return null;
+          }
+        },
+      },
 
       // This is where the fragment definition is actually removed.
-      FragmentDefinition: enterVisitor,
+      FragmentDefinition: {
+        enter(node) {
+          if (fragmentWillBeRemoved(node.name.value)) {
+            return null;
+          }
+        },
+      },
 
       OperationDefinition: {
         leave(node) {

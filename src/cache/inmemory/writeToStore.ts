@@ -710,6 +710,7 @@ export class StoreWriter {
                 fragmentContext = {
                   ...fragmentContext,
                   variables,
+                  varString: canonicalStringify(variables),
                   flavors: new Map(),
                 };
               }

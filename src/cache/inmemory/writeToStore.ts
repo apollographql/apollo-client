@@ -71,7 +71,10 @@ import type {
 
 export interface WriteContext extends ReadMergeModifyContext {
   readonly written: {
-    [dataId: string]: SelectionSetNode[];
+    [dataId: string]: Array<{
+      selectionSet: SelectionSetNode;
+      varString: string | undefined;
+    }>;
   };
   readonly fragmentMap: FragmentMap;
   lookupFragment: FragmentMapFunction;
@@ -480,11 +483,22 @@ export class StoreWriter {
       // Avoid processing the same entity object using the same selection
       // set more than once. We use an array instead of a Set since most
       // entity IDs will be written using only one selection set, so the
-      // size of this array is likely to be very small, meaning indexOf is
-      // likely to be faster than Set.prototype.has.
+      // size of this array is likely to be very small, meaning a linear
+      // search is likely to be faster than a Map or Set lookup. The same
+      // selection set inside a fragment can be reached with different
+      // fragment arguments, so the variables are part of the check.
+      const { varString } = context;
       const sets = context.written[dataId] || (context.written[dataId] = []);
-      if (sets.indexOf(selectionSet) >= 0) return dataRef;
-      sets.push(selectionSet);
+      if (
+        sets.some(
+          (written) =>
+            written.selectionSet === selectionSet &&
+            written.varString === varString
+        )
+      ) {
+        return dataRef;
+      }
+      sets.push({ selectionSet, varString });
 
       // If we're about to write a result object into the store, but we
       // happen to know that the exact same (===) result object would be

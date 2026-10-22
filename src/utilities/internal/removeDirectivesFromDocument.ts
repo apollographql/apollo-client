@@ -129,7 +129,20 @@ export function removeDirectivesFromDocument(
         }
         const inUse = getInUse(ancestors);
         if (inUse) {
-          inUse.fragmentSpreads.add(node.name.value);
+          const spreadArgs = inUse.fragmentSpreads.get(node.name.value) ?? [];
+
+          node.arguments?.forEach((arg) => {
+            const variables = new Set<string>();
+            visit(arg, {
+              Variable(node) {
+                variables.add(node.name.value);
+              },
+            });
+
+            spreadArgs.push({ name: arg.name.value, variables });
+          });
+
+          inUse.fragmentSpreads.set(node.name.value, spreadArgs);
         }
         // We might like to remove this FragmentSpread by returning null here if
         // the corresponding FragmentDefinition node is also going to be removed
@@ -206,7 +219,7 @@ export function removeDirectivesFromDocument(
     if (!inUse.transitiveVars) {
       inUse.transitiveVars = new Set(inUse.variables);
       if (!inUse.removed) {
-        inUse.fragmentSpreads.forEach((childFragmentName) => {
+        inUse.fragmentSpreads.forEach((_, childFragmentName) => {
           populateTransitiveVars(
             getInUseByFragmentName(childFragmentName)
           ).transitiveVars!.forEach((varName) => {
@@ -226,7 +239,7 @@ export function removeDirectivesFromDocument(
     if (def.kind === Kind.OPERATION_DEFINITION) {
       populateTransitiveVars(
         getInUseByOperationName(def.name && def.name.value)
-      ).fragmentSpreads.forEach((childFragmentName) => {
+      ).fragmentSpreads.forEach((_, childFragmentName) => {
         allFragmentNamesUsed.add(childFragmentName);
       });
     } else if (
@@ -249,7 +262,7 @@ export function removeDirectivesFromDocument(
     // the top-level allFragmentNamesUsed.forEach loop will terminate.
     populateTransitiveVars(
       getInUseByFragmentName(fragmentName)
-    ).fragmentSpreads.forEach((childFragmentName) => {
+    ).fragmentSpreads.forEach((_, childFragmentName) => {
       allFragmentNamesUsed.add(childFragmentName);
     });
   });
@@ -325,7 +338,11 @@ export function removeDirectivesFromDocument(
 // operation or fragment definition.
 interface InternalInUseInfo {
   variables: Set<string>;
-  fragmentSpreads: Set<string>;
+  fragmentSpreads: Map<
+    string,
+    // ...spread args
+    Array<{ name: string; variables: Set<string> }>
+  >;
   // Set to true when we deliberately remove a fragment definition, so we can
   // make sure also to remove dangling ...spreads that refer to it.
   removed?: boolean;
@@ -349,7 +366,7 @@ function makeInUseGetterFunction<TKey>(defaultKey: TKey) {
           // will be populated during the first traversal of the document in
           // removeDirectivesFromDocument below.
           variables: new Set(),
-          fragmentSpreads: new Set(),
+          fragmentSpreads: new Map(),
         })
       );
     }

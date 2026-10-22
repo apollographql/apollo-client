@@ -788,3 +788,86 @@ test("passes fragment arguments to read functions of @client fields", async () =
     expect.objectContaining({ args: { size: 32 }, variables: { size: 32 } })
   );
 });
+
+test("binds different fragment arguments for a shared child entity at different paths", async () => {
+  const query = gql`
+    query Team {
+      lead {
+        ...UserCard(size: 96)
+      }
+      member {
+        ...UserCard(size: 32)
+      }
+    }
+
+    fragment UserCard($size: Int) on User {
+      id
+      bestFriend {
+        id
+        avatar(size: $size)
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query },
+        result: {
+          data: {
+            lead: {
+              __typename: "User",
+              id: "1",
+              bestFriend: { __typename: "User", id: "3", avatar: "large.png" },
+            },
+            member: {
+              __typename: "User",
+              id: "2",
+              bestFriend: { __typename: "User", id: "3", avatar: "small.png" },
+            },
+          },
+        },
+      },
+    ]),
+  });
+
+  await expect(client.query({ query })).resolves.toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        bestFriend: { __typename: "User", id: "3", avatar: "large.png" },
+      },
+      member: {
+        __typename: "User",
+        id: "2",
+        bestFriend: { __typename: "User", id: "3", avatar: "small.png" },
+      },
+    },
+  });
+
+  expect(client.extract()).toStrictEqualTyped({
+    ROOT_QUERY: {
+      __typename: "Query",
+      lead: { __ref: "User:1" },
+      member: { __ref: "User:2" },
+    },
+    "User:1": {
+      __typename: "User",
+      id: "1",
+      bestFriend: { __ref: "User:3" },
+    },
+    "User:2": {
+      __typename: "User",
+      id: "2",
+      bestFriend: { __ref: "User:3" },
+    },
+    "User:3": {
+      __typename: "User",
+      id: "3",
+      'avatar({"size":96})': "large.png",
+      'avatar({"size":32})': "small.png",
+    },
+  });
+});

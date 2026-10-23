@@ -307,10 +307,22 @@ export function removeDirectivesFromDocument(
     getInUseByFragmentName(fragmentName).removed;
 
   function isFragmentVariableUsed(varName: string, inUse: InternalInUseInfo) {
-    return inUse.variables.has(varName);
+    return (
+      inUse.variables.has(varName) ||
+      Array.from(inUse.fragmentSpreads.entries()).some(
+        ([fragmentName, args]) => {
+          const childInUse = getInUseByFragmentName(fragmentName);
+
+          return (
+            childInUse.variables.has(varName) ||
+            args.some((arg) => isSpreadArgUsed(arg.name, childInUse))
+          );
+        }
+      )
+    );
   }
 
-  function isSpreadArgUsed(argName: string, inUse: InternalInUseInfo) {
+  function isSpreadArgUsed(argName: string, inUse: InternalInUseInfo): boolean {
     return (
       !inUse.removed &&
       inUse.declaredVariables.has(argName) &&

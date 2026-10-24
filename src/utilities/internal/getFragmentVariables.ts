@@ -33,8 +33,8 @@ export function getFragmentVariables(
     // We want to prevent operation variables from leaking into the fragment
     // variables scope for any variables the fragment declares in its fragment
     // definition. If a fragment defines a variable, but no argument is given,
-    // that value should be treated as `undefined`, even if it shadows a
-    // variable named the same from the operation.
+    // that value should be treated as `undefined` unless it has a default
+    // value, even if it shadows a variable named the same from the operation.
     delete scope[name.value];
 
     if (argument) {

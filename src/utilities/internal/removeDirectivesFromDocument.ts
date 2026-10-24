@@ -235,7 +235,13 @@ export function removeDirectivesFromDocument(
   // collected by the first traversal of the document.
   const populateTransitiveVars = (inUse: InternalInUseInfo) => {
     if (!inUse.transitiveVars) {
-      inUse.transitiveVars = new Set(inUse.variables);
+      inUse.transitiveVars = new Set(
+        Array.from(inUse.variables).filter(
+          // ...spread variables declared by the fragment are local to that
+          // fragment so we don't treat it as a transitive variable
+          (varName) => !inUse.declaredVariables.has(varName)
+        )
+      );
       if (!inUse.removed) {
         inUse.fragmentSpreads.forEach((args, childFragmentName) => {
           const childInUse = populateTransitiveVars(
@@ -243,11 +249,7 @@ export function removeDirectivesFromDocument(
           );
 
           childInUse.transitiveVars!.forEach((varName) => {
-            // ...spread variables declared by the fragment are local to that
-            // fragment so we don't treat it as a transitive variable
-            if (!childInUse.declaredVariables.has(varName)) {
-              inUse.transitiveVars!.add(varName);
-            }
+            inUse.transitiveVars!.add(varName);
           });
 
           args.forEach((arg) => {

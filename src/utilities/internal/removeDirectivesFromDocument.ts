@@ -397,14 +397,12 @@ export function removeDirectivesFromDocument(
             // enclosing operation. This pruning applies only to operations and
             // not fragment definitions, at the moment. Fragments may be able to
             // declare variables eventually, but today they can only consume them.
-            if (usedVariableNames.size < node.variableDefinitions.length) {
-              return {
-                ...node,
-                variableDefinitions: node.variableDefinitions.filter((varDef) =>
-                  usedVariableNames.has(varDef.variable.name.value)
-                ),
-              };
-            }
+            return {
+              ...node,
+              variableDefinitions: node.variableDefinitions.filter((varDef) =>
+                usedVariableNames.has(varDef.variable.name.value)
+              ),
+            };
           }
         },
       },

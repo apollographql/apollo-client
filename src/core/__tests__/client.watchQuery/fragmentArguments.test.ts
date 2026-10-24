@@ -1,5 +1,5 @@
 import type { DocumentNode } from "graphql";
-import { of } from "rxjs";
+import { delay, of } from "rxjs";
 
 import type { TypedDocumentNode } from "@apollo/client";
 import {
@@ -9,10 +9,16 @@ import {
   gql,
   NetworkStatus,
 } from "@apollo/client";
-import { InMemoryCache } from "@apollo/client/cache";
+import { createFragmentRegistry, InMemoryCache } from "@apollo/client/cache";
+import { GraphQL17Alpha9Handler } from "@apollo/client/incremental";
 import { LocalState } from "@apollo/client/local-state";
 import { MockLink } from "@apollo/client/testing";
-import { ObservableStream } from "@apollo/client/testing/internal";
+import {
+  markAsStreaming,
+  mockDeferStreamGraphQL17Alpha9,
+  ObservableStream,
+  spyOnConsole,
+} from "@apollo/client/testing/internal";
 
 enableExperimentalFragmentVariables();
 
@@ -1279,6 +1285,904 @@ test("emits a previously read result written under a different fragment argument
       __typename: "User",
       id: "4",
       'avatar({"size":32})': "small.png",
+    },
+  });
+});
+
+test("evaluates directives on a fragment spread with the parent fragment scope", async () => {
+  const query = gql`
+    query Team {
+      lead {
+        ...UserCard(flag: false)
+      }
+    }
+
+    fragment UserCard($flag: Boolean!) on User {
+      id
+      ...UserAvatar(flag: true) @include(if: $flag)
+      ...UserName(flag: true) @skip(if: $flag)
+    }
+
+    fragment UserAvatar($flag: Boolean!) on User {
+      avatar @include(if: $flag)
+    }
+
+    fragment UserName($flag: Boolean!) on User {
+      name @include(if: $flag)
+    }
+  `;
+
+  using _ = spyOnConsole("error");
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query },
+        result: {
+          data: {
+            lead: { __typename: "User", id: "1", name: "Lead" },
+          },
+        },
+      },
+    ]),
+  });
+
+  using stream = new ObservableStream(client.watchQuery({ query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      lead: { __typename: "User", id: "1", name: "Lead" },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+
+  expect(console.error).not.toHaveBeenCalled();
+  expect(client.extract()).toStrictEqualTyped({
+    ROOT_QUERY: {
+      __typename: "Query",
+      lead: { __ref: "User:1" },
+    },
+    "User:1": {
+      __typename: "User",
+      id: "1",
+      name: "Lead",
+    },
+  });
+});
+
+test("does not warn about fields excluded by a fragment argument in @include", async () => {
+  const query = gql`
+    query Team {
+      lead {
+        ...UserCard(includeAvatar: true)
+      }
+      member {
+        ...UserCard(includeAvatar: false)
+      }
+    }
+
+    fragment UserCard($includeAvatar: Boolean!) on User {
+      id
+      avatar @include(if: $includeAvatar)
+    }
+  `;
+
+  using _ = spyOnConsole("error");
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query },
+        result: {
+          data: {
+            lead: { __typename: "User", id: "1", avatar: "lead.png" },
+            member: { __typename: "User", id: "2" },
+          },
+        },
+      },
+    ]),
+  });
+
+  using stream = new ObservableStream(client.watchQuery({ query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      lead: { __typename: "User", id: "1", avatar: "lead.png" },
+      member: { __typename: "User", id: "2" },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+
+  expect(console.error).not.toHaveBeenCalled();
+});
+
+test("binds fragment arguments on a deferred fragment spread", async () => {
+  const query = gql`
+    query Team {
+      lead {
+        id
+        ...UserCard(size: 96) @defer
+      }
+    }
+
+    fragment UserCard($size: Int) on User {
+      avatar(size: $size)
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  using stream = new ObservableStream(client.watchQuery({ query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: { lead: { __typename: "User", id: "1" } },
+    pending: [{ id: "0", path: ["lead"], label: "ac_0" }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      lead: { __typename: "User", id: "1" },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [{ id: "0", data: { avatar: "lead.png" } }],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      lead: { __typename: "User", id: "1", avatar: "lead.png" },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+
+  expect(client.extract()).toStrictEqualTyped({
+    ROOT_QUERY: {
+      __typename: "Query",
+      lead: { __ref: "User:1" },
+    },
+    "User:1": {
+      __typename: "User",
+      id: "1",
+      'avatar({"size":96})': "lead.png",
+    },
+  });
+});
+
+test("uses a fragment argument in @defer", async () => {
+  const query = gql`
+    query Team {
+      lead {
+        ...UserCard(deferAvatar: true)
+      }
+      member {
+        ...UserCard(deferAvatar: false)
+      }
+    }
+
+    fragment UserCard($deferAvatar: Boolean!) on User {
+      id
+      ... @defer(if: $deferAvatar) {
+        avatar
+      }
+    }
+  `;
+
+  using _ = spyOnConsole("error");
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  using stream = new ObservableStream(client.watchQuery({ query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: {
+      lead: { __typename: "User", id: "1" },
+      member: { __typename: "User", id: "2", avatar: "member.png" },
+    },
+    pending: [{ id: "0", path: ["lead"], label: "ac_0" }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      lead: { __typename: "User", id: "1" },
+      member: { __typename: "User", id: "2", avatar: "member.png" },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [{ id: "0", data: { avatar: "lead.png" } }],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      lead: { __typename: "User", id: "1", avatar: "lead.png" },
+      member: { __typename: "User", id: "2", avatar: "member.png" },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+
+  expect(console.error).not.toHaveBeenCalled();
+});
+
+test("binds new operation variables passed through a fragment spread on refetch", async () => {
+  const query = gql`
+    query Team($n: Int!) {
+      lead {
+        ...UserCard(size: $n)
+      }
+    }
+
+    fragment UserCard($size: Int!) on User {
+      id
+      avatar(size: $size)
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query, variables: { n: 96 } },
+        result: {
+          data: {
+            lead: { __typename: "User", id: "1", avatar: "large.png" },
+          },
+        },
+      },
+      {
+        request: { query, variables: { n: 32 } },
+        result: {
+          data: {
+            lead: { __typename: "User", id: "1", avatar: "small.png" },
+          },
+        },
+      },
+    ]),
+  });
+
+  const observable = client.watchQuery({ query, variables: { n: 96 } });
+  using stream = new ObservableStream(observable);
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      lead: { __typename: "User", id: "1", avatar: "large.png" },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(observable.refetch({ n: 32 })).resolves.toStrictEqualTyped({
+    data: {
+      lead: { __typename: "User", id: "1", avatar: "small.png" },
+    },
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.refetch,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      lead: { __typename: "User", id: "1", avatar: "small.png" },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+
+  expect(client.extract()).toStrictEqualTyped({
+    ROOT_QUERY: {
+      __typename: "Query",
+      lead: { __ref: "User:1" },
+    },
+    "User:1": {
+      __typename: "User",
+      id: "1",
+      'avatar({"size":96})': "large.png",
+      'avatar({"size":32})': "small.png",
+    },
+  });
+});
+
+test("updates the matching fragment argument scope with a mutation result", async () => {
+  const query = gql`
+    query Team {
+      lead {
+        ...UserCard(size: 96)
+      }
+      members {
+        ...UserCard(size: 32)
+      }
+    }
+
+    fragment UserCard($size: Int) on User {
+      id
+      avatar(size: $size)
+    }
+  `;
+
+  const mutation = gql`
+    mutation UpdateAvatar {
+      updateAvatar {
+        ...UserCard(size: 96)
+      }
+    }
+
+    fragment UserCard($size: Int) on User {
+      id
+      avatar(size: $size)
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query },
+        result: {
+          data: {
+            lead: { __typename: "User", id: "1", avatar: "large.png" },
+            members: [{ __typename: "User", id: "1", avatar: "small.png" }],
+          },
+        },
+      },
+      {
+        request: { query: mutation },
+        result: {
+          data: {
+            updateAvatar: {
+              __typename: "User",
+              id: "1",
+              avatar: "large-updated.png",
+            },
+          },
+        },
+      },
+    ]),
+  });
+
+  using stream = new ObservableStream(client.watchQuery({ query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      lead: { __typename: "User", id: "1", avatar: "large.png" },
+      members: [{ __typename: "User", id: "1", avatar: "small.png" }],
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(client.mutate({ mutation })).resolves.toStrictEqualTyped({
+    data: {
+      updateAvatar: {
+        __typename: "User",
+        id: "1",
+        avatar: "large-updated.png",
+      },
+    },
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      lead: { __typename: "User", id: "1", avatar: "large-updated.png" },
+      members: [{ __typename: "User", id: "1", avatar: "small.png" }],
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+
+  expect(client.extract()).toStrictEqualTyped({
+    ROOT_QUERY: {
+      __typename: "Query",
+      lead: { __ref: "User:1" },
+      members: [{ __ref: "User:1" }],
+    },
+    ROOT_MUTATION: {
+      __typename: "Mutation",
+    },
+    "User:1": {
+      __typename: "User",
+      id: "1",
+      'avatar({"size":96})': "large-updated.png",
+      'avatar({"size":32})': "small.png",
+    },
+  });
+});
+
+test("updates the matching fragment argument scope with an optimistic response", async () => {
+  const query = gql`
+    query Team {
+      lead {
+        ...UserCard(size: 96)
+      }
+      members {
+        ...UserCard(size: 32)
+      }
+    }
+
+    fragment UserCard($size: Int) on User {
+      id
+      avatar(size: $size)
+    }
+  `;
+
+  const mutation = gql`
+    mutation UpdateAvatar {
+      updateAvatar {
+        ...UserCard(size: 96)
+      }
+    }
+
+    fragment UserCard($size: Int) on User {
+      id
+      avatar(size: $size)
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query },
+        result: {
+          data: {
+            lead: { __typename: "User", id: "1", avatar: "large.png" },
+            members: [{ __typename: "User", id: "1", avatar: "small.png" }],
+          },
+        },
+      },
+      {
+        request: { query: mutation },
+        result: {
+          data: {
+            updateAvatar: {
+              __typename: "User",
+              id: "1",
+              avatar: "large-updated.png",
+            },
+          },
+        },
+        delay: 20,
+      },
+    ]),
+  });
+
+  using stream = new ObservableStream(client.watchQuery({ query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      lead: { __typename: "User", id: "1", avatar: "large.png" },
+      members: [{ __typename: "User", id: "1", avatar: "small.png" }],
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  const promise = client.mutate({
+    mutation,
+    optimisticResponse: {
+      updateAvatar: {
+        __typename: "User",
+        id: "1",
+        avatar: "large-optimistic.png",
+      },
+    },
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      lead: { __typename: "User", id: "1", avatar: "large-optimistic.png" },
+      members: [{ __typename: "User", id: "1", avatar: "small.png" }],
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(promise).resolves.toStrictEqualTyped({
+    data: {
+      updateAvatar: {
+        __typename: "User",
+        id: "1",
+        avatar: "large-updated.png",
+      },
+    },
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      lead: { __typename: "User", id: "1", avatar: "large-updated.png" },
+      members: [{ __typename: "User", id: "1", avatar: "small.png" }],
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("passes the fragment argument scope as variables to keyArgs and merge functions", async () => {
+  const query = gql`
+    query Team {
+      lead {
+        ...UserCard(size: 96)
+      }
+      members {
+        ...UserCard(size: 32)
+      }
+    }
+
+    fragment UserCard($size: Int) on User {
+      id
+      avatar(size: $size)
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      typePolicies: {
+        User: {
+          fields: {
+            avatar: {
+              keyArgs: (_, { variables }) => `size-${variables?.size}`,
+              merge: (_, incoming, { variables }) =>
+                `${incoming}?size=${variables?.size}`,
+            },
+          },
+        },
+      },
+    }),
+    link: new MockLink([
+      {
+        request: { query },
+        result: {
+          data: {
+            lead: { __typename: "User", id: "1", avatar: "lead.png" },
+            members: [{ __typename: "User", id: "2", avatar: "member.png" }],
+          },
+        },
+      },
+    ]),
+  });
+
+  using stream = new ObservableStream(client.watchQuery({ query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      lead: { __typename: "User", id: "1", avatar: "lead.png?size=96" },
+      members: [{ __typename: "User", id: "2", avatar: "member.png?size=32" }],
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+
+  expect(client.extract()).toStrictEqualTyped({
+    ROOT_QUERY: {
+      __typename: "Query",
+      lead: { __ref: "User:1" },
+      members: [{ __ref: "User:2" }],
+    },
+    "User:1": {
+      __typename: "User",
+      id: "1",
+      "avatar:size-96": "lead.png?size=96",
+    },
+    "User:2": {
+      __typename: "User",
+      id: "2",
+      "avatar:size-32": "member.png?size=32",
+    },
+  });
+});
+
+test("uses fragment arguments in inline fragments", async () => {
+  const query = gql`
+    query Team {
+      lead {
+        ...UserCard(size: 96)
+      }
+      members {
+        ...UserCard(size: 32)
+      }
+    }
+
+    fragment UserCard($size: Int) on User {
+      id
+      ... on User {
+        avatar(size: $size)
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      possibleTypes: { User: ["User"] },
+    }),
+    link: new MockLink([
+      {
+        request: { query },
+        result: {
+          data: {
+            lead: { __typename: "User", id: "1", avatar: "lead.png" },
+            members: [{ __typename: "User", id: "2", avatar: "member.png" }],
+          },
+        },
+      },
+    ]),
+  });
+
+  using stream = new ObservableStream(client.watchQuery({ query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      lead: { __typename: "User", id: "1", avatar: "lead.png" },
+      members: [{ __typename: "User", id: "2", avatar: "member.png" }],
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+
+  expect(client.extract()).toStrictEqualTyped({
+    ROOT_QUERY: {
+      __typename: "Query",
+      lead: { __ref: "User:1" },
+      members: [{ __ref: "User:2" }],
+    },
+    "User:1": {
+      __typename: "User",
+      id: "1",
+      'avatar({"size":96})': "lead.png",
+    },
+    "User:2": {
+      __typename: "User",
+      id: "2",
+      'avatar({"size":32})': "member.png",
+    },
+  });
+});
+
+test("binds fragment arguments for fragments from the fragment registry", async () => {
+  const query = gql`
+    query Team {
+      lead {
+        ...UserCard(size: 96)
+      }
+      members {
+        ...UserCard(size: 32)
+      }
+    }
+  `;
+
+  let requestQuery!: DocumentNode;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      fragments: createFragmentRegistry(gql`
+        fragment UserCard($size: Int) on User {
+          id
+          avatar(size: $size)
+        }
+      `),
+    }),
+    link: new ApolloLink((operation) => {
+      requestQuery = operation.query;
+
+      return of({
+        data: {
+          lead: { __typename: "User", id: "1", avatar: "lead.png" },
+          members: [{ __typename: "User", id: "2", avatar: "member.png" }],
+        },
+      }).pipe(delay(20));
+    }),
+  });
+
+  using stream = new ObservableStream(client.watchQuery({ query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      lead: { __typename: "User", id: "1", avatar: "lead.png" },
+      members: [{ __typename: "User", id: "2", avatar: "member.png" }],
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+
+  expect(requestQuery).toMatchDocument(gql`
+    query Team {
+      lead {
+        ...UserCard(size: 96)
+        __typename
+      }
+      members {
+        ...UserCard(size: 32)
+        __typename
+      }
+    }
+
+    fragment UserCard($size: Int) on User {
+      id
+      avatar(size: $size)
+      __typename
+    }
+  `);
+
+  expect(client.extract()).toStrictEqualTyped({
+    ROOT_QUERY: {
+      __typename: "Query",
+      lead: { __ref: "User:1" },
+      members: [{ __ref: "User:2" }],
+    },
+    "User:1": {
+      __typename: "User",
+      id: "1",
+      'avatar({"size":96})': "lead.png",
+    },
+    "User:2": {
+      __typename: "User",
+      id: "2",
+      'avatar({"size":32})': "member.png",
     },
   });
 });

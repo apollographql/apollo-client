@@ -356,8 +356,6 @@ export function removeDirectivesFromDocument(
           }
 
           if (node.arguments) {
-            const inUse = getInUseByFragmentName(node.name.value);
-
             return {
               ...node,
               arguments: node.arguments.filter((arg) => {

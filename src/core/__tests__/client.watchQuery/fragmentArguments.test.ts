@@ -1927,7 +1927,7 @@ test("updates the matching fragment argument scope with an optimistic response",
   await expect(stream).not.toEmitAnything();
 });
 
-test("passes the fragment argument scope as variables to keyArgs and merge functions", async () => {
+test("passes the fragment argument scope to keyArgs and merge functions", async () => {
   const query = gql`
     query Team {
       lead {
@@ -1951,8 +1951,8 @@ test("passes the fragment argument scope as variables to keyArgs and merge funct
           fields: {
             avatar: {
               keyArgs: (_, { variables }) => `size-${variables?.size}`,
-              merge: (_, incoming, { variables }) =>
-                `${incoming}?size=${variables?.size}`,
+              merge: (_, incoming, { args, variables }) =>
+                `${incoming}?arg=${args?.size}&variable=${variables?.size}`,
             },
           },
         },
@@ -1983,8 +1983,18 @@ test("passes the fragment argument scope as variables to keyArgs and merge funct
 
   await expect(stream).toEmitTypedValue({
     data: {
-      lead: { __typename: "User", id: "1", avatar: "lead.png?size=96" },
-      members: [{ __typename: "User", id: "2", avatar: "member.png?size=32" }],
+      lead: {
+        __typename: "User",
+        id: "1",
+        avatar: "lead.png?arg=96&variable=96",
+      },
+      members: [
+        {
+          __typename: "User",
+          id: "2",
+          avatar: "member.png?arg=32&variable=32",
+        },
+      ],
     },
     dataState: "complete",
     loading: false,
@@ -2003,12 +2013,12 @@ test("passes the fragment argument scope as variables to keyArgs and merge funct
     "User:1": {
       __typename: "User",
       id: "1",
-      "avatar:size-96": "lead.png?size=96",
+      "avatar:size-96": "lead.png?arg=96&variable=96",
     },
     "User:2": {
       __typename: "User",
       id: "2",
-      "avatar:size-32": "member.png?size=32",
+      "avatar:size-32": "member.png?arg=32&variable=32",
     },
   });
 });

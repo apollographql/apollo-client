@@ -413,6 +413,7 @@ export class StoreWriter {
             typename,
             merge,
             path,
+            variables: context.variables,
           };
         } else if (
           context.extensions?.[streamInfoSymbol] &&
@@ -424,6 +425,7 @@ export class StoreWriter {
             typename,
             merge: defaultStreamFieldMergeFn,
             path,
+            variables: context.variables,
           };
         } else {
           maybeRecycleChildMergeTree(mergeTree, storeFieldName);

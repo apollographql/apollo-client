@@ -1054,7 +1054,7 @@ export class Policies {
   public runMergeFunction(
     existing: StoreValue,
     incoming: StoreValue,
-    { field, typename, merge, path }: MergeInfo,
+    { field, typename, merge, path, variables }: MergeInfo,
     context: WriteContext,
     storage?: StorageType
   ) {
@@ -1120,7 +1120,7 @@ export class Policies {
           typename,
           fieldName: field.name.value,
           field,
-          variables: context.variables,
+          variables,
           path,
         },
         context,

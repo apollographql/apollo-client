@@ -185,6 +185,7 @@ export interface MergeInfo {
   typename: string | undefined;
   merge: FieldMergeFunction;
   path: Array<string | number>;
+  variables: OperationVariables | undefined;
 }
 
 export interface MergeTree {

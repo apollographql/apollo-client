@@ -114,7 +114,7 @@ export function removeDirectivesFromDocument(
     Variable: {
       enter(node, _key, parent, _path, ancestors) {
         // Variables in ...spread args are tracked by FragmentSpread below since
-        // its possible the variable might be removed if the spread arg is also
+        // it's possible the variable might be removed if the spread arg is also
         // removed.
         if (
           [parent, ...ancestors].some(
@@ -231,14 +231,14 @@ export function removeDirectivesFromDocument(
   // Utility for making sure inUse.transitiveVars is recursively populated.
   // Because this logic assumes inUse.fragmentSpreads has been completely
   // populated and inUse.removed has been set if appropriate,
-  // populateTransitiveVars must be called after that information has been
+  // getUsedVariables must be called after that information has been
   // collected by the first traversal of the document.
   const getUsedVariables = (inUse: InternalInUseInfo) => {
     if (!inUse.transitiveVars) {
       inUse.transitiveVars = new Set(
         Array.from(inUse.variables).filter(
-          // ...spread variables declared by the fragment are local to that
-          // fragment so we don't treat it as a transitive variable
+          // Variables declared by the fragment are local to that fragment so
+          // we don't treat them as transitive variables
           (varName) => !inUse.declaredVariables.has(varName)
         )
       );
@@ -405,9 +405,7 @@ export function removeDirectivesFromDocument(
             // To stay on the right side of this validation rule, if/when we
             // remove the last $var references from an operation or its fragments,
             // we must also remove the corresponding $var declaration from the
-            // enclosing operation. This pruning applies only to operations and
-            // not fragment definitions, at the moment. Fragments may be able to
-            // declare variables eventually, but today they can only consume them.
+            // enclosing operation.
             return {
               ...node,
               variableDefinitions: node.variableDefinitions.filter((varDef) =>
@@ -435,7 +433,7 @@ interface InternalInUseInfo {
   // Set to true when we deliberately remove a fragment definition, so we can
   // make sure also to remove dangling ...spreads that refer to it.
   removed?: boolean;
-  // Populated by the populateTransitiveVars helper function below.
+  // Populated by the getUsedVariables helper function above.
   transitiveVars?: Set<string>;
 }
 
@@ -450,10 +448,10 @@ function makeInUseGetterFunction<TKey>(defaultKey: TKey) {
       map.set(
         key,
         (inUse = {
-          // Variable and fragment spread names used directly within this
-          // operation or fragment definition, as identified by key. These sets
-          // will be populated during the first traversal of the document in
-          // removeDirectivesFromDocument below.
+          // Variable names, fragment spreads, and declared variable names used
+          // directly within this operation or fragment definition, as
+          // identified by key. These will be populated during the first
+          // traversal of the document in removeDirectivesFromDocument below.
           variables: new Set(),
           fragmentSpreads: new Map(),
           declaredVariables: new Set(),

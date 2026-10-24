@@ -105,9 +105,10 @@ type FlavorableWriteContext = Pick<
 
 // Since there are only four possible combinations of context.clientOnly and
 // context.deferred values, we should need at most four "flavors" of any given
-// WriteContext. To avoid creating multiple copies of the same context, we cache
-// the contexts in the context.flavors Map (shared by all flavors) according to
-// their clientOnly and deferred values (always in that order).
+// WriteContext (per fragment argument scope). To avoid creating multiple copies
+// of the same context, we cache the contexts in the context.flavors Map (shared
+// by all flavors) according to their clientOnly and deferred values (always in
+// that order).
 function getContextFlavor<TContext extends FlavorableWriteContext>(
   context: TContext,
   clientOnly: TContext["clientOnly"],

@@ -15,7 +15,6 @@ import type { DocumentNode } from 'graphql';
 import { ErrorLike } from '@apollo/client';
 import type { FieldNode } from 'graphql';
 import type { FormattedExecutionResult } from 'graphql';
-import type { FragmentArgumentNode } from 'graphql';
 import type { FragmentDefinitionNode } from 'graphql';
 import type { FragmentSpreadNode } from 'graphql';
 import type { GraphQLFormattedError } from 'graphql';
@@ -24,7 +23,6 @@ import type { Incremental } from '@apollo/client/incremental';
 import type { InlineFragmentNode } from 'graphql';
 import { Kind } from 'graphql';
 import type { MaybeMasked } from '@apollo/client';
-import type { NameNode } from 'graphql';
 import type { NetworkStatus } from '@apollo/client';
 import { Observable } from 'rxjs';
 import type { ObservableQuery } from '@apollo/client';
@@ -41,8 +39,6 @@ import { StrongCache } from '@wry/caches';
 import type { Subscription } from 'rxjs';
 import type { Trie } from '@wry/trie';
 import type { TypeOverrides } from '@apollo/client';
-import type { ValueNode } from 'graphql';
-import type { VariableNode } from 'graphql';
 import { WeakCache } from '@wry/caches';
 
 // @public (undocumented)
@@ -112,28 +108,14 @@ export function combineLatestBatched<T>(observables: Array<Observable<T> & {
 // @internal @deprecated
 export function compact<TArgs extends any[]>(...objects: TArgs): TupleToIntersection<TArgs>;
 
-// @public (undocumented)
-export function createFragmentArgumentNode(name: string, value: ValueNode): FragmentArgumentNode;
-
 // @internal @deprecated
 export function createFragmentMap(fragments?: FragmentDefinitionNode[]): FragmentMap;
-
-// @public (undocumented)
-export function createFragmentSpreadNode(name: string, input?: {
-    arguments?: FragmentArgumentNode[];
-}): FragmentSpreadNode;
 
 // @internal @deprecated (undocumented)
 export function createFulfilledPromise<TValue>(value: TValue): FulfilledPromise<TValue>;
 
-// @public (undocumented)
-export function createNameNode(value: string): NameNode;
-
 // @internal @deprecated (undocumented)
 export function createRejectedPromise<TValue = unknown>(reason: unknown): RejectedPromise<TValue>;
-
-// @public (undocumented)
-export function createVariableNode(name: string): VariableNode;
 
 // @public (undocumented)
 export function dealias(fieldValue: Record<string, any> | null | undefined, selectionSet: SelectionSetNode): {

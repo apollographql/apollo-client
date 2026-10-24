@@ -3,7 +3,7 @@ import { removeDirectivesFromDocument } from "@apollo/client/utilities/internal"
 
 enableExperimentalFragmentVariables();
 
-test("should remove unused fragment variable definitions and spread arguments associated with the removed directive", () => {
+test("removes unused fragment variable definitions and spread arguments associated with the removed directive", () => {
   const query = gql`
     query Team {
       lead {
@@ -35,7 +35,7 @@ test("should remove unused fragment variable definitions and spread arguments as
   `);
 });
 
-test("should remove operation variables that were only used by a removed spread argument", () => {
+test("removes operation variables that were only used by a removed spread argument", () => {
   const query = gql`
     query Team($n: Int) {
       lead {
@@ -67,7 +67,7 @@ test("should remove operation variables that were only used by a removed spread 
   `);
 });
 
-test("should not remove used fragment variable definitions", () => {
+test("does not remove used fragment variable definitions", () => {
   const query = gql`
     query Team {
       lead {
@@ -101,7 +101,7 @@ test("should not remove used fragment variable definitions", () => {
   `);
 });
 
-test("should remove only the spread arguments and variables that are no longer used", () => {
+test("removes only the spread arguments and variables that are no longer used", () => {
   const query = gql`
     query Team($n: Int, $f: String) {
       lead {
@@ -135,7 +135,7 @@ test("should remove only the spread arguments and variables that are no longer u
   `);
 });
 
-test("should remove operation variables that were only used in a removed object spread argument", () => {
+test("removes operation variables that were only used in a removed object spread argument", () => {
   const query = gql`
     query Team($width: Int, $height: Int) {
       lead {
@@ -167,7 +167,7 @@ test("should remove operation variables that were only used in a removed object 
   `);
 });
 
-test("should remove operation variables that were only used in a removed list spread argument", () => {
+test("removes operation variables that were only used in a removed list spread argument", () => {
   const query = gql`
     query Team($first: String, $second: String) {
       lead {
@@ -199,7 +199,7 @@ test("should remove operation variables that were only used in a removed list sp
   `);
 });
 
-test("should remove variables passed through several nested spreads when the last fragment no longer uses them", () => {
+test("removes variables passed through several nested spreads when the last fragment no longer uses them", () => {
   const query = gql`
     query Team($n: Int) {
       lead {
@@ -247,7 +247,7 @@ test("should remove variables passed through several nested spreads when the las
   `);
 });
 
-test("should not remove variables passed through several nested spreads when the last fragment still uses them", () => {
+test("does not remove variables passed through several nested spreads when the last fragment still uses them", () => {
   const query = gql`
     query Team($n: Int) {
       lead {
@@ -297,7 +297,7 @@ test("should not remove variables passed through several nested spreads when the
   `);
 });
 
-test("should only remove variables from the nested spread levels that no longer use them", () => {
+test("only removes variables from the nested spread levels that no longer use them", () => {
   const query = gql`
     query Team($n: Int, $f: String) {
       lead {
@@ -339,7 +339,7 @@ test("should only remove variables from the nested spread levels that no longer 
   `);
 });
 
-test("should keep an operation variable that another spread still uses", () => {
+test("keeps an operation variable that another spread still uses", () => {
   const query = gql`
     query Team($n: Int) {
       lead {
@@ -381,7 +381,7 @@ test("should keep an operation variable that another spread still uses", () => {
   `);
 });
 
-test("should not treat a child fragment's operation variable as a parent fragment variable with the same name", () => {
+test("does not treat a child fragment's operation variable as a parent fragment variable with the same name", () => {
   const query = gql`
     query Team($size: Int, $n: Int) {
       lead {
@@ -421,7 +421,7 @@ test("should not treat a child fragment's operation variable as a parent fragmen
   `);
 });
 
-test("should only count child spread arguments that use the fragment variable", () => {
+test("only counts child spread arguments that use the fragment variable", () => {
   const query = gql`
     query Team($n: Int, $f: String) {
       lead {
@@ -461,7 +461,7 @@ test("should only count child spread arguments that use the fragment variable", 
   `);
 });
 
-test("should keep an operation variable used by a child fragment when the parent fragment declares a variable with the same name", () => {
+test("keeps an operation variable used by a child fragment when the parent fragment declares a variable with the same name", () => {
   const query = gql`
     query Team($size: Int, $n: Int) {
       lead {
@@ -503,7 +503,7 @@ test("should keep an operation variable used by a child fragment when the parent
   `);
 });
 
-test("should keep variables used by directives on a spread when its arguments are removed", () => {
+test("keeps variables used by directives on a spread when its arguments are removed", () => {
   const query = gql`
     query Team($n: Int, $show: Boolean!) {
       lead {
@@ -535,7 +535,7 @@ test("should keep variables used by directives on a spread when its arguments ar
   `);
 });
 
-test("should remove operation variables used by the arguments of a removed spread", () => {
+test("removes operation variables used by the arguments of a removed spread", () => {
   const query = gql`
     query Team($n: Int) {
       lead {
@@ -563,7 +563,7 @@ test("should remove operation variables used by the arguments of a removed sprea
   `);
 });
 
-test("should remove operation variables used by the arguments of a spread to a fragment that is removed", () => {
+test("removes operation variables used by the arguments of a spread to a fragment that is removed", () => {
   const query = gql`
     query Team($n: Int) {
       lead {
@@ -592,7 +592,7 @@ test("should remove operation variables used by the arguments of a spread to a f
   `);
 });
 
-test("should remove fragment variables only used in a removed inline fragment", () => {
+test("removes fragment variables only used in a removed inline fragment", () => {
   const query = gql`
     query Team($n: Int) {
       lead {
@@ -626,7 +626,7 @@ test("should remove fragment variables only used in a removed inline fragment", 
   `);
 });
 
-test("should not throw for cyclic fragment spreads with arguments", () => {
+test("does not throw for cyclic fragment spreads with arguments", () => {
   const query = gql`
     query Team($n: Int) {
       lead {
@@ -668,7 +668,7 @@ test("should not throw for cyclic fragment spreads with arguments", () => {
   `);
 });
 
-test("should remove fragment variables passed to a nested fragment that is removed", () => {
+test("removes fragment variables passed to a nested fragment that is removed", () => {
   const query = gql`
     query Team($n: Boolean) {
       lead {

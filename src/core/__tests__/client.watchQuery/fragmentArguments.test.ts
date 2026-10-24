@@ -1927,7 +1927,7 @@ test("updates the matching fragment argument scope with an optimistic response",
   await expect(stream).not.toEmitAnything();
 });
 
-test("passes the fragment argument scope to keyArgs and merge functions", async () => {
+test("passes the fragment argument scope to keyArgs, merge, and read functions", async () => {
   const query = gql`
     query Team {
       lead {
@@ -1953,6 +1953,8 @@ test("passes the fragment argument scope to keyArgs and merge functions", async 
               keyArgs: (_, { variables }) => `size-${variables?.size}`,
               merge: (_, incoming, { args, variables }) =>
                 `${incoming}?arg=${args?.size}&variable=${variables?.size}`,
+              read: (existing, { args, variables }) =>
+                `${existing}&readArg=${args?.size}&readVariable=${variables?.size}`,
             },
           },
         },
@@ -1986,13 +1988,13 @@ test("passes the fragment argument scope to keyArgs and merge functions", async 
       lead: {
         __typename: "User",
         id: "1",
-        avatar: "lead.png?arg=96&variable=96",
+        avatar: "lead.png?arg=96&variable=96&readArg=96&readVariable=96",
       },
       members: [
         {
           __typename: "User",
           id: "2",
-          avatar: "member.png?arg=32&variable=32",
+          avatar: "member.png?arg=32&variable=32&readArg=32&readVariable=32",
         },
       ],
     },
@@ -2023,7 +2025,7 @@ test("passes the fragment argument scope to keyArgs and merge functions", async 
   });
 });
 
-test("passes the fragment argument scope to keyArgs and merge functions when the variable and argument names differ", async () => {
+test("passes the fragment argument scope to keyArgs, merge, and read functions when the variable and argument names differ", async () => {
   const query = gql`
     query Team {
       lead {
@@ -2050,6 +2052,8 @@ test("passes the fragment argument scope to keyArgs and merge functions when the
                 `size-${args?.size}-${variables?.avatarSize}`,
               merge: (_, incoming, { args, variables }) =>
                 `${incoming}?size=${args?.size}&avatarSize=${variables?.avatarSize}`,
+              read: (existing, { args, variables }) =>
+                `${existing}&readSize=${args?.size}&readAvatarSize=${variables?.avatarSize}`,
             },
           },
         },
@@ -2083,13 +2087,14 @@ test("passes the fragment argument scope to keyArgs and merge functions when the
       lead: {
         __typename: "User",
         id: "1",
-        avatar: "lead.png?size=96&avatarSize=96",
+        avatar: "lead.png?size=96&avatarSize=96&readSize=96&readAvatarSize=96",
       },
       members: [
         {
           __typename: "User",
           id: "2",
-          avatar: "member.png?size=32&avatarSize=32",
+          avatar:
+            "member.png?size=32&avatarSize=32&readSize=32&readAvatarSize=32",
         },
       ],
     },

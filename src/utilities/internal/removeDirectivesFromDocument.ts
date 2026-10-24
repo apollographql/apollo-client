@@ -233,7 +233,7 @@ export function removeDirectivesFromDocument(
   // populated and inUse.removed has been set if appropriate,
   // populateTransitiveVars must be called after that information has been
   // collected by the first traversal of the document.
-  const populateTransitiveVars = (inUse: InternalInUseInfo) => {
+  const getUsedVariables = (inUse: InternalInUseInfo) => {
     if (!inUse.transitiveVars) {
       inUse.transitiveVars = new Set(
         Array.from(inUse.variables).filter(
@@ -242,27 +242,28 @@ export function removeDirectivesFromDocument(
           (varName) => !inUse.declaredVariables.has(varName)
         )
       );
+
       if (!inUse.removed) {
         inUse.fragmentSpreads.forEach((args, childFragmentName) => {
-          const childInUse = populateTransitiveVars(
+          const childVariables = getUsedVariables(
             getInUseByFragmentName(childFragmentName)
           );
 
-          childInUse.transitiveVars!.forEach((varName) => {
+          for (const varName of childVariables) {
             inUse.transitiveVars!.add(varName);
-          });
+          }
 
           args.forEach((arg) => {
             if (isSpreadArgUsed(childFragmentName, arg.name)) {
-              arg.variables.forEach((varName) => {
-                inUse.transitiveVars!.add(varName);
-              });
+              arg.variables.forEach((varName) =>
+                inUse.transitiveVars!.add(varName)
+              );
             }
           });
         });
       }
     }
-    return inUse;
+    return inUse.transitiveVars;
   };
 
   // Since we've been keeping track of fragment spreads used by particular
@@ -391,10 +392,10 @@ export function removeDirectivesFromDocument(
           // Upon leaving each operation in the depth-first AST traversal, prune
           // any variables that are declared by the operation but unused within.
           if (node.variableDefinitions) {
-            const usedVariableNames = populateTransitiveVars(
+            const usedVariableNames = getUsedVariables(
               // If an operation is anonymous, we use the empty string as its key.
               getInUseByOperationName(node.name && node.name.value)
-            ).transitiveVars!;
+            );
 
             // According to the GraphQL spec, all variables declared by an
             // operation must either be used by that operation or used by some

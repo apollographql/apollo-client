@@ -9,14 +9,14 @@ import { ObservableStream } from "@apollo/client/testing/internal";
 
 enableExperimentalFragmentVariables();
 
-const fragment = gql`
-  fragment UserCard($size: Int) on User {
-    id
-    avatar(size: $size)
-  }
-`;
-
 test("binds variables to the fragment arguments of the root fragment", async () => {
+  const fragment = gql`
+    fragment UserCard($size: Int) on User {
+      id
+      avatar(size: $size)
+    }
+  `;
+
   const client = new ApolloClient({
     cache: new InMemoryCache(),
     link: ApolloLink.empty(),
@@ -52,6 +52,13 @@ test("binds variables to the fragment arguments of the root fragment", async () 
 });
 
 test("only emits when the data for its own root fragment arguments changes", async () => {
+  const fragment = gql`
+    fragment UserCard($size: Int) on User {
+      id
+      avatar(size: $size)
+    }
+  `;
+
   const client = new ApolloClient({
     cache: new InMemoryCache(),
     link: ApolloLink.empty(),
@@ -107,6 +114,13 @@ test("only emits when the data for its own root fragment arguments changes", asy
 });
 
 test("watches the same entity with different root fragment arguments", async () => {
+  const fragment = gql`
+    fragment UserCard($size: Int) on User {
+      id
+      avatar(size: $size)
+    }
+  `;
+
   const client = new ApolloClient({
     cache: new InMemoryCache(),
     link: ApolloLink.empty(),
@@ -204,6 +218,13 @@ test("applies fragment argument defaults of the root fragment when variables omi
 });
 
 test("emits partial data until data for the root fragment arguments is written", async () => {
+  const fragment = gql`
+    fragment UserCard($size: Int) on User {
+      id
+      avatar(size: $size)
+    }
+  `;
+
   const client = new ApolloClient({
     cache: new InMemoryCache(),
     link: ApolloLink.empty(),
@@ -304,6 +325,13 @@ test("passes a root fragment argument through a nested fragment spread", async (
 });
 
 test("binds root fragment arguments for each item when from is an array", async () => {
+  const fragment = gql`
+    fragment UserCard($size: Int) on User {
+      id
+      avatar(size: $size)
+    }
+  `;
+
   const client = new ApolloClient({
     cache: new InMemoryCache(),
     link: ApolloLink.empty(),

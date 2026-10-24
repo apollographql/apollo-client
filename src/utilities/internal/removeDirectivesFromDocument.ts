@@ -253,7 +253,7 @@ export function removeDirectivesFromDocument(
           });
 
           args.forEach((arg) => {
-            if (isSpreadArgUsed(arg.name, childInUse)) {
+            if (isSpreadArgUsed(childFragmentName, arg.name)) {
               arg.variables.forEach((varName) => {
                 inUse.transitiveVars!.add(varName);
               });
@@ -308,28 +308,40 @@ export function removeDirectivesFromDocument(
     !allFragmentNamesUsed.has(fragmentName) ||
     getInUseByFragmentName(fragmentName).removed;
 
-  function isFragmentVariableUsed(varName: string, inUse: InternalInUseInfo) {
+  function isFragmentVariableUsed(
+    varName: string,
+    inUse: InternalInUseInfo,
+    seen = new Set<string>()
+  ) {
     return (
       inUse.variables.has(varName) ||
       Array.from(inUse.fragmentSpreads.entries()).some(
         ([fragmentName, args]) => {
-          const childInUse = getInUseByFragmentName(fragmentName);
-
           return args.some(
             (arg) =>
               arg.variables.has(varName) &&
-              isSpreadArgUsed(arg.name, childInUse)
+              isSpreadArgUsed(fragmentName, arg.name, seen)
           );
         }
       )
     );
   }
 
-  function isSpreadArgUsed(argName: string, inUse: InternalInUseInfo): boolean {
+  function isSpreadArgUsed(
+    fragmentName: string,
+    argName: string,
+    seen = new Set<string>()
+  ): boolean {
+    const key = `${fragmentName}:${argName}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+
+    const inUse = getInUseByFragmentName(fragmentName);
+
     return (
       !inUse.removed &&
       inUse.declaredVariables.has(argName) &&
-      isFragmentVariableUsed(argName, inUse)
+      isFragmentVariableUsed(argName, inUse, seen)
     );
   }
 
@@ -349,7 +361,7 @@ export function removeDirectivesFromDocument(
             return {
               ...node,
               arguments: node.arguments.filter((arg) => {
-                return isSpreadArgUsed(arg.name.value, inUse);
+                return isSpreadArgUsed(node.name.value, arg.name.value);
               }),
             };
           }

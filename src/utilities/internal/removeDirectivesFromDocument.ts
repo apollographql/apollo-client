@@ -244,10 +244,10 @@ export function removeDirectivesFromDocument(
       );
 
       inUse.fragmentSpreads.forEach((args, childFragmentName) => {
-        const childVariables = getUsedVariables(
-          getInUseByFragmentName(childFragmentName)
-        );
+        const childInUse = getInUseByFragmentName(childFragmentName);
+        if (childInUse.removed) return;
 
+        const childVariables = getUsedVariables(childInUse);
         childVariables.forEach((varName) => inUse.transitiveVars!.add(varName));
 
         args.forEach((arg) => {

@@ -275,3 +275,52 @@ test("uses variables directly when the root fragment declares no variables", () 
     client.readFragment({ fragment, id: "User:1", variables: { size: 96 } })
   ).toStrictEqualTyped({ __typename: "User", id: "1", avatar: "large.png" });
 });
+
+test("uses variables in a nested fragment that declares no variables when the root fragment declares a variable with the same name", () => {
+  const fragment = gql`
+    fragment UserCard($size: Int) on User {
+      id
+      avatar(size: $size)
+      ...UserAvatar
+    }
+
+    fragment UserAvatar on User {
+      nestedAvatar: avatar(size: $size)
+    }
+  `;
+
+  const client = createClient();
+
+  expect(
+    client.readFragment({
+      fragment,
+      fragmentName: "UserCard",
+      id: "User:1",
+      variables: { size: 96 },
+    })
+  ).toStrictEqualTyped({
+    __typename: "User",
+    id: "1",
+    avatar: "large.png",
+    nestedAvatar: "large.png",
+  });
+});
+
+test("ignores variables that the root fragment does not declare or use", () => {
+  const fragment = gql`
+    fragment UserCard($size: Int) on User {
+      id
+      avatar(size: $size)
+    }
+  `;
+
+  const client = createClient();
+
+  expect(
+    client.readFragment({
+      fragment,
+      id: "User:1",
+      variables: { size: 96, theme: "dark" },
+    })
+  ).toStrictEqualTyped({ __typename: "User", id: "1", avatar: "large.png" });
+});

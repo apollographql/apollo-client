@@ -243,25 +243,23 @@ export function removeDirectivesFromDocument(
         )
       );
 
-      if (!inUse.removed) {
-        inUse.fragmentSpreads.forEach((args, childFragmentName) => {
-          const childVariables = getUsedVariables(
-            getInUseByFragmentName(childFragmentName)
-          );
+      inUse.fragmentSpreads.forEach((args, childFragmentName) => {
+        const childVariables = getUsedVariables(
+          getInUseByFragmentName(childFragmentName)
+        );
 
-          for (const varName of childVariables) {
-            inUse.transitiveVars!.add(varName);
+        for (const varName of childVariables) {
+          inUse.transitiveVars!.add(varName);
+        }
+
+        args.forEach((arg) => {
+          if (isSpreadArgUsed(childFragmentName, arg.name)) {
+            arg.variables.forEach((varName) =>
+              inUse.transitiveVars!.add(varName)
+            );
           }
-
-          args.forEach((arg) => {
-            if (isSpreadArgUsed(childFragmentName, arg.name)) {
-              arg.variables.forEach((varName) =>
-                inUse.transitiveVars!.add(varName)
-              );
-            }
-          });
         });
-      }
+      });
     }
     return inUse.transitiveVars;
   };

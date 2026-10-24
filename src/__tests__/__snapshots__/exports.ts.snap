@@ -469,6 +469,7 @@ Array [
   "getFragmentDefinitions",
   "getFragmentFromSelection",
   "getFragmentQueryDocument",
+  "getFragmentVariables",
   "getGraphQLErrorsFromResult",
   "getInMemoryCacheMemoryInternals",
   "getMainDefinition",

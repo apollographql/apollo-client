@@ -5,7 +5,6 @@ import type {
   DocumentNode,
   FieldNode,
   FragmentDefinitionNode,
-  FragmentSpreadNode,
   InlineFragmentNode,
   OperationDefinitionNode,
 } from "graphql";
@@ -68,21 +67,14 @@ export function removeDirectivesFromDocument(
     return null;
   };
 
-  let operationCount = 0;
-  for (let i = doc.definitions.length - 1; i >= 0; --i) {
-    if (doc.definitions[i].kind === Kind.OPERATION_DEFINITION) {
-      ++operationCount;
-    }
-  }
+  const hasOperation = doc.definitions.some(
+    (def) => def.kind === Kind.OPERATION_DEFINITION
+  );
 
   const directiveMatcher = getDirectiveMatcher(directives);
   const shouldRemoveField = (nodeDirectives: FieldNode["directives"]) =>
     isNonEmptyArray(nodeDirectives) &&
-    nodeDirectives
-      .map(directiveMatcher)
-      .some(
-        (config: RemoveDirectiveConfig | undefined) => config && config.remove
-      );
+    nodeDirectives.map(directiveMatcher).some((config) => config?.remove);
 
   const originalFragmentDefsByPath = new Map<string, FragmentDefinitionNode>();
 
@@ -120,7 +112,21 @@ export function removeDirectivesFromDocument(
     },
 
     Variable: {
-      enter(node, _key, _parent, _path, ancestors) {
+      enter(node, _key, parent, _path, ancestors) {
+        // Variables in ...spread args are tracked by FragmentSpread below since
+        // it's possible the variable might be removed if the spread arg is also
+        // removed.
+        if (
+          [parent, ...ancestors].some(
+            (ancestor) =>
+              ancestor &&
+              !isArray(ancestor) &&
+              ancestor.kind === Kind.FRAGMENT_ARGUMENT
+          )
+        ) {
+          return;
+        }
+
         const inUse = getInUse(ancestors);
         if (inUse) {
           inUse.variables.add(node.name.value);
@@ -136,7 +142,20 @@ export function removeDirectivesFromDocument(
         }
         const inUse = getInUse(ancestors);
         if (inUse) {
-          inUse.fragmentSpreads.add(node.name.value);
+          const spreadArgs = inUse.fragmentSpreads.get(node.name.value) ?? [];
+
+          node.arguments?.forEach((arg) => {
+            const variables = new Set<string>();
+            visit(arg, {
+              Variable(node) {
+                variables.add(node.name.value);
+              },
+            });
+
+            spreadArgs.push({ name: arg.name.value, variables });
+          });
+
+          inUse.fragmentSpreads.set(node.name.value, spreadArgs);
         }
         // We might like to remove this FragmentSpread by returning null here if
         // the corresponding FragmentDefinition node is also going to be removed
@@ -149,6 +168,11 @@ export function removeDirectivesFromDocument(
     FragmentDefinition: {
       enter(node, _key, _parent, path) {
         originalFragmentDefsByPath.set(JSON.stringify(path), node);
+        node.variableDefinitions?.forEach((def) => {
+          getInUseByFragmentName(node.name.value).declaredVariables.add(
+            def.variable.name.value
+          );
+        });
       },
       leave(node, _key, _parent, path) {
         const originalNode = originalFragmentDefsByPath.get(
@@ -168,7 +192,7 @@ export function removeDirectivesFromDocument(
           // This logic applies only if the document contains one or more
           // operations, since removing all fragments from a document containing
           // only fragments makes the document useless.
-          operationCount > 0 &&
+          hasOperation &&
           node.selectionSet.selections.every(
             (selection) =>
               selection.kind === Kind.FIELD &&
@@ -207,22 +231,36 @@ export function removeDirectivesFromDocument(
   // Utility for making sure inUse.transitiveVars is recursively populated.
   // Because this logic assumes inUse.fragmentSpreads has been completely
   // populated and inUse.removed has been set if appropriate,
-  // populateTransitiveVars must be called after that information has been
+  // getUsedVariables must be called after that information has been
   // collected by the first traversal of the document.
-  const populateTransitiveVars = (inUse: InternalInUseInfo) => {
+  const getUsedVariables = (inUse: InternalInUseInfo) => {
     if (!inUse.transitiveVars) {
-      inUse.transitiveVars = new Set(inUse.variables);
-      if (!inUse.removed) {
-        inUse.fragmentSpreads.forEach((childFragmentName) => {
-          populateTransitiveVars(
-            getInUseByFragmentName(childFragmentName)
-          ).transitiveVars!.forEach((varName) => {
-            inUse.transitiveVars!.add(varName);
-          });
+      inUse.transitiveVars = new Set(
+        Array.from(inUse.variables).filter(
+          // Variables declared by the fragment are local to that fragment so
+          // we don't treat them as transitive variables
+          (varName) => !inUse.declaredVariables.has(varName)
+        )
+      );
+
+      inUse.fragmentSpreads.forEach((args, childFragmentName) => {
+        const childInUse = getInUseByFragmentName(childFragmentName);
+        if (childInUse.removed) return;
+
+        getUsedVariables(childInUse).forEach((varName) =>
+          inUse.transitiveVars!.add(varName)
+        );
+
+        args.forEach((arg) => {
+          if (isSpreadArgUsed(childFragmentName, arg.name)) {
+            arg.variables.forEach((varName) =>
+              inUse.transitiveVars!.add(varName)
+            );
+          }
         });
-      }
+      });
     }
-    return inUse;
+    return inUse.transitiveVars;
   };
 
   // Since we've been keeping track of fragment spreads used by particular
@@ -231,9 +269,9 @@ export function removeDirectivesFromDocument(
   const allFragmentNamesUsed = new Set<string>();
   docWithoutDirectiveSubtrees.definitions.forEach((def) => {
     if (def.kind === Kind.OPERATION_DEFINITION) {
-      populateTransitiveVars(
-        getInUseByOperationName(def.name && def.name.value)
-      ).fragmentSpreads.forEach((childFragmentName) => {
+      getInUseByOperationName(
+        def.name && def.name.value
+      ).fragmentSpreads.forEach((_, childFragmentName) => {
         allFragmentNamesUsed.add(childFragmentName);
       });
     } else if (
@@ -242,7 +280,7 @@ export function removeDirectivesFromDocument(
       // definitions count as usages of their own fragment names. This heuristic
       // prevents accidentally removing all fragment definitions from the
       // document just because it contains no operations that use the fragments.
-      operationCount === 0 &&
+      !hasOperation &&
       !getInUseByFragmentName(def.name.value).removed
     ) {
       allFragmentNamesUsed.add(def.name.value);
@@ -254,52 +292,110 @@ export function removeDirectivesFromDocument(
   allFragmentNamesUsed.forEach((fragmentName) => {
     // Once all the childFragmentName strings added here have been seen already,
     // the top-level allFragmentNamesUsed.forEach loop will terminate.
-    populateTransitiveVars(
-      getInUseByFragmentName(fragmentName)
-    ).fragmentSpreads.forEach((childFragmentName) => {
-      allFragmentNamesUsed.add(childFragmentName);
-    });
+    getInUseByFragmentName(fragmentName).fragmentSpreads.forEach(
+      (_, childFragmentName) => {
+        allFragmentNamesUsed.add(childFragmentName);
+      }
+    );
   });
 
   const fragmentWillBeRemoved = (fragmentName: string) =>
-    !!(
-      // A fragment definition will be removed if there are no spreads that refer
-      // to it, or the fragment was explicitly removed because it had no fields
-      // other than __typename.
-      (
-        !allFragmentNamesUsed.has(fragmentName) ||
-        getInUseByFragmentName(fragmentName).removed
+    // A fragment definition will be removed if there are no spreads that refer
+    // to it, or the fragment was explicitly removed because it had no fields
+    // other than __typename.
+    !allFragmentNamesUsed.has(fragmentName) ||
+    getInUseByFragmentName(fragmentName).removed;
+
+  function isFragmentVariableUsed(
+    fragmentName: string,
+    varName: string,
+    seen = new Set<string>()
+  ) {
+    const inUse = getInUseByFragmentName(fragmentName);
+
+    return (
+      inUse.variables.has(varName) ||
+      Array.from(inUse.fragmentSpreads.entries()).some(
+        ([fragmentName, args]) => {
+          return args.some(
+            (arg) =>
+              arg.variables.has(varName) &&
+              isSpreadArgUsed(fragmentName, arg.name, seen)
+          );
+        }
       )
     );
+  }
 
-  const enterVisitor: EnterLeaveVisitor<
-    FragmentSpreadNode | FragmentDefinitionNode
-  > = {
-    enter(node) {
-      if (fragmentWillBeRemoved(node.name.value)) {
-        return null;
-      }
-    },
-  };
+  function isSpreadArgUsed(
+    fragmentName: string,
+    argName: string,
+    seen = new Set<string>()
+  ): boolean {
+    const key = `${fragmentName}:${argName}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+
+    const inUse = getInUseByFragmentName(fragmentName);
+
+    return (
+      !inUse.removed &&
+      inUse.declaredVariables.has(argName) &&
+      isFragmentVariableUsed(fragmentName, argName, seen)
+    );
+  }
 
   return nullIfDocIsEmpty(
     visit(docWithoutDirectiveSubtrees, {
       // If the fragment is going to be removed, then leaving any dangling
       // FragmentSpread nodes with the same name would be a mistake.
-      FragmentSpread: enterVisitor,
+      FragmentSpread: {
+        enter(node) {
+          if (fragmentWillBeRemoved(node.name.value)) {
+            return null;
+          }
+
+          if (node.arguments) {
+            return {
+              ...node,
+              arguments: node.arguments.filter((arg) => {
+                return isSpreadArgUsed(node.name.value, arg.name.value);
+              }),
+            };
+          }
+        },
+      },
 
       // This is where the fragment definition is actually removed.
-      FragmentDefinition: enterVisitor,
+      FragmentDefinition: {
+        enter(node) {
+          if (fragmentWillBeRemoved(node.name.value)) {
+            return null;
+          }
+
+          if (node.variableDefinitions) {
+            return {
+              ...node,
+              variableDefinitions: node.variableDefinitions.filter((def) => {
+                return isFragmentVariableUsed(
+                  node.name.value,
+                  def.variable.name.value
+                );
+              }),
+            };
+          }
+        },
+      },
 
       OperationDefinition: {
         leave(node) {
           // Upon leaving each operation in the depth-first AST traversal, prune
           // any variables that are declared by the operation but unused within.
           if (node.variableDefinitions) {
-            const usedVariableNames = populateTransitiveVars(
+            const usedVariableNames = getUsedVariables(
               // If an operation is anonymous, we use the empty string as its key.
               getInUseByOperationName(node.name && node.name.value)
-            ).transitiveVars!;
+            );
 
             // According to the GraphQL spec, all variables declared by an
             // operation must either be used by that operation or used by some
@@ -309,17 +405,13 @@ export function removeDirectivesFromDocument(
             // To stay on the right side of this validation rule, if/when we
             // remove the last $var references from an operation or its fragments,
             // we must also remove the corresponding $var declaration from the
-            // enclosing operation. This pruning applies only to operations and
-            // not fragment definitions, at the moment. Fragments may be able to
-            // declare variables eventually, but today they can only consume them.
-            if (usedVariableNames.size < node.variableDefinitions.length) {
-              return {
-                ...node,
-                variableDefinitions: node.variableDefinitions.filter((varDef) =>
-                  usedVariableNames.has(varDef.variable.name.value)
-                ),
-              };
-            }
+            // enclosing operation.
+            return {
+              ...node,
+              variableDefinitions: node.variableDefinitions.filter((varDef) =>
+                usedVariableNames.has(varDef.variable.name.value)
+              ),
+            };
           }
         },
       },
@@ -332,11 +424,16 @@ export function removeDirectivesFromDocument(
 // operation or fragment definition.
 interface InternalInUseInfo {
   variables: Set<string>;
-  fragmentSpreads: Set<string>;
+  fragmentSpreads: Map<
+    string,
+    // ...spread args
+    Array<{ name: string; variables: Set<string> }>
+  >;
+  declaredVariables: Set<string>;
   // Set to true when we deliberately remove a fragment definition, so we can
   // make sure also to remove dangling ...spreads that refer to it.
   removed?: boolean;
-  // Populated by the populateTransitiveVars helper function below.
+  // Populated by the getUsedVariables helper function above.
   transitiveVars?: Set<string>;
 }
 
@@ -351,12 +448,13 @@ function makeInUseGetterFunction<TKey>(defaultKey: TKey) {
       map.set(
         key,
         (inUse = {
-          // Variable and fragment spread names used directly within this
-          // operation or fragment definition, as identified by key. These sets
-          // will be populated during the first traversal of the document in
-          // removeDirectivesFromDocument below.
+          // Variable names, fragment spreads, and declared variable names used
+          // directly within this operation or fragment definition, as
+          // identified by key. These will be populated during the first
+          // traversal of the document in removeDirectivesFromDocument below.
           variables: new Set(),
-          fragmentSpreads: new Set(),
+          fragmentSpreads: new Map(),
+          declaredVariables: new Set(),
         })
       );
     }
@@ -364,28 +462,19 @@ function makeInUseGetterFunction<TKey>(defaultKey: TKey) {
   };
 }
 
-type GetDirectiveConfig = {
-  name?: string;
-  test?: (node: DirectiveNode) => boolean;
-};
-
-function getDirectiveMatcher(
-  configs: (RemoveDirectiveConfig | GetDirectiveConfig)[]
-) {
-  const names = new Map<string, RemoveDirectiveConfig | GetDirectiveConfig>();
+function getDirectiveMatcher(configs: RemoveDirectiveConfig[]) {
+  const names = new Map<string, RemoveDirectiveConfig>();
 
   const tests = new Map<
     (directive: DirectiveNode) => boolean,
-    RemoveDirectiveConfig | GetDirectiveConfig
+    RemoveDirectiveConfig
   >();
 
-  configs.forEach((directive) => {
-    if (directive) {
-      if (directive.name) {
-        names.set(directive.name, directive);
-      } else if (directive.test) {
-        tests.set(directive.test, directive);
-      }
+  configs.forEach((config) => {
+    if (config.name) {
+      names.set(config.name, config);
+    } else if (config.test) {
+      tests.set(config.test, config);
     }
   });
 

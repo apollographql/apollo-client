@@ -58,7 +58,7 @@ export type ApplyHKTImplementationWithDefault<Implementation, Name extends strin
 } ? Implementation : DefaultImplementation[Name], arg1, arg2, arg3, arg4>;
 
 // @internal @deprecated (undocumented)
-export function argumentsObjectFromField(field: FieldNode | DirectiveNode, variables?: Record<string, any>): Object | null;
+export function argumentsObjectFromField(field: FieldNode | DirectiveNode | FragmentSpreadNode, variables?: Record<string, any>): Object | null;
 
 // @internal @deprecated
 export const AutoCleanedStrongCache: typeof StrongCache;
@@ -304,7 +304,7 @@ export const getApolloClientMemoryInternals: (() => {
 }) | undefined;
 
 // @internal @deprecated (undocumented)
-export function getDefaultValues(definition: OperationDefinitionNode | undefined): Record<string, any>;
+export function getDefaultValues(definition: OperationDefinitionNode | FragmentDefinitionNode | undefined): Record<string, any>;
 
 // @internal @deprecated (undocumented)
 export function getDirectiveArgValue(directive: DirectiveNode, name: string, kind: typeof Kind.STRING): string | undefined;
@@ -320,6 +320,13 @@ export function getFragmentFromSelection(selection: SelectionNode, fragmentMap?:
 
 // @internal @deprecated
 export function getFragmentQueryDocument(document: DocumentNode, fragmentName?: string): DocumentNode;
+
+// @public (undocumented)
+export function getFragmentVariables(fragmentSpread: FragmentSpreadNode, input: {
+    fragment: FragmentDefinitionNode;
+    variables: OperationVariables | undefined;
+    parentScope?: OperationVariables;
+}): OperationVariables;
 
 // @internal @deprecated (undocumented)
 export function getGraphQLErrorsFromResult(result: {

@@ -10,6 +10,10 @@ import {
   newInvariantError,
 } from "@apollo/client/utilities/invariant";
 
+import { createFragmentArgumentNode } from "./createFragmentArgumentNode.js";
+import { createFragmentSpreadNode } from "./createFragmentSpreadNode.js";
+import { createVariableNode } from "./createVariableNode.js";
+
 /**
  * Returns a query document which adds a single query operation that only
  * spreads the target fragment inside of it.
@@ -83,6 +87,8 @@ export function getFragmentQueryDocument(
     actualFragmentName = fragments[0].name.value;
   }
 
+  const fragment = fragments.find((f) => f.name.value === actualFragmentName);
+
   // Generate a query document with an operation that simply spreads the
   // fragment inside of it.
   const query: DocumentNode = {
@@ -95,13 +101,16 @@ export function getFragmentQueryDocument(
         selectionSet: {
           kind: "SelectionSet" as Kind.SELECTION_SET,
           selections: [
-            {
-              kind: "FragmentSpread" as Kind.FRAGMENT_SPREAD,
-              name: {
-                kind: "Name" as Kind.NAME,
-                value: actualFragmentName,
-              },
-            },
+            createFragmentSpreadNode(actualFragmentName, {
+              arguments: fragment?.variableDefinitions?.map((def) => {
+                const name = def.variable.name.value;
+
+                return createFragmentArgumentNode(
+                  name,
+                  createVariableNode(name)
+                );
+              }),
+            }),
           ],
         },
       },

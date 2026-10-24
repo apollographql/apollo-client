@@ -29,6 +29,7 @@ import {
   cloneDeep,
   getDefaultValues,
   getFragmentFromSelection,
+  getFragmentVariables,
   getOperationDefinition,
   handleIncrementalSymbol,
   isArray,
@@ -70,7 +71,10 @@ import type {
 
 export interface WriteContext extends ReadMergeModifyContext {
   readonly written: {
-    [dataId: string]: SelectionSetNode[];
+    [dataId: string]: Array<{
+      selectionSet: SelectionSetNode;
+      varString: string | undefined;
+    }>;
   };
   readonly fragmentMap: FragmentMap;
   lookupFragment: FragmentMapFunction;
@@ -101,9 +105,10 @@ type FlavorableWriteContext = Pick<
 
 // Since there are only four possible combinations of context.clientOnly and
 // context.deferred values, we should need at most four "flavors" of any given
-// WriteContext. To avoid creating multiple copies of the same context, we cache
-// the contexts in the context.flavors Map (shared by all flavors) according to
-// their clientOnly and deferred values (always in that order).
+// WriteContext (per fragment argument scope). To avoid creating multiple copies
+// of the same context, we cache the contexts in the context.flavors Map (shared
+// by all flavors) according to their clientOnly and deferred values (always in
+// that order).
 function getContextFlavor<TContext extends FlavorableWriteContext>(
   context: TContext,
   clientOnly: TContext["clientOnly"],
@@ -176,6 +181,7 @@ export class StoreWriter {
       },
       variables: variables as OperationVariables,
       varString: canonicalStringify(variables),
+      operationVariables: variables,
       ...extractFragmentContext(query, this.fragments),
       overwrite: !!overwrite,
       incomingById: new Map(),
@@ -408,6 +414,7 @@ export class StoreWriter {
             typename,
             merge,
             path,
+            variables: context.variables,
           };
         } else if (
           context.extensions?.[streamInfoSymbol] &&
@@ -419,6 +426,7 @@ export class StoreWriter {
             typename,
             merge: defaultStreamFieldMergeFn,
             path,
+            variables: context.variables,
           };
         } else {
           maybeRecycleChildMergeTree(mergeTree, storeFieldName);
@@ -478,11 +486,22 @@ export class StoreWriter {
       // Avoid processing the same entity object using the same selection
       // set more than once. We use an array instead of a Set since most
       // entity IDs will be written using only one selection set, so the
-      // size of this array is likely to be very small, meaning indexOf is
-      // likely to be faster than Set.prototype.has.
+      // size of this array is likely to be very small, meaning a linear
+      // search is likely to be faster than a Map or Set lookup. The same
+      // selection set inside a fragment can be reached with different
+      // fragment arguments, so the variables are part of the check.
+      const { varString } = context;
       const sets = context.written[dataId] || (context.written[dataId] = []);
-      if (sets.indexOf(selectionSet) >= 0) return dataRef;
-      sets.push(selectionSet);
+      if (
+        sets.some(
+          (written) =>
+            written.selectionSet === selectionSet &&
+            written.varString === varString
+        )
+      ) {
+        return dataRef;
+      }
+      sets.push({ selectionSet, varString });
 
       // If we're about to write a result object into the store, but we
       // happen to know that the exact same (===) result object would be
@@ -567,6 +586,7 @@ export class StoreWriter {
       | "isDeferPending"
       | "lookupFragment"
       | "variables"
+      | "operationVariables"
     >,
   >(
     selectionSet: SelectionSetNode,
@@ -608,7 +628,7 @@ export class StoreWriter {
       visitedNode.visited = true;
 
       selectionSet.selections.forEach((selection) => {
-        if (!shouldInclude(selection, context.variables)) return;
+        if (!shouldInclude(selection, inheritedContext.variables)) return;
 
         let { clientOnly, deferred } = inheritedContext;
         if (
@@ -622,7 +642,10 @@ export class StoreWriter {
             const name = dir.name.value;
             if (name === "client") clientOnly = true;
             if (name === "defer") {
-              const args = argumentsObjectFromField(dir, context.variables);
+              const args = argumentsObjectFromField(
+                dir,
+                inheritedContext.variables
+              );
               // The @defer directive takes an optional args.if boolean
               // argument, similar to @include(if: boolean). Note that
               // @defer(if: false) does not make context.deferred false, but
@@ -660,7 +683,7 @@ export class StoreWriter {
 
           fieldMap.set(
             selection,
-            getContextFlavor(context, clientOnly, deferred)
+            getContextFlavor(inheritedContext, clientOnly, deferred)
           );
         } else {
           const fragment = getFragmentFromSelection(
@@ -681,13 +704,36 @@ export class StoreWriter {
               fragment,
               typename,
               result,
-              context.variables
+              inheritedContext.variables
             )
           ) {
-            flatten(
-              fragment.selectionSet,
-              getContextFlavor(context, clientOnly, deferred)
+            let fragmentContext = getContextFlavor(
+              inheritedContext,
+              clientOnly,
+              deferred
             );
+
+            if (
+              selection.kind === Kind.FRAGMENT_SPREAD &&
+              fragment.kind === Kind.FRAGMENT_DEFINITION
+            ) {
+              const variables = getFragmentVariables(selection, {
+                fragment,
+                variables: context.operationVariables,
+                parentScope: inheritedContext.variables,
+              });
+
+              if (variables !== inheritedContext.variables) {
+                fragmentContext = {
+                  ...fragmentContext,
+                  variables,
+                  varString: canonicalStringify(variables),
+                  flavors: new Map(),
+                };
+              }
+            }
+
+            flatten(fragment.selectionSet, fragmentContext);
           }
         }
       });

@@ -29,6 +29,7 @@ import {
   getDefaultValues,
   getDirectiveArgValue,
   getFragmentFromSelection,
+  getFragmentVariables,
   getMainDefinition,
   getQueryDefinition,
   handleIncrementalSymbol,
@@ -339,6 +340,7 @@ export class StoreReader {
       policies,
       variables,
       varString: canonicalStringify(variables),
+      operationVariables: variables,
       ...extractFragmentContext(query, this.config.fragments),
       ...options[handleIncrementalSymbol],
     };
@@ -638,6 +640,27 @@ export class StoreReader {
         }
 
         if (fragment && policies.fragmentMatches(fragment, typename)) {
+          let fragmentContext = context;
+
+          if (
+            selection.kind === Kind.FRAGMENT_SPREAD &&
+            fragment.kind === Kind.FRAGMENT_DEFINITION
+          ) {
+            const variables = getFragmentVariables(selection, {
+              fragment,
+              variables: context.operationVariables,
+              parentScope: context.variables,
+            });
+
+            if (variables !== context.variables) {
+              fragmentContext = {
+                ...fragmentContext,
+                variables,
+                varString: canonicalStringify(variables),
+              };
+            }
+          }
+
           const isDeferBoundary = isDeferredFragment(
             selection,
             context.variables
@@ -662,7 +685,7 @@ export class StoreReader {
             selectionSet: fragment.selectionSet,
             objectOrReference,
             enclosingRef,
-            context,
+            context: fragmentContext,
           });
           const { result, dataState: nextDataState } = execResult;
 

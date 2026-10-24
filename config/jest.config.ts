@@ -94,6 +94,11 @@ const tsGraphql16Config = {
     ...tsStandardConfig.moduleNameMapper,
     "^graphql$": "graphql-16",
   },
+  testPathIgnorePatterns: [
+    ...tsStandardConfig.testPathIgnorePatterns,
+    "fragmentArguments\\.test\\.tsx?$",
+    "getFragmentVariables\\.test\\.tsx?$",
+  ],
 };
 
 // For both React (Jest) "projects", ignore core tests (.ts files) as they

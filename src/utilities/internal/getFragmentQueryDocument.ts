@@ -10,11 +10,9 @@ import {
   newInvariantError,
 } from "@apollo/client/utilities/invariant";
 
-import {
-  createFragmentArgumentNode,
-  createFragmentSpreadNode,
-  createVariableNode,
-} from "./createGraphQLNode.js";
+import { createFragmentArgumentNode } from "./createFragmentArgumentNode.js";
+import { createFragmentSpreadNode } from "./createFragmentSpreadNode.js";
+import { createVariableNode } from "./createVariableNode.js";
 
 /**
  * Returns a query document which adds a single query operation that only

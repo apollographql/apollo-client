@@ -869,3 +869,134 @@ testWithFragmentArgs(
   `);
   }
 );
+
+testWithFragmentArgs(
+  "should not treat a child fragment's operation variable as a parent fragment variable with the same name",
+  () => {
+    const query = gql`
+    query Team($size: Int, $n: Int) {
+      lead {
+        ...Parent(size: $n)
+      }
+    }
+
+    fragment Parent($size: Int) on User {
+      localAvatar(size: $size) @client
+      ...Child
+    }
+
+    fragment Child on User {
+      avatar(size: $size)
+    }
+  `;
+
+    const doc = removeDirectivesFromDocument(
+      [{ name: "client", remove: true }],
+      query
+    );
+
+    expect(doc).toMatchDocument(gql`
+      query Team($size: Int) {
+        lead {
+          ...Parent
+        }
+      }
+
+      fragment Parent on User {
+        ...Child
+      }
+
+      fragment Child on User {
+        avatar(size: $size)
+      }
+    `);
+  }
+);
+
+testWithFragmentArgs(
+  "should only count child spread arguments that use the fragment variable",
+  () => {
+    const query = gql`
+    query Team($n: Int, $f: String) {
+      lead {
+        ...Parent(size: $n, format: $f)
+      }
+    }
+
+    fragment Parent($size: Int, $format: String) on User {
+      localAvatar(size: $size) @client
+      ...Child(format: $format)
+    }
+
+    fragment Child($format: String) on User {
+      avatar(format: $format)
+    }
+  `;
+
+    const doc = removeDirectivesFromDocument(
+      [{ name: "client", remove: true }],
+      query
+    );
+
+    expect(doc).toMatchDocument(gql`
+    query Team($f: String) {
+      lead {
+        ...Parent(format: $f)
+      }
+    }
+
+    fragment Parent($format: String) on User {
+      ...Child(format: $format)
+    }
+
+    fragment Child($format: String) on User {
+      avatar(format: $format)
+    }
+  `);
+  }
+);
+
+testWithFragmentArgs(
+  "should keep an operation variable used by a child fragment when the parent fragment declares a variable with the same name",
+  () => {
+    const query = gql`
+    query Team($size: Int, $n: Int) {
+      lead {
+        ...Parent(size: $n)
+      }
+    }
+
+    fragment Parent($size: Int) on User {
+      photo(size: $size)
+      ...Child
+    }
+
+    fragment Child on User {
+      avatar(size: $size)
+      localAvatar @client
+    }
+  `;
+
+    const doc = removeDirectivesFromDocument(
+      [{ name: "client", remove: true }],
+      query
+    );
+
+    expect(doc).toMatchDocument(gql`
+    query Team($size: Int, $n: Int) {
+      lead {
+        ...Parent(size: $n)
+      }
+    }
+
+    fragment Parent($size: Int) on User {
+      photo(size: $size)
+      ...Child
+    }
+
+    fragment Child on User {
+      avatar(size: $size)
+    }
+  `);
+  }
+);

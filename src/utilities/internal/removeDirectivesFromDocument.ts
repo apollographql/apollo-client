@@ -248,9 +248,7 @@ export function removeDirectivesFromDocument(
           getInUseByFragmentName(childFragmentName)
         );
 
-        for (const varName of childVariables) {
-          inUse.transitiveVars!.add(varName);
-        }
+        childVariables.forEach((varName) => inUse.transitiveVars!.add(varName));
 
         args.forEach((arg) => {
           if (isSpreadArgUsed(childFragmentName, arg.name)) {

@@ -474,6 +474,12 @@ type OptionsUnion<TData, TVariables extends OperationVariables> = ApolloClient.W
 export type OptionWithFallback<Options, DefaultOptions, Key extends keyof DefaultOptions> = Key extends keyof RemoveIndexSignature<Options> ? ReplaceUndefinedWithDefault<Options[Key], DefaultOptions[Key]> : DefaultOptions[Key];
 
 // @internal @deprecated (undocumented)
+export type PartialDataState<Options, DefaultOptions extends {
+    returnPartialData: boolean;
+    fetchPolicy?: unknown;
+}> = OptionWithFallback<Options, DefaultOptions, "returnPartialData"> extends (false) ? never : OptionWithFallback<Options, DefaultOptions, "fetchPolicy"> extends ("no-cache") ? never : "partial";
+
+// @internal @deprecated (undocumented)
 export interface PendingPromise<TValue> extends Promise<TValue> {
     // (undocumented)
     status: "pending";

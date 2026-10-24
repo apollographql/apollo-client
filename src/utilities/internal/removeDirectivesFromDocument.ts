@@ -271,8 +271,8 @@ export function removeDirectivesFromDocument(
   const allFragmentNamesUsed = new Set<string>();
   docWithoutDirectiveSubtrees.definitions.forEach((def) => {
     if (def.kind === Kind.OPERATION_DEFINITION) {
-      populateTransitiveVars(
-        getInUseByOperationName(def.name && def.name.value)
+      getInUseByOperationName(
+        def.name && def.name.value
       ).fragmentSpreads.forEach((_, childFragmentName) => {
         allFragmentNamesUsed.add(childFragmentName);
       });
@@ -294,11 +294,11 @@ export function removeDirectivesFromDocument(
   allFragmentNamesUsed.forEach((fragmentName) => {
     // Once all the childFragmentName strings added here have been seen already,
     // the top-level allFragmentNamesUsed.forEach loop will terminate.
-    populateTransitiveVars(
-      getInUseByFragmentName(fragmentName)
-    ).fragmentSpreads.forEach((_, childFragmentName) => {
-      allFragmentNamesUsed.add(childFragmentName);
-    });
+    getInUseByFragmentName(fragmentName).fragmentSpreads.forEach(
+      (_, childFragmentName) => {
+        allFragmentNamesUsed.add(childFragmentName);
+      }
+    );
   });
 
   const fragmentWillBeRemoved = (fragmentName: string) =>

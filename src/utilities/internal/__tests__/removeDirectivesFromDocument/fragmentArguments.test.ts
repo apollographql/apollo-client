@@ -667,3 +667,40 @@ test("should not throw for cyclic fragment spreads with arguments", () => {
     }
   `);
 });
+
+test("should remove fragment variables passed to a nested fragment that is removed", () => {
+  const query = gql`
+    query Team($n: Boolean) {
+      lead {
+        ...UserCard(show: $n)
+      }
+    }
+
+    fragment UserCard($show: Boolean) on User {
+      id
+      ...UserDetails(include: $show)
+    }
+
+    fragment UserDetails($include: Boolean) on User {
+      __typename @include(if: $include)
+      localAvatar @client
+    }
+  `;
+
+  const doc = removeDirectivesFromDocument(
+    [{ name: "client", remove: true }],
+    query
+  );
+
+  expect(doc).toMatchDocument(gql`
+    query Team {
+      lead {
+        ...UserCard
+      }
+    }
+
+    fragment UserCard on User {
+      id
+    }
+  `);
+});

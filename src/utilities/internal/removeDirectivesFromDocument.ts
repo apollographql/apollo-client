@@ -313,9 +313,10 @@ export function removeDirectivesFromDocument(
         ([fragmentName, args]) => {
           const childInUse = getInUseByFragmentName(fragmentName);
 
-          return (
-            childInUse.variables.has(varName) ||
-            args.some((arg) => isSpreadArgUsed(arg.name, childInUse))
+          return args.some(
+            (arg) =>
+              arg.variables.has(varName) &&
+              isSpreadArgUsed(arg.name, childInUse)
           );
         }
       )

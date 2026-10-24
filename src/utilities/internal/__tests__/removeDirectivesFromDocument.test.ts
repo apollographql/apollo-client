@@ -1000,3 +1000,183 @@ testWithFragmentArgs(
   `);
   }
 );
+
+testWithFragmentArgs(
+  "should keep variables used by directives on a spread when its arguments are removed",
+  () => {
+    const query = gql`
+    query Team($n: Int, $show: Boolean!) {
+      lead {
+        ...UserCard(size: $n) @include(if: $show)
+      }
+    }
+
+    fragment UserCard($size: Int) on User {
+      id
+      localAvatar(size: $size) @client
+    }
+  `;
+
+    const doc = removeDirectivesFromDocument(
+      [{ name: "client", remove: true }],
+      query
+    );
+
+    expect(doc).toMatchDocument(gql`
+      query Team($show: Boolean!) {
+        lead {
+          ...UserCard @include(if: $show)
+        }
+      }
+
+      fragment UserCard on User {
+        id
+      }
+    `);
+  }
+);
+
+testWithFragmentArgs(
+  "should remove operation variables used by the arguments of a removed spread",
+  () => {
+    const query = gql`
+    query Team($n: Int) {
+      lead {
+        id
+        ...UserCard(size: $n) @client
+      }
+    }
+
+    fragment UserCard($size: Int) on User {
+      avatar(size: $size)
+    }
+  `;
+
+    const doc = removeDirectivesFromDocument(
+      [{ name: "client", remove: true }],
+      query
+    );
+
+    expect(doc).toMatchDocument(gql`
+      query Team {
+        lead {
+          id
+        }
+      }
+    `);
+  }
+);
+
+testWithFragmentArgs(
+  "should remove operation variables used by the arguments of a spread to a fragment that is removed",
+  () => {
+    const query = gql`
+    query Team($n: Int) {
+      lead {
+        id
+        ...UserCard(size: $n)
+      }
+    }
+
+    fragment UserCard($size: Int) on User {
+      __typename
+      localAvatar(size: $size) @client
+    }
+  `;
+
+    const doc = removeDirectivesFromDocument(
+      [{ name: "client", remove: true }],
+      query
+    );
+
+    expect(doc).toMatchDocument(gql`
+      query Team {
+        lead {
+          id
+        }
+      }
+    `);
+  }
+);
+
+testWithFragmentArgs(
+  "should remove fragment variables only used in a removed inline fragment",
+  () => {
+    const query = gql`
+    query Team($n: Int) {
+      lead {
+        ...UserCard(size: $n)
+      }
+    }
+
+    fragment UserCard($size: Int) on User {
+      id
+      ... on User @client {
+        localAvatar(size: $size)
+      }
+    }
+  `;
+
+    const doc = removeDirectivesFromDocument(
+      [{ name: "client", remove: true }],
+      query
+    );
+
+    expect(doc).toMatchDocument(gql`
+      query Team {
+        lead {
+          ...UserCard
+        }
+      }
+
+      fragment UserCard on User {
+        id
+      }
+    `);
+  }
+);
+
+testWithFragmentArgs(
+  "should not throw for cyclic fragment spreads with arguments",
+  () => {
+    const query = gql`
+    query Team($n: Int) {
+      lead {
+        ...A(x: $n)
+      }
+    }
+
+    fragment A($x: Int) on User {
+      id
+      ...B(y: $x)
+    }
+
+    fragment B($y: Int) on User {
+      localAvatar(size: $y) @client
+      ...A(x: $y)
+    }
+  `;
+
+    const doc = removeDirectivesFromDocument(
+      [{ name: "client", remove: true }],
+      query
+    );
+
+    expect(doc).toMatchDocument(gql`
+      query Team {
+        lead {
+          ...A
+        }
+      }
+
+      fragment A on User {
+        id
+        ...B
+      }
+
+      fragment B on User {
+        ...A
+      }
+    `);
+  }
+);

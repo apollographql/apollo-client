@@ -2023,6 +2023,103 @@ test("passes the fragment argument scope to keyArgs and merge functions", async 
   });
 });
 
+test("passes the fragment argument scope to keyArgs and merge functions when the variable and argument names differ", async () => {
+  const query = gql`
+    query Team {
+      lead {
+        ...UserCard(avatarSize: 96)
+      }
+      members {
+        ...UserCard(avatarSize: 32)
+      }
+    }
+
+    fragment UserCard($avatarSize: Int) on User {
+      id
+      avatar(size: $avatarSize)
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      typePolicies: {
+        User: {
+          fields: {
+            avatar: {
+              keyArgs: (args, { variables }) =>
+                `size-${args?.size}-${variables?.avatarSize}`,
+              merge: (_, incoming, { args, variables }) =>
+                `${incoming}?size=${args?.size}&avatarSize=${variables?.avatarSize}`,
+            },
+          },
+        },
+      },
+    }),
+    link: new MockLink([
+      {
+        request: { query },
+        result: {
+          data: {
+            lead: { __typename: "User", id: "1", avatar: "lead.png" },
+            members: [{ __typename: "User", id: "2", avatar: "member.png" }],
+          },
+        },
+      },
+    ]),
+  });
+
+  using stream = new ObservableStream(client.watchQuery({ query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        avatar: "lead.png?size=96&avatarSize=96",
+      },
+      members: [
+        {
+          __typename: "User",
+          id: "2",
+          avatar: "member.png?size=32&avatarSize=32",
+        },
+      ],
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+
+  expect(client.extract()).toStrictEqualTyped({
+    ROOT_QUERY: {
+      __typename: "Query",
+      lead: { __ref: "User:1" },
+      members: [{ __ref: "User:2" }],
+    },
+    "User:1": {
+      __typename: "User",
+      id: "1",
+      "avatar:size-96-96": "lead.png?size=96&avatarSize=96",
+    },
+    "User:2": {
+      __typename: "User",
+      id: "2",
+      "avatar:size-32-32": "member.png?size=32&avatarSize=32",
+    },
+  });
+});
+
 test("uses fragment arguments in inline fragments", async () => {
   const query = gql`
     query Team {

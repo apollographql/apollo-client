@@ -663,7 +663,7 @@ export class StoreReader {
 
           const isDeferBoundary = isDeferredFragment(
             selection,
-            fragmentContext.variables
+            context.variables
           );
           // Prior to 4.3, this branch just flattened the fragment's
           // selectionSet into the existing workSet so that it continued

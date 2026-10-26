@@ -563,10 +563,10 @@ export class QueryInfo<
         : {
             ...result,
             data: coerceScalarFieldsToParsed(
-              result.data as any,
+              result.data,
               mutation.document,
               cache
-            ) as any,
+            ) as typeof result.data,
           };
     }
   }

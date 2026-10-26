@@ -74,6 +74,7 @@ interface MarkQueryResult<TData, TExtensions>
 }
 
 const queryInfoIds = new WeakMap<QueryManager, number>();
+const NOT_THROWN = Symbol();
 
 // A QueryInfo object represents a single network request, either initiated
 // from the QueryManager or from an ObservableQuery.
@@ -365,7 +366,8 @@ export class QueryInfo<
       ExtensionsWithStreamInfo
     >
   > {
-    let thrown: unknown, coerced: true | undefined;
+    let thrown: unknown = NOT_THROWN,
+      coerced: true | undefined;
 
     const cacheWrites: Cache.WriteOptions[] = [];
     const skipCache = mutation.cacheWriteBehavior === CacheWriteBehavior.FORBID;
@@ -559,7 +561,7 @@ export class QueryInfo<
     } catch (e) {
       thrown = e;
     } finally {
-      if (thrown) throw thrown;
+      if (thrown !== NOT_THROWN) throw thrown;
 
       return coerced || !result.data ?
           result

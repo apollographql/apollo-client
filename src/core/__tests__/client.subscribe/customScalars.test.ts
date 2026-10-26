@@ -347,65 +347,62 @@ test("parses custom scalar fields with a network-only fetch policy", async () =>
   await expect(stream).toComplete();
 });
 
-test.failing(
-  "parses custom scalar fields with a no-cache fetch policy",
-  async () => {
-    const subscription = gql`
-      subscription EventCreated {
-        eventCreated {
-          id
-          startDate
-        }
+test("parses custom scalar fields with a no-cache fetch policy", async () => {
+  const subscription = gql`
+    subscription EventCreated {
+      eventCreated {
+        id
+        startDate
       }
-    `;
-    const client = new ApolloClient({
-      cache: new InMemoryCache({
-        scalars: {
-          Date: dateScalar,
-        },
-        typePolicies: {
-          Event: {
-            fields: {
-              startDate: {
-                scalar: "Date",
-              },
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: {
+        Date: dateScalar,
+      },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: {
+              scalar: "Date",
             },
           },
-        },
-      }),
-      link: new ApolloLink(() =>
-        of({
-          data: {
-            eventCreated: {
-              __typename: "Event",
-              id: "1",
-              startDate: "2026-01-01",
-            },
-          },
-        }).pipe(delay(20))
-      ),
-    });
-
-    using stream = new ObservableStream(
-      client.subscribe({
-        query: subscription,
-        fetchPolicy: "no-cache",
-      })
-    );
-
-    await expect(stream).toEmitTypedValue({
-      data: {
-        eventCreated: {
-          __typename: "Event",
-          id: "1",
-          startDate: new Date(2026, 0, 1),
         },
       },
-    });
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          eventCreated: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+          },
+        },
+      }).pipe(delay(20))
+    ),
+  });
 
-    await expect(stream).toComplete();
-  }
-);
+  using stream = new ObservableStream(
+    client.subscribe({
+      query: subscription,
+      fetchPolicy: "no-cache",
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      eventCreated: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+      },
+    },
+  });
+
+  await expect(stream).toComplete();
+});
 
 test("preserves referential identity when a subscription emits identical serialized scalar values", async () => {
   const subscription: TypedDocumentNode<{
@@ -476,30 +473,61 @@ test("preserves referential identity when a subscription emits identical seriali
   await expect(stream).toComplete();
 });
 
-test("serializes scalar fields in the error with a `none` error policy", async () => {
-  const subscription = gql`
-    subscription EventCreated {
-      eventCreated {
-        id
-        startDate
-        endDate
+test.each(["cache-first", "no-cache"] as const)(
+  "serializes scalar fields in the error with a `none` error policy and %s fetch policy",
+  async (fetchPolicy) => {
+    const subscription = gql`
+      subscription EventCreated {
+        eventCreated {
+          id
+          startDate
+          endDate
+        }
       }
-    }
-  `;
-  const client = new ApolloClient({
-    cache: new InMemoryCache({
-      scalars: { Date: dateScalar },
-      typePolicies: {
-        Event: {
-          fields: {
-            startDate: { scalar: "Date" },
-            endDate: { scalar: "Date" },
+    `;
+    const client = new ApolloClient({
+      cache: new InMemoryCache({
+        scalars: { Date: dateScalar },
+        typePolicies: {
+          Event: {
+            fields: {
+              startDate: { scalar: "Date" },
+              endDate: { scalar: "Date" },
+            },
           },
         },
-      },
-    }),
-    link: new ApolloLink(() =>
-      of({
+      }),
+      link: new ApolloLink(() =>
+        of({
+          data: {
+            eventCreated: {
+              __typename: "Event",
+              id: "1",
+              startDate: "2026-01-01",
+              endDate: null,
+            },
+          },
+          errors: [
+            {
+              message: "Could not resolve endDate",
+              path: ["eventCreated", "endDate"],
+            },
+          ],
+        }).pipe(delay(20))
+      ),
+    });
+
+    using stream = new ObservableStream(
+      client.subscribe({
+        query: subscription,
+        errorPolicy: "none",
+        fetchPolicy,
+      })
+    );
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      error: new CombinedGraphQLErrors({
         data: {
           eventCreated: {
             __typename: "Event",
@@ -514,143 +542,77 @@ test("serializes scalar fields in the error with a `none` error policy", async (
             path: ["eventCreated", "endDate"],
           },
         ],
-      }).pipe(delay(20))
-    ),
-  });
+      }),
+    });
 
-  using stream = new ObservableStream(
-    client.subscribe({ query: subscription, errorPolicy: "none" })
-  );
+    await expect(stream).toComplete();
+  }
+);
 
-  await expect(stream).toEmitTypedValue({
-    data: undefined,
-    error: new CombinedGraphQLErrors({
-      data: {
-        eventCreated: {
-          __typename: "Event",
-          id: "1",
-          startDate: "2026-01-01",
-          endDate: null,
-        },
-      },
-      errors: [
-        {
-          message: "Could not resolve endDate",
-          path: ["eventCreated", "endDate"],
-        },
-      ],
-    }),
-  });
-
-  await expect(stream).toComplete();
-});
-
-test("parses scalar fields in the result and serializes them in the error with an `all` error policy", async () => {
-  const subscription = gql`
-    subscription EventCreated {
-      eventCreated {
-        id
-        startDate
-        endDate
+test.each(["cache-first", "no-cache"] as const)(
+  "parses scalar fields in the result and serializes them in the error with an `all` error policy and %s fetch policy",
+  async (fetchPolicy) => {
+    const subscription = gql`
+      subscription EventCreated {
+        eventCreated {
+          id
+          startDate
+          endDate
+        }
       }
-    }
-  `;
-  const client = new ApolloClient({
-    cache: new InMemoryCache({
-      scalars: { Date: dateScalar },
-      typePolicies: {
-        Event: {
-          fields: {
-            startDate: { scalar: "Date" },
-            endDate: { scalar: "Date" },
+    `;
+    const client = new ApolloClient({
+      cache: new InMemoryCache({
+        scalars: { Date: dateScalar },
+        typePolicies: {
+          Event: {
+            fields: {
+              startDate: { scalar: "Date" },
+              endDate: { scalar: "Date" },
+            },
           },
         },
-      },
-    }),
-    link: new ApolloLink(() =>
-      of({
-        data: {
-          eventCreated: {
-            __typename: "Event",
-            id: "1",
-            startDate: "2026-01-01",
-            endDate: null,
+      }),
+      link: new ApolloLink(() =>
+        of({
+          data: {
+            eventCreated: {
+              __typename: "Event",
+              id: "1",
+              startDate: "2026-01-01",
+              endDate: null,
+            },
           },
-        },
-        errors: [
-          {
-            message: "Could not resolve endDate",
-            path: ["eventCreated", "endDate"],
-          },
-        ],
-      }).pipe(delay(20))
-    ),
-  });
+          errors: [
+            {
+              message: "Could not resolve endDate",
+              path: ["eventCreated", "endDate"],
+            },
+          ],
+        }).pipe(delay(20))
+      ),
+    });
 
-  using stream = new ObservableStream(
-    client.subscribe({ query: subscription, errorPolicy: "all" })
-  );
+    using stream = new ObservableStream(
+      client.subscribe({ query: subscription, errorPolicy: "all", fetchPolicy })
+    );
 
-  await expect(stream).toEmitTypedValue({
-    data: {
-      eventCreated: {
-        __typename: "Event",
-        id: "1",
-        startDate: new Date(2026, 0, 1),
-        endDate: null,
-      },
-    },
-    error: new CombinedGraphQLErrors({
+    await expect(stream).toEmitTypedValue({
       data: {
         eventCreated: {
           __typename: "Event",
           id: "1",
-          // TODO: Determine if this is correct
           startDate: new Date(2026, 0, 1),
           endDate: null,
         },
       },
-      errors: [
-        {
-          message: "Could not resolve endDate",
-          path: ["eventCreated", "endDate"],
-        },
-      ],
-    }),
-  });
-
-  await expect(stream).toComplete();
-});
-
-test("parses custom scalar fields with an `ignore` error policy", async () => {
-  const subscription = gql`
-    subscription EventCreated {
-      eventCreated {
-        id
-        startDate
-        endDate
-      }
-    }
-  `;
-  const client = new ApolloClient({
-    cache: new InMemoryCache({
-      scalars: { Date: dateScalar },
-      typePolicies: {
-        Event: {
-          fields: {
-            startDate: { scalar: "Date" },
-            endDate: { scalar: "Date" },
-          },
-        },
-      },
-    }),
-    link: new ApolloLink(() =>
-      of({
+      error: new CombinedGraphQLErrors({
         data: {
           eventCreated: {
             __typename: "Event",
             id: "1",
-            startDate: "2026-01-01",
+            // TODO: Determine if this is correct
+            startDate: new Date(2026, 0, 1),
             endDate: null,
           },
         },
@@ -660,24 +622,76 @@ test("parses custom scalar fields with an `ignore` error policy", async () => {
             path: ["eventCreated", "endDate"],
           },
         ],
-      }).pipe(delay(20))
-    ),
-  });
+      }),
+    });
 
-  using stream = new ObservableStream(
-    client.subscribe({ query: subscription, errorPolicy: "ignore" })
-  );
+    await expect(stream).toComplete();
+  }
+);
 
-  await expect(stream).toEmitTypedValue({
-    data: {
-      eventCreated: {
-        __typename: "Event",
-        id: "1",
-        startDate: new Date(2026, 0, 1),
-        endDate: null,
+test.each(["cache-first", "no-cache"] as const)(
+  "parses custom scalar fields with an `ignore` error policy and %s fetch policy",
+  async (fetchPolicy) => {
+    const subscription = gql`
+      subscription EventCreated {
+        eventCreated {
+          id
+          startDate
+          endDate
+        }
+      }
+    `;
+    const client = new ApolloClient({
+      cache: new InMemoryCache({
+        scalars: { Date: dateScalar },
+        typePolicies: {
+          Event: {
+            fields: {
+              startDate: { scalar: "Date" },
+              endDate: { scalar: "Date" },
+            },
+          },
+        },
+      }),
+      link: new ApolloLink(() =>
+        of({
+          data: {
+            eventCreated: {
+              __typename: "Event",
+              id: "1",
+              startDate: "2026-01-01",
+              endDate: null,
+            },
+          },
+          errors: [
+            {
+              message: "Could not resolve endDate",
+              path: ["eventCreated", "endDate"],
+            },
+          ],
+        }).pipe(delay(20))
+      ),
+    });
+
+    using stream = new ObservableStream(
+      client.subscribe({
+        query: subscription,
+        errorPolicy: "ignore",
+        fetchPolicy,
+      })
+    );
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        eventCreated: {
+          __typename: "Event",
+          id: "1",
+          startDate: new Date(2026, 0, 1),
+          endDate: null,
+        },
       },
-    },
-  });
+    });
 
-  await expect(stream).toComplete();
-});
+    await expect(stream).toComplete();
+  }
+);

@@ -18,7 +18,10 @@ import {
   ObservableStream,
   promiseWithResolvers,
 } from "@apollo/client/testing/internal";
-import { streamInfoSymbol } from "@apollo/client/utilities/internal";
+import {
+  addDeferFragmentLabels,
+  streamInfoSymbol,
+} from "@apollo/client/utilities/internal";
 
 // This is the test setup of the `graphql-js` v17.0.0-alpha.9 release:
 // https://github.com/graphql/graphql-js/blob/3283f8adf52e77a47f148ff2f30185c8d11ff0f0/src/execution/__tests__/stream-test.ts
@@ -1604,7 +1607,7 @@ describe("graphql-js test cases", () => {
   });
 
   it("Does not filter payloads when null error is in a different path", async () => {
-    const query = gql`
+    const query = addDeferFragmentLabels(gql`
       query {
         otherNestedObject: nestedObject {
           ... @defer {
@@ -1617,7 +1620,7 @@ describe("graphql-js test cases", () => {
           }
         }
       }
-    `;
+    `);
 
     const handler = new GraphQL17Alpha9Handler();
     const request = handler.startRequest({ query });
@@ -1690,7 +1693,7 @@ describe("graphql-js test cases", () => {
   });
 
   it("Filters stream payloads that are nulled in a deferred payload", async () => {
-    const query = gql`
+    const query = addDeferFragmentLabels(gql`
       query {
         nestedObject {
           ... @defer {
@@ -1703,7 +1706,7 @@ describe("graphql-js test cases", () => {
           }
         }
       }
-    `;
+    `);
 
     const handler = new GraphQL17Alpha9Handler();
     const request = handler.startRequest({ query });
@@ -1756,7 +1759,7 @@ describe("graphql-js test cases", () => {
   });
 
   it("Filters defer payloads that are nulled in a stream response", async () => {
-    const query = gql`
+    const query = addDeferFragmentLabels(gql`
       query {
         friendList @stream(initialCount: 0) {
           nonNullName
@@ -1765,7 +1768,7 @@ describe("graphql-js test cases", () => {
           }
         }
       }
-    `;
+    `);
 
     const handler = new GraphQL17Alpha9Handler();
     const request = handler.startRequest({ query });
@@ -1933,7 +1936,7 @@ describe("graphql-js test cases", () => {
   });
 
   it("Handles overlapping deferred and non-deferred streams", async () => {
-    const query = gql`
+    const query = addDeferFragmentLabels(gql`
       query {
         nestedObject {
           nestedFriendList @stream(initialCount: 0) {
@@ -1949,7 +1952,7 @@ describe("graphql-js test cases", () => {
           }
         }
       }
-    `;
+    `);
 
     const handler = new GraphQL17Alpha9Handler();
     const request = handler.startRequest({ query });
@@ -2038,7 +2041,7 @@ describe("graphql-js test cases", () => {
     const { promise: slowFieldPromise, resolve: resolveSlowField } =
       promiseWithResolvers();
 
-    const query = gql`
+    const query = addDeferFragmentLabels(gql`
       query {
         nestedObject {
           ...DeferFragment @defer
@@ -2050,7 +2053,7 @@ describe("graphql-js test cases", () => {
           name
         }
       }
-    `;
+    `);
 
     const handler = new GraphQL17Alpha9Handler();
     const request = handler.startRequest({ query });
@@ -2154,7 +2157,7 @@ describe("graphql-js test cases", () => {
     const { promise: slowFieldPromise, resolve: resolveSlowField } =
       promiseWithResolvers();
 
-    const query = gql`
+    const query = addDeferFragmentLabels(gql`
       query {
         nestedObject {
           ...DeferFragment @defer
@@ -2166,7 +2169,7 @@ describe("graphql-js test cases", () => {
           name
         }
       }
-    `;
+    `);
 
     const handler = new GraphQL17Alpha9Handler();
     const request = handler.startRequest({ query });
@@ -2255,7 +2258,7 @@ describe("graphql-js test cases", () => {
       resolve: resolveIterableCompletion,
     } = promiseWithResolvers();
 
-    const query = gql`
+    const query = addDeferFragmentLabels(gql`
       query {
         friendList @stream(label: "stream-label") {
           ...NameFragment @defer(label: "DeferName") @defer(label: "DeferName")
@@ -2265,7 +2268,7 @@ describe("graphql-js test cases", () => {
       fragment NameFragment on Friend {
         name
       }
-    `;
+    `);
 
     const handler = new GraphQL17Alpha9Handler();
     const request = handler.startRequest({ query });
@@ -2367,7 +2370,7 @@ describe("graphql-js test cases", () => {
       resolve: resolveIterableCompletion,
     } = promiseWithResolvers();
 
-    const query = gql`
+    const query = addDeferFragmentLabels(gql`
       query {
         friendList @stream(initialCount: 1, label: "stream-label") {
           ...NameFragment @defer(label: "DeferName") @defer(label: "DeferName")
@@ -2377,7 +2380,7 @@ describe("graphql-js test cases", () => {
       fragment NameFragment on Friend {
         name
       }
-    `;
+    `);
 
     const handler = new GraphQL17Alpha9Handler();
     const request = handler.startRequest({ query });
@@ -2908,7 +2911,7 @@ test("properly merges cache data when list is included in deferred chunk", async
   const { promise: slowFieldPromise, resolve: resolveSlowField } =
     promiseWithResolvers();
 
-  const query = gql`
+  const query = addDeferFragmentLabels(gql`
     query {
       nestedObject {
         ...DeferFragment @defer
@@ -2920,7 +2923,7 @@ test("properly merges cache data when list is included in deferred chunk", async
         name
       }
     }
-  `;
+  `);
 
   const handler = new GraphQL17Alpha9Handler();
   const request = handler.startRequest({ query });

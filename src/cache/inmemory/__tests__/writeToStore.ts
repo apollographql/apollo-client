@@ -687,6 +687,8 @@ describe("writing to the store", () => {
   });
 
   it("refuses to normalize objects with nullish id fields", () => {
+    // Silence missing id field write errors
+    using _ = spyOnConsole("error");
     const query: TypedDocumentNode<{
       objects: Array<{
         __typename: string;
@@ -785,6 +787,8 @@ describe("writing to the store", () => {
   });
 
   it("refuses to normalize objects with nullish id fields", () => {
+    // Silence missing id field write errors
+    using _ = spyOnConsole("error");
     const query: TypedDocumentNode<{
       objects: Array<{
         __typename: string;
@@ -2054,6 +2058,8 @@ describe("writing to the store", () => {
   describe('"Cache data may be lost..." warnings', () => {
     it('should warn "Cache data may be lost..." message', () => {
       using _consoleSpy = spyOnConsole.takeSnapshots("warn");
+      // Silence missing field write errors from partial writes
+      using _ = spyOnConsole("error");
       const cache = new InMemoryCache();
 
       const query = gql`
@@ -3233,7 +3239,8 @@ describe("writing to the store", () => {
             true: true,
             false: false,
           },
-        }
+        },
+        []
       );
 
       expect(flat.size).toBe(3);

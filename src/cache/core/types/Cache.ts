@@ -8,6 +8,7 @@ import type {
 import type { Unmasked } from "@apollo/client/masking";
 import type { ExtensionsWithStreamInfo } from "@apollo/client/utilities/internal";
 
+import type { WithHandleIncremental } from "../../inmemory/types.js";
 import type { ApolloCache } from "../cache.js";
 
 import type {
@@ -300,6 +301,12 @@ export declare namespace Cache {
      * are available in `merge` functions.
      */
     extensions?: ExtensionsWithStreamInfo;
+  }
+
+  namespace WriteQueryOptions {
+    interface WithIncremental<TData, TVariables extends OperationVariables>
+      extends WriteQueryOptions<TData, TVariables>,
+        WithHandleIncremental {}
   }
 
   export type WriteFragmentOptions<

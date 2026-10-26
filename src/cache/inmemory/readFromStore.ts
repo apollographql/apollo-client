@@ -19,7 +19,6 @@ import {
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
-  DeferInfoTrie,
   FragmentMap,
   FragmentMapFunction,
   StreamInfoTrie,
@@ -93,7 +92,6 @@ interface ReadContext extends ReadMergeModifyContext {
   fragmentMap: FragmentMap;
   lookupFragment: FragmentMapFunction;
   streamInfo?: StreamInfoTrie;
-  deferInfo?: DeferInfoTrie;
 }
 
 type ExecResult<R = any> = {
@@ -268,7 +266,7 @@ export class StoreReader {
               selectionSet,
               boundaries,
               context.streamInfo,
-              context.deferInfo
+              context.isDeferPending
             );
           }
         },
@@ -295,7 +293,7 @@ export class StoreReader {
               field,
               boundaries,
               context.streamInfo,
-              context.deferInfo
+              context.isDeferPending
             );
           }
         },
@@ -820,7 +818,10 @@ export class StoreReader {
       return { result: data, dataState: "complete" };
     }
 
-    const merger = new DeepMerger();
+    // `truncate` is only necessary for the Defer20220824 protocol. the
+    // `arrayMerge` option can be removed when we stop supporting the old
+    // protocol. See the comment below on array merging for more info.
+    const merger = new DeepMerger({ arrayMerge: "truncate" });
 
     let changed = false;
     let dataState: DataState = "complete";
@@ -856,7 +857,22 @@ export class StoreReader {
           });
 
           changed ||= pruned.result !== fieldValue;
-          result[resultName] = pruned.result;
+          const previous = result[resultName];
+          let merged = merger.merge(previous, pruned.result);
+          // The Defer20220824 protocol allows more than one selection of a
+          // list field with `@stream` when the `@stream` arguments are the
+          // same. Each selection can prune the list to a different length, so
+          // we keep the shortest length. The `truncate` option of the merger
+          // handles a shorter later visit, and this check handles a shorter
+          // earlier visit. GraphQL 17 rejects any overlapping `@stream` field,
+          // so all visits give the same length. When we no longer support the
+          // older protocol, we can remove this check and the `truncate` option,
+          // and simplify to:
+          // result[resultName] = merger.merge(result[resultName], pruned.result);
+          if (previous && previous.length < merged.length) {
+            merged = merged.slice(0, previous.length);
+          }
+          result[resultName] = merged;
           dataState = mergeDataState(dataState, pruned.dataState);
         } else if (!selection.selectionSet) {
           result[resultName] = fieldValue;
@@ -894,14 +910,14 @@ export class StoreReader {
       const fragment = getFragmentFromSelection(selection, lookupFragment);
       let prune = false;
 
-      if (context.deferInfo && isDeferredFragment(selection, variables)) {
+      if (context.isDeferPending && isDeferredFragment(selection, variables)) {
         const directive = selection.directives?.find(
           (d) => d.name.value === "defer"
         );
         const label =
           directive && getDirectiveArgValue(directive, "label", Kind.STRING);
 
-        prune = !!context.deferInfo.peekArray(path.concat(label || []));
+        prune = context.isDeferPending(path, label);
       }
 
       if (fragment && policies.fragmentMatches(fragment, data.__typename)) {
@@ -1103,7 +1119,7 @@ function shouldPrune({ dataState }: ExecResult<any>, context: ReadContext) {
         context.streamInfo ||
         // The network hasn't delivered these @defer boundaries yet, so prune
         // the (possibly complete) cached data sitting at them.
-        context.deferInfo
+        context.isDeferPending
       )
     );
   }

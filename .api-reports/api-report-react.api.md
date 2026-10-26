@@ -634,13 +634,23 @@ export function useFragment<TData = unknown, TVariables extends OperationVariabl
 
 // @public (undocumented)
 export namespace useFragment {
-    import _self = useFragment;
+    // (undocumented)
+    export namespace Base {
+        // (undocumented)
+        export interface Options<TData, TVariables extends OperationVariables> {
+            client?: ApolloClient;
+            fragment: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>;
+            fragmentName?: string;
+            from: useFragment.FromOptionValue<TData> | Array<useFragment.FromOptionValue<TData> | null> | null;
+            optimistic?: boolean;
+        }
+    }
     // (undocumented)
     export namespace DocumentationTypes {
         // (undocumented)
         export namespace useFragment {
             // (undocumented)
-            export interface Options<TData = unknown, TVariables extends OperationVariables = OperationVariables> extends useFragment.Options<TData, TVariables> {
+            export interface Options<TData = unknown, TVariables extends OperationVariables = OperationVariables> extends Base.Options<TData, TVariables>, DocumentationTypes.VariableOptions<TVariables> {
             }
         }
     }
@@ -664,14 +674,7 @@ export namespace useFragment {
     }
     export type FromOptionValue<TData> = ApolloCache.FromOptionValue<TData>;
     // (undocumented)
-    export interface Options<TData, TVariables extends OperationVariables> {
-        client?: ApolloClient;
-        fragment: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>;
-        fragmentName?: string;
-        from: useFragment.FromOptionValue<TData> | Array<useFragment.FromOptionValue<TData> | null> | null;
-        optimistic?: boolean;
-        variables?: NoInfer<TVariables>;
-    }
+    export type Options<TData, TVariables extends OperationVariables> = Base.Options<TData, TVariables> & VariablesOption<NoInfer<TVariables>>;
     // (undocumented)
     export type Result<TData> = ({
         complete: true;

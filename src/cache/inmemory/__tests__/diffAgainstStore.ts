@@ -22,6 +22,10 @@ disableFragmentWarnings();
 describe("diffing queries against the store", () => {
   const cache = new InMemoryCache({
     dataIdFromObject: defaultDataIdFromObject,
+    possibleTypes: {
+      Person: ["Author", "Jedi"],
+      DisableWarnings: ["DummyQuery", "DummyQuery2", "Query"],
+    },
   });
   const reader = new StoreReader({ cache });
   const writer = new StoreWriter(cache);

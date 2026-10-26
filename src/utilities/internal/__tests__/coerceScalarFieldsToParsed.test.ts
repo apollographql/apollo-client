@@ -898,6 +898,8 @@ test("parses custom scalar fields selected by a fragment on an interface type", 
 });
 
 test("does not parse fields selected by a fragment on a supertype missing from possibleTypes", () => {
+  using consoleSpy = spyOnConsole("warn");
+
   const cache = new InMemoryCache({
     scalars: { Date: dateScalar },
     typePolicies: {
@@ -939,11 +941,22 @@ test("does not parse fields selected by a fragment on a supertype missing from p
       createdAt: "2026-01-01",
     },
   });
+
+  expect(consoleSpy.warn).toHaveBeenCalledWith(
+    "Cannot match %s on `%s` against `%s`. This indicates a missing `possibleTypes` entry for the supertype of %s. Data might be lost.",
+    "inline fragment",
+    "Node",
+    "Event",
+    "Event"
+  );
 });
 
 test("ignores fields from inline fragments that don't match the returned type", () => {
   const cache = new InMemoryCache({
     scalars: { Date: dateScalar },
+    possibleTypes: {
+      Pet: ["Dog", "Cat"],
+    },
     typePolicies: {
       Dog: {
         fields: {
@@ -993,6 +1006,9 @@ test("ignores fields from inline fragments that don't match the returned type", 
 test("does not coerce an overlapping alias using a non-matching fragment field", () => {
   const cache = new InMemoryCache({
     scalars: { Date: dateScalar, Price: priceScalar },
+    possibleTypes: {
+      Pet: ["Dog", "Cat"],
+    },
     typePolicies: {
       Dog: {
         fields: {

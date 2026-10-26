@@ -281,6 +281,58 @@ test("parses custom scalar fields with a no-cache fetch policy", async () => {
   });
 });
 
+test("passes parsed custom scalar fields to update with a no-cache fetch policy", async () => {
+  const mutation = gql`
+    mutation CreateEvent {
+      createEvent {
+        id
+        startDate
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          createEvent: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+          },
+        },
+      })
+    ),
+  });
+  const expectedData = {
+    createEvent: {
+      __typename: "Event",
+      id: "1",
+      startDate: new Date(2026, 0, 1),
+    },
+  };
+  const update = jest.fn((_cache, { data }) => {
+    expect(data).toEqual(expectedData);
+    expect(data.createEvent.startDate.getTime()).toBe(
+      expectedData.createEvent.startDate.getTime()
+    );
+  });
+
+  await expect(
+    client.mutate({ mutation, fetchPolicy: "no-cache", update })
+  ).resolves.toStrictEqualTyped({ data: expectedData });
+  expect(update).toHaveBeenCalledTimes(1);
+});
+
 test("parses parsed custom scalar fields in optimistic responses", async () => {
   const mutation = gql`
     mutation CreateEvent {

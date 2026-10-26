@@ -365,8 +365,6 @@ export class QueryInfo<
       ExtensionsWithStreamInfo
     >
   > {
-    let coerced: true | undefined;
-
     const cacheWrites: Cache.WriteOptions[] = [];
     const skipCache = mutation.cacheWriteBehavior === CacheWriteBehavior.FORBID;
 
@@ -387,12 +385,24 @@ export class QueryInfo<
       mutation.document
     );
 
+    result = {
+      ...result,
+      data:
+        result.data ?
+          (coerceScalarFieldsToParsed(
+            result.data,
+            mutation.document,
+            cache
+          ) as typeof result.data)
+        : result.data,
+    };
+
     if (mutation.errorPolicy === "ignore") {
-      result = { ...result, errors: [] };
+      result.errors = [];
     }
 
     if (graphQLResultHasError(result) && mutation.errorPolicy === "none") {
-      return Promise.resolve(finalize());
+      return Promise.resolve(result);
     }
 
     const getResultWithDataState = () =>
@@ -497,12 +507,8 @@ export class QueryInfo<
                 returnPartialData: true,
               });
 
-              if (diff.complete) {
-                result = {
-                  ...result,
-                  data: diff.result,
-                };
-                coerced = true;
+              if (diff.complete && diff.result) {
+                result.data = diff.result;
               }
             }
 
@@ -551,24 +557,11 @@ export class QueryInfo<
         // Returning a promise here makes the mutation await that promise, so we
         // include results in that promise's work if awaitRefetchQueries or an
         // onQueryUpdated function was specified.
-
-        return Promise.all(results).then(finalize);
+        return Promise.all(results).then(() => result);
       }
     }
-    return Promise.resolve(finalize());
 
-    function finalize() {
-      return coerced || !result.data ?
-          result
-        : {
-            ...result,
-            data: coerceScalarFieldsToParsed(
-              result.data,
-              mutation.document,
-              cache
-            ) as typeof result.data,
-          };
-    }
+    return Promise.resolve(result);
   }
 
   public markMutationOptimistic(

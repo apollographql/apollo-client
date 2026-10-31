@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 4.3.6
+
+### Patch Changes
+
+- [#13484](https://github.com/apollographql/apollo-client/pull/13484) [`9462324`](https://github.com/apollographql/apollo-client/commit/94623248357407b2b872e1c740ede95c763b523d) Thanks [@SunilRathod27](https://github.com/SunilRathod27)! - Exclude `"partial"` from the `dataState` union returned from `useQuery`, `useLazyQuery`, `useSuspenseQuery`, `useBackgroundQuery`, `useLoadableQuery`, and `preloadQuery` (`createQueryPreloader`) when `fetchPolicy` is `"no-cache"`. This means that `dataState` is never `"partial"` when `fetchPolicy` is `"no-cache"`, regardless of whether `returnPartialData` is `true` or `false`.
+
 ## 4.3.5
 
 ### Patch Changes

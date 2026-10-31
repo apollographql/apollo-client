@@ -228,9 +228,114 @@ test("parses custom scalar fields with a network-only fetch policy", async () =>
   });
 });
 
-test.failing(
-  "parses custom scalar fields with a no-cache fetch policy",
-  async () => {
+test("parses custom scalar fields with a no-cache fetch policy", async () => {
+  const mutation = gql`
+    mutation CreateEvent {
+      createEvent {
+        id
+        startDate
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: {
+        Date: dateScalar,
+      },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: {
+              scalar: "Date",
+            },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          createEvent: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+          },
+        },
+      }).pipe(delay(20))
+    ),
+  });
+
+  await expect(
+    client.mutate({
+      mutation,
+      fetchPolicy: "no-cache",
+    })
+  ).resolves.toStrictEqualTyped({
+    data: {
+      createEvent: {
+        __typename: "Event",
+        id: "1",
+        startDate: new Date(2026, 0, 1),
+      },
+    },
+  });
+});
+
+test("passes parsed custom scalar fields to update with a no-cache fetch policy", async () => {
+  const mutation = gql`
+    mutation CreateEvent {
+      createEvent {
+        id
+        startDate
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: {
+          fields: {
+            startDate: { scalar: "Date" },
+          },
+        },
+      },
+    }),
+    link: new ApolloLink(() =>
+      of({
+        data: {
+          createEvent: {
+            __typename: "Event",
+            id: "1",
+            startDate: "2026-01-01",
+          },
+        },
+      })
+    ),
+  });
+  const expectedData = {
+    createEvent: {
+      __typename: "Event",
+      id: "1",
+      startDate: new Date(2026, 0, 1),
+    },
+  };
+  const update = jest.fn((_cache, { data }) => {
+    expect(data).toEqual(expectedData);
+    expect(data.createEvent.startDate.getTime()).toBe(
+      expectedData.createEvent.startDate.getTime()
+    );
+  });
+
+  await expect(
+    client.mutate({ mutation, fetchPolicy: "no-cache", update })
+  ).resolves.toStrictEqualTyped({ data: expectedData });
+  expect(update).toHaveBeenCalledTimes(1);
+});
+
+test.each(["network-only", "no-cache"] as const)(
+  "passes parsed custom scalar fields to mutation callbacks with %s",
+  async (fetchPolicy) => {
     const mutation = gql`
       mutation CreateEvent {
         createEvent {
@@ -239,21 +344,23 @@ test.failing(
         }
       }
     `;
+    const query = gql`
+      query Events {
+        events {
+          id
+          startDate
+        }
+      }
+    `;
+    const cache = new InMemoryCache({
+      scalars: { Date: dateScalar },
+      typePolicies: {
+        Event: { fields: { startDate: { scalar: "Date" } } },
+      },
+    });
+    cache.writeQuery({ query, data: { events: [] } });
     const client = new ApolloClient({
-      cache: new InMemoryCache({
-        scalars: {
-          Date: dateScalar,
-        },
-        typePolicies: {
-          Event: {
-            fields: {
-              startDate: {
-                scalar: "Date",
-              },
-            },
-          },
-        },
-      }),
+      cache,
       link: new ApolloLink(() =>
         of({
           data: {
@@ -263,24 +370,62 @@ test.failing(
               startDate: "2026-01-01",
             },
           },
-        }).pipe(delay(20))
+        })
       ),
     });
-
-    await expect(
-      client.mutate({
-        mutation,
-        fetchPolicy: "no-cache",
-      })
-    ).resolves.toStrictEqualTyped({
-      data: {
-        createEvent: {
-          __typename: "Event",
-          id: "1",
-          startDate: new Date(2026, 0, 1),
-        },
-      },
+    const stream = new ObservableStream(
+      client.watchQuery({ query, fetchPolicy: "cache-only" })
+    );
+    const expectedDate = new Date(2026, 0, 1);
+    const refetchQueries = jest.fn(({ data }) => {
+      expect(data.createEvent.startDate).toEqual(expectedDate);
+      return [];
     });
+    const updateQuery = jest.fn((previous, { mutationResult }) => {
+      expect(mutationResult.data.createEvent.startDate).toEqual(expectedDate);
+      return {
+        ...previous,
+        events: [...previous.events, mutationResult.data.createEvent],
+      };
+    });
+    const update = jest.fn((_cache, { data }) => {
+      expect(data.createEvent.startDate).toEqual(expectedDate);
+    });
+
+    try {
+      await expect(stream).toEmitNext();
+      await expect(
+        client.mutate({
+          mutation,
+          fetchPolicy,
+          refetchQueries,
+          updateQueries: { Events: updateQuery },
+          update,
+        })
+      ).resolves.toStrictEqualTyped({
+        data: {
+          createEvent: {
+            __typename: "Event",
+            id: "1",
+            startDate: expectedDate,
+          },
+        },
+      });
+      expect(refetchQueries).toHaveBeenCalledTimes(1);
+      expect(update).toHaveBeenCalledTimes(1);
+      // no-cache mutations intentionally do not run updateQueries reducers.
+      expect(updateQuery).toHaveBeenCalledTimes(
+        fetchPolicy === "no-cache" ? 0 : 1
+      );
+      expect(cache.readQuery({ query })).toEqual({
+        events:
+          fetchPolicy === "no-cache" ?
+            []
+          : [{ __typename: "Event", id: "1", startDate: expectedDate }],
+      });
+    } finally {
+      stream.unsubscribe();
+    }
   }
 );
 
@@ -724,7 +869,7 @@ test("serializes scalar fields in the error with a `none` error policy", async (
         createEvent: {
           __typename: "Event",
           id: "1",
-          startDate: "2026-01-01",
+          startDate: new Date(2026, 0, 1),
           endDate: null,
         },
       },

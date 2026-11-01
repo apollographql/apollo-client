@@ -2,6 +2,8 @@
 title: Offset-based pagination
 ---
 
+> **Note:** The pagination helper functions provided by Apollo Client, such as `offsetLimitPagination`, are primarily examples of how to implement a type policy for paginated fields. In most cases, you will need to copy these helpers into your own codebase and adjust them to fit your specific requirements and API schema.
+
 > We recommend reading [Core pagination API](./core-api) before learning about considerations specific to offset-based pagination.
 
 With offset-based pagination, a list field accepts an `offset` argument that indicates _where in the list_ the server should start when returning items for a particular query. The field usually also accepts a `limit` argument that indicates the _maximum_ number of items to return:

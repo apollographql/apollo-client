@@ -903,7 +903,8 @@ export class Policies {
       if (!warned.peekArray(path)) {
         warned.lookupArray(path);
         invariant.warn(
-          "Cannot match %s on `%s` against `%s`. This indicates a missing `possibleTypes` entry for the supertype of %s. Data might be lost.",
+          "Cannot match %s on `%s` against `%s`. This indicates a missing `possibleTypes` entry for the supertype of %s. Data might be lost. \n\n" +
+            "For more information on configuring `possibleTypes`, please refer to the documentation: https://go.apollo.dev/c/possible-types",
           fragment.kind === Kind.FRAGMENT_DEFINITION ?
             "fragment `" + fragment.name.value + "`"
           : "inline fragment",

@@ -943,7 +943,8 @@ test("does not parse fields selected by a fragment on a supertype missing from p
   });
 
   expect(consoleSpy.warn).toHaveBeenCalledWith(
-    "Cannot match %s on `%s` against `%s`. This indicates a missing `possibleTypes` entry for the supertype of %s. Data might be lost.",
+    "Cannot match %s on `%s` against `%s`. This indicates a missing `possibleTypes` entry for the supertype of %s. Data might be lost. \n\n" +
+      "For more information on configuring `possibleTypes`, please refer to the documentation: https://go.apollo.dev/c/possible-types",
     "inline fragment",
     "Node",
     "Event",

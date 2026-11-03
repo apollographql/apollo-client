@@ -1696,6 +1696,13 @@ test("binds new operation variables passed through a fragment spread on refetch"
 });
 
 test("updates the matching fragment argument scope with a mutation result", async () => {
+  const fragment = gql`
+    fragment UserCard($size: Int) on User {
+      id
+      avatar(size: $size)
+    }
+  `;
+
   const query = gql`
     query Team {
       lead {
@@ -1706,10 +1713,7 @@ test("updates the matching fragment argument scope with a mutation result", asyn
       }
     }
 
-    fragment UserCard($size: Int) on User {
-      id
-      avatar(size: $size)
-    }
+    ${fragment}
   `;
 
   const mutation = gql`
@@ -1719,10 +1723,7 @@ test("updates the matching fragment argument scope with a mutation result", asyn
       }
     }
 
-    fragment UserCard($size: Int) on User {
-      id
-      avatar(size: $size)
-    }
+    ${fragment}
   `;
 
   const client = new ApolloClient({
@@ -1815,6 +1816,12 @@ test("updates the matching fragment argument scope with a mutation result", asyn
 });
 
 test("updates the matching fragment argument scope with an optimistic response", async () => {
+  const fragment = gql`
+    fragment UserCard($size: Int) on User {
+      id
+      avatar(size: $size)
+    }
+  `;
   const query = gql`
     query Team {
       lead {
@@ -1825,10 +1832,7 @@ test("updates the matching fragment argument scope with an optimistic response",
       }
     }
 
-    fragment UserCard($size: Int) on User {
-      id
-      avatar(size: $size)
-    }
+    ${fragment}
   `;
 
   const mutation = gql`
@@ -1838,10 +1842,7 @@ test("updates the matching fragment argument scope with an optimistic response",
       }
     }
 
-    fragment UserCard($size: Int) on User {
-      id
-      avatar(size: $size)
-    }
+    ${fragment}
   `;
 
   const client = new ApolloClient({

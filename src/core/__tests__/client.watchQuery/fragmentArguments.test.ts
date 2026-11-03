@@ -538,11 +538,21 @@ test("uses a fragment argument in @include", async () => {
         result: {
           data: {
             lead: { __typename: "User", id: "1", avatar: "lead.png" },
-            member: { __typename: "User", id: "2", avatar: "member.png" },
+            member: { __typename: "User", id: "2" },
           },
         },
       },
     ]),
+  });
+
+  client.writeFragment({
+    fragment: gql`
+      fragment MemberAvatar on User {
+        avatar
+      }
+    `,
+    id: "User:2",
+    data: { __typename: "User", avatar: "member.png" },
   });
 
   using stream = new ObservableStream(client.watchQuery({ query }));
@@ -569,6 +579,7 @@ test("uses a fragment argument in @include", async () => {
   await expect(stream).not.toEmitAnything();
 
   expect(client.extract()).toStrictEqualTyped({
+    __META: { extraRootIds: ["User:2"] },
     ROOT_QUERY: {
       __typename: "Query",
       lead: { __ref: "User:1" },
@@ -582,6 +593,7 @@ test("uses a fragment argument in @include", async () => {
     "User:2": {
       __typename: "User",
       id: "2",
+      avatar: "member.png",
     },
   });
 });

@@ -8672,6 +8672,235 @@ describe("useQuery Hook", () => {
       await expect(takeSnapshot).not.toRerender();
     });
 
+    it("returns `loading: false` when `skip` becomes `true` while the request is in flight", async () => {
+      const query = gql`
+        {
+          hello
+        }
+      `;
+      const mocks = [
+        {
+          request: { query },
+          result: { data: { hello: "world" } },
+          delay: 20,
+        },
+      ];
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
+        ({ skip }) => useQuery(query, { skip }),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>{children}</MockedProvider>
+          ),
+          initialProps: { skip: false },
+        }
+      );
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await rerender({ skip: true });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await expect(takeSnapshot).not.toRerender();
+
+      await rerender({ skip: false });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { hello: "world" },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await expect(takeSnapshot).not.toRerender();
+    });
+
+    it("returns `loading: false` when providing skipToken while the request is in flight", async () => {
+      const query = gql`
+        {
+          hello
+        }
+      `;
+      const mocks = [
+        {
+          request: { query },
+          result: { data: { hello: "world" } },
+          delay: 20,
+        },
+      ];
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
+        (options: SkipToken | undefined) => useQuery(query, options),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>{children}</MockedProvider>
+          ),
+        }
+      );
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await rerender(skipToken);
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await expect(takeSnapshot).not.toRerender();
+    });
+
+    it("keeps `data` when `skip` becomes `true` while a refetch is in flight", async () => {
+      const query = gql`
+        {
+          hello
+        }
+      `;
+      const mocks = [
+        {
+          request: { query },
+          result: { data: { hello: "world" } },
+        },
+        {
+          request: { query },
+          result: { data: { hello: "world again" } },
+          delay: 20,
+        },
+      ];
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot, rerender } =
+        await renderHookToSnapshotStream(
+          ({ skip }) => useQuery(query, { skip }),
+          {
+            wrapper: ({ children }) => (
+              <MockedProvider mocks={mocks}>{children}</MockedProvider>
+            ),
+            initialProps: { skip: false },
+          }
+        );
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { hello: "world" },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      const refetchPromise = getCurrentSnapshot().refetch();
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { hello: "world" },
+        dataState: "complete",
+        loading: true,
+        networkStatus: NetworkStatus.refetch,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await rerender({ skip: true });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { hello: "world" },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await expect(takeSnapshot).not.toRerender();
+      await expect(refetchPromise).resolves.toStrictEqualTyped({
+        data: { hello: "world again" },
+      });
+    });
+
+    it("stays `loading: false` when `skip` becomes `true` right after the request started", async () => {
+      const query = gql`
+        {
+          hello
+        }
+      `;
+      const mocks = [
+        {
+          request: { query },
+          result: { data: { hello: "world" } },
+          delay: 20,
+        },
+      ];
+
+      const wrapper = ({ children }: any) => (
+        <MockedProvider mocks={mocks}>{children}</MockedProvider>
+      );
+
+      const { result, rerender } = renderHook(
+        ({ skip }: { skip: boolean }) => useQuery(query, { skip }),
+        { wrapper, initialProps: { skip: false } }
+      );
+      rerender({ skip: true });
+
+      expect(result.current).toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await act(() => wait(50));
+
+      expect(result.current).toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+    });
+
     // Amusingly, #8270 thinks this is a bug, but #9101 thinks this is not.
     it("should refetch when skip is true", async () => {
       const query = gql`

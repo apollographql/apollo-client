@@ -1692,6 +1692,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     if (options.fetchPolicy === "standby") {
       this.cancelPolling();
+      this.activeOperations.forEach((operation) => {
+        delete operation.override;
+      });
     }
 
     this.resubscribeCache();

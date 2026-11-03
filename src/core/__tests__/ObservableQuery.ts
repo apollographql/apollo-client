@@ -7437,6 +7437,116 @@ test("emits loading state when calling reobserve with new fetch policy after cha
   await expect(stream).not.toEmitAnything();
 });
 
+test("returns `loading: false` from `getCurrentResult` after switching to standby while a request is in flight", async () => {
+  const query = gql`
+    query {
+      greeting
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query },
+        result: { data: { greeting: "hello" } },
+        delay: 20,
+      },
+    ]),
+  });
+
+  const observable = client.watchQuery({ query });
+  const stream = new ObservableStream(observable);
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(
+    observable.reobserve({ fetchPolicy: "standby" })
+  ).resolves.toStrictEqualTyped({ data: undefined });
+
+  expect(observable.getCurrentResult()).toStrictEqualTyped({
+    data: undefined,
+    dataState: "empty",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: true,
+  });
+
+  await expect(stream).not.toEmitAnything();
+
+  expect(observable.getCurrentResult()).toStrictEqualTyped({
+    data: { greeting: "hello" },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+});
+
+test("keeps data when switching to standby while a refetch is in flight", async () => {
+  const query = gql`
+    query {
+      greeting
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query },
+        result: { data: { greeting: "hello again" } },
+        delay: 20,
+      },
+    ]),
+  });
+  client.writeQuery({ query, data: { greeting: "hello" } });
+
+  const observable = client.watchQuery({ query });
+  const stream = new ObservableStream(observable);
+
+  await expect(stream).toEmitTypedValue({
+    data: { greeting: "hello" },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  const refetchPromise = observable.refetch();
+
+  await expect(stream).toEmitTypedValue({
+    data: { greeting: "hello" },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.refetch,
+    partial: false,
+  });
+
+  await expect(
+    observable.reobserve({ fetchPolicy: "standby" })
+  ).resolves.toStrictEqualTyped({ data: undefined });
+
+  expect(observable.getCurrentResult()).toStrictEqualTyped({
+    data: { greeting: "hello" },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+  await expect(refetchPromise).resolves.toStrictEqualTyped({
+    data: { greeting: "hello again" },
+  });
+});
+
 test('completes open subscription when "stop" is called', async () => {
   const link = new MockSubscriptionLink();
   const client = new ApolloClient({

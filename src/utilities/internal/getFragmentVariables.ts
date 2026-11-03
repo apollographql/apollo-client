@@ -1,4 +1,5 @@
 import type { FragmentDefinitionNode, FragmentSpreadNode } from "graphql";
+import { Kind } from "graphql";
 
 import type { OperationVariables } from "@apollo/client";
 
@@ -17,7 +18,11 @@ export function getFragmentVariables(
     parentScope?: OperationVariables;
   }
 ) {
-  if (!fragment.variableDefinitions || !fragment.variableDefinitions.length) {
+  if (
+    Kind.FRAGMENT_ARGUMENT === undefined ||
+    !fragment.variableDefinitions ||
+    !fragment.variableDefinitions.length
+  ) {
     return variables ?? {};
   }
 

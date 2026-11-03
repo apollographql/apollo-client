@@ -3919,6 +3919,9 @@ test("parses scalar values when the field is selected via an inline fragment", (
 test("parses scalar values on the matching member types of a union", () => {
   const cache = new InMemoryCache({
     scalars: { DateTime: dateTimeScalar },
+    possibleTypes: {
+      SearchResult: ["Event", "Appointment"],
+    },
     typePolicies: {
       Event: {
         fields: { startTime: { scalar: "DateTime" } },
@@ -4143,6 +4146,7 @@ test("parses scalar values across a complex nested query", () => {
     },
     possibleTypes: {
       Schedulable: ["Session", "Workshop"],
+      Presenter: ["VirtualPresenter", "InPersonPresenter"],
     },
     typePolicies: {
       Conference: {

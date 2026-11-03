@@ -28,6 +28,7 @@ import type {
 import type {
   DocumentationTypes as UtilityDocumentationTypes,
   OptionWithFallback,
+  PartialDataState,
   SignatureStyle,
   VariablesOption,
 } from "@apollo/client/utilities/internal";
@@ -259,13 +260,7 @@ export declare namespace useLazyQuery {
     | "complete"
     | "streaming"
     | "empty"
-    | (OptionWithFallback<
-        TOptions,
-        DefaultOptions,
-        "returnPartialData"
-      > extends false ?
-        never
-      : "partial"),
+    | PartialDataState<TOptions, DefaultOptions>,
     OptionWithFallback<TOptions, DefaultOptions, "errorPolicy"> & ErrorPolicy
   >;
 

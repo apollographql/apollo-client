@@ -18,6 +18,7 @@ import {
 } from "@apollo/client/react/internal";
 import type {
   OptionWithFallback,
+  PartialDataState,
   Prettify,
   SignatureStyle,
   VariablesOption,
@@ -179,13 +180,7 @@ export declare namespace PreloadQueryFunction {
         ) ?
           never
         : "empty")
-      | (OptionWithFallback<
-          TOptions,
-          TDefaultOptions,
-          "returnPartialData"
-        > extends false ?
-          never
-        : "partial");
+      | PartialDataState<TOptions, TDefaultOptions>;
   }
 
   export namespace Signatures {

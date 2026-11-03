@@ -22,6 +22,7 @@ export type {
   SignatureStyle,
 } from "./types/SignatureStyle.js";
 export type { OptionWithFallback } from "./types/OptionWithFallback.js";
+export type { PartialDataState } from "./types/PartialDataState.js";
 
 export { addDeferFragmentLabels } from "./addDeferFragmentLabels.js";
 export { argumentsObjectFromField } from "./argumentsObjectFromField.js";

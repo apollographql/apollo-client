@@ -28,6 +28,7 @@ import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
   DocumentationTypes as UtilityDocumentationTypes,
   OptionWithFallback,
+  PartialDataState,
   Prettify,
   SignatureStyle,
   VariablesOption,
@@ -211,13 +212,7 @@ export declare namespace useSuspenseQuery {
             ) ?
               never
             : "empty")
-          | (OptionWithFallback<
-              TOptions,
-              DefaultOptions,
-              "returnPartialData"
-            > extends false ?
-              never
-            : "partial")
+          | PartialDataState<TOptions, DefaultOptions>
       : never)
     // special case, if only `SkipToken` is passed in (no union type),
     // then we want to still keep "partial" if `returnPartialData` is globally

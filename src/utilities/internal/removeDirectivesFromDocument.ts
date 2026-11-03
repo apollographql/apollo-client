@@ -40,6 +40,8 @@ export function removeDirectivesFromDocument(
 ): DocumentNode | null {
   checkDocument(doc);
 
+  const canUseFragmentArgs = Kind.FRAGMENT_ARGUMENT !== undefined;
+
   // Passing empty strings to makeInUseGetterFunction means we handle anonymous
   // operations as if their names were "". Anonymous fragment definitions are
   // not supposed to be possible, but the same default naming strategy seems
@@ -117,6 +119,7 @@ export function removeDirectivesFromDocument(
         // it's possible the variable might be removed if the spread arg is also
         // removed.
         if (
+          canUseFragmentArgs &&
           [parent, ...ancestors].some(
             (ancestor) =>
               ancestor &&
@@ -168,11 +171,14 @@ export function removeDirectivesFromDocument(
     FragmentDefinition: {
       enter(node, _key, _parent, path) {
         originalFragmentDefsByPath.set(JSON.stringify(path), node);
-        node.variableDefinitions?.forEach((def) => {
-          getInUseByFragmentName(node.name.value).declaredVariables.add(
-            def.variable.name.value
-          );
-        });
+
+        if (canUseFragmentArgs) {
+          node.variableDefinitions?.forEach((def) => {
+            getInUseByFragmentName(node.name.value).declaredVariables.add(
+              def.variable.name.value
+            );
+          });
+        }
       },
       leave(node, _key, _parent, path) {
         const originalNode = originalFragmentDefsByPath.get(

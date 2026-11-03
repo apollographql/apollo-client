@@ -32,7 +32,11 @@ describe("resultCacheMaxSize", () => {
 
 describe("reading from the store", () => {
   const reader = new StoreReader({
-    cache: new InMemoryCache(),
+    cache: new InMemoryCache({
+      possibleTypes: {
+        DisableWarnings: ["DummyQuery", "DummyQuery2", "Query"],
+      },
+    }),
   });
 
   it("runs a nested query with proper fragment fields in arrays", () => {

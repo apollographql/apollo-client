@@ -1036,6 +1036,9 @@ describe("type policies", function () {
 
     it("assumes keyArgs:false when read and merge function present", function () {
       const cache = new InMemoryCache({
+        possibleTypes: {
+          Types: ["TypeA", "TypeB", "TypeC", "TypeD", "TypeE", "TypeF"],
+        },
         typePolicies: {
           TypeA: {
             fields: {
@@ -3792,6 +3795,9 @@ describe("type policies", function () {
 
     it("can handle Relay-style pagination", async () => {
       const cache = new InMemoryCache({
+        possibleTypes: {
+          SearchResult: ["Artist", "SearchableItem"],
+        },
         typePolicies: {
           Query: {
             fields: {

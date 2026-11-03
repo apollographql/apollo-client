@@ -13,7 +13,8 @@ export function createFragmentSpreadNode(
     name: createNameNode(name),
   };
 
-  if (args) {
+  // fragment arguments are not supported in GraphQL 16
+  if (Kind.FRAGMENT_ARGUMENT !== undefined && args) {
     node.arguments = args;
   }
 

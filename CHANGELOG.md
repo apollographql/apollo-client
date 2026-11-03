@@ -1,5 +1,17 @@
 # @apollo/client
 
+## 4.3.6
+
+### Patch Changes
+
+- [#13484](https://github.com/apollographql/apollo-client/pull/13484) [`9462324`](https://github.com/apollographql/apollo-client/commit/94623248357407b2b872e1c740ede95c763b523d) Thanks [@SunilRathod27](https://github.com/SunilRathod27)! - Exclude `"partial"` from the `dataState` union returned from `useQuery`, `useLazyQuery`, `useSuspenseQuery`, `useBackgroundQuery`, `useLoadableQuery`, and `preloadQuery` (`createQueryPreloader`) when `fetchPolicy` is `"no-cache"`. This means that `dataState` is never `"partial"` when `fetchPolicy` is `"no-cache"`, regardless of whether `returnPartialData` is `true` or `false`.
+
+- [#13486](https://github.com/apollographql/apollo-client/pull/13486) [`165aa72`](https://github.com/apollographql/apollo-client/commit/165aa7217536a1fed69eb342827becc3b7bcfc20) Thanks [@phryneas](https://github.com/phryneas)! - Pass coerced scalars into `refetchQueries`, `updateQueries` and `update` mutation callback options
+
+- [#13487](https://github.com/apollographql/apollo-client/pull/13487) [`237a2a1`](https://github.com/apollographql/apollo-client/commit/237a2a16dc34d477d602d5e34ae4c9a3b22ff9f9) Thanks [@phryneas](https://github.com/phryneas)! - Introduce a warning for missing `possibleTypes` that might lead to data loss.
+
+- [#13486](https://github.com/apollographql/apollo-client/pull/13486) [`165aa72`](https://github.com/apollographql/apollo-client/commit/165aa7217536a1fed69eb342827becc3b7bcfc20) Thanks [@phryneas](https://github.com/phryneas)! - Coerce scalars in no-cache mutations
+
 ## 4.3.5
 
 ### Patch Changes

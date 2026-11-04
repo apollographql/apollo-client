@@ -698,39 +698,34 @@ export class StoreWriter {
             );
           }
 
-          if (
-            fragment &&
-            policies.fragmentMatches(
-              fragment,
-              typename,
-              result,
-              inheritedContext.variables
-            )
-          ) {
+          if (!fragment) return;
+
+          const variables =
+            (
+              selection.kind === Kind.FRAGMENT_SPREAD &&
+              fragment.kind === Kind.FRAGMENT_DEFINITION
+            ) ?
+              getFragmentVariables(selection, {
+                fragment,
+                variables: context.operationVariables,
+                parentScope: inheritedContext.variables,
+              })
+            : inheritedContext.variables;
+
+          if (policies.fragmentMatches(fragment, typename, result, variables)) {
             let fragmentContext = getContextFlavor(
               inheritedContext,
               clientOnly,
               deferred
             );
 
-            if (
-              selection.kind === Kind.FRAGMENT_SPREAD &&
-              fragment.kind === Kind.FRAGMENT_DEFINITION
-            ) {
-              const variables = getFragmentVariables(selection, {
-                fragment,
-                variables: context.operationVariables,
-                parentScope: inheritedContext.variables,
-              });
-
-              if (variables !== inheritedContext.variables) {
-                fragmentContext = {
-                  ...fragmentContext,
-                  variables,
-                  varString: canonicalStringify(variables),
-                  flavors: new Map(),
-                };
-              }
+            if (variables !== inheritedContext.variables) {
+              fragmentContext = {
+                ...fragmentContext,
+                variables,
+                varString: canonicalStringify(variables),
+                flavors: new Map(),
+              };
             }
 
             flatten(fragment.selectionSet, fragmentContext);

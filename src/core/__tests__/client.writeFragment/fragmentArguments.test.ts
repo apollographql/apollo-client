@@ -520,3 +520,39 @@ test("reads data written with different root fragment arguments", () => {
     },
   });
 });
+
+test("uses a fragment argument in @include when matching a fuzzy subtype from possibleTypes", () => {
+  const fragment = gql`
+    fragment HeroCard on HeroUser {
+      id
+      ...CharacterAvatar(includeAvatar: true)
+    }
+
+    fragment CharacterAvatar($includeAvatar: Boolean!) on Character {
+      avatar @include(if: $includeAvatar)
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      possibleTypes: { Character: ["Hero.*"] },
+    }),
+    link: ApolloLink.empty(),
+  });
+
+  client.writeFragment({
+    fragment,
+    fragmentName: "HeroCard",
+    id: "HeroUser:1",
+    data: { __typename: "HeroUser", id: "1", avatar: "hero.png" },
+  });
+
+  expect(client.extract()).toStrictEqualTyped({
+    __META: { extraRootIds: ["HeroUser:1"] },
+    "HeroUser:1": {
+      __typename: "HeroUser",
+      id: "1",
+      avatar: "hero.png",
+    },
+  });
+});

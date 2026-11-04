@@ -7877,6 +7877,7 @@ describe("useSuspenseQuery", () => {
         expect(snapshot).toEqual({ isPending: true, data: firstPage });
       }
 
+      // Waiting for both pages would miss an early non-pending render.
       let { snapshot } = await renderStream.takeRender();
       while (snapshot.isPending) {
         snapshot = (await renderStream.takeRender()).snapshot;

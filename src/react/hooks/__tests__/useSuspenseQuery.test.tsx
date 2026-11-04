@@ -7780,6 +7780,116 @@ describe("useSuspenseQuery", () => {
     });
   });
 
+  it.each(["refetch", "fetchMore"] as const)(
+    "keeps a chained fetchMore transition pending after %s settles",
+    async (firstFetch) => {
+      const { query, data } = setupPaginatedCase();
+      const firstPage = { letters: data.slice(0, 2) };
+      const nextPage = { letters: data.slice(2, 4) };
+      const firstPageVariables = { offset: 0, limit: 2 };
+
+      const user = userEvent.setup();
+
+      const client = new ApolloClient({
+        cache: new InMemoryCache({
+          typePolicies: {
+            Query: {
+              fields: {
+                letters: offsetLimitPagination(),
+              },
+            },
+          },
+        }),
+        link: new MockLink([
+          {
+            request: { query, variables: firstPageVariables },
+            result: { data: firstPage },
+            // Return the same page again to exercise the fallback timer.
+            maxUsageCount: 2,
+            delay: 10,
+          },
+          {
+            request: { query, variables: { offset: 2, limit: 2 } },
+            result: { data: nextPage },
+            delay: 50,
+          },
+        ]),
+      });
+      const renderStream = createRenderStream({
+        skipNonTrackingRenders: true,
+        initialSnapshot: {
+          isPending: false,
+          data: null as PaginatedCaseData | null,
+        },
+      });
+
+      function App() {
+        useTrackRenders();
+        const [isPending, startTransition] = useTransition();
+        const { data, refetch, fetchMore } = useSuspenseQuery(query, {
+          variables: firstPageVariables,
+        });
+
+        renderStream.mergeSnapshot({ isPending, data });
+
+        return (
+          <button
+            onClick={() => {
+              startTransition(() => {
+                const promise =
+                  firstFetch === "refetch" ? refetch() : (
+                    fetchMore({ variables: firstPageVariables })
+                  );
+
+                void promise.then(() => {
+                  startTransition(() => {
+                    void fetchMore({ variables: { offset: 2, limit: 2 } });
+                  });
+                });
+              });
+            }}
+          >
+            Fetch next
+          </button>
+        );
+      }
+
+      using _disabledAct = disableActEnvironment();
+      await renderStream.render(
+        <Suspense fallback={<div>Loading...</div>}>
+          <App />
+        </Suspense>,
+        { wrapper: createClientWrapper(client) }
+      );
+
+      {
+        const { snapshot } = await renderStream.takeRender();
+
+        expect(snapshot).toEqual({ isPending: false, data: firstPage });
+      }
+
+      await user.click(screen.getByText("Fetch next"));
+
+      {
+        const { snapshot } = await renderStream.takeRender();
+
+        expect(snapshot).toEqual({ isPending: true, data: firstPage });
+      }
+
+      {
+        // Waiting for both pages would miss an early non-pending render.
+        const { snapshot } = await renderStream.takeRender();
+
+        expect(snapshot).toEqual({
+          isPending: false,
+          data: { letters: [...firstPage.letters, ...nextPage.letters] },
+        });
+      }
+
+      await expect(renderStream).not.toRerender();
+    }
+  );
+
   // https://github.com/apollographql/apollo-client/issues/11315
   it("fetchMore does not cause extra render", async () => {
     const { query, link } = setupPaginatedCase();

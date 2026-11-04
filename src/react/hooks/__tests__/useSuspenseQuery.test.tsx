@@ -7786,11 +7786,10 @@ describe("useSuspenseQuery", () => {
       const { query, data } = setupPaginatedCase();
       const firstPage = { letters: data.slice(0, 2) };
       const nextPage = { letters: data.slice(2, 4) };
-      const bothPages = {
-        letters: [...firstPage.letters, ...nextPage.letters],
-      };
       const firstPageVariables = { offset: 0, limit: 2 };
+
       const user = userEvent.setup();
+
       const client = new ApolloClient({
         cache: new InMemoryCache({
           typePolicies: {
@@ -7877,12 +7876,15 @@ describe("useSuspenseQuery", () => {
         expect(snapshot).toEqual({ isPending: true, data: firstPage });
       }
 
-      // Waiting for both pages would miss an early non-pending render.
-      let { snapshot } = await renderStream.takeRender();
-      while (snapshot.isPending) {
-        snapshot = (await renderStream.takeRender()).snapshot;
+      {
+        // Waiting for both pages would miss an early non-pending render.
+        const { snapshot } = await renderStream.takeRender();
+
+        expect(snapshot).toEqual({
+          isPending: false,
+          data: { letters: [...firstPage.letters, ...nextPage.letters] },
+        });
       }
-      expect(snapshot).toEqual({ isPending: false, data: bothPages });
 
       await expect(renderStream).not.toRerender();
     }

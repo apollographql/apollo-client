@@ -454,7 +454,7 @@ export class InternalQueryReference<
   private initiateFetch(
     returnedPromise: Promise<ApolloClient.QueryResult<MaybeMasked<TData>>>
   ) {
-    this.promise = this.createPendingPromise();
+    const promise = (this.promise = this.createPendingPromise());
     this.promise.catch(() => {});
 
     // If the data returned from the fetch is deeply equal to the data already
@@ -475,7 +475,7 @@ export class InternalQueryReference<
         // See https://github.com/apollographql/apollo-client/issues/11315 for
         // more information
         setTimeout(() => {
-          if (this.promise.status === "pending") {
+          if (this.promise === promise && promise.status === "pending") {
             // Use the current result from the observable instead of the value
             // resolved from the promise. This avoids issues in some cases where
             // the raw resolved value should not be the emitted value, such as

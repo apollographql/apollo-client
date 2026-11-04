@@ -417,7 +417,7 @@ test("does not error when re-enabling a skipped query after its query ref was di
 
   using _disabledAct = disableActEnvironment();
   const { rerender, takeRender } = await renderUseBackgroundQuery(
-    ({ skip, showReader }) => {
+    ({ skip, renderQueryRef }) => {
       const [queryRef, result] = useBackgroundQuery(
         query,
         skip ? skipToken : (
@@ -425,10 +425,10 @@ test("does not error when re-enabling a skipped query after its query ref was di
         )
       );
 
-      return [showReader ? queryRef : undefined, result];
+      return [renderQueryRef ? queryRef : undefined, result];
     },
     {
-      initialProps: { skip: false, showReader: true },
+      initialProps: { skip: false, renderQueryRef: true },
       wrapper: createClientWrapper(client),
     }
   );
@@ -457,7 +457,7 @@ test("does not error when re-enabling a skipped query after its query ref was di
   }
 
   // Skipping the query and unmounting its only reader disposes the query ref
-  await rerender({ skip: true, showReader: false });
+  await rerender({ skip: true, renderQueryRef: false });
 
   {
     const { renderedComponents } = await takeRender();
@@ -469,7 +469,7 @@ test("does not error when re-enabling a skipped query after its query ref was di
 
   // Re-enable the query with the same variables and mount the reader in the
   // same render
-  await rerender({ skip: false, showReader: true });
+  await rerender({ skip: false, renderQueryRef: true });
 
   {
     const { renderedComponents } = await takeRender();

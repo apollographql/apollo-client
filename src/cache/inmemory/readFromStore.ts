@@ -835,7 +835,7 @@ export class StoreReader {
     path,
     selectionSet,
   }: PruneSelectionSetOptions): PruneResult<any> {
-    const { variables, lookupFragment, policies } = context;
+    const { lookupFragment, policies } = context;
 
     if (data == null || !boundaries) {
       return { result: data, dataState: "complete" };
@@ -857,8 +857,12 @@ export class StoreReader {
       result.__typename = data.__typename;
     }
 
-    const workSet = new Set(selectionSet.selections);
-    workSet.forEach((selection) => {
+    const workSet = new Map(
+      selectionSet.selections.map((selection) => [selection, context])
+    );
+    workSet.forEach((context, selection) => {
+      const { variables } = context;
+
       if (!shouldInclude(selection, variables)) return;
 
       if (isField(selection)) {
@@ -947,7 +951,32 @@ export class StoreReader {
         if (boundaries.has(selection) || prune) {
           dataState = mergeDataState(dataState, "streaming");
         } else {
-          fragment.selectionSet.selections.forEach(workSet.add, workSet);
+          let fragmentContext = context;
+
+          if (
+            selection.kind === Kind.FRAGMENT_SPREAD &&
+            fragment.kind === Kind.FRAGMENT_DEFINITION
+          ) {
+            const variables = getFragmentVariables(selection, {
+              fragment,
+              variables: context.operationVariables,
+              parentScope: context.variables,
+            });
+
+            if (variables !== context.variables) {
+              fragmentContext = {
+                ...context,
+                variables,
+                varString: canonicalStringify(variables),
+              };
+            }
+          }
+
+          fragment.selectionSet.selections.forEach((selection) => {
+            if (!workSet.has(selection)) {
+              workSet.set(selection, fragmentContext);
+            }
+          });
         }
       }
     });

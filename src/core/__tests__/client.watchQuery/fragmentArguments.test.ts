@@ -1684,6 +1684,77 @@ test("uses a fragment argument in @defer", async () => {
   expect(console.error).not.toHaveBeenCalled();
 });
 
+test("uses a fragment argument in @include while a deferred fragment is pending", async () => {
+  const query = gql`
+    query Team {
+      lead {
+        ...UserCard(includeAvatar: true)
+        ... @defer {
+          name
+        }
+      }
+    }
+
+    fragment UserCard($includeAvatar: Boolean!) on User {
+      id
+      avatar @include(if: $includeAvatar)
+    }
+  `;
+
+  const { httpLink, enqueueInitialChunk, enqueueSubsequentChunk } =
+    mockDeferStreamGraphQL17Alpha9();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: httpLink,
+    incrementalHandler: new GraphQL17Alpha9Handler(),
+  });
+
+  using stream = new ObservableStream(client.watchQuery({ query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  enqueueInitialChunk({
+    data: { lead: { __typename: "User", id: "1", avatar: "lead.png" } },
+    pending: [{ id: "0", path: ["lead"], label: "ac_0" }],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: markAsStreaming({
+      lead: { __typename: "User", id: "1", avatar: "lead.png" },
+    }),
+    dataState: "streaming",
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  enqueueSubsequentChunk({
+    incremental: [{ id: "0", data: { name: "Lead" } }],
+    completed: [{ id: "0" }],
+    hasNext: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      lead: { __typename: "User", id: "1", avatar: "lead.png", name: "Lead" },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
 test("binds new operation variables passed through a fragment spread on refetch", async () => {
   const query = gql`
     query Team($n: Int!) {

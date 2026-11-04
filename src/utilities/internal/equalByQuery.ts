@@ -14,11 +14,11 @@ import { Kind } from "graphql";
 import type { ObservableQuery } from "@apollo/client";
 import type { OperationVariables } from "@apollo/client";
 import type { FragmentMap } from "@apollo/client/utilities/internal";
-import { getFragmentVariables } from "@apollo/client/utilities/internal";
 
 import { createFragmentMap } from "./createFragmentMap.js";
 import { getFragmentDefinitions } from "./getFragmentDefinitions.js";
 import { getFragmentFromSelection } from "./getFragmentFromSelection.js";
+import { getFragmentVariables } from "./getFragmentVariables.js";
 import { getMainDefinition } from "./getMainDefinition.js";
 import { isField } from "./isField.js";
 import { resultKeyNameFromField } from "./resultKeyNameFromField.js";

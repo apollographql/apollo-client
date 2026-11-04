@@ -493,7 +493,11 @@ export class InternalQueryReference<
           }
         });
       })
-      .catch((error) => this.reject?.(error));
+      .catch((error) => {
+        if (this.promise === promise) {
+          this.reject?.(error);
+        }
+      });
 
     return returnedPromise;
   }

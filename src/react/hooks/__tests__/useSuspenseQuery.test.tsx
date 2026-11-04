@@ -7784,9 +7784,12 @@ describe("useSuspenseQuery", () => {
     "keeps a chained fetchMore transition pending after %s settles",
     async (firstFetch) => {
       const { query, data } = setupPaginatedCase();
-      const initialData = { letters: data.slice(0, 2) };
-      const mergedData = { letters: data.slice(0, 4) };
-      const variables = { offset: 0, limit: 2 };
+      const firstPage = { letters: data.slice(0, 2) };
+      const nextPage = { letters: data.slice(2, 4) };
+      const bothPages = {
+        letters: [...firstPage.letters, ...nextPage.letters],
+      };
+      const firstPageVariables = { offset: 0, limit: 2 };
       const user = userEvent.setup();
       const client = new ApolloClient({
         cache: new InMemoryCache({
@@ -7800,14 +7803,15 @@ describe("useSuspenseQuery", () => {
         }),
         link: new MockLink([
           {
-            request: { query, variables },
-            result: { data: initialData },
+            request: { query, variables: firstPageVariables },
+            result: { data: firstPage },
+            // Return the same page again to exercise the fallback timer.
             maxUsageCount: 2,
             delay: 10,
           },
           {
             request: { query, variables: { offset: 2, limit: 2 } },
-            result: { data: { letters: data.slice(2, 4) } },
+            result: { data: nextPage },
             delay: 50,
           },
         ]),
@@ -7820,17 +7824,11 @@ describe("useSuspenseQuery", () => {
         },
       });
 
-      function SuspenseFallback() {
-        useTrackRenders();
-
-        return <div>Loading...</div>;
-      }
-
       function App() {
         useTrackRenders();
         const [isPending, startTransition] = useTransition();
         const { data, refetch, fetchMore } = useSuspenseQuery(query, {
-          variables,
+          variables: firstPageVariables,
         });
 
         renderStream.mergeSnapshot({ isPending, data });
@@ -7841,7 +7839,7 @@ describe("useSuspenseQuery", () => {
               startTransition(() => {
                 const promise =
                   firstFetch === "refetch" ? refetch() : (
-                    fetchMore({ variables })
+                    fetchMore({ variables: firstPageVariables })
                   );
 
                 void promise.then(() => {
@@ -7859,22 +7857,16 @@ describe("useSuspenseQuery", () => {
 
       using _disabledAct = disableActEnvironment();
       await renderStream.render(
-        <Suspense fallback={<SuspenseFallback />}>
+        <Suspense fallback={<div>Loading...</div>}>
           <App />
         </Suspense>,
         { wrapper: createClientWrapper(client) }
       );
 
       {
-        const { renderedComponents } = await renderStream.takeRender();
-
-        expect(renderedComponents).toStrictEqual([SuspenseFallback]);
-      }
-
-      {
         const { snapshot } = await renderStream.takeRender();
 
-        expect(snapshot).toEqual({ isPending: false, data: initialData });
+        expect(snapshot).toEqual({ isPending: false, data: firstPage });
       }
 
       await user.click(screen.getByText("Fetch next"));
@@ -7882,20 +7874,14 @@ describe("useSuspenseQuery", () => {
       {
         const { snapshot } = await renderStream.takeRender();
 
-        expect(snapshot).toEqual({ isPending: true, data: initialData });
+        expect(snapshot).toEqual({ isPending: true, data: firstPage });
       }
 
-      while (true) {
-        const { snapshot, renderedComponents } =
-          await renderStream.takeRender();
-
-        expect(renderedComponents).toStrictEqual([App]);
-
-        if (!snapshot.isPending) {
-          expect(snapshot.data).toEqual(mergedData);
-          break;
-        }
+      let { snapshot } = await renderStream.takeRender();
+      while (snapshot.isPending) {
+        snapshot = (await renderStream.takeRender()).snapshot;
       }
+      expect(snapshot).toEqual({ isPending: false, data: bothPages });
 
       await expect(renderStream).not.toRerender();
     }

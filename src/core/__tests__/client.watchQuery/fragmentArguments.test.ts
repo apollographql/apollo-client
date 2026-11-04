@@ -598,6 +598,92 @@ test("uses a fragment argument in @include", async () => {
   });
 });
 
+test("emits cache updates to fields in @include with a fragment argument when the query uses @nonreactive", async () => {
+  const query = gql`
+    query Team {
+      lead {
+        ...UserCard(includeAvatar: true)
+        ...UserName @nonreactive
+      }
+    }
+
+    fragment UserCard($includeAvatar: Boolean!) on User {
+      id
+      avatar @include(if: $includeAvatar)
+    }
+
+    fragment UserName on User {
+      name
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query },
+        result: {
+          data: {
+            lead: {
+              __typename: "User",
+              id: "1",
+              avatar: "lead.png",
+              name: "Lead",
+            },
+          },
+        },
+      },
+    ]),
+  });
+
+  using stream = new ObservableStream(client.watchQuery({ query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      lead: { __typename: "User", id: "1", avatar: "lead.png", name: "Lead" },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  client.writeFragment({
+    fragment: gql`
+      fragment LeadAvatar on User {
+        avatar
+      }
+    `,
+    id: "User:1",
+    data: { __typename: "User", avatar: "updated.png" },
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        avatar: "updated.png",
+        name: "Lead",
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
 test("uses fragment arguments in child selection sets", async () => {
   const query = gql`
     query Team {

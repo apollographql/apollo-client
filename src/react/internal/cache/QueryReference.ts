@@ -206,6 +206,7 @@ export class InternalQueryReference<
   private subscription!: Subscription;
   private listeners = new Set<Listener<TData, TStates>>();
   private autoDisposeTimeoutId?: NodeJS.Timeout;
+  private pendingOptions?: ObservedOptions;
 
   private resolve:
     | ((result: ObservableQuery.Result<MaybeMasked<TData>, TStates>) => void)
@@ -279,6 +280,15 @@ export class InternalQueryReference<
     } finally {
       observable.applyOptions({ fetchPolicy: originalFetchPolicy });
     }
+
+    // Apply options that changed while the query ref was disposed now that the
+    // query is subscribed again.
+    const { pendingOptions } = this;
+    this.pendingOptions = undefined;
+
+    if (pendingOptions) {
+      this.applyOptions(pendingOptions);
+    }
   }
 
   retain() {
@@ -325,14 +335,29 @@ export class InternalQueryReference<
   }
 
   didChangeOptions(watchQueryOptions: ObservedOptions) {
+    const currentOptions = {
+      ...this.watchQueryOptions,
+      ...this.pendingOptions,
+    };
+
     return OBSERVED_CHANGED_OPTIONS.some(
       (option) =>
         option in watchQueryOptions &&
-        !equal(this.watchQueryOptions[option], watchQueryOptions[option])
+        !equal(currentOptions[option], watchQueryOptions[option])
     );
   }
 
   applyOptions(watchQueryOptions: ObservedOptions) {
+    // If the queryRef is disposed because useReadQuery unmounts or the auto
+    // dispose timer disposes it, but the parent hook (e.g. useBackgroundQuery)
+    // rerenders with new options, we want to keep a copy of the new options so
+    // that when useReadQuery mounts, we can apply them. This avoids subscribing
+    // or fetching while its disposed due to e.g. unskipping a query.
+    if (this.disposed) {
+      this.pendingOptions = { ...this.pendingOptions, ...watchQueryOptions };
+      return this.promise;
+    }
+
     const { fetchPolicy: currentFetchPolicy } = this.watchQueryOptions;
 
     // "standby" is used when `skip` is set to `true`. Detect when we've

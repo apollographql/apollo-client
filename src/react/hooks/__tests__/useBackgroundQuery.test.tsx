@@ -574,6 +574,103 @@ it("does not recreate queryRef and execute a network request when rerendering us
   await expect(renderStream).not.toRerender({ timeout: 50 });
 });
 
+it("does not resubscribe or execute a network request when changing options while the queryRef is disposed", async () => {
+  const { query } = setupSimpleCase();
+  const user = userEvent.setup();
+  let fetchCount = 0;
+  const client = new ApolloClient({
+    link: new ApolloLink(() => {
+      fetchCount++;
+
+      return new Observable((observer) => {
+        setTimeout(() => {
+          observer.next({ data: { greeting: "Hello" } });
+          observer.complete();
+        }, 20);
+      });
+    }),
+    cache: new InMemoryCache(),
+  });
+
+  const renderStream = createDefaultProfiler<SimpleCaseData>();
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(renderStream);
+
+  function App({ returnPartialData = false }: { returnPartialData?: boolean }) {
+    useTrackRenders();
+    const [show, setShow] = React.useState(true);
+    const [queryRef] = useBackgroundQuery(query, {
+      fetchPolicy: "network-only",
+      returnPartialData,
+    });
+
+    return (
+      <>
+        <button onClick={() => setShow((show) => !show)}>Toggle</button>
+        <Suspense fallback={<SuspenseFallback />}>
+          {show && <ReadQueryHook queryRef={queryRef} />}
+        </Suspense>
+      </>
+    );
+  }
+
+  using _disabledAct = disableActEnvironment();
+  const { rerender } = await renderStream.render(<App />, {
+    wrapper: createClientWrapper(client),
+  });
+
+  const toggleButton = screen.getByText("Toggle");
+
+  {
+    const { renderedComponents } = await renderStream.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
+
+  {
+    const { snapshot } = await renderStream.takeRender();
+
+    expect(snapshot.result).toStrictEqualTyped({
+      data: { greeting: "Hello" },
+      dataState: "complete",
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  expect(client.getObservableQueries().size).toBe(1);
+
+  await user.click(toggleButton);
+  await renderStream.takeRender();
+  await wait(0);
+  expect(client.getObservableQueries().size).toBe(0);
+
+  await rerender(<App returnPartialData />);
+  await renderStream.takeRender();
+
+  expect(fetchCount).toBe(1);
+  expect(client.getObservableQueries().size).toBe(0);
+
+  await user.click(toggleButton);
+
+  {
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
+    expect(snapshot.result).toStrictEqualTyped({
+      data: { greeting: "Hello" },
+      dataState: "complete",
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  expect(fetchCount).toBe(1);
+  expect(client.getObservableQueries().size).toBe(1);
+
+  await expect(renderStream).not.toRerender({ timeout: 50 });
+});
+
 // https://github.com/apollographql/apollo-client/issues/11815
 it("does not recreate queryRef or execute a network request when rerendering useBackgroundQuery in strict mode", async () => {
   const { query } = setupSimpleCase();

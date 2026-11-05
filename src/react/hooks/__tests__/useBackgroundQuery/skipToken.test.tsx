@@ -500,3 +500,116 @@ test("does not error when re-enabling a skipped query after its query ref was di
 
   await expect(takeRender).not.toRerender();
 });
+
+test("does not execute a network request when mounting useReadQuery after re-enabling and skipping the query again while its query ref is disposed", async () => {
+  const { query, mocks } = setupVariablesCase();
+
+  let fetchCount = 0;
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.from([
+      new ApolloLink((operation, forward) => {
+        fetchCount++;
+        return forward(operation);
+      }),
+      new MockLink(mocks),
+    ]),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { rerender, takeRender } = await renderUseBackgroundQuery(
+    ({ skip, renderQueryRef }) => {
+      const [queryRef, result] = useBackgroundQuery(
+        query,
+        skip ? skipToken : (
+          { variables: { id: "1" }, fetchPolicy: "network-only" }
+        )
+      );
+
+      return [renderQueryRef ? queryRef : undefined, result];
+    },
+    {
+      initialProps: { skip: false, renderQueryRef: true },
+      wrapper: createClientWrapper(client),
+    }
+  );
+
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual([
+      "useBackgroundQuery",
+      "<Suspense />",
+    ]);
+  }
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useReadQuery"]);
+    expect(snapshot).toStrictEqualTyped({
+      data: {
+        character: { __typename: "Character", id: "1", name: "Spider-Man" },
+      },
+      dataState: "complete",
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  expect(fetchCount).toBe(1);
+
+  // Skipping the query and unmounting its only reader disposes the query ref
+  await rerender({ skip: true, renderQueryRef: false });
+
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useBackgroundQuery"]);
+  }
+
+  await expect(takeRender).not.toRerender();
+  expect(client.getObservableQueries().size).toBe(0);
+
+  await rerender({ skip: false, renderQueryRef: false });
+
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useBackgroundQuery"]);
+  }
+
+  await rerender({ skip: true, renderQueryRef: false });
+
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual(["useBackgroundQuery"]);
+  }
+
+  await expect(takeRender).not.toRerender();
+  expect(fetchCount).toBe(1);
+  expect(client.getObservableQueries().size).toBe(0);
+
+  await rerender({ skip: true, renderQueryRef: true });
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual([
+      "useBackgroundQuery",
+      "useReadQuery",
+    ]);
+    expect(snapshot).toStrictEqualTyped({
+      data: {
+        character: { __typename: "Character", id: "1", name: "Spider-Man" },
+      },
+      dataState: "complete",
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  await expect(takeRender).not.toRerender();
+  expect(fetchCount).toBe(1);
+});

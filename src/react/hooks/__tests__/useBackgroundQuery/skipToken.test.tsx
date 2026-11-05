@@ -3,9 +3,11 @@ import { gql } from "graphql-tag";
 import React from "react";
 import { delay, of, Subject } from "rxjs";
 
+import type { ErrorPolicy } from "@apollo/client";
 import {
   ApolloClient,
   ApolloLink,
+  CombinedGraphQLErrors,
   InMemoryCache,
   NetworkStatus,
 } from "@apollo/client";
@@ -456,7 +458,7 @@ test("does not error when re-enabling a skipped query after its query ref was di
     });
   }
 
-  // Skipping the query and unmounting its only reader disposes the query ref
+  // Skipping the query and unmounting useReadQuery disposes the query ref
   await rerender({ skip: true, renderQueryRef: false });
 
   {
@@ -467,7 +469,7 @@ test("does not error when re-enabling a skipped query after its query ref was di
 
   await expect(takeRender).not.toRerender();
 
-  // Re-enable the query with the same variables and mount the reader in the
+  // Re-enable the query with the same variables and mount useReadQuery in the
   // same render
   await rerender({ skip: false, renderQueryRef: true });
 
@@ -559,7 +561,7 @@ test("does not execute a network request when mounting useReadQuery after re-ena
 
   expect(fetchCount).toBe(1);
 
-  // Skipping the query and unmounting its only reader disposes the query ref
+  // Skipping the query and unmounting useReadQuery disposes the query ref
   await rerender({ skip: true, renderQueryRef: false });
 
   {

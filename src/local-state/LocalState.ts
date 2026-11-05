@@ -37,6 +37,7 @@ import {
   createFragmentMap,
   dealias,
   getFragmentDefinitions,
+  getFragmentVariables,
   getMainDefinition,
   hasDirectives,
   mergeDeep,
@@ -54,6 +55,7 @@ interface ExecContext {
   operationDefinition: OperationDefinitionNode;
   fragmentMap: FragmentMap;
   context: unknown;
+  operationVariables: OperationVariables;
   variables: OperationVariables;
   exportedVariables: OperationVariables;
   onlyRunForcedResolvers: boolean;
@@ -398,6 +400,7 @@ export class LocalState<
           phase: "resolve",
           variables: variables ?? {},
         }) ?? (requestContext as TContext),
+      operationVariables: variables,
       variables,
       exportedVariables: {},
       selectionsToResolve,
@@ -479,6 +482,7 @@ export class LocalState<
           phase: "resolve",
           variables: variables ?? {},
         }) ?? (requestContext as TContext),
+      operationVariables: variables,
       variables,
       exportedVariables: {},
       selectionsToResolve: exportsToResolve,
@@ -597,11 +601,22 @@ export class LocalState<
           cache.fragmentMatches(fragment, typename ?? "");
 
         if (matches) {
+          let context = execContext;
+          const variables = getFragmentVariables(selection, {
+            fragment,
+            variables: execContext.operationVariables,
+            parentScope: execContext.variables,
+          });
+
+          if (variables !== execContext.variables) {
+            context = { ...context, variables };
+          }
+
           const fragmentResult = await this.resolveSelectionSet(
             fragment.selectionSet,
             isClientFieldDescendant,
             rootValue,
-            execContext,
+            context,
             path
           );
 

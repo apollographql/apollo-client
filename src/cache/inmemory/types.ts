@@ -185,6 +185,7 @@ export interface MergeInfo {
   typename: string | undefined;
   merge: FieldMergeFunction;
   path: Array<string | number>;
+  variables: OperationVariables | undefined;
 }
 
 export interface MergeTree {
@@ -202,6 +203,9 @@ export interface ReadMergeModifyContext {
     path: Incremental.Path,
     label: string | undefined
   ) => boolean;
+  // Keep a copy of the operation variables. variables reflects the current
+  // scoped variables in fragments that have arguments
+  operationVariables?: OperationVariables;
 }
 
 type ListOf<T extends string> = `[${T}]`;

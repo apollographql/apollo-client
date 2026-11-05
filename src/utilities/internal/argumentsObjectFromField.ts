@@ -1,10 +1,10 @@
-import type { DirectiveNode, FieldNode } from "graphql";
+import type { DirectiveNode, FieldNode, FragmentSpreadNode } from "graphql";
 
 import { valueToObjectRepresentation } from "./valueToObjectRepresentation.js";
 
 /** @internal */
 export function argumentsObjectFromField(
-  field: FieldNode | DirectiveNode,
+  field: FieldNode | DirectiveNode | FragmentSpreadNode,
   variables?: Record<string, any>
 ): Object | null {
   if (field.arguments && field.arguments.length) {

@@ -1,5 +1,15 @@
 # @apollo/client
 
+## 4.3.7
+
+### Patch Changes
+
+- [#13518](https://github.com/apollographql/apollo-client/pull/13518) [`b302e5a`](https://github.com/apollographql/apollo-client/commit/b302e5a3fbd1b46b09fcfee11ef0586188d8123e) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where an `AbortError` was thrown by `useReadQuery` when a `useBackgroundQuery` query is skipped, its `useReadQuery` component unmounts, and the query is then re-enabled in the same render that `useReadQuery` mounts again.
+
+- [#13516](https://github.com/apollographql/apollo-client/pull/13516) [`d7cb685`](https://github.com/apollographql/apollo-client/commit/d7cb685c20a5ad73f21a5eb07bfc21aa4b8bd701) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Fix a race when chaining `refetch` and `fetchMore` calls with `useSuspenseQuery` inside React transitions.
+
+  For example, an app can refresh the first page of a list with `refetch()`, then immediately load the next page with `fetchMore()` from the refetch promise's `.then` callback. A timer from the completed refetch could make `useTransition`'s `isPending` become `false` before the next page arrived, hiding the pending indicator while the list still showed only the first page. Keep the transition pending until the next page is available. This also applies when the first request is another `fetchMore()`.
+
 ## 4.3.6
 
 ### Patch Changes

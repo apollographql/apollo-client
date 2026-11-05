@@ -394,26 +394,32 @@ test("client.refetchQueries should not refetch queries that start with skipToken
 
 // https://github.com/apollographql/apollo-client/issues/13502
 test("does not error when re-enabling a skipped query after its query ref was disposed", async () => {
-  const delay = React.version.startsWith("18") ? 200 : 20;
-  const { query, mocks } = setupVariablesCase({ delay });
+  const { query, mocks } = setupVariablesCase();
 
+  let fetchCount = 0;
   const client = new ApolloClient({
     cache: new InMemoryCache(),
-    link: new MockLink([
-      mocks[0],
-      {
-        request: { query, variables: { id: "1" } },
-        result: {
-          data: {
-            character: {
-              __typename: "Character",
-              id: "1",
-              name: "Spider-Man (refetched)",
+    link: ApolloLink.from([
+      new ApolloLink((operation, forward) => {
+        fetchCount++;
+        return forward(operation);
+      }),
+      new MockLink([
+        mocks[0],
+        {
+          request: { query, variables: { id: "1" } },
+          result: {
+            data: {
+              character: {
+                __typename: "Character",
+                id: "1",
+                name: "Spider-Man (refetched)",
+              },
             },
           },
+          delay: 20,
         },
-        delay,
-      },
+      ]),
     ]),
   });
 
@@ -469,30 +475,23 @@ test("does not error when re-enabling a skipped query after its query ref was di
 
   await expect(takeRender).not.toRerender();
 
+  expect(fetchCount).toBe(1);
+
   // Re-enable the query with the same variables and mount useReadQuery in the
-  // same render
+  // same render. useReadQuery resumes from the disposed query ref and renders
+  // the existing data without executing a network request.
   await rerender({ skip: false, renderQueryRef: true });
-
-  {
-    const { renderedComponents } = await takeRender();
-
-    expect(renderedComponents).toStrictEqual([
-      "useBackgroundQuery",
-      "<Suspense />",
-    ]);
-  }
 
   {
     const { snapshot, renderedComponents } = await takeRender();
 
-    expect(renderedComponents).toStrictEqual(["useReadQuery"]);
+    expect(renderedComponents).toStrictEqual([
+      "useBackgroundQuery",
+      "useReadQuery",
+    ]);
     expect(snapshot).toStrictEqualTyped({
       data: {
-        character: {
-          __typename: "Character",
-          id: "1",
-          name: "Spider-Man (refetched)",
-        },
+        character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },
       dataState: "complete",
       error: undefined,
@@ -501,6 +500,7 @@ test("does not error when re-enabling a skipped query after its query ref was di
   }
 
   await expect(takeRender).not.toRerender();
+  expect(fetchCount).toBe(1);
 });
 
 test("does not execute a network request when mounting useReadQuery after re-enabling and skipping the query again while its query ref is disposed", async () => {

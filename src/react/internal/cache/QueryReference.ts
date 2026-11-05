@@ -259,7 +259,15 @@ export class InternalQueryReference<
   }
 
   reinitialize() {
-    const { observable } = this;
+    const { observable, pendingOptions } = this;
+    this.pendingOptions = undefined;
+
+    // Apply options that changed while the query ref was disposed before
+    // resubscribing so that we resume with the latest options without
+    // executing a network request.
+    if (pendingOptions) {
+      observable.applyOptions(pendingOptions);
+    }
 
     const originalFetchPolicy = this.watchQueryOptions.fetchPolicy;
     const avoidNetworkRequests =
@@ -279,15 +287,6 @@ export class InternalQueryReference<
       this.subscribeToQuery();
     } finally {
       observable.applyOptions({ fetchPolicy: originalFetchPolicy });
-    }
-
-    // Apply options that changed while the query ref was disposed now that the
-    // query is subscribed again.
-    const { pendingOptions } = this;
-    this.pendingOptions = undefined;
-
-    if (pendingOptions) {
-      this.applyOptions(pendingOptions);
     }
   }
 

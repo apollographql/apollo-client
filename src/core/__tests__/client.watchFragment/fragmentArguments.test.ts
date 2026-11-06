@@ -2122,14 +2122,14 @@ test("binds fragment arguments passed through an unmasked fragment from a query 
   `;
 
   const detailsFragment = gql`
-      fragment UserDetails($size: Int) on User {
-        id
-        name
-        ...UserCard(size: $size)
-      }
+    fragment UserDetails($size: Int) on User {
+      id
+      name
+      ...UserCard(size: $size)
+    }
 
-      ${cardFragment}
-    `;
+    ${cardFragment}
+  `;
 
   const query: TypedDocumentNode<
     { lead: MaskedUser & { name: string } },

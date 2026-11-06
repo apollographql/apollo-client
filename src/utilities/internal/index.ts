@@ -90,6 +90,7 @@ export { canonicalStringify } from "./canonicalStringify.js";
 export { mapObservableFragmentMemoized } from "./mapObservableFragment.js";
 export {
   extensionsSymbol,
+  fragmentVariablesSymbol,
   handleIncrementalSymbol,
   streamInfoSymbol,
   variablesUnknownSymbol,

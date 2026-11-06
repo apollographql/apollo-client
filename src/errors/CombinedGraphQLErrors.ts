@@ -184,7 +184,7 @@ export class CombinedGraphQLErrors extends AggregateError {
     defaultFormatMessage;
 
   /** {@inheritDoc @apollo/client!CombinedGraphQLErrors.DocumentationTypes.InstanceProperties#errors:member} */
-  errors!: Array<GraphQLFormattedError>;
+  declare errors: Array<GraphQLFormattedError>;
 
   /** {@inheritDoc @apollo/client!CombinedGraphQLErrors.DocumentationTypes.InstanceProperties#data:member} */
   readonly data: Record<string, unknown> | null | undefined;

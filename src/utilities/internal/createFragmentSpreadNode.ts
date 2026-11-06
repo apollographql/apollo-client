@@ -1,4 +1,8 @@
-import type { FragmentArgumentNode, FragmentSpreadNode } from "graphql";
+import type {
+  DirectiveNode,
+  FragmentArgumentNode,
+  FragmentSpreadNode,
+} from "graphql";
 import { Kind } from "graphql";
 
 import { createNameNode } from "./createNameNode.js";

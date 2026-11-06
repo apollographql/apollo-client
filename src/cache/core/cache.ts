@@ -663,13 +663,11 @@ export abstract class ApolloCache {
     });
 
     if (!Array.isArray(from)) {
-      const variables =
-        options.variables ??
-        (from as any)?.[fragmentVariablesSymbol]?.[actualFragmentName];
-
       const observable = this.watchSingleFragment(ids[0], query, {
         ...options,
-        variables,
+        variables:
+          options.variables ??
+          (from as any)?.[fragmentVariablesSymbol]?.[actualFragmentName],
       });
       // Unfortunately we forgot to allow for `null` on watchFragment in 4.0
       // when `from` is a single record. As such, we need to fallback to {}
@@ -728,8 +726,13 @@ export abstract class ApolloCache {
     }
 
     let subscribed = false;
-    const observables = ids.map((id) =>
-      this.watchSingleFragment(id, query, options)
+    const observables = ids.map((id, idx) =>
+      this.watchSingleFragment(id, query, {
+        ...options,
+        variables:
+          options.variables ??
+          (from as any[])[idx]?.[fragmentVariablesSymbol]?.[actualFragmentName],
+      })
     ) as Array<ApolloCache.ObservableFragment<TData>>;
 
     const observable = combineLatestBatched(observables).pipe(

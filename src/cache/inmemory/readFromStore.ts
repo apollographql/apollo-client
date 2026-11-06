@@ -3,6 +3,7 @@ import { Trie } from "@wry/trie";
 import type {
   DocumentNode,
   FieldNode,
+  FragmentSpreadNode,
   SelectionNode,
   SelectionSetNode,
 } from "graphql";
@@ -666,8 +667,10 @@ export class StoreReader {
                 varString: canonicalStringify(variables),
               };
 
-              fragmentVariables ||= {};
-              fragmentVariables[fragment.name.value] = variables;
+              if (!isFragmentRoot(selection)) {
+                fragmentVariables ||= {};
+                fragmentVariables[fragment.name.value] = variables;
+              }
             }
           }
 
@@ -1240,4 +1243,19 @@ function mergeDataState(
   }
 
   return DATA_STATE_MERGES[current][next] || current;
+}
+
+function isFragmentRoot(fragmentSpread: FragmentSpreadNode) {
+  return (
+    fragmentSpread.directives?.some(
+      (directive) =>
+        directive.name.value === "_apollo" &&
+        directive.arguments?.some(
+          (arg) =>
+            arg.name.value === "fragmentRoot" &&
+            arg.value.kind === Kind.BOOLEAN &&
+            arg.value.value
+        )
+    ) ?? false
+  );
 }

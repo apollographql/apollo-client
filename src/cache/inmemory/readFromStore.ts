@@ -672,6 +672,10 @@ export class StoreReader {
                 fragmentVariables[fragment.name.value] = variables;
               }
             }
+
+            if (isMaskedSpread(selection)) {
+              return;
+            }
           }
 
           const isDeferBoundary = isDeferredFragment(
@@ -1253,6 +1257,21 @@ function isFragmentRoot(fragmentSpread: FragmentSpreadNode) {
         directive.arguments?.some(
           (arg) =>
             arg.name.value === "fragmentRoot" &&
+            arg.value.kind === Kind.BOOLEAN &&
+            arg.value.value
+        )
+    ) ?? false
+  );
+}
+
+function isMaskedSpread(fragmentSpread: FragmentSpreadNode) {
+  return (
+    fragmentSpread.directives?.some(
+      (directive) =>
+        directive.name.value === "_apollo" &&
+        directive.arguments?.some(
+          (arg) =>
+            arg.name.value === "mask" &&
             arg.value.kind === Kind.BOOLEAN &&
             arg.value.value
         )

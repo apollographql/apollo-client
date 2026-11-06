@@ -35,6 +35,7 @@ import {
   mapObservableFragmentMemoized,
   mergeOptions,
   removeMaskedFragmentSpreads,
+  supportsFragmentVariablesSymbol,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
@@ -1990,11 +1991,19 @@ export class ApolloClient {
   private maskedFragmentTransform = new DocumentTransform(
     removeMaskedFragmentSpreads
   );
+  private fragmentVariablesTransform = new DocumentTransform((document) =>
+    removeMaskedFragmentSpreads(document, { mode: "mark" })
+  );
 
   private transform(document: DocumentNode, dataMasking = false) {
     const transformed = this.queryManager.transform(document);
+    const maskedTransform =
+      this.cache[supportsFragmentVariablesSymbol] ?
+        this.fragmentVariablesTransform
+      : this.maskedFragmentTransform;
+
     return dataMasking ?
-        this.maskedFragmentTransform.transformDocument(transformed)
+        maskedTransform.transformDocument(transformed)
       : transformed;
   }
 

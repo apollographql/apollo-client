@@ -46,6 +46,7 @@ import {
   getFragmentDefinition,
   getFragmentQueryDocument,
   mapObservableFragmentMemoized,
+  supportsFragmentVariablesSymbol,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
@@ -223,6 +224,13 @@ export declare namespace ApolloCache {
 
 export abstract class ApolloCache {
   public readonly assumeImmutableResults: boolean = false;
+
+  /**
+   * @internal
+   * Used to determine whether the cache supports passing fragment variables
+   * in the result object.
+   */
+  public readonly [supportsFragmentVariablesSymbol]?: boolean;
 
   // required to implement
   // core API

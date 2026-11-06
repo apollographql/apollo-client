@@ -5,6 +5,7 @@ import type { ApolloCache } from "@apollo/client/cache";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type { FragmentMap } from "@apollo/client/utilities/internal";
 import {
+  fragmentVariablesSymbol,
   maybeDeepFreeze,
   resultKeyNameFromField,
 } from "@apollo/client/utilities/internal";
@@ -193,6 +194,10 @@ function maskSelectionSet(
 
   if ("__typename" in data && !("__typename" in memo)) {
     memo.__typename = data.__typename;
+  }
+
+  if (fragmentVariablesSymbol in data && !(fragmentVariablesSymbol in memo)) {
+    (memo as any)[fragmentVariablesSymbol] = data[fragmentVariablesSymbol];
   }
 
   // This check prevents cases where masked fields may accidentally be

@@ -746,7 +746,10 @@ export class StoreReader {
     });
 
     if (fragmentVariables) {
-      (result as any)[fragmentVariablesSymbol] = fragmentVariables;
+      (result as any)[fragmentVariablesSymbol] = {
+        ...(result as any)[fragmentVariablesSymbol],
+        ...fragmentVariables,
+      };
     }
 
     const finalResult: ExecResult = {

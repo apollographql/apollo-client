@@ -977,27 +977,27 @@ test("binds fragment arguments of a nested fragment from a fragment result passe
   `;
 
   const cardFragment: TypedDocumentNode<MaskedUser> = gql`
-      fragment UserCard($size: Int) on User {
-        id
-        ...UserAvatar(size: $size)
-      }
+    fragment UserCard($size: Int) on User {
+      id
+      ...UserAvatar(size: $size)
+    }
 
-      ${avatarFragment}
-    `;
+    ${avatarFragment}
+  `;
 
   const query: TypedDocumentNode<
     { lead: MaskedUser },
     Record<string, never>
   > = gql`
-      query Team {
-        lead {
-          id
-          ...UserCard(size: 96)
-        }
+    query Team {
+      lead {
+        id
+        ...UserCard(size: 96)
       }
+    }
 
-      ${cardFragment}
-    `;
+    ${cardFragment}
+  `;
 
   const client = new ApolloClient({
     dataMasking: true,

@@ -42,10 +42,12 @@ import {
   capitalize,
   combineLatestBatched,
   equalByQuery,
+  fragmentVariablesSymbol,
   getApolloCacheMemoryInternals,
   getFragmentDefinition,
   getFragmentQueryDocument,
   mapObservableFragmentMemoized,
+  supportsFragmentVariablesSymbol,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
@@ -223,6 +225,13 @@ export declare namespace ApolloCache {
 
 export abstract class ApolloCache {
   public readonly assumeImmutableResults: boolean = false;
+
+  /**
+   * @internal
+   * Used to determine whether the cache supports passing fragment variables
+   * in the result object.
+   */
+  public readonly [supportsFragmentVariablesSymbol]?: boolean;
 
   // required to implement
   // core API
@@ -627,6 +636,8 @@ export abstract class ApolloCache {
       fragment,
       fragmentName
     ) as TypedDocumentNode<TData, TVariables>;
+    const actualFragmentName =
+      fragmentName || getFragmentDefinition(fragment).name.value;
 
     const fromArray = Array.isArray(from) ? from : [from];
 
@@ -640,9 +651,6 @@ export abstract class ApolloCache {
       const id = value == null ? value : this.toCacheId(value);
 
       if (__DEV__) {
-        const actualFragmentName =
-          fragmentName || getFragmentDefinition(fragment).name.value;
-
         if (id === undefined) {
           invariant.warn(
             "Could not identify object passed to `from` for '%s' fragment, either because the object is non-normalized or the key fields are missing. If you are masking this object, please ensure the key fields are requested by the parent object.",
@@ -655,7 +663,12 @@ export abstract class ApolloCache {
     });
 
     if (!Array.isArray(from)) {
-      const observable = this.watchSingleFragment(ids[0], query, options);
+      const observable = this.watchSingleFragment(ids[0], query, {
+        ...options,
+        variables:
+          options.variables ??
+          (from as any)?.[fragmentVariablesSymbol]?.[actualFragmentName],
+      });
       // Unfortunately we forgot to allow for `null` on watchFragment in 4.0
       // when `from` is a single record. As such, we need to fallback to {}
       // when diff.result is null to maintain backwards compatibility. We
@@ -713,8 +726,13 @@ export abstract class ApolloCache {
     }
 
     let subscribed = false;
-    const observables = ids.map((id) =>
-      this.watchSingleFragment(id, query, options)
+    const observables = ids.map((id, idx) =>
+      this.watchSingleFragment(id, query, {
+        ...options,
+        variables:
+          options.variables ??
+          (from as any[])[idx]?.[fragmentVariablesSymbol]?.[actualFragmentName],
+      })
     ) as Array<ApolloCache.ObservableFragment<TData>>;
 
     const observable = combineLatestBatched(observables).pipe(

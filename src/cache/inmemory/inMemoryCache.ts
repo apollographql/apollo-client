@@ -32,6 +32,7 @@ import {
   getOperationDefinition,
   isPlainObject,
   matchScalarList,
+  supportsFragmentVariablesSymbol,
   unwrapScalarType,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
@@ -114,6 +115,9 @@ export class InMemoryCache extends ApolloCache {
   // Override the default value, since InMemoryCache result objects are frozen
   // in development and expected to remain logically immutable in production.
   public readonly assumeImmutableResults = true;
+
+  /** @internal */
+  public readonly [supportsFragmentVariablesSymbol] = true;
 
   // Dynamically imported code can augment existing typePolicies or
   // possibleTypes by calling cache.policies.addTypePolicies or

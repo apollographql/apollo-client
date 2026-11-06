@@ -3,6 +3,7 @@ import { Trie } from "@wry/trie";
 import type {
   DocumentNode,
   FieldNode,
+  FragmentSpreadNode,
   SelectionNode,
   SelectionSetNode,
 } from "graphql";
@@ -26,6 +27,7 @@ import type {
 import {
   compact,
   DeepMerger,
+  fragmentVariablesSymbol,
   getDefaultValues,
   getDirectiveArgValue,
   getFragmentFromSelection,
@@ -514,6 +516,12 @@ export class StoreReader {
       return result;
     }
 
+    let fragmentVariables:
+      | Record<
+          string /* fragmentName */,
+          Record<string, unknown> /* variables */
+        >
+      | undefined;
     const workSet = new Set(selectionSet.selections);
 
     workSet.forEach((selection) => {
@@ -659,6 +667,15 @@ export class StoreReader {
                 varString: canonicalStringify(variables),
               };
             }
+
+            if (!isFragmentRoot(selection) && Object.keys(variables).length) {
+              fragmentVariables ||= {};
+              fragmentVariables[fragment.name.value] = variables;
+            }
+
+            if (isMaskedSpread(selection)) {
+              return;
+            }
           }
 
           const isDeferBoundary = isDeferredFragment(
@@ -720,7 +737,29 @@ export class StoreReader {
 
     dataState ||= "complete";
 
-    const result = mergeDeepArray(objectsToMerge);
+    let result = mergeDeepArray(objectsToMerge);
+
+    const allFragmentVariables = objectsToMerge.reduce<
+      Record<string, Record<string, unknown>> | undefined
+    >((memo, obj) => {
+      const childFragmentVariables = (obj as any)[fragmentVariablesSymbol];
+
+      return childFragmentVariables ?
+          { ...memo, ...childFragmentVariables }
+        : memo;
+    }, undefined);
+
+    if (allFragmentVariables || fragmentVariables) {
+      // Always copy since `result` might be a frozen fragment result when
+      // `objectsToMerge` contains a single object.
+      result = {
+        ...result,
+        [fragmentVariablesSymbol]: {
+          ...allFragmentVariables,
+          ...fragmentVariables,
+        },
+      };
+    }
 
     const finalResult: ExecResult = {
       result,
@@ -1226,4 +1265,34 @@ function mergeDataState(
   }
 
   return DATA_STATE_MERGES[current][next] || current;
+}
+
+function isFragmentRoot(fragmentSpread: FragmentSpreadNode) {
+  return (
+    fragmentSpread.directives?.some(
+      (directive) =>
+        directive.name.value === "_apollo" &&
+        directive.arguments?.some(
+          (arg) =>
+            arg.name.value === "fragmentRoot" &&
+            arg.value.kind === Kind.BOOLEAN &&
+            arg.value.value
+        )
+    ) ?? false
+  );
+}
+
+function isMaskedSpread(fragmentSpread: FragmentSpreadNode) {
+  return (
+    fragmentSpread.directives?.some(
+      (directive) =>
+        directive.name.value === "_apollo" &&
+        directive.arguments?.some(
+          (arg) =>
+            arg.name.value === "mask" &&
+            arg.value.kind === Kind.BOOLEAN &&
+            arg.value.value
+        )
+    ) ?? false
+  );
 }

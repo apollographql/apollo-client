@@ -13,6 +13,14 @@ export const streamInfoSymbol = Symbol.for("apollo.result.streamInfo");
 
 /**
  * @internal
+ * Used to store the variables for each fragment spread on a result
+ * object so they can be read when the object is passed to `from` in
+ * fragment APIs. Only use internally!
+ */
+export const fragmentVariablesSymbol = Symbol.for("apollo.fragments.variables");
+
+/**
+ * @internal
  * Used as key for `ApolloClient.WatchQueryOptions`.
  *
  * Meant for framework integrators only!
@@ -39,4 +47,20 @@ export const variablesUnknownSymbol = Symbol.for(
  */
 export const handleIncrementalSymbol = Symbol.for(
   "apollo.cache.handleIncremental"
+);
+
+/**
+ * @internal
+ * Used to determine whether a cache provides fragment variables on the returned
+ * result objects so that fragment variables can be passed using the `from`
+ * option on `watchFragment`.
+ *
+ * 3rd party caches that want to implement this behavior should talk to the
+ * Apollo Client team. Open a GitHub issue so we can chat with you on what is
+ * required for this to work in Apollo Client version 4.x.
+ *
+ * Meant for cache implementors only. This should not be used in userland code.
+ */
+export const supportsFragmentVariablesSymbol = Symbol.for(
+  "apollo.cache.supportsFragmentVariables"
 );

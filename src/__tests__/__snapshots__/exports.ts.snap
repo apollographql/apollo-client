@@ -510,6 +510,7 @@ Array [
   "storeKeyNameFromField",
   "streamInfoSymbol",
   "stringifyForDisplay",
+  "supportsFragmentVariablesSymbol",
   "toDiffWithDataState",
   "toQueryResult",
   "unwrapScalarType",

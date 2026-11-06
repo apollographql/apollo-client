@@ -93,6 +93,7 @@ export {
   fragmentVariablesSymbol,
   handleIncrementalSymbol,
   streamInfoSymbol,
+  supportsFragmentVariablesSymbol,
   variablesUnknownSymbol,
 } from "./constants.js";
 export { bindCacheKey } from "./bindCacheKey.js";

@@ -195,7 +195,7 @@ export class CombinedGraphQLErrors extends AggregateError {
   constructor(result: FormattedExecutionResult<any>);
   constructor(
     result: ApolloLink.Result<any>,
-    errors: Array<GraphQLFormattedError>
+    errors: ReadonlyArray<GraphQLFormattedError>
   );
 
   constructor(

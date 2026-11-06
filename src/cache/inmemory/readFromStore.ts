@@ -666,11 +666,11 @@ export class StoreReader {
                 variables,
                 varString: canonicalStringify(variables),
               };
+            }
 
-              if (!isFragmentRoot(selection)) {
-                fragmentVariables ||= {};
-                fragmentVariables[fragment.name.value] = variables;
-              }
+            if (!isFragmentRoot(selection) && Object.keys(variables).length) {
+              fragmentVariables ||= {};
+              fragmentVariables[fragment.name.value] = variables;
             }
 
             if (isMaskedSpread(selection)) {

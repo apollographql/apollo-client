@@ -13,6 +13,7 @@ import {
   ObservableStream,
   withProdMode,
 } from "@apollo/client/testing/internal";
+import { fragmentVariablesSymbol } from "@apollo/client/utilities/internal";
 
 enableExperimentalFragmentVariables();
 
@@ -314,7 +315,12 @@ test("passes a root fragment argument through a nested fragment spread", async (
   );
 
   await expect(stream).toEmitTypedValue({
-    data: { __typename: "User", id: "1", avatar: "large.png" },
+    data: {
+      __typename: "User",
+      id: "1",
+      avatar: "large.png",
+      [fragmentVariablesSymbol]: { UserAvatar: { size: 96 } },
+    },
     dataState: "complete",
     complete: true,
   });
@@ -328,7 +334,12 @@ test("passes a root fragment argument through a nested fragment spread", async (
   });
 
   await expect(stream).toEmitTypedValue({
-    data: { __typename: "User", id: "1", avatar: "large-updated.png" },
+    data: {
+      __typename: "User",
+      id: "1",
+      avatar: "large-updated.png",
+      [fragmentVariablesSymbol]: { UserAvatar: { size: 96 } },
+    },
     dataState: "complete",
     complete: true,
   });
@@ -455,7 +466,12 @@ test("masks nested fragment spreads with arguments when data masking is enabled"
   );
 
   await expect(stream).toEmitTypedValue({
-    data: { __typename: "User", id: "1", avatar: "large.png" },
+    data: {
+      __typename: "User",
+      id: "1",
+      avatar: "large.png",
+      [fragmentVariablesSymbol]: { UserAvatar: { size: 32 } },
+    },
     dataState: "complete",
     complete: true,
   });
@@ -484,7 +500,12 @@ test("masks nested fragment spreads with arguments when data masking is enabled"
   });
 
   await expect(stream).toEmitTypedValue({
-    data: { __typename: "User", id: "1", avatar: "large-updated.png" },
+    data: {
+      __typename: "User",
+      id: "1",
+      avatar: "large-updated.png",
+      [fragmentVariablesSymbol]: { UserAvatar: { size: 32 } },
+    },
     dataState: "complete",
     complete: true,
   });

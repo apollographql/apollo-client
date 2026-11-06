@@ -10,6 +10,7 @@ import {
   newInvariantError,
 } from "@apollo/client/utilities/invariant";
 
+import { createDirectiveNode } from "./createDirectiveNode.js";
 import { createFragmentArgumentNode } from "./createFragmentArgumentNode.js";
 import { createFragmentSpreadNode } from "./createFragmentSpreadNode.js";
 import { createVariableNode } from "./createVariableNode.js";
@@ -102,6 +103,9 @@ export function getFragmentQueryDocument(
           kind: "SelectionSet" as Kind.SELECTION_SET,
           selections: [
             createFragmentSpreadNode(actualFragmentName, {
+              directives: [
+                createDirectiveNode("_apollo", { fragmentRoot: true }),
+              ],
               arguments: fragment?.variableDefinitions?.map((def) => {
                 const name = def.variable.name.value;
 

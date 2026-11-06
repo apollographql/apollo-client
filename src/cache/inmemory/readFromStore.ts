@@ -737,18 +737,27 @@ export class StoreReader {
 
     dataState ||= "complete";
 
-    const result = mergeDeepArray(objectsToMerge);
+    let result = mergeDeepArray(objectsToMerge);
 
-    objectsToMerge.forEach((obj) => {
-      Object.getOwnPropertySymbols(obj).forEach(
-        (sym) => ((result as any)[sym] = (obj as any)[sym])
-      );
-    });
+    const allFragmentVariables = objectsToMerge.reduce<
+      Record<string, Record<string, unknown>> | undefined
+    >((memo, obj) => {
+      const childFragmentVariables = (obj as any)[fragmentVariablesSymbol];
 
-    if (fragmentVariables) {
-      (result as any)[fragmentVariablesSymbol] = {
-        ...(result as any)[fragmentVariablesSymbol],
-        ...fragmentVariables,
+      return childFragmentVariables ?
+          { ...memo, ...childFragmentVariables }
+        : memo;
+    }, undefined);
+
+    if (allFragmentVariables || fragmentVariables) {
+      // Always copy since `result` might be a frozen fragment result when
+      // `objectsToMerge` contains a single object.
+      result = {
+        ...result,
+        [fragmentVariablesSymbol]: {
+          ...allFragmentVariables,
+          ...fragmentVariables,
+        },
       };
     }
 

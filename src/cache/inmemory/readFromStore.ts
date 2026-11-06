@@ -26,6 +26,7 @@ import type {
 import {
   compact,
   DeepMerger,
+  fragmentVariablesSymbol,
   getDefaultValues,
   getDirectiveArgValue,
   getFragmentFromSelection,
@@ -514,6 +515,12 @@ export class StoreReader {
       return result;
     }
 
+    let fragmentVariables:
+      | Record<
+          string /* fragmentName */,
+          Record<string, unknown> /* variables */
+        >
+      | undefined;
     const workSet = new Set(selectionSet.selections);
 
     workSet.forEach((selection) => {
@@ -658,6 +665,9 @@ export class StoreReader {
                 variables,
                 varString: canonicalStringify(variables),
               };
+
+              fragmentVariables ||= {};
+              fragmentVariables[fragment.name.value] = variables;
             }
           }
 
@@ -721,6 +731,10 @@ export class StoreReader {
     dataState ||= "complete";
 
     const result = mergeDeepArray(objectsToMerge);
+
+    if (fragmentVariables) {
+      (result as any)[fragmentVariablesSymbol] = fragmentVariables;
+    }
 
     const finalResult: ExecResult = {
       result,

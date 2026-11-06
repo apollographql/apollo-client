@@ -2029,6 +2029,69 @@ test("binds fragment arguments of a fragment spread inside an inline fragment fr
   await expect(stream).not.toEmitAnything();
 });
 
+test("binds fragment arguments of an unmasked fragment from a query result passed to from", async () => {
+  const fragment = gql`
+    fragment UserCard($size: Int) on User {
+      id
+      avatar(size: $size)
+    }
+  `;
+
+  const query: TypedDocumentNode<
+    { lead: MaskedUser & { avatar: string } },
+    Record<string, never>
+  > = gql`
+    query Team {
+      lead {
+        id
+        ...UserCard(size: 96) @unmask
+      }
+    }
+
+    ${fragment}
+  `;
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query },
+        result: {
+          data: {
+            lead: { __typename: "User", id: "1", avatar: "large.png" },
+          },
+        },
+      },
+    ]),
+  });
+
+  using queryStream = new ObservableStream(client.watchQuery({ query }));
+
+  await queryStream.takeNext();
+  const result = await queryStream.takeNext();
+  assert(result.dataState === "complete");
+  const data = result.data;
+
+  using stream = new ObservableStream(
+    client.watchFragment({ fragment, from: data.lead })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: { __typename: "User", id: "1", avatar: "large.png" },
+    dataState: "complete",
+    complete: true,
+  });
+
+  client.writeFragment({
+    fragment,
+    variables: { size: 32 },
+    data: { __typename: "User", id: "1", avatar: "small.png" },
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
 test("binds fragment arguments passed through an unmasked fragment from a query result passed to from", async () => {
   const cardFragment = gql`
     fragment UserCard($size: Int) on User {

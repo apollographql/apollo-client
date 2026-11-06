@@ -171,7 +171,7 @@ function defaultFormatMessage(errors: ReadonlyArray<GraphQLFormattedError>) {
  * }
  * ```
  */
-export class CombinedGraphQLErrors extends Error {
+export class CombinedGraphQLErrors extends AggregateError {
   /**
    * {@inheritDoc @apollo/client!CombinedGraphQLErrors.DocumentationTypes.is:function(1) {"errorClass":"CombinedGraphQLErrors"}}
    */
@@ -184,7 +184,7 @@ export class CombinedGraphQLErrors extends Error {
     defaultFormatMessage;
 
   /** {@inheritDoc @apollo/client!CombinedGraphQLErrors.DocumentationTypes.InstanceProperties#errors:member} */
-  readonly errors: ReadonlyArray<GraphQLFormattedError>;
+  declare errors: Array<GraphQLFormattedError>;
 
   /** {@inheritDoc @apollo/client!CombinedGraphQLErrors.DocumentationTypes.InstanceProperties#data:member} */
   readonly data: Record<string, unknown> | null | undefined;
@@ -203,12 +203,12 @@ export class CombinedGraphQLErrors extends Error {
     errors = (result as FormattedExecutionResult<any>).errors || []
   ) {
     super(
+      errors,
       CombinedGraphQLErrors.formatMessage(errors, {
         result,
         defaultFormatMessage,
       })
     );
-    this.errors = errors;
     this.data = (result as Partial<FormattedExecutionResult>).data;
     this.extensions = (result as Partial<FormattedExecutionResult>).extensions;
     this.name = "CombinedGraphQLErrors";

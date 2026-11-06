@@ -739,6 +739,12 @@ export class StoreReader {
 
     const result = mergeDeepArray(objectsToMerge);
 
+    objectsToMerge.forEach((obj) => {
+      Object.getOwnPropertySymbols(obj).forEach(
+        (sym) => ((result as any)[sym] = (obj as any)[sym])
+      );
+    });
+
     if (fragmentVariables) {
       (result as any)[fragmentVariablesSymbol] = fragmentVariables;
     }

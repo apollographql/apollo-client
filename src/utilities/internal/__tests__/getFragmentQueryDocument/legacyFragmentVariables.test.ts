@@ -21,7 +21,7 @@ test("does not pass arguments to the root fragment spread for fragment variables
 
   expect(document).toMatchDocument(gql`
     {
-      ...UserCard
+      ...UserCard @_apollo(fragmentRoot: true)
     }
 
     fragment UserCard($size: Int) on User {
@@ -36,6 +36,19 @@ test("does not pass arguments to the root fragment spread for fragment variables
     {
       kind: Kind.FRAGMENT_SPREAD,
       name: { kind: Kind.NAME, value: "UserCard" },
+      directives: [
+        {
+          kind: Kind.DIRECTIVE,
+          name: { kind: Kind.NAME, value: "_apollo" },
+          arguments: [
+            {
+              kind: Kind.ARGUMENT,
+              name: { kind: Kind.NAME, value: "fragmentRoot" },
+              value: { kind: Kind.BOOLEAN, value: true },
+            },
+          ],
+        },
+      ],
     },
   ]);
 });

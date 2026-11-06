@@ -2240,3 +2240,345 @@ test("binds input object fragment arguments that contain operation variables fro
 
   await expect(stream).not.toEmitAnything();
 });
+
+test("binds fragment arguments of a sibling fragment and a fragment nested in an unmasked fragment from a query result passed to from", async () => {
+  const cardFragment = gql`
+    fragment UserCard($size: Int) on User {
+      id
+      avatar(size: $size)
+    }
+  `;
+
+  const badgeFragment = gql`
+    fragment UserBadge($color: String) on User {
+      id
+      badge(color: $color)
+    }
+  `;
+
+  const detailsFragment = gql`
+    fragment UserDetails($size: Int) on User {
+      id
+      name
+      ...UserCard(size: $size)
+    }
+
+    ${cardFragment}
+  `;
+
+  const query: TypedDocumentNode<
+    { lead: MaskedUser & { name: string } },
+    Record<string, never>
+  > = gql`
+    query Team {
+      lead {
+        id
+        ...UserDetails(size: 96) @unmask
+        ...UserBadge(color: "gold")
+      }
+    }
+
+    ${detailsFragment}
+    ${badgeFragment}
+  `;
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query },
+        result: {
+          data: {
+            lead: {
+              __typename: "User",
+              id: "1",
+              name: "Alice",
+              avatar: "large.png",
+              badge: "gold-badge.png",
+            },
+          },
+        },
+      },
+    ]),
+  });
+
+  using queryStream = new ObservableStream(client.watchQuery({ query }));
+
+  await queryStream.takeNext();
+  const result = await queryStream.takeNext();
+  assert(result.dataState === "complete");
+  const data = result.data;
+
+  using cardStream = new ObservableStream(
+    client.watchFragment({ fragment: cardFragment, from: data.lead })
+  );
+
+  using badgeStream = new ObservableStream(
+    client.watchFragment({ fragment: badgeFragment, from: data.lead })
+  );
+
+  await expect(cardStream).toEmitTypedValue({
+    data: { __typename: "User", id: "1", avatar: "large.png" },
+    dataState: "complete",
+    complete: true,
+  });
+
+  await expect(badgeStream).toEmitTypedValue({
+    data: { __typename: "User", id: "1", badge: "gold-badge.png" },
+    dataState: "complete",
+    complete: true,
+  });
+
+  await expect(cardStream).not.toEmitAnything();
+  await expect(badgeStream).not.toEmitAnything();
+});
+
+test("binds fragment arguments of fragments nested in sibling unmasked fragments from a query result passed to from", async () => {
+  const cardFragment = gql`
+    fragment UserCard($size: Int) on User {
+      id
+      avatar(size: $size)
+    }
+  `;
+
+  const badgeFragment = gql`
+    fragment UserBadge($color: String) on User {
+      id
+      badge(color: $color)
+    }
+  `;
+
+  const query: TypedDocumentNode<
+    { lead: MaskedUser & { name: string; email: string } },
+    Record<string, never>
+  > = gql`
+    query Team {
+      lead {
+        id
+        ...UserDetails @unmask
+        ...UserContact @unmask
+      }
+    }
+
+    fragment UserDetails on User {
+      name
+      ...UserCard(size: 96)
+    }
+
+    fragment UserContact on User {
+      email
+      ...UserBadge(color: "gold")
+    }
+
+    ${cardFragment}
+    ${badgeFragment}
+  `;
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query },
+        result: {
+          data: {
+            lead: {
+              __typename: "User",
+              id: "1",
+              name: "Alice",
+              email: "alice@example.com",
+              avatar: "large.png",
+              badge: "gold-badge.png",
+            },
+          },
+        },
+      },
+    ]),
+  });
+
+  using queryStream = new ObservableStream(client.watchQuery({ query }));
+
+  await queryStream.takeNext();
+  const result = await queryStream.takeNext();
+  assert(result.dataState === "complete");
+  const data = result.data;
+
+  using cardStream = new ObservableStream(
+    client.watchFragment({ fragment: cardFragment, from: data.lead })
+  );
+
+  using badgeStream = new ObservableStream(
+    client.watchFragment({ fragment: badgeFragment, from: data.lead })
+  );
+
+  await expect(cardStream).toEmitTypedValue({
+    data: { __typename: "User", id: "1", avatar: "large.png" },
+    dataState: "complete",
+    complete: true,
+  });
+
+  await expect(badgeStream).toEmitTypedValue({
+    data: { __typename: "User", id: "1", badge: "gold-badge.png" },
+    dataState: "complete",
+    complete: true,
+  });
+
+  await expect(cardStream).not.toEmitAnything();
+  await expect(badgeStream).not.toEmitAnything();
+});
+
+test("binds fragment arguments of fragments nested in sibling fragments from a query result passed to from without data masking", async () => {
+  const cardFragment = gql`
+    fragment UserCard($size: Int) on User {
+      id
+      avatar(size: $size)
+    }
+  `;
+
+  const badgeFragment = gql`
+    fragment UserBadge($color: String) on User {
+      id
+      badge(color: $color)
+    }
+  `;
+
+  const query: TypedDocumentNode<
+    { lead: MaskedUser & { name: string; email: string } },
+    Record<string, never>
+  > = gql`
+    query Team {
+      lead {
+        id
+        ...UserDetails
+        ...UserContact
+      }
+    }
+
+    fragment UserDetails on User {
+      name
+      ...UserCard(size: 96)
+    }
+
+    fragment UserContact on User {
+      email
+      ...UserBadge(color: "gold")
+    }
+
+    ${cardFragment}
+    ${badgeFragment}
+  `;
+
+  const client = new ApolloClient({
+    dataMasking: false,
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query },
+        result: {
+          data: {
+            lead: {
+              __typename: "User",
+              id: "1",
+              name: "Alice",
+              email: "alice@example.com",
+              avatar: "large.png",
+              badge: "gold-badge.png",
+            },
+          },
+        },
+      },
+    ]),
+  });
+
+  using queryStream = new ObservableStream(client.watchQuery({ query }));
+
+  await queryStream.takeNext();
+  const result = await queryStream.takeNext();
+  assert(result.dataState === "complete");
+  const data = result.data;
+
+  using cardStream = new ObservableStream(
+    client.watchFragment({ fragment: cardFragment, from: data.lead })
+  );
+
+  using badgeStream = new ObservableStream(
+    client.watchFragment({ fragment: badgeFragment, from: data.lead })
+  );
+
+  await expect(cardStream).toEmitTypedValue({
+    data: { __typename: "User", id: "1", avatar: "large.png" },
+    dataState: "complete",
+    complete: true,
+  });
+
+  await expect(badgeStream).toEmitTypedValue({
+    data: { __typename: "User", id: "1", badge: "gold-badge.png" },
+    dataState: "complete",
+    complete: true,
+  });
+
+  await expect(cardStream).not.toEmitAnything();
+  await expect(badgeStream).not.toEmitAnything();
+});
+
+test("binds fragment arguments passed through an unmasked fragment spread on the root query from a query result passed to from", async () => {
+  const cardFragment = gql`
+    fragment UserCard($size: Int) on User {
+      id
+      avatar(size: $size)
+    }
+  `;
+
+  const query: TypedDocumentNode<
+    { lead: MaskedUser },
+    Record<string, never>
+  > = gql`
+      query Team {
+        ...TeamFields(size: 96) @unmask
+      }
+
+      fragment TeamFields($size: Int) on Query {
+        lead {
+          id
+          ...UserCard(size: $size)
+        }
+      }
+
+      ${cardFragment}
+    `;
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query },
+        result: {
+          data: {
+            lead: { __typename: "User", id: "1", avatar: "large.png" },
+          },
+        },
+      },
+    ]),
+  });
+
+  using queryStream = new ObservableStream(client.watchQuery({ query }));
+
+  await queryStream.takeNext();
+  const result = await queryStream.takeNext();
+  assert(result.dataState === "complete");
+  const data = result.data;
+
+  using stream = new ObservableStream(
+    client.watchFragment({ fragment: cardFragment, from: data.lead })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: { __typename: "User", id: "1", avatar: "large.png" },
+    dataState: "complete",
+    complete: true,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});

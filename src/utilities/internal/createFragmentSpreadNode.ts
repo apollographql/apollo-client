@@ -6,7 +6,10 @@ import type { Mutable } from "./types/Mutable.js";
 
 export function createFragmentSpreadNode(
   name: string,
-  { arguments: args }: { arguments?: FragmentArgumentNode[] } = {}
+  {
+    arguments: args,
+    directives,
+  }: { arguments?: FragmentArgumentNode[]; directives?: DirectiveNode[] } = {}
 ): FragmentSpreadNode {
   const node: Mutable<FragmentSpreadNode> = {
     kind: Kind.FRAGMENT_SPREAD,
@@ -16,6 +19,10 @@ export function createFragmentSpreadNode(
   // fragment arguments are not supported in GraphQL 16
   if (Kind.FRAGMENT_ARGUMENT !== undefined && args) {
     node.arguments = args;
+  }
+
+  if (directives) {
+    node.directives = directives;
   }
 
   return node;

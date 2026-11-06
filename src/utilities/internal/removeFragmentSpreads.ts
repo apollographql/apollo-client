@@ -1,11 +1,61 @@
-import type { DocumentNode } from "graphql";
-import { visit } from "graphql";
+import type { DirectiveNode, DocumentNode, FragmentSpreadNode } from "graphql";
+import { Kind, visit } from "graphql";
 
-export function removeMaskedFragmentSpreads(document: DocumentNode) {
+import { __DEV__ } from "@apollo/client/utilities/environment";
+
+import { createDirectiveNode } from "./createDirectiveNode.js";
+import { createFragmentMap } from "./createFragmentMap.js";
+
+export declare namespace removeMaskedFragmentSpreads {
+  export interface Options {
+    /**
+     * @internal
+     * Determines whether to remove the fragment spread node or mark it for
+     * removal later. `mark` is used with data masking and fragment arguments so
+     * that caches can pass variables via the result object but have a way to
+     * continue to mask the data.
+     *
+     * @defaultValue "remove"
+     */
+    mode?: "remove" | "mark";
+  }
+}
+
+export function removeMaskedFragmentSpreads(
+  document: DocumentNode,
+  { mode = "remove" }: removeMaskedFragmentSpreads.Options = {}
+) {
+  const fragments = createFragmentMap(
+    document.definitions.filter((def) => def.kind === Kind.FRAGMENT_DEFINITION)
+  );
+
   return visit(document, {
     FragmentSpread(node) {
       if (!node.directives?.some(({ name }) => name.value === "unmask")) {
-        return null;
+        switch (mode) {
+          case "remove":
+            return null;
+          case "mark": {
+            if (
+              !node.arguments?.length &&
+              !fragments[node.name.value]?.variableDefinitions?.length
+            ) {
+              return null;
+            }
+
+            return {
+              ...node,
+              directives: [
+                ...((node.directives ?? []) as DirectiveNode[]),
+                createDirectiveNode("_apollo", { mask: true }),
+              ],
+            } satisfies FragmentSpreadNode;
+          }
+          default:
+            if (__DEV__) {
+              mode satisfies never;
+            }
+        }
       }
     },
   });

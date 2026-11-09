@@ -48,7 +48,7 @@ export declare namespace BaseBatchHttpLink {
      *
      * @defaultValue false
      */
-    batchDifferentlyShapedOperations?: boolean;
+    batchHybridRequests?: boolean;
   }
 }
 
@@ -220,7 +220,7 @@ export class BaseBatchHttpLink extends ApolloLink {
 
         const contextConfig = {
           http:
-            options.batchDifferentlyShapedOperations ?
+            options.batchHybridRequests ?
               {
                 ...context.http,
                 // omit includeExtensions and includeQuery from the HTTP options

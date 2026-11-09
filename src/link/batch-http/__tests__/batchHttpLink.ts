@@ -116,7 +116,7 @@ describe("BatchHttpLink", () => {
     );
   });
 
-  describe("batchDifferentlyShapedOperations: true", () => {
+  describe("batchHybridRequests: true", () => {
     it.each([
       ["the persisted operation is first", true],
       ["the non-persisted operation is first", false],
@@ -130,7 +130,7 @@ describe("BatchHttpLink", () => {
           uri: "/mixed-batch",
           batchInterval: 20,
           batchMax: 2,
-          batchDifferentlyShapedOperations: true,
+          batchHybridRequests: true,
         });
         const persistedQueryLink = new PersistedQueryLink({
           sha256: () => hash,
@@ -235,7 +235,7 @@ describe("BatchHttpLink", () => {
           uri: "/mixed-batch-retry",
           batchInterval: 20,
           batchMax: 2,
-          batchDifferentlyShapedOperations: true,
+          batchHybridRequests: true,
         });
         const persistedQueryLink = new PersistedQueryLink({
           sha256: () => hash,
@@ -311,7 +311,7 @@ describe("BatchHttpLink", () => {
       }
     );
   });
-  describe("batchDifferentlyShapedOperations: false", () => {
+  describe("batchHybridRequests: false", () => {
     it.each([
       ["the persisted operation is first", true],
       ["the non-persisted operation is first", false],
@@ -326,7 +326,7 @@ describe("BatchHttpLink", () => {
           batchInterval: 20,
           batchMax: 2,
           // default
-          // batchDifferentlyShapedOperations: false,
+          // batchHybridRequests: false,
         });
         const persistedQueryLink = new PersistedQueryLink({
           sha256: () => hash,

@@ -15,7 +15,7 @@ export namespace BaseBatchHttpLink {
     export interface ContextOptions extends BaseHttpLink.ContextOptions {
     }
     export interface Options extends BatchLink.Shared.Options, BaseHttpLink.Shared.Options {
-        batchDifferentlyShapedOperations?: boolean;
+        batchHybridRequests?: boolean;
         batchMax?: number;
     }
 }

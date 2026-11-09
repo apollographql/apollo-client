@@ -1,5 +1,58 @@
 # @apollo/client
 
+## 4.3.7
+
+### Patch Changes
+
+- [#13518](https://github.com/apollographql/apollo-client/pull/13518) [`b302e5a`](https://github.com/apollographql/apollo-client/commit/b302e5a3fbd1b46b09fcfee11ef0586188d8123e) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where an `AbortError` was thrown by `useReadQuery` when a `useBackgroundQuery` query is skipped, its `useReadQuery` component unmounts, and the query is then re-enabled in the same render that `useReadQuery` mounts again.
+
+- [#13516](https://github.com/apollographql/apollo-client/pull/13516) [`d7cb685`](https://github.com/apollographql/apollo-client/commit/d7cb685c20a5ad73f21a5eb07bfc21aa4b8bd701) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Fix a race when chaining `refetch` and `fetchMore` calls with `useSuspenseQuery` inside React transitions.
+
+  For example, an app can refresh the first page of a list with `refetch()`, then immediately load the next page with `fetchMore()` from the refetch promise's `.then` callback. A timer from the completed refetch could make `useTransition`'s `isPending` become `false` before the next page arrived, hiding the pending indicator while the list still showed only the first page. Keep the transition pending until the next page is available. This also applies when the first request is another `fetchMore()`.
+
+## 4.3.6
+
+### Patch Changes
+
+- [#13484](https://github.com/apollographql/apollo-client/pull/13484) [`9462324`](https://github.com/apollographql/apollo-client/commit/94623248357407b2b872e1c740ede95c763b523d) Thanks [@SunilRathod27](https://github.com/SunilRathod27)! - Exclude `"partial"` from the `dataState` union returned from `useQuery`, `useLazyQuery`, `useSuspenseQuery`, `useBackgroundQuery`, `useLoadableQuery`, and `preloadQuery` (`createQueryPreloader`) when `fetchPolicy` is `"no-cache"`. This means that `dataState` is never `"partial"` when `fetchPolicy` is `"no-cache"`, regardless of whether `returnPartialData` is `true` or `false`.
+
+- [#13486](https://github.com/apollographql/apollo-client/pull/13486) [`165aa72`](https://github.com/apollographql/apollo-client/commit/165aa7217536a1fed69eb342827becc3b7bcfc20) Thanks [@phryneas](https://github.com/phryneas)! - Pass coerced scalars into `refetchQueries`, `updateQueries` and `update` mutation callback options
+
+- [#13487](https://github.com/apollographql/apollo-client/pull/13487) [`237a2a1`](https://github.com/apollographql/apollo-client/commit/237a2a16dc34d477d602d5e34ae4c9a3b22ff9f9) Thanks [@phryneas](https://github.com/phryneas)! - Introduce a warning for missing `possibleTypes` that might lead to data loss.
+
+- [#13486](https://github.com/apollographql/apollo-client/pull/13486) [`165aa72`](https://github.com/apollographql/apollo-client/commit/165aa7217536a1fed69eb342827becc3b7bcfc20) Thanks [@phryneas](https://github.com/phryneas)! - Coerce scalars in no-cache mutations
+
+## 4.3.5
+
+### Patch Changes
+
+- [#13498](https://github.com/apollographql/apollo-client/pull/13498) [`04b12e5`](https://github.com/apollographql/apollo-client/commit/04b12e5f864c83b823b45190ea7d5400ca9951aa) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where custom scalar values that are not JSON-serializable caused errors. These values are properly serialized when used as input for `variables` or when used as a key field value so that cache writes and calls to `cache.identify` succeed.
+
+- [#13500](https://github.com/apollographql/apollo-client/pull/13500) [`a23ea85`](https://github.com/apollographql/apollo-client/commit/a23ea855952cff27469f4c7f2a097c10091a3e0f) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Require the `variables` option in `useFragment` when the fragment has required variables. This matches the behavior of `useSuspenseFragment` and the query hooks.
+
+- [#13501](https://github.com/apollographql/apollo-client/pull/13501) [`303d80f`](https://github.com/apollographql/apollo-client/commit/303d80f5827c05165dacd1e8e8df8728615c8c02) Thanks [@kgssystem](https://github.com/kgssystem)! - Parse custom scalar fields in subscription results when using the `no-cache` fetch policy.
+
+## 4.3.4
+
+### Patch Changes
+
+- [#13497](https://github.com/apollographql/apollo-client/pull/13497) [`41d604c`](https://github.com/apollographql/apollo-client/commit/41d604c6cc33582571739b8cd35b9feac21f26b2) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where a list field selected more than once with different selection sets lost the fields that only one of the selections included while a `@defer` boundary elsewhere in the query was still pending when using the `GraphQL17Alpha9Handler`. The results of all selections of the list field are now merged.
+
+- [#13457](https://github.com/apollographql/apollo-client/pull/13457) [`22746bb`](https://github.com/apollographql/apollo-client/commit/22746bb03a8c45a2a1919d3c5804b3b74fb8d871) Thanks [@phryneas](https://github.com/phryneas)! - Fixed a bug where `streamFieldInfo` might not have been passed into custom merge functions for
+  `@stream` directives that had an aliased field in the path.
+
+- [#13457](https://github.com/apollographql/apollo-client/pull/13457) [`22746bb`](https://github.com/apollographql/apollo-client/commit/22746bb03a8c45a2a1919d3c5804b3b74fb8d871) Thanks [@phryneas](https://github.com/phryneas)! - Fix `Missing field` errors being logged when writing `@defer` results where a parent field is selected both inside and outside of a deferred fragment. Fields whose `@defer` boundary has not been delivered from the network are no longer reported as missing.
+
+- [#13453](https://github.com/apollographql/apollo-client/pull/13453) [`9bb3a41`](https://github.com/apollographql/apollo-client/commit/9bb3a416e2b343650a6a5faf62a17e65509421ae) Thanks [@wassim-k](https://github.com/wassim-k)! - Unregister the watch when an immediate `cache.watch` broadcast throws. Previously the watch was added to the cache before its first read, and a read that threw left the watch registered while the caller never received the unsubscribe function, so it could not be removed and every later broadcast ran into the same failing read.
+
+- [#13457](https://github.com/apollographql/apollo-client/pull/13457) [`22746bb`](https://github.com/apollographql/apollo-client/commit/22746bb03a8c45a2a1919d3c5804b3b74fb8d871) Thanks [@phryneas](https://github.com/phryneas)! - `Defer20220824Handler`: fix a situation where `dataState` would show up as `completed` with incremental errors instead of staying `streaming`.
+
+## 4.3.3
+
+### Patch Changes
+
+- [#13479](https://github.com/apollographql/apollo-client/pull/13479) [`0ab2579`](https://github.com/apollographql/apollo-client/commit/0ab25794ad88a2f7755323c5218ae64f933f287f) Thanks [@phryneas](https://github.com/phryneas)! - Fix a memory leak in `isDeferredFragment`/`isStreamField`
+
 ## 4.3.2
 
 ### Patch Changes
@@ -476,6 +529,11 @@
   Apollo Client now always writes network results to the cache before delivering them, ensuring custom scalars and field `read` functions are applied. To prevent repeated refetches when competing queries repeatedly make each other's cache results incomplete, Apollo Client stops automatically refetching a query after it sees the same incomplete result again.
 
   This may add one network request in these cache-feud scenarios.
+
+- [#13275](https://github.com/apollographql/apollo-client/pull/13275) [`263f987`](https://github.com/apollographql/apollo-client/commit/263f987bf8a604412baf4d54140f6978bd8d9afe) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Make sure scalars are correctly returned for mutations and subscriptions.
+
+> [!NOTE]
+> This change affects cache reads after mutations as mutations now reread from the cache after each execution that writes a result to the cache. Previously mutations only reread from the cache when an `update` function was provided. This can have an effect on the result if you have union or interface types in the mutation but forget to include `possibleTypes` which might return a result that doesn't include the interface/union fields.
 
 ### Patch Changes
 

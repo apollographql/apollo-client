@@ -1886,13 +1886,9 @@ it("returns correct TData type when combined options that do not affect TData", 
     });
 
     expectTypeOf(data).toEqualTypeOf<
-      | VariablesCaseData
-      | DeepPartial<VariablesCaseData>
-      | DataValue.Streaming<VariablesCaseData>
+      VariablesCaseData | DataValue.Streaming<VariablesCaseData>
     >();
-    expectTypeOf(dataState).toEqualTypeOf<
-      "complete" | "streaming" | "partial"
-    >();
+    expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
 
     if (dataState === "complete") {
       expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
@@ -1902,10 +1898,6 @@ it("returns correct TData type when combined options that do not affect TData", 
       expectTypeOf(data).toEqualTypeOf<
         DataValue.Streaming<VariablesCaseData>
       >();
-    }
-
-    if (dataState === "partial") {
-      expectTypeOf(data).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
     }
   }
 
@@ -1955,13 +1947,9 @@ it("returns correct TData type when combined options that do not affect TData", 
     });
 
     expectTypeOf(data).toEqualTypeOf<
-      | MaskedVariablesCaseData
-      | DeepPartial<MaskedVariablesCaseData>
-      | DataValue.Streaming<MaskedVariablesCaseData>
+      MaskedVariablesCaseData | DataValue.Streaming<MaskedVariablesCaseData>
     >();
-    expectTypeOf(dataState).toEqualTypeOf<
-      "complete" | "streaming" | "partial"
-    >();
+    expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
 
     if (dataState === "complete") {
       expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData>();
@@ -1971,10 +1959,6 @@ it("returns correct TData type when combined options that do not affect TData", 
       expectTypeOf(data).toEqualTypeOf<
         DataValue.Streaming<MaskedVariablesCaseData>
       >();
-    }
-
-    if (dataState === "partial") {
-      expectTypeOf(data).toEqualTypeOf<DeepPartial<MaskedVariablesCaseData>>();
     }
   }
 

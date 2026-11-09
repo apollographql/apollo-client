@@ -817,7 +817,7 @@ export class QueryManager {
         restart = res;
         return (observable as Observable<FormattedExecutionResult<TData>>).pipe(
           map((rawResult): ApolloClient.SubscribeResult<TData> => {
-            queryInfo.markSubscriptionResult(rawResult, {
+            const data = queryInfo.markSubscriptionResult(rawResult, {
               document: query,
               variables,
               errorPolicy,
@@ -828,11 +828,18 @@ export class QueryManager {
             });
 
             const result: ApolloClient.SubscribeResult<TData> = {
-              data: rawResult.data ?? undefined,
+              data: data ?? undefined,
             };
 
             if (graphQLResultHasError(rawResult)) {
-              result.error = new CombinedGraphQLErrors(rawResult);
+              // TODO: Determine whether this should return the raw network
+              // result or the parsed result (e.g. the result with custom
+              // scalars). 4.3.0 went out passing rawResult, but that was
+              // mutated by markSubscriptionResult so the error.data property
+              // was the parsed result. This behavior is kept in 4.3.5 with
+              // the change to avoid mutating rawResult.data, but long-term we
+              // should consider whether to use the raw network result.
+              result.error = new CombinedGraphQLErrors({ ...rawResult, data });
             } else if (graphQLResultHasProtocolErrors(rawResult)) {
               result.error = rawResult.extensions[PROTOCOL_ERRORS_SYMBOL];
               // Don't emit protocol errors added by HttpLink

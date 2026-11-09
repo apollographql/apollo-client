@@ -5,6 +5,7 @@ import "../../../testing/internal/messageChannelPolyfill.js";
 
 import "./polyfillReactDomTypes.d.ts";
 
+import { disableActEnvironment } from "@testing-library/react-render-stream";
 import { expectTypeOf } from "expect-type";
 import { JSDOM } from "jsdom";
 import jsesc from "jsesc";
@@ -251,6 +252,7 @@ test.each([
     // hydrate the app in the "jest/browser" JSDOM
     (window as any).__APOLLO_CLIENT_INIT__ = __APOLLO_CLIENT_INIT__;
     window.document.documentElement.innerHTML = innerHtml;
+    using _disabledAct = disableActEnvironment();
     const reactClient = await import("react-dom/client");
     const root = reactClient.hydrateRoot(window.document, <App />, {
       onCaughtError: console.error,
@@ -371,6 +373,7 @@ test.each([
       renderFunction: (tree) =>
         resumeFunction(tree, initialResult.renderFnResult.postponed, {
           signal: controller.signal,
+          onError,
         }),
       signal: controller.signal,
     });

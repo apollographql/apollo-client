@@ -63,7 +63,13 @@ class DeferRequest<TData extends Record<string, unknown>>
   implements
     Incremental.IncrementalRequest<Defer20220824Handler.Chunk<TData>, TData>
 {
+  private hasDefer: boolean;
   public hasNext = true;
+  private hasFailedDefer = false;
+
+  constructor({ query }: Incremental.StartRequestOptions) {
+    this.hasDefer = hasDirectives(["defer"], query);
+  }
 
   private errors: Array<GraphQLFormattedError> = [];
   private extensions: Record<string, any> = {};
@@ -120,6 +126,10 @@ class DeferRequest<TData extends Record<string, unknown>>
           }
         }
 
+        if ("data" in incremental && incremental.data === null) {
+          this.hasFailedDefer = true;
+        }
+
         let data: any =
           "items" in incremental ? incremental.items
             // Ensure `data: null` isn't merged for `@defer` responses by
@@ -157,6 +167,12 @@ class DeferRequest<TData extends Record<string, unknown>>
 
     return result;
   }
+
+  // This protocol can't identify individual `@defer`/`@stream` boundaries by
+  // `path`/`label`, so we can't answer whether a *specific* boundary is
+  // pending - only whether *anything* might still be coming (`hasNext`), or
+  // whether a boundary failed and will never arrive (`hasFailedDefer`).
+  isDeferPending = () => this.hasDefer && (this.hasNext || this.hasFailedDefer);
 }
 
 /**
@@ -211,9 +227,9 @@ export class Defer20220824Handler
     return request;
   }
   startRequest<TData extends Record<string, unknown>>(
-    _: Incremental.StartRequestOptions
+    opts: Incremental.StartRequestOptions
   ) {
-    return new DeferRequest<TData>();
+    return new DeferRequest<TData>(opts);
   }
 }
 

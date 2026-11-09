@@ -66,7 +66,7 @@ test("should handle deferred queries", async () => {
         __typename: "Greeting",
       },
     },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -175,8 +175,8 @@ test("should handle deferred queries in lists", async () => {
       ],
     },
     pending: [
-      { id: "0", path: ["greetings", 0] },
-      { id: "1", path: ["greetings", 1] },
+      { id: "0", label: "ac_0", path: ["greetings", 0] },
+      { id: "1", label: "ac_0", path: ["greetings", 1] },
     ],
     hasNext: true,
   });
@@ -354,8 +354,8 @@ test("should handle deferred queries in lists, merging arrays", async () => {
       ],
     },
     pending: [
-      { id: "0", path: ["allProducts", 0, "delivery"] },
-      { id: "1", path: ["allProducts", 1, "delivery"] },
+      { id: "0", label: "ac_0", path: ["allProducts", 0, "delivery"] },
+      { id: "1", label: "ac_0", path: ["allProducts", 1, "delivery"] },
     ],
     hasNext: true,
   });
@@ -510,7 +510,7 @@ test("should handle deferred queries with fetch policy no-cache", async () => {
         __typename: "Greeting",
       },
     },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -630,8 +630,8 @@ test("should handle deferred queries with errors returned on the incremental bat
       },
     },
     pending: [
-      { id: "0", path: ["hero", "heroFriends", 0] },
-      { id: "1", path: ["hero", "heroFriends", 1] },
+      { id: "0", label: "ac_0", path: ["hero", "heroFriends", 0] },
+      { id: "1", label: "ac_0", path: ["hero", "heroFriends", 1] },
     ],
     hasNext: true,
   });
@@ -795,8 +795,8 @@ test('should handle deferred queries with errors returned on the incremental bat
       },
     },
     pending: [
-      { id: "0", path: ["hero", "heroFriends", 0] },
-      { id: "1", path: ["hero", "heroFriends", 1] },
+      { id: "0", label: "ac_0", path: ["hero", "heroFriends", 0] },
+      { id: "1", label: "ac_0", path: ["hero", "heroFriends", 1] },
     ],
     hasNext: true,
   });
@@ -986,7 +986,7 @@ test('returns eventually consistent data from deferred queries with data in the 
     data: {
       greeting: { __typename: "Greeting", message: "Hello world" },
     },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -1117,7 +1117,7 @@ test('returns eventually consistent data from deferred queries with partial data
     data: {
       greeting: { message: "Hello world", __typename: "Greeting" },
     },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 

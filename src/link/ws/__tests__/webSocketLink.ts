@@ -7,6 +7,7 @@ import { WebSocketLink } from "@apollo/client/link/ws";
 import {
   executeWithDefaultContext as execute,
   ObservableStream,
+  spyOnConsole,
 } from "@apollo/client/testing/internal";
 
 const query = gql`
@@ -35,6 +36,8 @@ const subscription = gql`
 
 describe("WebSocketLink", () => {
   it("constructs", () => {
+    // Silence WebSocketLink deprecation warning
+    using _ = spyOnConsole("warn");
     const client: any = {};
     client.__proto__ = SubscriptionClient.prototype;
     expect(() => new WebSocketLink(client)).not.toThrow();
@@ -46,6 +49,8 @@ describe("WebSocketLink", () => {
   // });
 
   it("should call request on the client for a query", async () => {
+    // Silence WebSocketLink deprecation warning
+    using _ = spyOnConsole("warn");
     const result = { data: { data: "result" } };
     const client: any = {};
     const observable = of(result);
@@ -63,6 +68,8 @@ describe("WebSocketLink", () => {
   });
 
   it("should call query on the client for a mutation", async () => {
+    // Silence WebSocketLink deprecation warning
+    using _ = spyOnConsole("warn");
     const result = { data: { data: "result" } };
     const client: any = {};
     const observable = of(result);
@@ -80,6 +87,8 @@ describe("WebSocketLink", () => {
   });
 
   it("should call request on the subscriptions client for subscription", async () => {
+    // Silence WebSocketLink deprecation warning
+    using _ = spyOnConsole("warn");
     const result = { data: { data: "result" } };
     const client: any = {};
     const observable = of(result);
@@ -97,6 +106,8 @@ describe("WebSocketLink", () => {
   });
 
   it("should call next with multiple results for subscription", async () => {
+    // Silence WebSocketLink deprecation warning
+    using _ = spyOnConsole("warn");
     const results = [
       { data: { data: "result1" } },
       { data: { data: "result2" } },

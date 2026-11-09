@@ -10,71 +10,76 @@ import type {
 } from "@apollo/client";
 import type { ApolloCache, MissingTree } from "@apollo/client/cache";
 import type { MaybeMasked } from "@apollo/client/masking";
+import type {
+  DocumentationTypes as UtilityDocumentationTypes,
+  VariablesOption,
+} from "@apollo/client/utilities/internal";
 
 import { useDeepMemo, wrapHook } from "./internal/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 
 export declare namespace useFragment {
-  import _self = useFragment;
+  export namespace Base {
+    export interface Options<TData, TVariables extends OperationVariables> {
+      /**
+       * A GraphQL document created using the `gql` template string tag from
+       * `graphql-tag` with one or more fragments which will be used to determine
+       * the shape of data to read. If you provide more than one fragment in this
+       * document then you must also specify `fragmentName` to select a single.
+       */
+      fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
 
-  export interface Options<TData, TVariables extends OperationVariables> {
-    /**
-     * A GraphQL document created using the `gql` template string tag from
-     * `graphql-tag` with one or more fragments which will be used to determine
-     * the shape of data to read. If you provide more than one fragment in this
-     * document then you must also specify `fragmentName` to select a single.
-     */
-    fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
+      /**
+       * The name of the fragment in your GraphQL document to be used. If you do
+       * not provide a `fragmentName` and there is only one fragment in your
+       * `fragment` document then that fragment will be used.
+       */
+      fragmentName?: string;
 
-    /**
-     * The name of the fragment in your GraphQL document to be used. If you do
-     * not provide a `fragmentName` and there is only one fragment in your
-     * `fragment` document then that fragment will be used.
-     */
-    fragmentName?: string;
+      /**
+       * An object or array containing a `__typename` and primary key fields
+       * (such as `id`) identifying the entity object from which the fragment will
+       * be retrieved, or a `{ __ref: "..." }` reference, or a `string` ID (uncommon).
+       */
+      from:
+        | useFragment.FromOptionValue<TData>
+        | Array<useFragment.FromOptionValue<TData> | null>
+        | null;
 
-    /**
-     * Any variables that the GraphQL query may depend on.
-     */
-    variables?: NoInfer<TVariables>;
+      /**
+       * Whether to read from optimistic or non-optimistic cache data. If
+       * this named option is provided, the optimistic parameter of the
+       * readQuery method can be omitted.
+       *
+       * @defaultValue true
+       */
+      optimistic?: boolean;
 
-    /**
-     * An object or array containing a `__typename` and primary key fields
-     * (such as `id`) identifying the entity object from which the fragment will
-     * be retrieved, or a `{ __ref: "..." }` reference, or a `string` ID (uncommon).
-     */
-    from:
-      | useFragment.FromOptionValue<TData>
-      | Array<useFragment.FromOptionValue<TData> | null>
-      | null;
-
-    /**
-     * Whether to read from optimistic or non-optimistic cache data. If
-     * this named option is provided, the optimistic parameter of the
-     * readQuery method can be omitted.
-     *
-     * @defaultValue true
-     */
-    optimistic?: boolean;
-
-    /**
-     * The instance of `ApolloClient` to use to look up the fragment.
-     *
-     * By default, the instance that's passed down via context is used, but you
-     * can provide a different instance here.
-     *
-     * @docGroup 1. Operation options
-     */
-    client?: ApolloClient;
+      /**
+       * The instance of `ApolloClient` to use to look up the fragment.
+       *
+       * By default, the instance that's passed down via context is used, but you
+       * can provide a different instance here.
+       *
+       * @docGroup 1. Operation options
+       */
+      client?: ApolloClient;
+    }
   }
+
+  export type Options<
+    TData,
+    TVariables extends OperationVariables,
+  > = Base.Options<TData, TVariables> & VariablesOption<NoInfer<TVariables>>;
 
   namespace DocumentationTypes {
     namespace useFragment {
       export interface Options<
         TData = unknown,
         TVariables extends OperationVariables = OperationVariables,
-      > extends _self.Options<TData, TVariables> {}
+      > extends Base.Options<TData, TVariables>,
+          UtilityDocumentationTypes.VariableOptions<TVariables> {}
     }
   }
 

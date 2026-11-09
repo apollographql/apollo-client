@@ -39,6 +39,8 @@ The `is` function determines whether a value is in its parsed or serialized form
 
 If you omit `is`, Apollo Client treats any non-null object as a parsed value. That default might be enough, but it is typically better to pass your own `is`.
 
+If the parsed type is a primitive value, such as a `bigint`, you must provide `is`. The default `is` treats only non-null objects as parsed values.
+
 </Note>
 
 ### Create a `Scalar` from a GraphQL.js `GraphQLScalarType`
@@ -317,6 +319,52 @@ new InMemoryCache({
 If you omit `is`, Apollo Client treats any non-null object as a parsed value, including JSON arrays. Provide an `is` function that returns `false` for the serialized array so Apollo Client still calls `parse`.
 
 </Caution>
+
+### Scalars in key fields
+
+You can use a field that is mapped to a scalar as a key field. Apollo Client serializes key field values before it creates the cache ID, so the parsed and serialized forms of a value identify the same entity.
+
+```ts
+const bigIntScalar = new Scalar<string, bigint>({
+  parse: (value) => BigInt(value),
+  serialize: (value) => value.toString(),
+  is: (value) => typeof value === "bigint",
+});
+
+const cache = new InMemoryCache({
+  scalars: { BigInt: bigIntScalar },
+  typePolicies: {
+    Product: {
+      fields: {
+        id: { scalar: "BigInt" },
+      },
+    },
+  },
+});
+
+cache.identify({ __typename: "Product", id: 5n }); // "Product:5"
+cache.identify({ __typename: "Product", id: "5" }); // "Product:5"
+```
+
+This applies to the default `id` and `_id` fields, and to fields that you list in `keyFields`, including nested key fields and lists of scalars.
+
+<Note>
+
+If you define `keyFields` as a function, or you pass a `dataIdFromObject` function, Apollo Client passes the key field values to your function in the form that they are in. Serialize scalar values before you include them in the ID. For example, use `coerceToSerialized`:
+
+```ts
+const cache = new InMemoryCache({
+  scalars: { BigInt: bigIntScalar },
+  typePolicies: {
+    Product: {
+      keyFields: (product) =>
+        `Product:${bigIntScalar.coerceToSerialized(product.id)}`,
+    },
+  },
+});
+```
+
+</Note>
 
 ## Variable serialization
 

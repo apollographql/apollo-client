@@ -206,6 +206,7 @@ export class InternalQueryReference<
   private subscription!: Subscription;
   private listeners = new Set<Listener<TData, TStates>>();
   private autoDisposeTimeoutId?: NodeJS.Timeout;
+  private pendingOptions?: ObservedOptions;
 
   private resolve:
     | ((result: ObservableQuery.Result<MaybeMasked<TData>, TStates>) => void)
@@ -258,7 +259,15 @@ export class InternalQueryReference<
   }
 
   reinitialize() {
-    const { observable } = this;
+    const { observable, pendingOptions } = this;
+    this.pendingOptions = undefined;
+
+    // Apply options that changed while the query ref was disposed before
+    // resubscribing so that we resume with the latest options without
+    // executing a network request.
+    if (pendingOptions) {
+      observable.applyOptions(pendingOptions);
+    }
 
     const originalFetchPolicy = this.watchQueryOptions.fetchPolicy;
     const avoidNetworkRequests =
@@ -325,14 +334,29 @@ export class InternalQueryReference<
   }
 
   didChangeOptions(watchQueryOptions: ObservedOptions) {
+    const currentOptions = {
+      ...this.watchQueryOptions,
+      ...this.pendingOptions,
+    };
+
     return OBSERVED_CHANGED_OPTIONS.some(
       (option) =>
         option in watchQueryOptions &&
-        !equal(this.watchQueryOptions[option], watchQueryOptions[option])
+        !equal(currentOptions[option], watchQueryOptions[option])
     );
   }
 
   applyOptions(watchQueryOptions: ObservedOptions) {
+    // If the queryRef is disposed because useReadQuery unmounts or the auto
+    // dispose timer disposes it, but the parent hook (e.g. useBackgroundQuery)
+    // rerenders with new options, we want to keep a copy of the new options so
+    // that when useReadQuery mounts, we can apply them. This avoids subscribing
+    // or fetching while its disposed due to e.g. unskipping a query.
+    if (this.disposed) {
+      this.pendingOptions = { ...this.pendingOptions, ...watchQueryOptions };
+      return this.promise;
+    }
+
     const { fetchPolicy: currentFetchPolicy } = this.watchQueryOptions;
 
     // "standby" is used when `skip` is set to `true`. Detect when we've
@@ -454,7 +478,7 @@ export class InternalQueryReference<
   private initiateFetch(
     returnedPromise: Promise<ApolloClient.QueryResult<MaybeMasked<TData>>>
   ) {
-    this.promise = this.createPendingPromise();
+    const promise = (this.promise = this.createPendingPromise());
     this.promise.catch(() => {});
 
     // If the data returned from the fetch is deeply equal to the data already
@@ -475,7 +499,7 @@ export class InternalQueryReference<
         // See https://github.com/apollographql/apollo-client/issues/11315 for
         // more information
         setTimeout(() => {
-          if (this.promise.status === "pending") {
+          if (this.promise === promise && promise.status === "pending") {
             // Use the current result from the observable instead of the value
             // resolved from the promise. This avoids issues in some cases where
             // the raw resolved value should not be the emitted value, such as
@@ -493,7 +517,11 @@ export class InternalQueryReference<
           }
         });
       })
-      .catch((error) => this.reject?.(error));
+      .catch((error) => {
+        if (this.promise === promise) {
+          this.reject?.(error);
+        }
+      });
 
     return returnedPromise;
   }

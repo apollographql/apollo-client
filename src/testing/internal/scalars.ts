@@ -47,3 +47,10 @@ export const dateTimeRangeScalar = new Scalar<
   }),
   is: (value) => !Array.isArray(value),
 });
+
+// Used to test a scalar whose parsed value is not JSON-serializable
+export const bigIntScalar = new Scalar<string, bigint>({
+  serialize: (value) => value.toString(),
+  parse: (value) => BigInt(value),
+  is: (value) => typeof value === "bigint",
+});

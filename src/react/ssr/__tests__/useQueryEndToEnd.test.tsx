@@ -1,4 +1,5 @@
 import { screen, waitFor } from "@testing-library/react";
+import { disableActEnvironment } from "@testing-library/react-render-stream";
 import React from "react";
 import { hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
@@ -75,6 +76,7 @@ it("should not cause a hydration mismatch when both ssr: false and skip: true ar
   });
 
   const hydrationErrors: unknown[] = [];
+  using _disabledAct = disableActEnvironment();
   const root = hydrateRoot(
     container,
     <ApolloProvider client={clientClient}>

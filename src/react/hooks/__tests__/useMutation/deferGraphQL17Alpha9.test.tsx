@@ -81,7 +81,7 @@ test("resolves a deferred mutation with the full result", async () => {
         __typename: "Todo",
       },
     },
-    pending: [{ id: "0", path: ["createTodo"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["createTodo"] }],
     hasNext: true,
   });
 
@@ -202,7 +202,7 @@ test("resolves with resulting errors and calls onError callback", async () => {
         __typename: "Todo",
       },
     },
-    pending: [{ id: "0", path: ["createTodo"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["createTodo"] }],
     hasNext: true,
   });
 
@@ -311,7 +311,7 @@ test("calls the update function with the final merged result data", async () => 
         __typename: "Todo",
       },
     },
-    pending: [{ id: "0", path: ["createTodo"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["createTodo"] }],
     hasNext: true,
   });
 

@@ -391,7 +391,13 @@ describe("Link interactions", () => {
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
-      localState: new LocalState(),
+      localState: new LocalState({
+        resolvers: {
+          Book: {
+            isRead: () => false,
+          },
+        },
+      }),
     });
 
     await client.query({ query });

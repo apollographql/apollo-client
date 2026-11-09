@@ -971,7 +971,7 @@ it("returns DeepPartial<TData> with returnPartialData: boolean", () => {
 it("returns TData with returnPartialData: true and fetchPolicy: no-cache", () => {
   const { query } = setupVariablesCase();
 
-  /*  {
+  {
     const [queryRef] = useBackgroundQuery(query, {
       returnPartialData: true,
       fetchPolicy: "no-cache",
@@ -985,7 +985,7 @@ it("returns TData with returnPartialData: true and fetchPolicy: no-cache", () =>
         VariablesCaseVariables,
         "complete" | "streaming"
       >
-    >;
+    >();
     expectTypeOf(data).toEqualTypeOf<
       VariablesCaseData | DataValue.Streaming<VariablesCaseData>
     >();
@@ -1000,7 +1000,7 @@ it("returns TData with returnPartialData: true and fetchPolicy: no-cache", () =>
         DataValue.Streaming<VariablesCaseData>
       >();
     }
-  } */
+  }
 
   /* {
     const [queryRef] = useBackgroundQuery<
@@ -1517,7 +1517,7 @@ it("handles combinations of options", () => {
 it("returns correct TData type when combined options that do not affect TData", () => {
   const { query } = setupVariablesCase();
 
-  /* {
+  {
     const [queryRef] = useBackgroundQuery(query, {
       fetchPolicy: "no-cache",
       returnPartialData: true,
@@ -1532,7 +1532,7 @@ it("returns correct TData type when combined options that do not affect TData", 
         VariablesCaseVariables,
         "complete" | "streaming"
       >
-    >;
+    >();
     expectTypeOf(data).toEqualTypeOf<
       VariablesCaseData | DataValue.Streaming<VariablesCaseData>
     >();
@@ -1547,7 +1547,7 @@ it("returns correct TData type when combined options that do not affect TData", 
         DataValue.Streaming<VariablesCaseData>
       >();
     }
-  } */
+  }
 
   /* {
     const [queryRef] = useBackgroundQuery<
@@ -1587,7 +1587,7 @@ it("returns correct TData type when combined options that do not affect TData", 
 
   const { query: maskedQuery } = setupMaskedVariablesCase();
 
-  /* {
+  {
     const [queryRef] = useBackgroundQuery(maskedQuery, {
       fetchPolicy: "no-cache",
       returnPartialData: true,
@@ -1602,7 +1602,7 @@ it("returns correct TData type when combined options that do not affect TData", 
         VariablesCaseVariables,
         "complete" | "streaming"
       >
-    >;
+    >();
     expectTypeOf(data).toEqualTypeOf<
       MaskedVariablesCaseData | DataValue.Streaming<MaskedVariablesCaseData>
     >();
@@ -1617,7 +1617,7 @@ it("returns correct TData type when combined options that do not affect TData", 
         DataValue.Streaming<MaskedVariablesCaseData>
       >();
     }
-  } */
+  }
 
   /* {
     const [queryRef] = useBackgroundQuery<

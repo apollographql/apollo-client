@@ -3551,7 +3551,7 @@ describe("useQuery Hook", () => {
           <ApolloProvider client={client}>{children}</ApolloProvider>
         );
 
-        const { result } = renderHook(
+        const { result, unmount } = renderHook(
           () => useQuery(query, { pollInterval: 10 }),
           { wrapper }
         );
@@ -3579,7 +3579,7 @@ describe("useQuery Hook", () => {
           { interval: 1 }
         );
 
-        await jest.advanceTimersByTimeAsync(12);
+        await act(() => jest.advanceTimersByTimeAsync(12));
         expect(result.current).toStrictEqualTyped({
           data: { hello: "world 2" },
           dataState: "complete",
@@ -3591,7 +3591,7 @@ describe("useQuery Hook", () => {
 
         skipPollAttempt.mockImplementation(() => true);
 
-        await jest.advanceTimersByTimeAsync(12);
+        await act(() => jest.advanceTimersByTimeAsync(12));
         expect(result.current).toStrictEqualTyped({
           data: { hello: "world 2" },
           dataState: "complete",
@@ -3601,7 +3601,7 @@ describe("useQuery Hook", () => {
           variables: {},
         });
 
-        await jest.advanceTimersByTimeAsync(12);
+        await act(() => jest.advanceTimersByTimeAsync(12));
         expect(result.current).toStrictEqualTyped({
           data: { hello: "world 2" },
           dataState: "complete",
@@ -3611,7 +3611,7 @@ describe("useQuery Hook", () => {
           variables: {},
         });
 
-        await jest.advanceTimersByTimeAsync(12);
+        await act(() => jest.advanceTimersByTimeAsync(12));
         expect(result.current).toStrictEqualTyped({
           data: { hello: "world 2" },
           dataState: "complete",
@@ -3623,7 +3623,7 @@ describe("useQuery Hook", () => {
 
         skipPollAttempt.mockImplementation(() => false);
 
-        await jest.advanceTimersByTimeAsync(12);
+        await act(() => jest.advanceTimersByTimeAsync(12));
         expect(result.current).toStrictEqualTyped({
           data: { hello: "world 3" },
           dataState: "complete",
@@ -3632,6 +3632,8 @@ describe("useQuery Hook", () => {
           previousData: { hello: "world 2" },
           variables: {},
         });
+
+        unmount();
       });
 
       it("when defined for a single query", async () => {
@@ -3671,7 +3673,7 @@ describe("useQuery Hook", () => {
           </MockedProvider>
         );
 
-        const { result } = renderHook(
+        const { result, unmount } = renderHook(
           () =>
             useQuery(query, {
               pollInterval: 10,
@@ -3703,7 +3705,7 @@ describe("useQuery Hook", () => {
           { interval: 1 }
         );
 
-        await jest.advanceTimersByTimeAsync(12);
+        await act(() => jest.advanceTimersByTimeAsync(12));
         expect(result.current).toStrictEqualTyped({
           data: { hello: "world 2" },
           dataState: "complete",
@@ -3715,7 +3717,7 @@ describe("useQuery Hook", () => {
 
         skipPollAttempt.mockImplementation(() => true);
 
-        await jest.advanceTimersByTimeAsync(12);
+        await act(() => jest.advanceTimersByTimeAsync(12));
         expect(result.current).toStrictEqualTyped({
           data: { hello: "world 2" },
           dataState: "complete",
@@ -3725,7 +3727,7 @@ describe("useQuery Hook", () => {
           variables: {},
         });
 
-        await jest.advanceTimersByTimeAsync(12);
+        await act(() => jest.advanceTimersByTimeAsync(12));
         expect(result.current).toStrictEqualTyped({
           data: { hello: "world 2" },
           dataState: "complete",
@@ -3735,7 +3737,7 @@ describe("useQuery Hook", () => {
           variables: {},
         });
 
-        await jest.advanceTimersByTimeAsync(12);
+        await act(() => jest.advanceTimersByTimeAsync(12));
         expect(result.current).toStrictEqualTyped({
           data: { hello: "world 2" },
           dataState: "complete",
@@ -3747,7 +3749,7 @@ describe("useQuery Hook", () => {
 
         skipPollAttempt.mockImplementation(() => false);
 
-        await jest.advanceTimersByTimeAsync(12);
+        await act(() => jest.advanceTimersByTimeAsync(12));
         expect(result.current).toStrictEqualTyped({
           data: { hello: "world 3" },
           dataState: "complete",
@@ -3756,6 +3758,8 @@ describe("useQuery Hook", () => {
           previousData: { hello: "world 2" },
           variables: {},
         });
+
+        unmount();
       });
     });
   });

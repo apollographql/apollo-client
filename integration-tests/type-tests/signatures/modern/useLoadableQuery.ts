@@ -845,17 +845,13 @@ it("returns correct TData type when combined options that do not affect TData", 
       QueryRef<
         VariablesCaseData,
         VariablesCaseVariables,
-        "complete" | "streaming" | "partial"
+        "complete" | "streaming"
       >
     >;
     expectTypeOf(data).toEqualTypeOf<
-      | VariablesCaseData
-      | DeepPartial<VariablesCaseData>
-      | DataValue.Streaming<VariablesCaseData>
+      VariablesCaseData | DataValue.Streaming<VariablesCaseData>
     >();
-    expectTypeOf(dataState).toEqualTypeOf<
-      "complete" | "streaming" | "partial"
-    >();
+    expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
 
     if (dataState === "complete") {
       expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
@@ -865,10 +861,6 @@ it("returns correct TData type when combined options that do not affect TData", 
       expectTypeOf(data).toEqualTypeOf<
         DataValue.Streaming<VariablesCaseData>
       >();
-    }
-
-    if (dataState === "partial") {
-      expectTypeOf(data).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
     }
   }
 

@@ -179,9 +179,6 @@ type DeepOmitArray<T extends any[], K> = {
 // @public (undocumented)
 type DeepOmitPrimitive = Primitive | Function;
 
-// @internal @deprecated
-export type DeferInfoTrie = Trie<true>;
-
 // @public (undocumented)
 type Directives = {
     [directiveName: string]: {
@@ -395,7 +392,7 @@ export type IsAny<T> = 0 extends 1 & T ? true : false;
 export const isArray: (a: any) => a is any[] | readonly any[];
 
 // @internal @deprecated (undocumented)
-export const isDeferredFragment: (fragmentSelection: FragmentSpreadNode | InlineFragmentNode, variables: OperationVariables | undefined) => boolean;
+export function isDeferredFragment(fragmentSelection: InlineFragmentNode | FragmentSpreadNode, variables: OperationVariables | undefined): boolean;
 
 // @internal @deprecated (undocumented)
 export function isDocumentNode(value: unknown): value is DocumentNode;
@@ -425,7 +422,7 @@ export function isNonNullObject(obj: unknown): obj is Record<string | number, an
 export function isPlainObject(obj: unknown): obj is Record<string | number, any>;
 
 // @internal @deprecated (undocumented)
-export const isStreamField: (field: FieldNode, variables: OperationVariables | undefined) => boolean;
+export function isStreamField(field: FieldNode, variables: OperationVariables | undefined): boolean;
 
 // @public (undocumented)
 export function isTypenameField(field: FieldNode): boolean;
@@ -475,6 +472,12 @@ type OptionsUnion<TData, TVariables extends OperationVariables> = ApolloClient.W
 //
 // @public (undocumented)
 export type OptionWithFallback<Options, DefaultOptions, Key extends keyof DefaultOptions> = Key extends keyof RemoveIndexSignature<Options> ? ReplaceUndefinedWithDefault<Options[Key], DefaultOptions[Key]> : DefaultOptions[Key];
+
+// @internal @deprecated (undocumented)
+export type PartialDataState<Options, DefaultOptions extends {
+    returnPartialData: boolean;
+    fetchPolicy?: unknown;
+}> = OptionWithFallback<Options, DefaultOptions, "returnPartialData"> extends (false) ? never : OptionWithFallback<Options, DefaultOptions, "fetchPolicy"> extends ("no-cache") ? never : "partial";
 
 // @internal @deprecated (undocumented)
 export interface PendingPromise<TValue> extends Promise<TValue> {

@@ -27,6 +27,7 @@ import {
 } from "@apollo/client/react/internal";
 import type {
   OptionWithFallback,
+  PartialDataState,
   Prettify,
   SignatureStyle,
   VariablesOption,
@@ -187,13 +188,7 @@ export declare namespace useBackgroundQuery {
                   > extends "none" ?
                     never
                   : "empty")
-                | (OptionWithFallback<
-                    TOptions,
-                    DefaultOptions,
-                    "returnPartialData"
-                  > extends false ?
-                    never
-                  : "partial")
+                | PartialDataState<TOptions, DefaultOptions>
               )
           >
         | (OptionWithFallback<TOptions, DefaultOptions, "skip"> extends false ?

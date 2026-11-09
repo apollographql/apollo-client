@@ -192,7 +192,7 @@ test('does not suspend deferred queries with data in the cache and using a "cach
     data: {
       greeting: { __typename: "Greeting", message: "Hello world" },
     },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -346,7 +346,7 @@ test('does not suspend deferred queries with partial data in the cache and using
     data: {
       greeting: { message: "Hello world", __typename: "Greeting" },
     },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 

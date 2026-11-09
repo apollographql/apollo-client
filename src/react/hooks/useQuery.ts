@@ -43,6 +43,7 @@ import type {
   DocumentationTypes as UtilityDocumentationTypes,
   LazyType,
   OptionWithFallback,
+  PartialDataState,
   Prettify,
   SignatureStyle,
   VariablesOption,
@@ -244,14 +245,9 @@ export declare namespace useQuery {
       | "streaming"
       | "empty"
       | (TOptions extends any ?
-          TOptions extends SkipToken ? never
-          : OptionWithFallback<
-            TOptions,
-            DefaultOptions,
-            "returnPartialData"
-          > extends false ?
+          TOptions extends SkipToken ?
             never
-          : "partial"
+          : PartialDataState<TOptions, DefaultOptions>
         : never),
       TVariables,
       OptionWithFallback<TOptions, DefaultOptions, "errorPolicy"> & ErrorPolicy

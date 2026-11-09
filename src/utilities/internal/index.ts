@@ -14,7 +14,6 @@ export type { Primitive } from "./types/Primitive.js";
 export type { RejectedPromise } from "./types/RejectedPromise.js";
 export type { RemoveIndexSignature } from "./types/RemoveIndexSignature.js";
 export type { StreamInfoTrie } from "./types/StreamInfoTrie.js";
-export type { DeferInfoTrie } from "./types/DeferInfo.js";
 export type { VariablesOption } from "./types/VariablesOption.js";
 export type { DocumentationTypes } from "./types/DocumentationTypes.js";
 export type { LazyType } from "./LazyType.js";
@@ -23,6 +22,7 @@ export type {
   SignatureStyle,
 } from "./types/SignatureStyle.js";
 export type { OptionWithFallback } from "./types/OptionWithFallback.js";
+export type { PartialDataState } from "./types/PartialDataState.js";
 
 export { addDeferFragmentLabels } from "./addDeferFragmentLabels.js";
 export { argumentsObjectFromField } from "./argumentsObjectFromField.js";

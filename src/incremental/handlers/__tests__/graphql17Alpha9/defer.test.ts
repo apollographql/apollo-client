@@ -28,6 +28,7 @@ import {
   promiseWithResolvers,
   wait,
 } from "@apollo/client/testing/internal";
+import { addDeferFragmentLabels } from "@apollo/client/utilities/internal";
 
 // This is the test setup of the `graphql-js` v17.0.0-alpha.9 release:
 // https://github.com/graphql/graphql-js/blob/3283f8adf52e77a47f148ff2f30185c8d11ff0f0/src/execution/__tests__/defer-test.ts
@@ -173,7 +174,7 @@ describe("graphql-js test cases", () => {
   // https://github.com/graphql/graphql-js/blob/3283f8adf52e77a47f148ff2f30185c8d11ff0f0/src/execution/__tests__/defer-test.ts
 
   it("Can defer fragments containing scalar types", async () => {
-    const query = gql`
+    const query = addDeferFragmentLabels(gql`
       query HeroNameQuery {
         hero {
           id
@@ -183,7 +184,7 @@ describe("graphql-js test cases", () => {
       fragment NameFragment on Hero {
         name
       }
-    `;
+    `);
 
     const handler = new GraphQL17Alpha9Handler();
     const request = handler.startRequest({ query });
@@ -223,7 +224,7 @@ describe("graphql-js test cases", () => {
   });
 
   it("Can disable defer using if argument", async () => {
-    const query = gql`
+    const query = addDeferFragmentLabels(gql`
       query HeroNameQuery {
         hero {
           id
@@ -233,7 +234,7 @@ describe("graphql-js test cases", () => {
       fragment NameFragment on Hero {
         name
       }
-    `;
+    `);
     const handler = new GraphQL17Alpha9Handler();
     const incoming = run(query);
 
@@ -256,7 +257,7 @@ describe("graphql-js test cases", () => {
   });
 
   it("Can defer fragments on the top level Query field", async () => {
-    const query = gql`
+    const query = addDeferFragmentLabels(gql`
       query HeroNameQuery {
         ...QueryFragment @defer(label: "DeferQuery")
       }
@@ -265,7 +266,7 @@ describe("graphql-js test cases", () => {
           id
         }
       }
-    `;
+    `);
 
     const handler = new GraphQL17Alpha9Handler();
     const request = handler.startRequest({ query });
@@ -300,7 +301,7 @@ describe("graphql-js test cases", () => {
   });
 
   it("Can defer fragments with errors on the top level Query field", async () => {
-    const query = gql`
+    const query = addDeferFragmentLabels(gql`
       query HeroNameQuery {
         ...QueryFragment @defer(label: "DeferQuery")
       }
@@ -309,7 +310,7 @@ describe("graphql-js test cases", () => {
           name
         }
       }
-    `;
+    `);
     const handler = new GraphQL17Alpha9Handler();
     const request = handler.startRequest({ query });
 
@@ -356,7 +357,7 @@ describe("graphql-js test cases", () => {
   });
 
   it("Can defer a fragment within an already deferred fragment", async () => {
-    const query = gql`
+    const query = addDeferFragmentLabels(gql`
       query HeroNameQuery {
         hero {
           ...TopFragment @defer(label: "DeferTop")
@@ -371,7 +372,7 @@ describe("graphql-js test cases", () => {
           name
         }
       }
-    `;
+    `);
 
     const handler = new GraphQL17Alpha9Handler();
     const request = handler.startRequest({ query });
@@ -417,7 +418,7 @@ describe("graphql-js test cases", () => {
   });
 
   it("Can defer an inline fragment", async () => {
-    const query = gql`
+    const query = addDeferFragmentLabels(gql`
       query HeroNameQuery {
         hero {
           id
@@ -426,7 +427,7 @@ describe("graphql-js test cases", () => {
           }
         }
       }
-    `;
+    `);
     const handler = new GraphQL17Alpha9Handler();
     const request = handler.startRequest({ query });
 
@@ -469,7 +470,7 @@ describe("graphql-js test cases", () => {
   });
 
   it("Emits children of empty defer fragments", async () => {
-    const query = gql`
+    const query = addDeferFragmentLabels(gql`
       query HeroNameQuery {
         hero {
           ... @defer {
@@ -479,7 +480,7 @@ describe("graphql-js test cases", () => {
           }
         }
       }
-    `;
+    `);
 
     const handler = new GraphQL17Alpha9Handler();
     const request = handler.startRequest({ query });
@@ -516,7 +517,7 @@ describe("graphql-js test cases", () => {
   });
 
   it("Can separately emit defer fragments with different labels with varying fields", async () => {
-    const query = gql`
+    const query = addDeferFragmentLabels(gql`
       query HeroNameQuery {
         hero {
           ... @defer(label: "DeferID") {
@@ -527,7 +528,7 @@ describe("graphql-js test cases", () => {
           }
         }
       }
-    `;
+    `);
 
     const handler = new GraphQL17Alpha9Handler();
     const request = handler.startRequest({ query });
@@ -565,7 +566,7 @@ describe("graphql-js test cases", () => {
   });
 
   it("Separately emits defer fragments with different labels with varying subfields", async () => {
-    const query = gql`
+    const query = addDeferFragmentLabels(gql`
       query HeroNameQuery {
         ... @defer(label: "DeferID") {
           hero {
@@ -578,7 +579,7 @@ describe("graphql-js test cases", () => {
           }
         }
       }
-    `;
+    `);
 
     const handler = new GraphQL17Alpha9Handler();
     const request = handler.startRequest({ query });
@@ -618,7 +619,7 @@ describe("graphql-js test cases", () => {
   });
 
   it("Separately emits defer fragments with varying subfields of same priorities but different level of defers", async () => {
-    const query = gql`
+    const query = addDeferFragmentLabels(gql`
       query HeroNameQuery {
         hero {
           ... @defer(label: "DeferID") {
@@ -631,7 +632,7 @@ describe("graphql-js test cases", () => {
           }
         }
       }
-    `;
+    `);
 
     const handler = new GraphQL17Alpha9Handler();
     const request = handler.startRequest({ query });
@@ -669,7 +670,7 @@ describe("graphql-js test cases", () => {
   });
 
   it("Separately emits nested defer fragments with varying subfields of same priorities but different level of defers", async () => {
-    const query = gql`
+    const query = addDeferFragmentLabels(gql`
       query HeroNameQuery {
         ... @defer(label: "DeferName") {
           hero {
@@ -680,7 +681,7 @@ describe("graphql-js test cases", () => {
           }
         }
       }
-    `;
+    `);
     const handler = new GraphQL17Alpha9Handler();
     const request = handler.startRequest({ query });
 
@@ -715,7 +716,7 @@ describe("graphql-js test cases", () => {
   });
 
   it("Initiates deferred grouped field sets only if they have been released as pending", async () => {
-    const query = gql`
+    const query = addDeferFragmentLabels(gql`
       query {
         ... @defer {
           a {
@@ -741,7 +742,7 @@ describe("graphql-js test cases", () => {
           }
         }
       }
-    `;
+    `);
 
     const { promise: slowFieldPromise, resolve: resolveSlowField } =
       promiseWithResolvers();
@@ -813,7 +814,7 @@ describe("graphql-js test cases", () => {
   });
 
   it("Initiates unique deferred grouped field sets after those that are common to sibling defers", async () => {
-    const query = gql`
+    const query = addDeferFragmentLabels(gql`
       query {
         ... @defer {
           a {
@@ -841,7 +842,7 @@ describe("graphql-js test cases", () => {
           }
         }
       }
-    `;
+    `);
 
     const { promise: cPromise, resolve: resolveC } =
       promiseWithResolvers<void>();
@@ -908,7 +909,7 @@ describe("graphql-js test cases", () => {
   });
 
   it("Can deduplicate multiple defers on the same object", async () => {
-    const query = gql`
+    const query = addDeferFragmentLabels(gql`
       query {
         hero {
           friends {
@@ -932,7 +933,7 @@ describe("graphql-js test cases", () => {
         id
         name
       }
-    `;
+    `);
 
     const handler = new GraphQL17Alpha9Handler();
     const request = handler.startRequest({ query });
@@ -975,7 +976,7 @@ describe("graphql-js test cases", () => {
   });
 
   it("Deduplicates fields present in the initial payload", async () => {
-    const query = gql`
+    const query = addDeferFragmentLabels(gql`
       query {
         hero {
           nestedObject {
@@ -1002,7 +1003,7 @@ describe("graphql-js test cases", () => {
           }
         }
       }
-    `;
+    `);
     const handler = new GraphQL17Alpha9Handler();
     const request = handler.startRequest({ query });
 
@@ -1064,7 +1065,7 @@ describe("graphql-js test cases", () => {
   });
 
   it("Deduplicates fields present in a parent defer payload", async () => {
-    const query = gql`
+    const query = addDeferFragmentLabels(gql`
       query {
         hero {
           ... @defer {
@@ -1080,7 +1081,7 @@ describe("graphql-js test cases", () => {
           }
         }
       }
-    `;
+    `);
     const handler = new GraphQL17Alpha9Handler();
     const request = handler.startRequest({ query });
 
@@ -1123,7 +1124,7 @@ describe("graphql-js test cases", () => {
   });
 
   it("Deduplicates fields with deferred fragments at multiple levels", async () => {
-    const query = gql`
+    const query = addDeferFragmentLabels(gql`
       query {
         hero {
           nestedObject {
@@ -1154,7 +1155,7 @@ describe("graphql-js test cases", () => {
           }
         }
       }
-    `;
+    `);
 
     const handler = new GraphQL17Alpha9Handler();
     const request = handler.startRequest({ query });
@@ -1210,7 +1211,7 @@ describe("graphql-js test cases", () => {
   });
 
   it("Deduplicates multiple fields from deferred fragments from different branches occurring at the same level", async () => {
-    const query = gql`
+    const query = addDeferFragmentLabels(gql`
       query {
         hero {
           nestedObject {
@@ -1232,7 +1233,7 @@ describe("graphql-js test cases", () => {
           }
         }
       }
-    `;
+    `);
 
     const handler = new GraphQL17Alpha9Handler();
     const request = handler.startRequest({ query });
@@ -1280,7 +1281,7 @@ describe("graphql-js test cases", () => {
   });
 
   it("Deduplicate fields with deferred fragments in different branches at multiple non-overlapping levels", async () => {
-    const query = gql`
+    const query = addDeferFragmentLabels(gql`
       query {
         a {
           b {
@@ -1307,7 +1308,7 @@ describe("graphql-js test cases", () => {
           }
         }
       }
-    `;
+    `);
 
     const handler = new GraphQL17Alpha9Handler();
     const request = handler.startRequest({ query });
@@ -1362,7 +1363,7 @@ describe("graphql-js test cases", () => {
   });
 
   it("Correctly bundles varying subfields into incremental data records unique by defer combination, ignoring fields in a fragment masked by a parent defer", async () => {
-    const query = gql`
+    const query = addDeferFragmentLabels(gql`
       query HeroNameQuery {
         ... @defer {
           hero {
@@ -1379,7 +1380,7 @@ describe("graphql-js test cases", () => {
           }
         }
       }
-    `;
+    `);
     const handler = new GraphQL17Alpha9Handler();
     const request = handler.startRequest({ query });
 
@@ -1415,7 +1416,7 @@ describe("graphql-js test cases", () => {
   });
 
   it("Nulls cross defer boundaries, null first", async () => {
-    const query = gql`
+    const query = addDeferFragmentLabels(gql`
       query {
         ... @defer {
           a {
@@ -1437,7 +1438,7 @@ describe("graphql-js test cases", () => {
           }
         }
       }
-    `;
+    `);
     const handler = new GraphQL17Alpha9Handler();
     const request = handler.startRequest({ query });
 
@@ -1484,7 +1485,7 @@ describe("graphql-js test cases", () => {
   });
 
   it("Nulls cross defer boundaries, value first", async () => {
-    const query = gql`
+    const query = addDeferFragmentLabels(gql`
       query {
         ... @defer {
           a {
@@ -1506,7 +1507,7 @@ describe("graphql-js test cases", () => {
           }
         }
       }
-    `;
+    `);
     const handler = new GraphQL17Alpha9Handler();
     const request = handler.startRequest({ query });
 
@@ -1556,7 +1557,7 @@ describe("graphql-js test cases", () => {
   });
 
   it("Handles multiple erroring deferred grouped field sets", async () => {
-    const query = gql`
+    const query = addDeferFragmentLabels(gql`
       query {
         ... @defer {
           a {
@@ -1577,7 +1578,7 @@ describe("graphql-js test cases", () => {
           }
         }
       }
-    `;
+    `);
     const handler = new GraphQL17Alpha9Handler();
     const request = handler.startRequest({ query });
 
@@ -1623,7 +1624,7 @@ describe("graphql-js test cases", () => {
   });
 
   it("Handles multiple erroring deferred grouped field sets for the same fragment", async () => {
-    const query = gql`
+    const query = addDeferFragmentLabels(gql`
       query {
         ... @defer {
           a {
@@ -1650,7 +1651,7 @@ describe("graphql-js test cases", () => {
           }
         }
       }
-    `;
+    `);
     const handler = new GraphQL17Alpha9Handler();
     const request = handler.startRequest({ query });
 
@@ -1698,7 +1699,7 @@ describe("graphql-js test cases", () => {
   });
 
   it("filters a payload with a null that cannot be merged", async () => {
-    const query = gql`
+    const query = addDeferFragmentLabels(gql`
       query {
         ... @defer {
           a {
@@ -1720,7 +1721,7 @@ describe("graphql-js test cases", () => {
           }
         }
       }
-    `;
+    `);
     const handler = new GraphQL17Alpha9Handler();
     const request = handler.startRequest({ query });
 
@@ -1803,7 +1804,7 @@ describe("graphql-js test cases", () => {
   });
 
   it("Cancels deferred fields when deferred result exhibits null bubbling", async () => {
-    const query = gql`
+    const query = addDeferFragmentLabels(gql`
       query {
         ... @defer {
           hero {
@@ -1812,7 +1813,7 @@ describe("graphql-js test cases", () => {
           }
         }
       }
-    `;
+    `);
 
     const handler = new GraphQL17Alpha9Handler();
     const request = handler.startRequest({ query });
@@ -1873,7 +1874,7 @@ describe("graphql-js test cases", () => {
   });
 
   it("Does not deduplicate list fields with non-overlapping fields", async () => {
-    const query = gql`
+    const query = addDeferFragmentLabels(gql`
       query {
         hero {
           friends {
@@ -1886,7 +1887,7 @@ describe("graphql-js test cases", () => {
           }
         }
       }
-    `;
+    `);
     const handler = new GraphQL17Alpha9Handler();
     const request = handler.startRequest({ query });
 
@@ -1940,7 +1941,7 @@ describe("graphql-js test cases", () => {
   });
 
   it("Handles errors thrown in deferred fragments", async () => {
-    const query = gql`
+    const query = addDeferFragmentLabels(gql`
       query HeroNameQuery {
         hero {
           id
@@ -1950,7 +1951,7 @@ describe("graphql-js test cases", () => {
       fragment NameFragment on Hero {
         name
       }
-    `;
+    `);
 
     const handler = new GraphQL17Alpha9Handler();
     const request = handler.startRequest({ query });
@@ -2003,7 +2004,7 @@ describe("graphql-js test cases", () => {
   });
 
   it("Handles non-nullable errors thrown in deferred fragments", async () => {
-    const query = gql`
+    const query = addDeferFragmentLabels(gql`
       query HeroNameQuery {
         hero {
           id
@@ -2013,7 +2014,7 @@ describe("graphql-js test cases", () => {
       fragment NameFragment on Hero {
         nonNullName
       }
-    `;
+    `);
     const handler = new GraphQL17Alpha9Handler();
     const request = handler.startRequest({ query });
 
@@ -2067,7 +2068,7 @@ describe("graphql-js test cases", () => {
   });
 
   it("Handles async non-nullable errors thrown in deferred fragments", async () => {
-    const query = gql`
+    const query = addDeferFragmentLabels(gql`
       query HeroNameQuery {
         hero {
           id
@@ -2077,7 +2078,7 @@ describe("graphql-js test cases", () => {
       fragment NameFragment on Hero {
         nonNullName
       }
-    `;
+    `);
     const handler = new GraphQL17Alpha9Handler();
     const request = handler.startRequest({ query });
 
@@ -2127,7 +2128,7 @@ describe("graphql-js test cases", () => {
   });
 
   it("Returns payloads in correct order", async () => {
-    const query = gql`
+    const query = addDeferFragmentLabels(gql`
       query HeroNameQuery {
         hero {
           id
@@ -2143,7 +2144,7 @@ describe("graphql-js test cases", () => {
       fragment NestedFragment on Friend {
         name
       }
-    `;
+    `);
     const handler = new GraphQL17Alpha9Handler();
     const request = handler.startRequest({ query });
 
@@ -2214,7 +2215,7 @@ test("GraphQL17Alpha9Handler can be used with `ApolloClient`", async () => {
     incrementalHandler: new GraphQL17Alpha9Handler(),
   });
 
-  const query = gql`
+  const query = addDeferFragmentLabels(gql`
     query HeroNameQuery {
       hero {
         id
@@ -2223,7 +2224,7 @@ test("GraphQL17Alpha9Handler can be used with `ApolloClient`", async () => {
         }
       }
     }
-  `;
+  `);
 
   const observableStream = new ObservableStream(client.watchQuery({ query }));
 
@@ -2271,7 +2272,7 @@ test("merges cache updates that happen concurrently", async () => {
     incrementalHandler: new GraphQL17Alpha9Handler(),
   });
 
-  const query = gql`
+  const query = addDeferFragmentLabels(gql`
     query HeroNameQuery {
       hero {
         id
@@ -2281,7 +2282,7 @@ test("merges cache updates that happen concurrently", async () => {
         }
       }
     }
-  `;
+  `);
 
   const observableStream = new ObservableStream(client.watchQuery({ query }));
 
@@ -2301,7 +2302,7 @@ test("merges cache updates that happen concurrently", async () => {
         job: "Farmer",
       },
     },
-    pending: [{ id: "0", path: ["hero"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["hero"] }],
     hasNext: true,
   });
 
@@ -2372,7 +2373,7 @@ test("returns error on initial result", async () => {
     incrementalHandler: new GraphQL17Alpha9Handler(),
   });
 
-  const query = gql`
+  const query = addDeferFragmentLabels(gql`
     query HeroNameQuery {
       hero {
         id
@@ -2382,7 +2383,7 @@ test("returns error on initial result", async () => {
         nonNullName
       }
     }
-  `;
+  `);
 
   const observableStream = new ObservableStream(
     client.watchQuery({ query, errorPolicy: "all" })
@@ -2437,7 +2438,7 @@ test("stream that returns an error but continues to stream", async () => {
     incrementalHandler: new GraphQL17Alpha9Handler(),
   });
 
-  const query = gql`
+  const query = addDeferFragmentLabels(gql`
     query HeroNameQuery {
       hero {
         id
@@ -2449,7 +2450,7 @@ test("stream that returns an error but continues to stream", async () => {
         }
       }
     }
-  `;
+  `);
 
   const observableStream = new ObservableStream(
     client.watchQuery({ query, errorPolicy: "all" })
@@ -2643,7 +2644,7 @@ test("ignores `data` property added to subsequent chunks by misbehaving servers"
     incrementalHandler: new GraphQL17Alpha9Handler(),
   });
 
-  const query = gql`
+  const query = addDeferFragmentLabels(gql`
     query HeroNameQuery {
       hero {
         id
@@ -2652,13 +2653,13 @@ test("ignores `data` property added to subsequent chunks by misbehaving servers"
         }
       }
     }
-  `;
+  `);
 
   const observableStream = new ObservableStream(client.watchQuery({ query }));
 
   stream.enqueueInitialChunk({
     data: { hero: { __typename: "Hero", id: "1" } },
-    pending: [{ id: "0", path: ["hero"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["hero"] }],
     hasNext: true,
   });
 
@@ -2712,7 +2713,7 @@ test("handles an incremental payload for a defer id that already completed with 
   // fragment with the deepest path (`inner`). Since `nonNullName` errors,
   // `inner` completes with errors before that shared unit resolves, which means
   // an `incremental` payload arrives for an id that has already been completed.
-  const query = gql`
+  const query = addDeferFragmentLabels(gql`
     query {
       ... @defer(label: "outer") {
         hero {
@@ -2726,7 +2727,7 @@ test("handles an incremental payload for a defer id that already completed with 
         }
       }
     }
-  `;
+  `);
 
   const handler = new GraphQL17Alpha9Handler();
   const request = handler.startRequest({ query });

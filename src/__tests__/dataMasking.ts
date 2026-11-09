@@ -1325,7 +1325,7 @@ describe("client.watchQuery", () => {
   });
 
   test("warns when passing parent object to `from` when id is masked", async () => {
-    using _ = spyOnConsole("warn");
+    using consoleSpy = spyOnConsole("warn");
 
     type UserFieldsFragment = {
       id: number;
@@ -1406,6 +1406,7 @@ describe("client.watchQuery", () => {
       "Could not identify object passed to `from` for '%s' fragment, either because the object is non-normalized or the key fields are missing. If you are masking this object, please ensure the key fields are requested by the parent object.",
       "UserFields"
     );
+    consoleSpy.warn.mockReset();
 
     const fragmentStream = new ObservableStream(fragmentObservable);
 
@@ -1416,10 +1417,11 @@ describe("client.watchQuery", () => {
       // TODO: Update when https://github.com/apollographql/apollo-client/issues/12003 is fixed
       expect(complete).toBe(true);
     }
+    expect(console.warn).not.toHaveBeenCalled();
   });
 
   test("warns when passing parent object to `from` that is non-normalized", async () => {
-    using _ = spyOnConsole("warn");
+    using consoleSpy = spyOnConsole("warn");
 
     type UserFieldsFragment = {
       age: number;
@@ -1497,6 +1499,7 @@ describe("client.watchQuery", () => {
       "Could not identify object passed to `from` for '%s' fragment, either because the object is non-normalized or the key fields are missing. If you are masking this object, please ensure the key fields are requested by the parent object.",
       "UserFields"
     );
+    consoleSpy.warn.mockReset();
 
     const fragmentStream = new ObservableStream(fragmentObservable);
 
@@ -1507,6 +1510,7 @@ describe("client.watchQuery", () => {
       // TODO: Update when https://github.com/apollographql/apollo-client/issues/12003 is fixed
       expect(complete).toBe(true);
     }
+    expect(console.warn).not.toHaveBeenCalled();
   });
 
   test("can lookup unmasked fragments from the fragment registry in queries", async () => {

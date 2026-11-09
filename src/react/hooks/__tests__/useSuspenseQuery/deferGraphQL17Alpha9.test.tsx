@@ -131,7 +131,7 @@ test("suspends deferred queries until initial chunk loads then streams in data a
 
   enqueueInitialChunk({
     data: { greeting: { message: "Hello world", __typename: "Greeting" } },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -232,7 +232,7 @@ test.each<useSuspenseQuery.FetchPolicy>([
       data: {
         greeting: { message: "Hello world", __typename: "Greeting" },
       },
-      pending: [{ id: "0", path: ["greeting"] }],
+      pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
       hasNext: true,
     });
 
@@ -416,7 +416,7 @@ test('does not suspend deferred queries with partial data in the cache and using
 
   enqueueInitialChunk({
     data: { greeting: { message: "Hello world", __typename: "Greeting" } },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -535,7 +535,7 @@ test('does not suspend deferred queries with data in the cache and using a "cach
 
   enqueueInitialChunk({
     data: { greeting: { __typename: "Greeting", message: "Hello world" } },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -637,8 +637,8 @@ test("suspends deferred queries with lists and properly patches results", async 
       ],
     },
     pending: [
-      { id: "0", path: ["greetings", 0] },
-      { id: "1", path: ["greetings", 1] },
+      { id: "0", label: "ac_0", path: ["greetings", 0] },
+      { id: "1", label: "ac_0", path: ["greetings", 1] },
     ],
     hasNext: true,
   });
@@ -803,8 +803,8 @@ test("suspends queries with deferred fragments in lists and properly merges arra
       ],
     },
     pending: [
-      { id: "0", path: ["allProducts", 0, "delivery"] },
-      { id: "1", path: ["allProducts", 1, "delivery"] },
+      { id: "0", label: "ac_0", path: ["allProducts", 0, "delivery"] },
+      { id: "1", label: "ac_0", path: ["allProducts", 1, "delivery"] },
     ],
     hasNext: true,
   });
@@ -940,7 +940,7 @@ test("incrementally rerenders data returned by a `refetch` for a deferred query"
 
   enqueueInitialChunk({
     data: { greeting: { __typename: "Greeting", message: "Hello world" } },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -1010,7 +1010,7 @@ test("incrementally rerenders data returned by a `refetch` for a deferred query"
         message: "Goodbye",
       },
     },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -1137,7 +1137,7 @@ test("incrementally renders data returned after skipping a deferred query", asyn
 
   enqueueInitialChunk({
     data: { greeting: { __typename: "Greeting", message: "Hello world" } },
-    pending: [{ id: "0", path: ["greeting"] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greeting"] }],
     hasNext: true,
   });
 
@@ -1245,7 +1245,7 @@ test("incrementally rerenders data returned by a `fetchMore` for a deferred quer
     data: {
       greetings: [{ __typename: "Greeting", message: "Hello world" }],
     },
-    pending: [{ id: "0", path: ["greetings", 0] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greetings", 0] }],
     hasNext: true,
   });
 
@@ -1318,7 +1318,7 @@ test("incrementally rerenders data returned by a `fetchMore` for a deferred quer
         },
       ],
     },
-    pending: [{ id: "0", path: ["greetings", 0] }],
+    pending: [{ id: "0", label: "ac_0", path: ["greetings", 0] }],
     hasNext: true,
   });
 
@@ -1631,8 +1631,8 @@ test("discards partial data and throws errors returned in incremental chunks", a
       },
     },
     pending: [
-      { id: "0", path: ["hero", "heroFriends", 0] },
-      { id: "1", path: ["hero", "heroFriends", 1] },
+      { id: "0", label: "ac_0", path: ["hero", "heroFriends", 0] },
+      { id: "1", label: "ac_0", path: ["hero", "heroFriends", 1] },
     ],
     hasNext: true,
   });
@@ -1784,8 +1784,8 @@ test("adds partial data and does not throw errors returned in incremental chunks
       },
     },
     pending: [
-      { id: "0", path: ["hero", "heroFriends", 0] },
-      { id: "1", path: ["hero", "heroFriends", 1] },
+      { id: "0", label: "ac_0", path: ["hero", "heroFriends", 0] },
+      { id: "1", label: "ac_0", path: ["hero", "heroFriends", 1] },
     ],
     hasNext: true,
   });
@@ -1956,8 +1956,8 @@ test("adds partial data and discards errors returned in incremental chunks with 
       },
     },
     pending: [
-      { id: "0", path: ["hero", "heroFriends", 0] },
-      { id: "1", path: ["hero", "heroFriends", 1] },
+      { id: "0", label: "ac_0", path: ["hero", "heroFriends", 0] },
+      { id: "1", label: "ac_0", path: ["hero", "heroFriends", 1] },
     ],
     hasNext: true,
   });
@@ -2095,8 +2095,8 @@ test("can refetch and respond to cache updates after encountering an error in an
       },
     },
     pending: [
-      { id: "0", path: ["hero", "heroFriends", 0] },
-      { id: "1", path: ["hero", "heroFriends", 1] },
+      { id: "0", label: "ac_0", path: ["hero", "heroFriends", 0] },
+      { id: "1", label: "ac_0", path: ["hero", "heroFriends", 1] },
     ],
     hasNext: true,
   });
@@ -2203,8 +2203,8 @@ test("can refetch and respond to cache updates after encountering an error in an
       },
     },
     pending: [
-      { id: "0", path: ["hero", "heroFriends", 0] },
-      { id: "1", path: ["hero", "heroFriends", 1] },
+      { id: "0", label: "ac_0", path: ["hero", "heroFriends", 0] },
+      { id: "1", label: "ac_0", path: ["hero", "heroFriends", 1] },
     ],
     hasNext: true,
   });

@@ -227,11 +227,13 @@ const client = new ApolloClient({
       Query: {
         fields: {
           book: {
-            read(_, { args, toReference }) {
-              return toReference({
+            read(existing, { args, toReference, canRead }) {
+              const ref = toReference({
                 __typename: "Book",
                 id: args.id,
               });
+
+              return canRead(ref) ? ref : existing;
             },
           },
         },
@@ -243,7 +245,7 @@ const client = new ApolloClient({
 
 This `read` function uses the `toReference` helper utility to generate and return a **cache reference** for a `Book` object, based on its `__typename` and `id`.
 
-Now whenever a query includes the `book` field, the `read` function above executes and returns a reference to a `Book` object. Apollo Client uses this reference to look up the object in its cache and return it if it's present. If it _isn't_ present, Apollo Client knows it needs to execute the query over the network.
+Now whenever a query includes the `book` field, the `read` function above executes. If `canRead(ref)` returns `true`, the function returns the reference and Apollo Client reads the `Book` from the cache. Otherwise, the function returns the existing field value. If no existing value is available, Apollo Client cannot satisfy the field from the cache and needs to execute the query over the network.
 
 <Note>
 

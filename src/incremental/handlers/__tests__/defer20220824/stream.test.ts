@@ -1407,7 +1407,7 @@ describe("Execute: stream directive", () => {
     const query = gql`
       query {
         friendList @stream(initialCount: 1, label: "stream-label") {
-          ...NameFragment @defer(label: "DeferName") @defer(label: "DeferName")
+          ...NameFragment @defer(label: "DeferName")
           id
         }
       }

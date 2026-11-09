@@ -873,6 +873,10 @@ function useResult<TData, TVariables extends OperationVariables>(
           // new value.
           .pipe(observeOn(asapScheduler))
           .subscribe((result) => {
+            if (observable.options.fetchPolicy === "standby") {
+              return;
+            }
+
             const previous = resultData.current;
 
             if (

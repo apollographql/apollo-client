@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 4.3.8
+
+### Patch Changes
+
+- [#13470](https://github.com/apollographql/apollo-client/pull/13470) [`6bc13c8`](https://github.com/apollographql/apollo-client/commit/6bc13c88e4bf798083094c4ad0d492af83693ea1) Thanks [@phryneas](https://github.com/phryneas)! - Add a new option, `batchHybridRequests` to `BatchHttpLink`. This allows it to combine persisted and non-persisted queries in one shared batch.
+
 ## 4.3.7
 
 ### Patch Changes

@@ -1617,7 +1617,7 @@ test("binds operation variables of a nested fragment shadowed by a parent fragme
   await expect(stream).not.toEmitAnything();
 });
 
-test("binds operation variables of a nested fragment shadowed by a parent fragment argument from a query result passed to from without data masking", async () => {
+test("binds operation variables of a masked nested fragment shadowed by a parent fragment argument from a fragment result passed to from", async () => {
   const barFragment = gql`
     fragment Bar on User {
       value(x: $x)
@@ -1629,7 +1629,6 @@ test("binds operation variables of a nested fragment shadowed by a parent fragme
       __typename: "User";
       id: string;
       fooValue: number;
-      value: number;
     }>
   > = gql`
     fragment Foo($x: Int!) on User {
@@ -1642,14 +1641,7 @@ test("binds operation variables of a nested fragment shadowed by a parent fragme
   `;
 
   const query: TypedDocumentNode<
-    WithFragmentInfo<{
-      user: {
-        __typename: "User";
-        id: string;
-        fooValue: number;
-        value: number;
-      };
-    }>,
+    WithFragmentInfo<{ user: MaskedUser }>,
     { x: number }
   > = gql`
       query Example($x: Int) {
@@ -1663,7 +1655,7 @@ test("binds operation variables of a nested fragment shadowed by a parent fragme
     `;
 
   const client = new ApolloClient({
-    dataMasking: false,
+    dataMasking: true,
     cache: new InMemoryCache(),
     link: new MockLink([
       {
@@ -1696,9 +1688,7 @@ test("binds operation variables of a nested fragment shadowed by a parent fragme
       user: {
         __typename: "User",
         id: "1",
-        fooValue: 1,
-        value: 99,
-        [fragmentVariablesSymbol]: { Foo: { x: 1 }, Bar: { x: 99 } },
+        [fragmentVariablesSymbol]: { Foo: { x: 1 } },
       },
     },
     dataState: "complete",
@@ -1709,7 +1699,7 @@ test("binds operation variables of a nested fragment shadowed by a parent fragme
   assert(queryResult.dataState === "complete");
   const queryData = queryResult.data;
 
-  using stream = new ObservableStream(
+  using fooStream = new ObservableStream(
     client.watchFragment({
       fragment: fooFragment,
       fragmentName: "Foo",
@@ -1717,14 +1707,27 @@ test("binds operation variables of a nested fragment shadowed by a parent fragme
     })
   );
 
-  await expect(stream).toEmitTypedValue({
+  const fooResult = await fooStream.takeNext();
+
+  expect(fooResult).toStrictEqualTyped({
     data: {
       __typename: "User",
       id: "1",
       fooValue: 1,
-      value: 99,
       [fragmentVariablesSymbol]: { Bar: { x: 99 } },
     },
+    dataState: "complete",
+    complete: true,
+  });
+  assert(fooResult.dataState === "complete");
+  const fooData = fooResult.data;
+
+  using stream = new ObservableStream(
+    client.watchFragment({ fragment: barFragment, from: fooData })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: { __typename: "User", value: 99 },
     dataState: "complete",
     complete: true,
   });

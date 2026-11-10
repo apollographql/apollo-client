@@ -84,7 +84,7 @@ function hasVariables(
       return BREAK;
     },
     FragmentSpread(node) {
-      usesVariables = hasVariables(fragmentMap[node.name.value], fragmentMap);
+      usesVariables ||= hasVariables(fragmentMap[node.name.value], fragmentMap);
     },
   });
 

@@ -1511,6 +1511,227 @@ test("binds fragment arguments of a nested fragment from a fragment result passe
   await expect(stream).not.toEmitAnything();
 });
 
+test("binds operation variables of a nested fragment shadowed by a parent fragment argument from a query result passed to from", async () => {
+  const barFragment = gql`
+    fragment Bar on User {
+      value(x: $x)
+    }
+  `;
+
+  const fooFragment: TypedDocumentNode<
+    WithFragmentInfo<{
+      __typename: "User";
+      id: string;
+      fooValue: number;
+      value: number;
+    }>
+  > = gql`
+    fragment Foo($x: Int!) on User {
+      id
+      fooValue: value(x: $x)
+      ...Bar @unmask
+    }
+
+    ${barFragment}
+  `;
+
+  const query: TypedDocumentNode<
+    WithFragmentInfo<{ user: MaskedUser }>,
+    { x: number }
+  > = gql`
+      query Example($x: Int) {
+        user {
+          id
+          ...Foo(x: 1)
+        }
+      }
+
+      ${fooFragment}
+    `;
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query, variables: { x: 99 } },
+        result: {
+          data: {
+            user: { __typename: "User", id: "1", fooValue: 1, value: 99 },
+          },
+        },
+      },
+    ]),
+  });
+
+  using queryStream = new ObservableStream(
+    client.watchQuery({ query, variables: { x: 99 } })
+  );
+
+  await expect(queryStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  const queryResult = await queryStream.takeNext();
+
+  expect(queryResult).toStrictEqualTyped({
+    data: {
+      user: {
+        __typename: "User",
+        id: "1",
+        [fragmentVariablesSymbol]: { Foo: { x: 1 } },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+  assert(queryResult.dataState === "complete");
+  const queryData = queryResult.data;
+
+  using stream = new ObservableStream(
+    client.watchFragment({
+      fragment: fooFragment,
+      fragmentName: "Foo",
+      from: queryData.user,
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      __typename: "User",
+      id: "1",
+      fooValue: 1,
+      value: 99,
+      [fragmentVariablesSymbol]: { Bar: { x: 99 } },
+    },
+    dataState: "complete",
+    complete: true,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("binds operation variables of a nested fragment shadowed by a parent fragment argument from a query result passed to from without data masking", async () => {
+  const barFragment = gql`
+    fragment Bar on User {
+      value(x: $x)
+    }
+  `;
+
+  const fooFragment: TypedDocumentNode<
+    WithFragmentInfo<{
+      __typename: "User";
+      id: string;
+      fooValue: number;
+      value: number;
+    }>
+  > = gql`
+    fragment Foo($x: Int!) on User {
+      id
+      fooValue: value(x: $x)
+      ...Bar
+    }
+
+    ${barFragment}
+  `;
+
+  const query: TypedDocumentNode<
+    WithFragmentInfo<{
+      user: {
+        __typename: "User";
+        id: string;
+        fooValue: number;
+        value: number;
+      };
+    }>,
+    { x: number }
+  > = gql`
+      query Example($x: Int) {
+        user {
+          id
+          ...Foo(x: 1)
+        }
+      }
+
+      ${fooFragment}
+    `;
+
+  const client = new ApolloClient({
+    dataMasking: false,
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query, variables: { x: 99 } },
+        result: {
+          data: {
+            user: { __typename: "User", id: "1", fooValue: 1, value: 99 },
+          },
+        },
+      },
+    ]),
+  });
+
+  using queryStream = new ObservableStream(
+    client.watchQuery({ query, variables: { x: 99 } })
+  );
+
+  await expect(queryStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  const queryResult = await queryStream.takeNext();
+
+  expect(queryResult).toStrictEqualTyped({
+    data: {
+      user: {
+        __typename: "User",
+        id: "1",
+        fooValue: 1,
+        value: 99,
+        [fragmentVariablesSymbol]: { Foo: { x: 1 }, Bar: { x: 99 } },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+  assert(queryResult.dataState === "complete");
+  const queryData = queryResult.data;
+
+  using stream = new ObservableStream(
+    client.watchFragment({
+      fragment: fooFragment,
+      fragmentName: "Foo",
+      from: queryData.user,
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      __typename: "User",
+      id: "1",
+      fooValue: 1,
+      value: 99,
+      [fragmentVariablesSymbol]: { Bar: { x: 99 } },
+    },
+    dataState: "complete",
+    complete: true,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
 test("binds new fragment arguments from a query result after refetch with new variables", async () => {
   const fragment = gql`
     fragment UserCard($size: Int) on User {

@@ -1,10 +1,16 @@
-import type { DirectiveNode, DocumentNode, FragmentSpreadNode } from "graphql";
-import { Kind, visit } from "graphql";
+import type {
+  DirectiveNode,
+  DocumentNode,
+  FragmentDefinitionNode,
+  FragmentSpreadNode,
+} from "graphql";
+import { BREAK, Kind, visit } from "graphql";
 
 import { __DEV__ } from "@apollo/client/utilities/environment";
 
 import { createDirectiveNode } from "./createDirectiveNode.js";
 import { createFragmentMap } from "./createFragmentMap.js";
+import type { FragmentMap } from "./types/FragmentMap.js";
 
 export declare namespace removeMaskedFragmentSpreads {
   export interface Options {
@@ -36,9 +42,12 @@ export function removeMaskedFragmentSpreads(
           case "remove":
             return null;
           case "mark": {
+            const fragment = fragments[node.name.value];
+
             if (
               !node.arguments?.length &&
-              !fragments[node.name.value]?.variableDefinitions?.length
+              !fragment?.variableDefinitions?.length &&
+              !hasVariables(fragment, fragments)
             ) {
               return null;
             }
@@ -59,4 +68,25 @@ export function removeMaskedFragmentSpreads(
       }
     },
   });
+}
+
+function hasVariables(
+  fragment: FragmentDefinitionNode | undefined,
+  fragmentMap: FragmentMap
+) {
+  if (!fragment) return false;
+
+  let usesVariables = false;
+
+  visit(fragment, {
+    Variable() {
+      usesVariables = true;
+      return BREAK;
+    },
+    FragmentSpread(node) {
+      usesVariables = hasVariables(fragmentMap[node.name.value], fragmentMap);
+    },
+  });
+
+  return usesVariables;
 }

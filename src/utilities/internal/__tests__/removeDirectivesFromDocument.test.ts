@@ -454,3 +454,32 @@ test("should not throw in combination with addTypenameToDocument", () => {
     );
   }).not.toThrow();
 });
+
+test("should remove operation variables only used by a fragment that is removed", () => {
+  const query = gql`
+    query Team($show: Boolean!) {
+      lead {
+        id
+        ...UserCard
+      }
+    }
+
+    fragment UserCard on User {
+      __typename @include(if: $show)
+      local @client
+    }
+  `;
+
+  const doc = removeDirectivesFromDocument(
+    [{ name: "client", remove: true }],
+    query
+  );
+
+  expect(doc).toMatchDocument(gql`
+    query Team {
+      lead {
+        id
+      }
+    }
+  `);
+});

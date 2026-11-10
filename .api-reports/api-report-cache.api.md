@@ -832,6 +832,8 @@ export interface MergeInfo {
     path: Array<string | number>;
     // (undocumented)
     typename: string | undefined;
+    // (undocumented)
+    variables: OperationVariables | undefined;
 }
 
 // @public (undocumented)
@@ -1029,6 +1031,8 @@ export interface ReadMergeModifyContext {
     // (undocumented)
     isDeferPending?: (path: Incremental.Path, label: string | undefined) => boolean;
     // (undocumented)
+    operationVariables?: OperationVariables;
+    // (undocumented)
     store: NormalizedCache;
     // (undocumented)
     variables?: OperationVariables;
@@ -1188,7 +1192,10 @@ interface WriteContext extends ReadMergeModifyContext {
     overwrite: boolean;
     // (undocumented)
     readonly written: {
-        [dataId: string]: SelectionSetNode[];
+        [dataId: string]: Array<{
+            selectionSet: SelectionSetNode;
+            varString: string | undefined;
+        }>;
     };
 }
 

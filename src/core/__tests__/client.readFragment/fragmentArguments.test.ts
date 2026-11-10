@@ -210,7 +210,7 @@ test("binds variables to the root fragment selected by fragmentName", () => {
     __typename: "User",
     id: "1",
     avatar: "large.png",
-    [fragmentVariablesSymbol]: { UserAvatar: { avatarSize: 96 } },
+    [fragmentVariablesSymbol]: { UserAvatar: { size: 96, avatarSize: 96 } },
   });
 
   expect(

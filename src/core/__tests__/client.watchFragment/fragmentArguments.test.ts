@@ -774,7 +774,7 @@ test("binds fragment arguments set from operation variables from a query result 
       lead: {
         __typename: "User",
         id: "1",
-        [fragmentVariablesSymbol]: { UserCard: { size: 96 } },
+        [fragmentVariablesSymbol]: { UserCard: { avatarSize: 96, size: 96 } },
       },
     },
     dataState: "complete",
@@ -1798,7 +1798,7 @@ test("binds new fragment arguments from a query result after refetch with new va
       lead: {
         __typename: "User",
         id: "1",
-        [fragmentVariablesSymbol]: { UserCard: { size: 96 } },
+        [fragmentVariablesSymbol]: { UserCard: { avatarSize: 96, size: 96 } },
       },
     },
     dataState: "complete",
@@ -1826,7 +1826,7 @@ test("binds new fragment arguments from a query result after refetch with new va
       lead: {
         __typename: "User",
         id: "1",
-        [fragmentVariablesSymbol]: { UserCard: { size: 32 } },
+        [fragmentVariablesSymbol]: { UserCard: { avatarSize: 32, size: 32 } },
       },
     },
   });
@@ -1846,7 +1846,7 @@ test("binds new fragment arguments from a query result after refetch with new va
       lead: {
         __typename: "User",
         id: "1",
-        [fragmentVariablesSymbol]: { UserCard: { size: 32 } },
+        [fragmentVariablesSymbol]: { UserCard: { avatarSize: 32, size: 32 } },
       },
     },
     dataState: "complete",
@@ -1937,7 +1937,7 @@ test("binds new fragment arguments from a query result after setVariables", asyn
       lead: {
         __typename: "User",
         id: "1",
-        [fragmentVariablesSymbol]: { UserCard: { size: 96 } },
+        [fragmentVariablesSymbol]: { UserCard: { avatarSize: 96, size: 96 } },
       },
     },
     dataState: "complete",
@@ -1965,7 +1965,7 @@ test("binds new fragment arguments from a query result after setVariables", asyn
       lead: {
         __typename: "User",
         id: "1",
-        [fragmentVariablesSymbol]: { UserCard: { size: 32 } },
+        [fragmentVariablesSymbol]: { UserCard: { avatarSize: 32, size: 32 } },
       },
     },
   });
@@ -1985,7 +1985,7 @@ test("binds new fragment arguments from a query result after setVariables", asyn
       lead: {
         __typename: "User",
         id: "1",
-        [fragmentVariablesSymbol]: { UserCard: { size: 32 } },
+        [fragmentVariablesSymbol]: { UserCard: { avatarSize: 32, size: 32 } },
       },
     },
     dataState: "complete",
@@ -2076,7 +2076,7 @@ test("binds new fragment arguments from a query result after reobserve with new 
       lead: {
         __typename: "User",
         id: "1",
-        [fragmentVariablesSymbol]: { UserCard: { size: 96 } },
+        [fragmentVariablesSymbol]: { UserCard: { avatarSize: 96, size: 96 } },
       },
     },
     dataState: "complete",
@@ -2104,7 +2104,7 @@ test("binds new fragment arguments from a query result after reobserve with new 
       lead: {
         __typename: "User",
         id: "1",
-        [fragmentVariablesSymbol]: { UserCard: { size: 32 } },
+        [fragmentVariablesSymbol]: { UserCard: { avatarSize: 32, size: 32 } },
       },
     },
   });
@@ -2124,7 +2124,7 @@ test("binds new fragment arguments from a query result after reobserve with new 
       lead: {
         __typename: "User",
         id: "1",
-        [fragmentVariablesSymbol]: { UserCard: { size: 32 } },
+        [fragmentVariablesSymbol]: { UserCard: { avatarSize: 32, size: 32 } },
       },
     },
     dataState: "complete",
@@ -2326,8 +2326,8 @@ test("binds fragment arguments for each sibling fragment with different fragment
         __typename: "User",
         id: "1",
         [fragmentVariablesSymbol]: {
-          UserCard: { size: 96 },
-          UserBadge: { color: "gold" },
+          UserCard: { badgeColor: "gold", size: 96 },
+          UserBadge: { badgeColor: "gold", color: "gold" },
         },
       },
     },
@@ -2443,8 +2443,8 @@ test("binds fragment arguments for each sibling fragment with different fragment
         avatar: "large.png",
         badge: "gold-badge.png",
         [fragmentVariablesSymbol]: {
-          UserCard: { size: 96 },
-          UserBadge: { color: "gold" },
+          UserCard: { badgeColor: "gold", size: 96 },
+          UserBadge: { badgeColor: "gold", color: "gold" },
         },
       },
     },
@@ -3160,7 +3160,10 @@ test("binds input object fragment arguments that contain operation variables fro
         __typename: "User",
         id: "1",
         [fragmentVariablesSymbol]: {
-          UserCard: { options: { size: 96, format: "png" } },
+          UserCard: {
+            avatarSize: 96,
+            options: { size: 96, format: "png" },
+          },
         },
       },
     },

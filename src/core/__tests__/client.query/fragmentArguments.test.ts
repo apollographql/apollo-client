@@ -115,7 +115,7 @@ test("passes an operation variable through a fragment spread", async () => {
         __typename: "User",
         id: "1",
         avatar: "lead.png",
-        [fragmentVariablesSymbol]: { UserCard: { size: 96 } },
+        [fragmentVariablesSymbol]: { UserCard: { n: 96, size: 96 } },
       },
     },
   });

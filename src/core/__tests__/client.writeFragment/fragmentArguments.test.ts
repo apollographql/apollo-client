@@ -1,3 +1,4 @@
+import type { TypedDocumentNode } from "@apollo/client";
 import {
   ApolloClient,
   ApolloLink,
@@ -5,7 +6,9 @@ import {
   gql,
 } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
+import type { WithFragmentInfo } from "@apollo/client/testing/internal";
 import { spyOnConsole } from "@apollo/client/testing/internal";
+import { fragmentInfoSymbol } from "@apollo/client/utilities/internal";
 
 enableExperimentalFragmentVariables();
 
@@ -553,6 +556,112 @@ test("uses a fragment argument in @include when matching a fuzzy subtype from po
       __typename: "HeroUser",
       id: "1",
       avatar: "hero.png",
+    },
+  });
+});
+
+test("writes operation variables of a nested fragment shadowed by a parent fragment argument from data read from a query result", () => {
+  const barFragment = gql`
+    fragment Bar on User {
+      value(x: $x)
+    }
+  `;
+
+  const fooFragment = gql`
+    fragment Foo($x: Int!) on User {
+      id
+      fooValue: value(x: $x)
+      ...Bar
+    }
+
+    ${barFragment}
+  `;
+
+  const query: TypedDocumentNode<
+    WithFragmentInfo<{
+      user: {
+        __typename: "User";
+        id: string;
+        fooValue: number;
+        value: number;
+      };
+    }>,
+    { x: number }
+  > = gql`
+    query Example($x: Int) {
+      user {
+        id
+        ...Foo(x: 1)
+      }
+    }
+
+    ${fooFragment}
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  client.writeQuery({
+    query,
+    variables: { x: 99 },
+    data: {
+      user: { __typename: "User", id: "1", fooValue: 1, value: 99 },
+    },
+  });
+
+  const data = client.readQuery({ query, variables: { x: 99 } });
+
+  expect(data).toStrictEqualTyped({
+    user: {
+      __typename: "User",
+      id: "1",
+      fooValue: 1,
+      value: 99,
+      [fragmentInfoSymbol]: {
+        operationVariables: { x: 99 },
+        fragments: {
+          Foo: { variables: { x: 1 } },
+          Bar: { variables: { x: 99 } },
+        },
+      },
+    },
+  });
+
+  client.writeFragment({
+    fragment: fooFragment,
+    fragmentName: "Foo",
+    data: { ...data!.user, fooValue: 2, value: 100 },
+  });
+
+  expect(client.extract()).toStrictEqualTyped({
+    __META: { extraRootIds: ["User:1"] },
+    ROOT_QUERY: {
+      __typename: "Query",
+      user: { __ref: "User:1" },
+    },
+    "User:1": {
+      __typename: "User",
+      id: "1",
+      'value({"x":1})': 2,
+      'value({"x":99})': 100,
+    },
+  });
+
+  expect(client.readQuery({ query, variables: { x: 99 } })).toStrictEqualTyped({
+    user: {
+      __typename: "User",
+      id: "1",
+      fooValue: 2,
+      value: 100,
+      [fragmentInfoSymbol]: {
+        operationVariables: { x: 99 },
+        fragments: {
+          Foo: { variables: { x: 1 } },
+          Bar: { variables: { x: 99 } },
+        },
+      },
     },
   });
 });

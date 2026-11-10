@@ -9152,6 +9152,56 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot).not.toRerender();
     });
+
+    it("loads again after skipToken when a cache field is gone and the refetch returns unchanged data", async () => {
+      const query: TypedDocumentNode<{ greeting: string }, { name: string }> =
+        gql`
+          query Greeting($name: String!) {
+            greeting(name: $name)
+          }
+        `;
+
+      const greetingMock = {
+        request: { query, variables: { name: "Ada" } },
+        result: { data: { greeting: "Hello Ada" } },
+      };
+
+      const cache = new InMemoryCache();
+      const mocks = [greetingMock, greetingMock];
+      const wrapper = ({ children }: any) => (
+        <MockedProvider cache={cache} mocks={mocks}>
+          {children}
+        </MockedProvider>
+      );
+      const initialProps: { name?: string } = { name: "Ada" };
+      const { result, rerender } = renderHook(
+        ({ name }: { name?: string }) =>
+          useQuery(
+            query,
+            name ?
+              { variables: { name }, notifyOnNetworkStatusChange: false }
+            : skipToken
+          ),
+        { wrapper, initialProps }
+      );
+
+      await waitFor(() => {
+        expect(result.current.data).toEqual({ greeting: "Hello Ada" });
+      });
+
+      rerender({});
+      await act(async () => {});
+      cache.evict({ id: "ROOT_QUERY", fieldName: "greeting" });
+      await act(async () => {});
+
+      rerender({ name: "Ada" });
+      await act(async () => {});
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+      expect(result.current.data).toEqual({ greeting: "Hello Ada" });
+    });
   });
 
   describe("Missing Fields", () => {

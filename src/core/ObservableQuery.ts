@@ -1349,7 +1349,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     options: ObservableQuery.Options<TData, TVariables>,
     networkStatus: NetworkStatus,
     fetchQuery: DocumentNode,
-    operator: MonoTypeOperatorFunction<QueryNotification.Value<TData>>
+    operator: MonoTypeOperatorFunction<QueryNotification.Value<TData>>,
+    leavingStandby = false
   ) {
     // TODO Make sure we update the networkStatus (and infer fetchVariables)
     // before actually committing to the fetch.
@@ -1424,7 +1425,12 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     let forceFirstValueEmit =
       networkStatus == NetworkStatus.refetch ||
-      networkStatus == NetworkStatus.setVariables;
+      networkStatus == NetworkStatus.setVariables ||
+      // Leaving `standby` only needs to force the first value through when
+      // the fetch actually goes to the network. With a complete cache the
+      // result is already equal to the pre-standby value and must not be
+      // re-emitted.
+      (leavingStandby && fromLink);
     observable = observable.pipe(operator, share());
     const subscription = observable
       .pipe(
@@ -1708,7 +1714,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       options,
       newNetworkStatus,
       query,
-      promiseOperator
+      promiseOperator,
+      oldFetchPolicy === "standby" && options.fetchPolicy !== "standby"
     );
 
     if (!useDisposableObservable && (fromLink || !this.linkSubscription)) {

@@ -20,6 +20,7 @@ import {
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
+  FragmentInfo,
   FragmentMap,
   FragmentMapFunction,
   StreamInfoTrie,
@@ -27,7 +28,7 @@ import type {
 import {
   compact,
   DeepMerger,
-  fragmentVariablesSymbol,
+  fragmentInfoSymbol,
   getDefaultValues,
   getDirectiveArgValue,
   getFragmentFromSelection,
@@ -516,12 +517,7 @@ export class StoreReader {
       return result;
     }
 
-    let fragmentVariables:
-      | Record<
-          string /* fragmentName */,
-          Record<string, unknown> /* variables */
-        >
-      | undefined;
+    let fragments: FragmentInfo["fragments"] | undefined;
     const workSet = new Set(selectionSet.selections);
 
     workSet.forEach((selection) => {
@@ -669,8 +665,8 @@ export class StoreReader {
             }
 
             if (!isFragmentRoot(selection) && Object.keys(variables).length) {
-              fragmentVariables ||= {};
-              fragmentVariables[fragment.name.value] = variables;
+              fragments ||= {};
+              fragments[fragment.name.value] = { variables };
             }
 
             if (isMaskedSpread(selection)) {
@@ -739,25 +735,26 @@ export class StoreReader {
 
     let result = mergeDeepArray(objectsToMerge);
 
-    const allFragmentVariables = objectsToMerge.reduce<
-      Record<string, Record<string, unknown>> | undefined
+    const childFragments = objectsToMerge.reduce<
+      FragmentInfo["fragments"] | undefined
     >((memo, obj) => {
-      const childFragmentVariables = (obj as any)[fragmentVariablesSymbol];
+      const childFragmentInfo: FragmentInfo | undefined = (obj as any)[
+        fragmentInfoSymbol
+      ];
 
-      return childFragmentVariables ?
-          { ...memo, ...childFragmentVariables }
+      return childFragmentInfo ?
+          { ...memo, ...childFragmentInfo.fragments }
         : memo;
     }, undefined);
 
-    if (allFragmentVariables || fragmentVariables) {
+    if (childFragments || fragments) {
       // Always copy since `result` might be a frozen fragment result when
       // `objectsToMerge` contains a single object.
       result = {
         ...result,
-        [fragmentVariablesSymbol]: {
-          ...allFragmentVariables,
-          ...fragmentVariables,
-        },
+        [fragmentInfoSymbol]: {
+          fragments: { ...childFragments, ...fragments },
+        } satisfies FragmentInfo,
       };
     }
 

@@ -5,7 +5,7 @@ import {
   gql,
 } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
-import { fragmentVariablesSymbol } from "@apollo/client/utilities/internal";
+import { fragmentInfoSymbol } from "@apollo/client/utilities/internal";
 
 enableExperimentalFragmentVariables();
 
@@ -69,6 +69,8 @@ test("uses variables in a nested fragment that declares variables", () => {
     __typename: "User",
     id: "1",
     avatar: "large.png",
-    [fragmentVariablesSymbol]: { UserAvatar: { size: 96 } },
+    [fragmentInfoSymbol]: {
+      fragments: { UserAvatar: { variables: { size: 96 } } },
+    },
   });
 });

@@ -1,4 +1,7 @@
-import type { fragmentVariablesSymbol } from "@apollo/client/utilities/internal";
+import type {
+  FragmentInfo,
+  fragmentInfoSymbol,
+} from "@apollo/client/utilities/internal";
 
 export type WithFragmentInfo<T> =
   T extends Array<infer TItem> ? Array<WithFragmentInfo<TItem>>
@@ -6,6 +9,6 @@ export type WithFragmentInfo<T> =
     ReadonlyArray<WithFragmentInfo<TItem>>
   : T extends object ?
     { [K in keyof T]: WithFragmentInfo<T[K]> } & {
-      [fragmentVariablesSymbol]?: Record<string, Record<string, unknown>>;
+      [fragmentInfoSymbol]?: FragmentInfo;
     }
   : T;

@@ -461,7 +461,7 @@ Array [
   "equalByQuery",
   "extensionsSymbol",
   "filterMap",
-  "fragmentVariablesSymbol",
+  "fragmentInfoSymbol",
   "getApolloCacheMemoryInternals",
   "getApolloClientMemoryInternals",
   "getDefaultValues",

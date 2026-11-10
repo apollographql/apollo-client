@@ -5,7 +5,7 @@ import type { ApolloCache } from "@apollo/client/cache";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type { FragmentMap } from "@apollo/client/utilities/internal";
 import {
-  fragmentVariablesSymbol,
+  fragmentInfoSymbol,
   maybeDeepFreeze,
   resultKeyNameFromField,
 } from "@apollo/client/utilities/internal";
@@ -175,11 +175,12 @@ function maskSelectionSet(
       );
 
       const mode = getFragmentMaskMode(selection);
-      const variables = data[fragmentVariablesSymbol]?.[fragmentName];
+      const fragmentInfo = data[fragmentInfoSymbol]?.fragments[fragmentName];
 
-      if (variables) {
-        (memo as any)[fragmentVariablesSymbol] ||= {};
-        (memo as any)[fragmentVariablesSymbol][fragmentName] = variables;
+      if (fragmentInfo) {
+        (memo as any)[fragmentInfoSymbol] ||= { fragments: {} };
+        (memo as any)[fragmentInfoSymbol].fragments[fragmentName] =
+          fragmentInfo;
       }
 
       if (mode !== "mask") {

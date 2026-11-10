@@ -13,11 +13,11 @@ export const streamInfoSymbol = Symbol.for("apollo.result.streamInfo");
 
 /**
  * @internal
- * Used to store the variables for each fragment spread on a result
- * object so they can be read when the object is passed to `from` in
- * fragment APIs. Only use internally!
+ * Used to store information about each fragment spread on a result
+ * object, such as its variables, so it can be read when the object is passed
+ * to `from` in fragment APIs. Only use internally!
  */
-export const fragmentVariablesSymbol = Symbol.for("apollo.fragments.variables");
+export const fragmentInfoSymbol = Symbol.for("apollo.fragments.info");
 
 /**
  * @internal

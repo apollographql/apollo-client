@@ -42,7 +42,7 @@ import {
   capitalize,
   combineLatestBatched,
   equalByQuery,
-  fragmentVariablesSymbol,
+  fragmentInfoSymbol,
   getApolloCacheMemoryInternals,
   getFragmentDefinition,
   getFragmentQueryDocument,
@@ -667,7 +667,8 @@ export abstract class ApolloCache {
         ...options,
         variables:
           options.variables ??
-          (from as any)?.[fragmentVariablesSymbol]?.[actualFragmentName],
+          (from as any)?.[fragmentInfoSymbol]?.fragments[actualFragmentName]
+            ?.variables,
       });
       // Unfortunately we forgot to allow for `null` on watchFragment in 4.0
       // when `from` is a single record. As such, we need to fallback to {}
@@ -731,7 +732,9 @@ export abstract class ApolloCache {
         ...options,
         variables:
           options.variables ??
-          (from as any[])[idx]?.[fragmentVariablesSymbol]?.[actualFragmentName],
+          (from as any[])[idx]?.[fragmentInfoSymbol]?.fragments[
+            actualFragmentName
+          ]?.variables,
       })
     ) as Array<ApolloCache.ObservableFragment<TData>>;
 

@@ -5,7 +5,7 @@ import {
 } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { MockLink } from "@apollo/client/testing";
-import { fragmentVariablesSymbol } from "@apollo/client/utilities/internal";
+import { fragmentInfoSymbol } from "@apollo/client/utilities/internal";
 
 enableExperimentalFragmentVariables();
 
@@ -47,14 +47,18 @@ test("binds different fragment arguments at different paths", async () => {
         __typename: "User",
         id: "1",
         avatar: "lead.png",
-        [fragmentVariablesSymbol]: { UserCard: { size: 96 } },
+        [fragmentInfoSymbol]: {
+          fragments: { UserCard: { variables: { size: 96 } } },
+        },
       },
       members: [
         {
           __typename: "User",
           id: "2",
           avatar: "member.png",
-          [fragmentVariablesSymbol]: { UserCard: { size: 32 } },
+          [fragmentInfoSymbol]: {
+            fragments: { UserCard: { variables: { size: 32 } } },
+          },
         },
       ],
     },
@@ -115,7 +119,9 @@ test("passes an operation variable through a fragment spread", async () => {
         __typename: "User",
         id: "1",
         avatar: "lead.png",
-        [fragmentVariablesSymbol]: { UserCard: { n: 96, size: 96 } },
+        [fragmentInfoSymbol]: {
+          fragments: { UserCard: { variables: { n: 96, size: 96 } } },
+        },
       },
     },
   });
@@ -169,14 +175,18 @@ test("reads bound fragment arguments from the cache without a network request", 
         __typename: "User",
         id: "1",
         avatar: "lead.png",
-        [fragmentVariablesSymbol]: { UserCard: { size: 96 } },
+        [fragmentInfoSymbol]: {
+          fragments: { UserCard: { variables: { size: 96 } } },
+        },
       },
       members: [
         {
           __typename: "User",
           id: "2",
           avatar: "member.png",
-          [fragmentVariablesSymbol]: { UserCard: { size: 32 } },
+          [fragmentInfoSymbol]: {
+            fragments: { UserCard: { variables: { size: 32 } } },
+          },
         },
       ],
     },

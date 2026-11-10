@@ -33,7 +33,10 @@ import {
   DocumentTransform,
   relayStylePagination,
 } from "@apollo/client/utilities";
-import { removeDirectivesFromDocument } from "@apollo/client/utilities/internal";
+import {
+  fragmentInfoSymbol,
+  removeDirectivesFromDocument,
+} from "@apollo/client/utilities/internal";
 
 describe("ObservableQuery", () => {
   // Standard data for all these tests
@@ -3160,6 +3163,56 @@ describe("ObservableQuery", () => {
         pets: petData.slice(0, 3),
       };
 
+      const expectedPetData = [
+        {
+          id: 1,
+          name: "Phoenix",
+          age: 6,
+          isTabby: true,
+          __typename: "Cat",
+          [fragmentInfoSymbol]: {
+            fragments: {
+              PetInfo: { variables: { id: 1 } },
+              CatInfo: { variables: { id: 1 } },
+            },
+          },
+        },
+        {
+          id: 2,
+          name: "Tempe",
+          age: 3,
+          isTabby: false,
+          __typename: "Cat",
+          [fragmentInfoSymbol]: {
+            fragments: {
+              PetInfo: { variables: { id: 1 } },
+              CatInfo: { variables: { id: 1 } },
+            },
+          },
+        },
+        {
+          id: 3,
+          name: "Robin",
+          age: 10,
+          hasBrindleCoat: true,
+          __typename: "Dog",
+          [fragmentInfoSymbol]: {
+            fragments: {
+              PetInfo: { variables: { id: 1 } },
+              DogInfo: { variables: { id: 1 } },
+            },
+          },
+        },
+      ];
+
+      const expectedDataOne = {
+        pets: expectedPetData.slice(0, 2),
+      };
+
+      const expectedDataTwo = {
+        pets: expectedPetData.slice(0, 3),
+      };
+
       const client = new ApolloClient({
         link: new MockLink([
           {
@@ -3218,7 +3271,7 @@ describe("ObservableQuery", () => {
       });
 
       await expect(stream).toEmitTypedValue({
-        data: dataOneWithTypename,
+        data: expectedDataOne,
         dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -3226,7 +3279,7 @@ describe("ObservableQuery", () => {
       });
 
       expect(observable.getCurrentResult()).toStrictEqualTyped({
-        data: dataOneWithTypename,
+        data: expectedDataOne,
         dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -3236,14 +3289,14 @@ describe("ObservableQuery", () => {
       void observable.refetch();
 
       await expect(stream).toEmitTypedValue({
-        data: dataOneWithTypename,
+        data: expectedDataOne,
         dataState: "complete",
         loading: true,
         networkStatus: NetworkStatus.refetch,
         partial: false,
       });
       expect(observable.getCurrentResult()).toStrictEqualTyped({
-        data: dataOneWithTypename,
+        data: expectedDataOne,
         dataState: "complete",
         loading: true,
         networkStatus: NetworkStatus.refetch,
@@ -3251,7 +3304,7 @@ describe("ObservableQuery", () => {
       });
 
       await expect(stream).toEmitTypedValue({
-        data: dataTwoWithTypename,
+        data: expectedDataTwo,
         dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -3259,7 +3312,7 @@ describe("ObservableQuery", () => {
       });
       expect(observable.getCurrentResult()).toStrictEqualTyped({
         dataState: "complete",
-        data: dataTwoWithTypename,
+        data: expectedDataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,

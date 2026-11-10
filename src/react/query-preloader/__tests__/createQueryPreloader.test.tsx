@@ -31,6 +31,7 @@ import type {
   MaskedVariablesCaseData,
   SimpleCaseData,
   VariablesCaseData,
+  WithFragmentInfo,
 } from "@apollo/client/testing/internal";
 import {
   createClientWrapper,
@@ -41,6 +42,7 @@ import {
   spyOnConsole,
   wait,
 } from "@apollo/client/testing/internal";
+import { fragmentInfoSymbol } from "@apollo/client/utilities/internal";
 
 function createDefaultClient(mocks: MockLink.MockedResponse[]) {
   return new ApolloClient({
@@ -1809,7 +1811,9 @@ test("masks result when dataMasking is `true`", async () => {
   const queryRef = preloadQuery(query, { variables: { id: "1" } });
 
   using _disabledAct = disableActEnvironment();
-  const { renderStream } = await renderDefaultTestApp<MaskedVariablesCaseData>({
+  const { renderStream } = await renderDefaultTestApp<
+    WithFragmentInfo<MaskedVariablesCaseData>
+  >({
     client,
     queryRef,
   });
@@ -1825,7 +1829,13 @@ test("masks result when dataMasking is `true`", async () => {
 
     expect(snapshot.result).toStrictEqualTyped({
       data: {
-        character: { __typename: "Character", id: "1" },
+        character: {
+          __typename: "Character",
+          id: "1",
+          [fragmentInfoSymbol]: {
+            fragments: { CharacterFragment: { variables: { id: "1" } } },
+          },
+        },
       },
       dataState: "complete",
       error: undefined,

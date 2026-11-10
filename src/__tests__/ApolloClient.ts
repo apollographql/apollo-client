@@ -20,7 +20,10 @@ import {
   withCleanup,
 } from "@apollo/client/testing/internal";
 import type { DeepPartial } from "@apollo/client/utilities";
-import { makeReference } from "@apollo/client/utilities/internal";
+import {
+  fragmentInfoSymbol,
+  makeReference,
+} from "@apollo/client/utilities/internal";
 import { invariant, InvariantError } from "@apollo/client/utilities/invariant";
 
 describe("ApolloClient", () => {
@@ -2738,6 +2741,9 @@ describe("ApolloClient", () => {
           __typename: "Item",
           id: 5,
           text: "Item #5",
+          [fragmentInfoSymbol]: {
+            fragments: { IncludedFragment: { variables: { withText: true } } },
+          },
         },
         dataState: "complete",
         complete: true,
@@ -2757,6 +2763,9 @@ describe("ApolloClient", () => {
           __typename: "Item",
           id: 5,
           text: "changed Item #5",
+          [fragmentInfoSymbol]: {
+            fragments: { IncludedFragment: { variables: { withText: true } } },
+          },
         },
         dataState: "complete",
         complete: true,

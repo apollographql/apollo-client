@@ -7,7 +7,7 @@ import {
 } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import type { WithFragmentInfo } from "@apollo/client/testing/internal";
-import { spyOnConsole } from "@apollo/client/testing/internal";
+import { dateScalar, spyOnConsole } from "@apollo/client/testing/internal";
 import { fragmentInfoSymbol } from "@apollo/client/utilities/internal";
 
 enableExperimentalFragmentVariables();
@@ -662,6 +662,36 @@ test("writes operation variables of a nested fragment shadowed by a parent fragm
           Bar: { variables: { x: 99 } },
         },
       },
+    },
+  });
+});
+
+test("serializes custom scalar variables bound to root fragment arguments", () => {
+  const fragment = gql`
+    fragment EventFields($since: Date!) on Event {
+      id
+      attendees(since: $since)
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache({ scalars: { Date: dateScalar } }),
+    link: ApolloLink.empty(),
+  });
+
+  client.writeFragment({
+    fragment,
+    id: "Event:1",
+    variables: { since: new Date(2026, 0, 1) },
+    data: { __typename: "Event", id: "1", attendees: 10 },
+  });
+
+  expect(client.extract()).toStrictEqualTyped({
+    __META: { extraRootIds: ["Event:1"] },
+    "Event:1": {
+      __typename: "Event",
+      id: "1",
+      'attendees({"since":"2026-01-01"})': 10,
     },
   });
 });

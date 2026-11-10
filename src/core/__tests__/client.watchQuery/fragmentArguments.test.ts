@@ -15,6 +15,7 @@ import { LocalState } from "@apollo/client/local-state";
 import { MockLink } from "@apollo/client/testing";
 import type { WithFragmentInfo } from "@apollo/client/testing/internal";
 import {
+  dateScalar,
   markAsStreaming,
   mockDeferStreamGraphQL17Alpha9,
   ObservableStream,
@@ -2955,4 +2956,79 @@ test("binds fragment arguments for fragments from the fragment registry", async 
       'avatar({"size":32})': "member.png",
     },
   });
+});
+
+test("serializes custom scalar operation variables passed as fragment arguments", async () => {
+  const query = gql`
+    query Events($date: Date!) {
+      event {
+        ...EventFields(since: $date)
+      }
+    }
+
+    fragment EventFields($since: Date!) on Event {
+      id
+      attendees(since: $since)
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache({ scalars: { Date: dateScalar } }),
+    link: new MockLink([
+      {
+        request: { query, variables: { date: "2026-01-01" } },
+        result: {
+          data: { event: { __typename: "Event", id: "1", attendees: 10 } },
+        },
+      },
+    ]),
+  });
+
+  using stream = new ObservableStream(
+    client.watchQuery({ query, variables: { date: new Date(2026, 0, 1) } })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        attendees: 10,
+        [fragmentInfoSymbol]: {
+          operationVariables: { date: "2026-01-01" },
+          fragments: {
+            EventFields: {
+              variables: { date: "2026-01-01", since: "2026-01-01" },
+            },
+          },
+        },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  expect(client.extract()).toStrictEqualTyped({
+    ROOT_QUERY: {
+      __typename: "Query",
+      event: { __ref: "Event:1" },
+    },
+    "Event:1": {
+      __typename: "Event",
+      id: "1",
+      'attendees({"since":"2026-01-01"})': 10,
+    },
+  });
+
+  await expect(stream).not.toEmitAnything();
 });

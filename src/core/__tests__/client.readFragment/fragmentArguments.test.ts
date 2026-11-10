@@ -5,6 +5,7 @@ import {
   gql,
 } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
+import { dateScalar } from "@apollo/client/testing/internal";
 import { fragmentInfoSymbol } from "@apollo/client/utilities/internal";
 
 enableExperimentalFragmentVariables();
@@ -356,4 +357,78 @@ test("ignores variables that the root fragment does not declare or use", () => {
       variables: { size: 96, theme: "dark" },
     })
   ).toStrictEqualTyped({ __typename: "User", id: "1", avatar: "large.png" });
+});
+
+test("serializes custom scalar variables bound to root fragment arguments", () => {
+  const fragment = gql`
+    fragment EventFields($since: Date!) on Event {
+      id
+      attendees(since: $since)
+    }
+  `;
+
+  const query = gql`
+    query Events($date: Date!) {
+      event {
+        ...EventFields(since: $date)
+      }
+    }
+
+    ${fragment}
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache({ scalars: { Date: dateScalar } }),
+    link: ApolloLink.empty(),
+  });
+
+  client.writeQuery({
+    query,
+    variables: { date: new Date(2026, 0, 1) },
+    data: { event: { __typename: "Event", id: "1", attendees: 10 } },
+  });
+
+  expect(
+    client.readFragment({
+      fragment,
+      id: "Event:1",
+      variables: { since: new Date(2026, 0, 1) },
+    })
+  ).toStrictEqualTyped({ __typename: "Event", id: "1", attendees: 10 });
+});
+
+test("applies custom scalar fragment argument defaults of the root fragment", () => {
+  const fragment = gql`
+    fragment EventFields($since: Date = "2026-01-01") on Event {
+      id
+      attendees(since: $since)
+    }
+  `;
+
+  const query = gql`
+    query Events($date: Date!) {
+      event {
+        ...EventFields(since: $date)
+      }
+    }
+
+    ${fragment}
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache({ scalars: { Date: dateScalar } }),
+    link: ApolloLink.empty(),
+  });
+
+  client.writeQuery({
+    query,
+    variables: { date: new Date(2026, 0, 1) },
+    data: { event: { __typename: "Event", id: "1", attendees: 10 } },
+  });
+
+  expect(client.readFragment({ fragment, id: "Event:1" })).toStrictEqualTyped({
+    __typename: "Event",
+    id: "1",
+    attendees: 10,
+  });
 });

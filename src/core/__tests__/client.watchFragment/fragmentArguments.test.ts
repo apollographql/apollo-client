@@ -12,6 +12,7 @@ import { InMemoryCache } from "@apollo/client/cache";
 import { MockLink } from "@apollo/client/testing";
 import type { WithFragmentInfo } from "@apollo/client/testing/internal";
 import {
+  dateScalar,
   ObservableStream,
   withProdMode,
 } from "@apollo/client/testing/internal";
@@ -3800,6 +3801,136 @@ test("binds fragment arguments passed through an unmasked fragment spread on the
 
   await expect(stream).toEmitTypedValue({
     data: { __typename: "User", id: "1", avatar: "large.png" },
+    dataState: "complete",
+    complete: true,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("binds custom scalar fragment arguments from a query result passed to from", async () => {
+  const fragment = gql`
+    fragment EventFields($since: Date!) on Event {
+      id
+      attendees(since: $since)
+    }
+  `;
+
+  const query: TypedDocumentNode<
+    WithFragmentInfo<{ event: { __typename: "Event"; id: string } }>,
+    { date: Date }
+  > = gql`
+    query Events($date: Date!) {
+      event {
+        id
+        ...EventFields(since: $date)
+      }
+    }
+
+    ${fragment}
+  `;
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache({ scalars: { Date: dateScalar } }),
+    link: new MockLink([
+      {
+        request: { query, variables: { date: "2026-01-01" } },
+        result: {
+          data: { event: { __typename: "Event", id: "1", attendees: 10 } },
+        },
+      },
+    ]),
+  });
+
+  using queryStream = new ObservableStream(
+    client.watchQuery({ query, variables: { date: new Date(2026, 0, 1) } })
+  );
+
+  await expect(queryStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  const result = await queryStream.takeNext();
+
+  expect(result).toStrictEqualTyped({
+    data: {
+      event: {
+        __typename: "Event",
+        id: "1",
+        [fragmentInfoSymbol]: {
+          operationVariables: { date: "2026-01-01" },
+          fragments: {
+            EventFields: {
+              variables: { date: "2026-01-01", since: "2026-01-01" },
+            },
+          },
+        },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+  assert(result.dataState === "complete");
+
+  using stream = new ObservableStream(
+    client.watchFragment({ fragment, from: result.data.event })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: { __typename: "Event", id: "1", attendees: 10 },
+    dataState: "complete",
+    complete: true,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("serializes custom scalar variables bound to root fragment arguments", async () => {
+  const fragment = gql`
+    fragment EventFields($since: Date!) on Event {
+      id
+      attendees(since: $since)
+    }
+  `;
+
+  const query = gql`
+    query Events($date: Date!) {
+      event {
+        ...EventFields(since: $date)
+      }
+    }
+
+    ${fragment}
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache({ scalars: { Date: dateScalar } }),
+    link: ApolloLink.empty(),
+  });
+
+  client.writeQuery({
+    query,
+    variables: { date: new Date(2026, 0, 1) },
+    data: { event: { __typename: "Event", id: "1", attendees: 10 } },
+  });
+
+  using stream = new ObservableStream(
+    client.watchFragment({
+      fragment,
+      from: { __typename: "Event", id: "1" },
+      variables: { since: new Date(2026, 0, 1) },
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: { __typename: "Event", id: "1", attendees: 10 },
     dataState: "complete",
     complete: true,
   });

@@ -231,3 +231,24 @@ test("does not mark fragment spreads with @unmask in mark mode", () => {
     query
   );
 });
+
+test("removes masked fragment spreads with fragment arguments to fragments missing from the document in mark mode", () => {
+  const query = gql`
+    query {
+      user {
+        id
+        ...UserAvatar(size: 96)
+      }
+    }
+  `;
+
+  expect(removeMaskedFragmentSpreads(query, { mode: "mark" })).toMatchDocument(
+    gql`
+      query {
+        user {
+          id
+        }
+      }
+    `
+  );
+});

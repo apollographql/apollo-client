@@ -178,7 +178,10 @@ function maskSelectionSet(
       const fragmentInfo = data[fragmentInfoSymbol]?.fragments[fragmentName];
 
       if (fragmentInfo) {
-        (memo as any)[fragmentInfoSymbol] ||= { fragments: {} };
+        (memo as any)[fragmentInfoSymbol] ||= {
+          operationVariables: data[fragmentInfoSymbol]?.operationVariables,
+          fragments: {},
+        };
         (memo as any)[fragmentInfoSymbol].fragments[fragmentName] =
           fragmentInfo;
       }

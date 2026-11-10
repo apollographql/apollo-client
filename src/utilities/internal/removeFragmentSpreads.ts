@@ -45,9 +45,10 @@ export function removeMaskedFragmentSpreads(
             const fragment = fragments[node.name.value];
 
             if (
-              !node.arguments?.length &&
-              !fragment?.variableDefinitions?.length &&
-              !hasVariables(fragment, fragments)
+              !fragment ||
+              (!node.arguments?.length &&
+                !fragment?.variableDefinitions?.length &&
+                !hasVariables(fragment, fragments))
             ) {
               return null;
             }

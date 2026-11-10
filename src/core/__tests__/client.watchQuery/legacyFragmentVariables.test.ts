@@ -7,6 +7,7 @@ import {
 import { InMemoryCache } from "@apollo/client/cache";
 import { MockLink } from "@apollo/client/testing";
 import { ObservableStream } from "@apollo/client/testing/internal";
+import { fragmentVariablesSymbol } from "@apollo/client/utilities/internal";
 
 enableExperimentalFragmentVariables();
 
@@ -56,7 +57,15 @@ test("uses operation variables in fragments that declare variables", async () =>
 
   await expect(stream).toEmitTypedValue({
     data: {
-      lead: { __typename: "User", id: "1", avatar: "large.png" },
+      lead: {
+        __typename: "User",
+        id: "1",
+        avatar: "large.png",
+        [fragmentVariablesSymbol]: {
+          UserCard: { size: 96 },
+          UserAvatar: { size: 96 },
+        },
+      },
     },
     dataState: "complete",
     loading: false,

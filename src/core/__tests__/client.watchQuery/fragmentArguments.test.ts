@@ -13,12 +13,14 @@ import { createFragmentRegistry, InMemoryCache } from "@apollo/client/cache";
 import { GraphQL17Alpha9Handler } from "@apollo/client/incremental";
 import { LocalState } from "@apollo/client/local-state";
 import { MockLink } from "@apollo/client/testing";
+import type { WithFragmentInfo } from "@apollo/client/testing/internal";
 import {
   markAsStreaming,
   mockDeferStreamGraphQL17Alpha9,
   ObservableStream,
   spyOnConsole,
 } from "@apollo/client/testing/internal";
+import { fragmentVariablesSymbol } from "@apollo/client/utilities/internal";
 
 enableExperimentalFragmentVariables();
 
@@ -73,7 +75,12 @@ test("binds a fragment argument", async () => {
 
   await expect(stream).toEmitTypedValue({
     data: {
-      lead: { __typename: "User", id: "1", avatar: "large.png" },
+      lead: {
+        __typename: "User",
+        id: "1",
+        avatar: "large.png",
+        [fragmentVariablesSymbol]: { UserCard: { size: 96 } },
+      },
     },
     dataState: "complete",
     loading: false,
@@ -140,8 +147,20 @@ test("binds different fragment arguments at different paths", async () => {
 
   await expect(stream).toEmitTypedValue({
     data: {
-      lead: { __typename: "User", id: "1", avatar: "lead.png" },
-      members: [{ __typename: "User", id: "2", avatar: "member.png" }],
+      lead: {
+        __typename: "User",
+        id: "1",
+        avatar: "lead.png",
+        [fragmentVariablesSymbol]: { UserCard: { size: 96 } },
+      },
+      members: [
+        {
+          __typename: "User",
+          id: "2",
+          avatar: "member.png",
+          [fragmentVariablesSymbol]: { UserCard: { size: 32 } },
+        },
+      ],
     },
     dataState: "complete",
     loading: false,
@@ -210,7 +229,12 @@ test("applies fragment argument defaults when the spread omits an argument", asy
 
   await expect(stream).toEmitTypedValue({
     data: {
-      lead: { __typename: "User", id: "1", avatar: "default.png" },
+      lead: {
+        __typename: "User",
+        id: "1",
+        avatar: "default.png",
+        [fragmentVariablesSymbol]: { UserCard: { size: 48 } },
+      },
     },
     dataState: "complete",
     loading: false,
@@ -275,7 +299,12 @@ test("passes an operation variable through a fragment spread", async () => {
 
   await expect(stream).toEmitTypedValue({
     data: {
-      lead: { __typename: "User", id: "1", avatar: "lead.png" },
+      lead: {
+        __typename: "User",
+        id: "1",
+        avatar: "lead.png",
+        [fragmentVariablesSymbol]: { UserCard: { size: 96 } },
+      },
     },
     dataState: "complete",
     loading: false,
@@ -351,6 +380,7 @@ test("shadows an operation variable with a fragment argument of the same name", 
         id: "1",
         photo: "photo-32.png",
         avatar: "avatar-96.png",
+        [fragmentVariablesSymbol]: { UserCard: { size: 96 } },
       },
     },
     dataState: "complete",
@@ -419,7 +449,12 @@ test("passes a fragment argument through a nested fragment spread", async () => 
 
   await expect(stream).toEmitTypedValue({
     data: {
-      lead: { __typename: "User", id: "1", avatar: "lead.png" },
+      lead: {
+        __typename: "User",
+        id: "1",
+        avatar: "lead.png",
+        [fragmentVariablesSymbol]: { Outer: { size: 96 }, Inner: { size: 96 } },
+      },
     },
     dataState: "complete",
     loading: false,
@@ -489,7 +524,13 @@ test("does not leak a fragment argument into a child fragment that does not decl
 
   await expect(stream).toEmitTypedValue({
     data: {
-      user: { __typename: "User", id: "1", fooValue: 1, value: 99 },
+      user: {
+        __typename: "User",
+        id: "1",
+        fooValue: 1,
+        value: 99,
+        [fragmentVariablesSymbol]: { Foo: { x: 1 }, Bar: { x: 99 } },
+      },
     },
     dataState: "complete",
     loading: false,
@@ -567,8 +608,17 @@ test("uses a fragment argument in @include", async () => {
 
   await expect(stream).toEmitTypedValue({
     data: {
-      lead: { __typename: "User", id: "1", avatar: "lead.png" },
-      member: { __typename: "User", id: "2" },
+      lead: {
+        __typename: "User",
+        id: "1",
+        avatar: "lead.png",
+        [fragmentVariablesSymbol]: { UserCard: { includeAvatar: true } },
+      },
+      member: {
+        __typename: "User",
+        id: "2",
+        [fragmentVariablesSymbol]: { UserCard: { includeAvatar: false } },
+      },
     },
     dataState: "complete",
     loading: false,
@@ -648,7 +698,13 @@ test("emits cache updates to fields in @include with a fragment argument when th
 
   await expect(stream).toEmitTypedValue({
     data: {
-      lead: { __typename: "User", id: "1", avatar: "lead.png", name: "Lead" },
+      lead: {
+        __typename: "User",
+        id: "1",
+        avatar: "lead.png",
+        name: "Lead",
+        [fragmentVariablesSymbol]: { UserCard: { includeAvatar: true } },
+      },
     },
     dataState: "complete",
     loading: false,
@@ -673,6 +729,7 @@ test("emits cache updates to fields in @include with a fragment argument when th
         id: "1",
         avatar: "updated.png",
         name: "Lead",
+        [fragmentVariablesSymbol]: { UserCard: { includeAvatar: true } },
       },
     },
     dataState: "complete",
@@ -745,12 +802,14 @@ test("uses fragment arguments in child selection sets", async () => {
         __typename: "User",
         id: "1",
         friends: [{ __typename: "User", id: "3", avatar: "large.png" }],
+        [fragmentVariablesSymbol]: { UserCard: { size: 96 } },
       },
       members: [
         {
           __typename: "User",
           id: "2",
           friends: [{ __typename: "User", id: "4", avatar: "small.png" }],
+          [fragmentVariablesSymbol]: { UserCard: { size: 32 } },
         },
       ],
     },
@@ -835,8 +894,20 @@ test("binds different fragment arguments for the same entity at different paths"
 
   await expect(stream).toEmitTypedValue({
     data: {
-      lead: { __typename: "User", id: "1", avatar: "large.png" },
-      members: [{ __typename: "User", id: "1", avatar: "small.png" }],
+      lead: {
+        __typename: "User",
+        id: "1",
+        avatar: "large.png",
+        [fragmentVariablesSymbol]: { UserCard: { size: 96 } },
+      },
+      members: [
+        {
+          __typename: "User",
+          id: "1",
+          avatar: "small.png",
+          [fragmentVariablesSymbol]: { UserCard: { size: 32 } },
+        },
+      ],
     },
     dataState: "complete",
     loading: false,
@@ -920,11 +991,13 @@ test("binds different fragment arguments for a shared child entity at different 
         __typename: "User",
         id: "1",
         bestFriend: { __typename: "User", id: "3", avatar: "large.png" },
+        [fragmentVariablesSymbol]: { UserCard: { size: 96 } },
       },
       member: {
         __typename: "User",
         id: "2",
         bestFriend: { __typename: "User", id: "3", avatar: "small.png" },
+        [fragmentVariablesSymbol]: { UserCard: { size: 32 } },
       },
     },
     dataState: "complete",
@@ -1018,8 +1091,20 @@ test("passes fragment arguments to read functions of @client fields", async () =
 
   await expect(stream).toEmitTypedValue({
     data: {
-      lead: { __typename: "User", id: "1", localAvatar: "local-96.png" },
-      members: [{ __typename: "User", id: "2", localAvatar: "local-32.png" }],
+      lead: {
+        __typename: "User",
+        id: "1",
+        localAvatar: "local-96.png",
+        [fragmentVariablesSymbol]: { UserCard: { size: 96 } },
+      },
+      members: [
+        {
+          __typename: "User",
+          id: "2",
+          localAvatar: "local-32.png",
+          [fragmentVariablesSymbol]: { UserCard: { size: 32 } },
+        },
+      ],
     },
     dataState: "complete",
     loading: false,
@@ -1089,7 +1174,12 @@ test("removes fragment variables that are only used by @client fields from the r
 
   await expect(stream).toEmitTypedValue({
     data: {
-      lead: { __typename: "User", id: "1", localAvatar: "local-96.png" },
+      lead: {
+        __typename: "User",
+        id: "1",
+        localAvatar: "local-96.png",
+        [fragmentVariablesSymbol]: { UserCard: { size: 96 } },
+      },
     },
     dataState: "complete",
     loading: false,
@@ -1148,8 +1238,20 @@ test("reads bound fragment arguments from the cache without a network request", 
 
   await expect(stream).toEmitTypedValue({
     data: {
-      lead: { __typename: "User", id: "1", avatar: "lead.png" },
-      members: [{ __typename: "User", id: "2", avatar: "member.png" }],
+      lead: {
+        __typename: "User",
+        id: "1",
+        avatar: "lead.png",
+        [fragmentVariablesSymbol]: { UserCard: { size: 96 } },
+      },
+      members: [
+        {
+          __typename: "User",
+          id: "2",
+          avatar: "member.png",
+          [fragmentVariablesSymbol]: { UserCard: { size: 32 } },
+        },
+      ],
     },
     dataState: "complete",
     loading: false,
@@ -1222,8 +1324,20 @@ test("emits only the path whose fragment argument scope changes in the cache", a
 
   await expect(stream).toEmitTypedValue({
     data: {
-      lead: { __typename: "User", id: "1", avatar: "large.png" },
-      members: [{ __typename: "User", id: "1", avatar: "small.png" }],
+      lead: {
+        __typename: "User",
+        id: "1",
+        avatar: "large.png",
+        [fragmentVariablesSymbol]: { UserCard: { size: 96 } },
+      },
+      members: [
+        {
+          __typename: "User",
+          id: "1",
+          avatar: "small.png",
+          [fragmentVariablesSymbol]: { UserCard: { size: 32 } },
+        },
+      ],
     },
     dataState: "complete",
     loading: false,
@@ -1241,8 +1355,20 @@ test("emits only the path whose fragment argument scope changes in the cache", a
 
   await expect(stream).toEmitTypedValue({
     data: {
-      lead: { __typename: "User", id: "1", avatar: "large.png" },
-      members: [{ __typename: "User", id: "1", avatar: "small-updated.png" }],
+      lead: {
+        __typename: "User",
+        id: "1",
+        avatar: "large.png",
+        [fragmentVariablesSymbol]: { UserCard: { size: 96 } },
+      },
+      members: [
+        {
+          __typename: "User",
+          id: "1",
+          avatar: "small-updated.png",
+          [fragmentVariablesSymbol]: { UserCard: { size: 32 } },
+        },
+      ],
     },
     dataState: "complete",
     loading: false,
@@ -1256,7 +1382,7 @@ test("emits only the path whose fragment argument scope changes in the cache", a
 test("emits a previously read result written under a different fragment argument scope", async () => {
   // `member` is first so the write reaches User:3 through the `member` scope
   // before the `lead` scope.
-  const query: TypedDocumentNode<TeamData> = gql`
+  const query: TypedDocumentNode<WithFragmentInfo<TeamData>> = gql`
     query Team {
       member {
         ...UserCard(size: 32)
@@ -1318,6 +1444,7 @@ test("emits a previously read result written under a different fragment argument
         __typename: "User",
         id: "2",
         bestFriend: { __typename: "User", id: "4", avatar: "small.png" },
+        [fragmentVariablesSymbol]: { UserCard: { size: 32 } },
       },
       lead: {
         __typename: "User",
@@ -1342,6 +1469,7 @@ test("emits a previously read result written under a different fragment argument
         __typename: "User",
         id: "2",
         bestFriend: { __typename: "User", id: "3", avatar: "default.png" },
+        [fragmentVariablesSymbol]: { UserCard: { size: 32 } },
       },
       lead: {
         __typename: "User",
@@ -1438,7 +1566,15 @@ test("evaluates directives on a fragment spread with the parent fragment scope",
 
   await expect(stream).toEmitTypedValue({
     data: {
-      lead: { __typename: "User", id: "1", name: "Lead" },
+      lead: {
+        __typename: "User",
+        id: "1",
+        name: "Lead",
+        [fragmentVariablesSymbol]: {
+          UserCard: { flag: false },
+          UserName: { flag: true },
+        },
+      },
     },
     dataState: "complete",
     loading: false,
@@ -1508,8 +1644,17 @@ test("does not warn about fields excluded by a fragment argument in @include", a
 
   await expect(stream).toEmitTypedValue({
     data: {
-      lead: { __typename: "User", id: "1", avatar: "lead.png" },
-      member: { __typename: "User", id: "2" },
+      lead: {
+        __typename: "User",
+        id: "1",
+        avatar: "lead.png",
+        [fragmentVariablesSymbol]: { UserCard: { includeAvatar: true } },
+      },
+      member: {
+        __typename: "User",
+        id: "2",
+        [fragmentVariablesSymbol]: { UserCard: { includeAvatar: false } },
+      },
     },
     dataState: "complete",
     loading: false,
@@ -1556,14 +1701,20 @@ test("binds fragment arguments on a deferred fragment spread", async () => {
   });
 
   enqueueInitialChunk({
-    data: { lead: { __typename: "User", id: "1" } },
+    data: {
+      lead: { __typename: "User", id: "1" },
+    },
     pending: [{ id: "0", path: ["lead"], label: "ac_0" }],
     hasNext: true,
   });
 
   await expect(stream).toEmitTypedValue({
     data: markAsStreaming({
-      lead: { __typename: "User", id: "1" },
+      lead: {
+        __typename: "User",
+        id: "1",
+        [fragmentVariablesSymbol]: { UserCard: { size: 96 } },
+      },
     }),
     dataState: "streaming",
     loading: true,
@@ -1579,7 +1730,12 @@ test("binds fragment arguments on a deferred fragment spread", async () => {
 
   await expect(stream).toEmitTypedValue({
     data: {
-      lead: { __typename: "User", id: "1", avatar: "lead.png" },
+      lead: {
+        __typename: "User",
+        id: "1",
+        avatar: "lead.png",
+        [fragmentVariablesSymbol]: { UserCard: { size: 96 } },
+      },
     },
     dataState: "complete",
     loading: false,
@@ -1653,8 +1809,17 @@ test("uses a fragment argument in @defer", async () => {
 
   await expect(stream).toEmitTypedValue({
     data: markAsStreaming({
-      lead: { __typename: "User", id: "1" },
-      member: { __typename: "User", id: "2", avatar: "member.png" },
+      lead: {
+        __typename: "User",
+        id: "1",
+        [fragmentVariablesSymbol]: { UserCard: { deferAvatar: true } },
+      },
+      member: {
+        __typename: "User",
+        id: "2",
+        avatar: "member.png",
+        [fragmentVariablesSymbol]: { UserCard: { deferAvatar: false } },
+      },
     }),
     dataState: "streaming",
     loading: true,
@@ -1670,8 +1835,18 @@ test("uses a fragment argument in @defer", async () => {
 
   await expect(stream).toEmitTypedValue({
     data: {
-      lead: { __typename: "User", id: "1", avatar: "lead.png" },
-      member: { __typename: "User", id: "2", avatar: "member.png" },
+      lead: {
+        __typename: "User",
+        id: "1",
+        avatar: "lead.png",
+        [fragmentVariablesSymbol]: { UserCard: { deferAvatar: true } },
+      },
+      member: {
+        __typename: "User",
+        id: "2",
+        avatar: "member.png",
+        [fragmentVariablesSymbol]: { UserCard: { deferAvatar: false } },
+      },
     },
     dataState: "complete",
     loading: false,
@@ -1721,14 +1896,21 @@ test("uses a fragment argument in @include while a deferred fragment is pending"
   });
 
   enqueueInitialChunk({
-    data: { lead: { __typename: "User", id: "1", avatar: "lead.png" } },
+    data: {
+      lead: { __typename: "User", id: "1", avatar: "lead.png" },
+    },
     pending: [{ id: "0", path: ["lead"], label: "ac_0" }],
     hasNext: true,
   });
 
   await expect(stream).toEmitTypedValue({
     data: markAsStreaming({
-      lead: { __typename: "User", id: "1", avatar: "lead.png" },
+      lead: {
+        __typename: "User",
+        id: "1",
+        avatar: "lead.png",
+        [fragmentVariablesSymbol]: { UserCard: { includeAvatar: true } },
+      },
     }),
     dataState: "streaming",
     loading: true,
@@ -1744,7 +1926,13 @@ test("uses a fragment argument in @include while a deferred fragment is pending"
 
   await expect(stream).toEmitTypedValue({
     data: {
-      lead: { __typename: "User", id: "1", avatar: "lead.png", name: "Lead" },
+      lead: {
+        __typename: "User",
+        id: "1",
+        avatar: "lead.png",
+        name: "Lead",
+        [fragmentVariablesSymbol]: { UserCard: { includeAvatar: true } },
+      },
     },
     dataState: "complete",
     loading: false,
@@ -1804,7 +1992,12 @@ test("binds new operation variables passed through a fragment spread on refetch"
 
   await expect(stream).toEmitTypedValue({
     data: {
-      lead: { __typename: "User", id: "1", avatar: "large.png" },
+      lead: {
+        __typename: "User",
+        id: "1",
+        avatar: "large.png",
+        [fragmentVariablesSymbol]: { UserCard: { size: 96 } },
+      },
     },
     dataState: "complete",
     loading: false,
@@ -1814,7 +2007,12 @@ test("binds new operation variables passed through a fragment spread on refetch"
 
   await expect(observable.refetch({ n: 32 })).resolves.toStrictEqualTyped({
     data: {
-      lead: { __typename: "User", id: "1", avatar: "small.png" },
+      lead: {
+        __typename: "User",
+        id: "1",
+        avatar: "small.png",
+        [fragmentVariablesSymbol]: { UserCard: { size: 32 } },
+      },
     },
   });
 
@@ -1828,7 +2026,12 @@ test("binds new operation variables passed through a fragment spread on refetch"
 
   await expect(stream).toEmitTypedValue({
     data: {
-      lead: { __typename: "User", id: "1", avatar: "small.png" },
+      lead: {
+        __typename: "User",
+        id: "1",
+        avatar: "small.png",
+        [fragmentVariablesSymbol]: { UserCard: { size: 32 } },
+      },
     },
     dataState: "complete",
     loading: false,
@@ -1922,8 +2125,20 @@ test("updates the matching fragment argument scope with a mutation result", asyn
 
   await expect(stream).toEmitTypedValue({
     data: {
-      lead: { __typename: "User", id: "1", avatar: "large.png" },
-      members: [{ __typename: "User", id: "1", avatar: "small.png" }],
+      lead: {
+        __typename: "User",
+        id: "1",
+        avatar: "large.png",
+        [fragmentVariablesSymbol]: { UserCard: { size: 96 } },
+      },
+      members: [
+        {
+          __typename: "User",
+          id: "1",
+          avatar: "small.png",
+          [fragmentVariablesSymbol]: { UserCard: { size: 32 } },
+        },
+      ],
     },
     dataState: "complete",
     loading: false,
@@ -1937,14 +2152,27 @@ test("updates the matching fragment argument scope with a mutation result", asyn
         __typename: "User",
         id: "1",
         avatar: "large-updated.png",
+        [fragmentVariablesSymbol]: { UserCard: { size: 96 } },
       },
     },
   });
 
   await expect(stream).toEmitTypedValue({
     data: {
-      lead: { __typename: "User", id: "1", avatar: "large-updated.png" },
-      members: [{ __typename: "User", id: "1", avatar: "small.png" }],
+      lead: {
+        __typename: "User",
+        id: "1",
+        avatar: "large-updated.png",
+        [fragmentVariablesSymbol]: { UserCard: { size: 96 } },
+      },
+      members: [
+        {
+          __typename: "User",
+          id: "1",
+          avatar: "small.png",
+          [fragmentVariablesSymbol]: { UserCard: { size: 32 } },
+        },
+      ],
     },
     dataState: "complete",
     loading: false,
@@ -2042,8 +2270,20 @@ test("updates the matching fragment argument scope with an optimistic response",
 
   await expect(stream).toEmitTypedValue({
     data: {
-      lead: { __typename: "User", id: "1", avatar: "large.png" },
-      members: [{ __typename: "User", id: "1", avatar: "small.png" }],
+      lead: {
+        __typename: "User",
+        id: "1",
+        avatar: "large.png",
+        [fragmentVariablesSymbol]: { UserCard: { size: 96 } },
+      },
+      members: [
+        {
+          __typename: "User",
+          id: "1",
+          avatar: "small.png",
+          [fragmentVariablesSymbol]: { UserCard: { size: 32 } },
+        },
+      ],
     },
     dataState: "complete",
     loading: false,
@@ -2064,8 +2304,20 @@ test("updates the matching fragment argument scope with an optimistic response",
 
   await expect(stream).toEmitTypedValue({
     data: {
-      lead: { __typename: "User", id: "1", avatar: "large-optimistic.png" },
-      members: [{ __typename: "User", id: "1", avatar: "small.png" }],
+      lead: {
+        __typename: "User",
+        id: "1",
+        avatar: "large-optimistic.png",
+        [fragmentVariablesSymbol]: { UserCard: { size: 96 } },
+      },
+      members: [
+        {
+          __typename: "User",
+          id: "1",
+          avatar: "small.png",
+          [fragmentVariablesSymbol]: { UserCard: { size: 32 } },
+        },
+      ],
     },
     dataState: "complete",
     loading: false,
@@ -2079,14 +2331,27 @@ test("updates the matching fragment argument scope with an optimistic response",
         __typename: "User",
         id: "1",
         avatar: "large-updated.png",
+        [fragmentVariablesSymbol]: { UserCard: { size: 96 } },
       },
     },
   });
 
   await expect(stream).toEmitTypedValue({
     data: {
-      lead: { __typename: "User", id: "1", avatar: "large-updated.png" },
-      members: [{ __typename: "User", id: "1", avatar: "small.png" }],
+      lead: {
+        __typename: "User",
+        id: "1",
+        avatar: "large-updated.png",
+        [fragmentVariablesSymbol]: { UserCard: { size: 96 } },
+      },
+      members: [
+        {
+          __typename: "User",
+          id: "1",
+          avatar: "small.png",
+          [fragmentVariablesSymbol]: { UserCard: { size: 32 } },
+        },
+      ],
     },
     dataState: "complete",
     loading: false,
@@ -2159,12 +2424,14 @@ test("passes the fragment argument scope to keyArgs, merge, and read functions",
         __typename: "User",
         id: "1",
         avatar: "lead.png?arg=96&variable=96&readArg=96&readVariable=96",
+        [fragmentVariablesSymbol]: { UserCard: { size: 96 } },
       },
       members: [
         {
           __typename: "User",
           id: "2",
           avatar: "member.png?arg=32&variable=32&readArg=32&readVariable=32",
+          [fragmentVariablesSymbol]: { UserCard: { size: 32 } },
         },
       ],
     },
@@ -2258,6 +2525,7 @@ test("passes the fragment argument scope to keyArgs, merge, and read functions w
         __typename: "User",
         id: "1",
         avatar: "lead.png?size=96&avatarSize=96&readSize=96&readAvatarSize=96",
+        [fragmentVariablesSymbol]: { UserCard: { avatarSize: 96 } },
       },
       members: [
         {
@@ -2265,6 +2533,7 @@ test("passes the fragment argument scope to keyArgs, merge, and read functions w
           id: "2",
           avatar:
             "member.png?size=32&avatarSize=32&readSize=32&readAvatarSize=32",
+          [fragmentVariablesSymbol]: { UserCard: { avatarSize: 32 } },
         },
       ],
     },
@@ -2343,8 +2612,20 @@ test("uses fragment arguments in inline fragments", async () => {
 
   await expect(stream).toEmitTypedValue({
     data: {
-      lead: { __typename: "User", id: "1", avatar: "lead.png" },
-      members: [{ __typename: "User", id: "2", avatar: "member.png" }],
+      lead: {
+        __typename: "User",
+        id: "1",
+        avatar: "lead.png",
+        [fragmentVariablesSymbol]: { UserCard: { size: 96 } },
+      },
+      members: [
+        {
+          __typename: "User",
+          id: "2",
+          avatar: "member.png",
+          [fragmentVariablesSymbol]: { UserCard: { size: 32 } },
+        },
+      ],
     },
     dataState: "complete",
     loading: false,
@@ -2420,8 +2701,20 @@ test("binds fragment arguments for fragments from the fragment registry", async 
 
   await expect(stream).toEmitTypedValue({
     data: {
-      lead: { __typename: "User", id: "1", avatar: "lead.png" },
-      members: [{ __typename: "User", id: "2", avatar: "member.png" }],
+      lead: {
+        __typename: "User",
+        id: "1",
+        avatar: "lead.png",
+        [fragmentVariablesSymbol]: { UserCard: { size: 96 } },
+      },
+      members: [
+        {
+          __typename: "User",
+          id: "2",
+          avatar: "member.png",
+          [fragmentVariablesSymbol]: { UserCard: { size: 32 } },
+        },
+      ],
     },
     dataState: "complete",
     loading: false,

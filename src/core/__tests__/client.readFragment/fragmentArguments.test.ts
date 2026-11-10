@@ -5,6 +5,7 @@ import {
   gql,
 } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
+import { fragmentVariablesSymbol } from "@apollo/client/utilities/internal";
 
 enableExperimentalFragmentVariables();
 
@@ -175,7 +176,12 @@ test("passes a root fragment argument through a nested fragment spread", () => {
       id: "User:1",
       variables: { size: 96 },
     })
-  ).toStrictEqualTyped({ __typename: "User", id: "1", avatar: "large.png" });
+  ).toStrictEqualTyped({
+    __typename: "User",
+    id: "1",
+    avatar: "large.png",
+    [fragmentVariablesSymbol]: { UserAvatar: { size: 96 } },
+  });
 });
 
 test("binds variables to the root fragment selected by fragmentName", () => {
@@ -200,7 +206,12 @@ test("binds variables to the root fragment selected by fragmentName", () => {
       id: "User:1",
       variables: { size: 96 },
     })
-  ).toStrictEqualTyped({ __typename: "User", id: "1", avatar: "large.png" });
+  ).toStrictEqualTyped({
+    __typename: "User",
+    id: "1",
+    avatar: "large.png",
+    [fragmentVariablesSymbol]: { UserAvatar: { avatarSize: 96 } },
+  });
 
   expect(
     client.readFragment({
@@ -239,6 +250,7 @@ test("binds a literal fragment argument on a nested spread instead of variables"
     id: "1",
     avatar: "large.png",
     smallAvatar: "small.png",
+    [fragmentVariablesSymbol]: { UserAvatar: { size: 32 } },
   });
 });
 
@@ -258,7 +270,12 @@ test("binds fragment arguments of a nested spread when the root fragment declare
 
   expect(
     client.readFragment({ fragment, fragmentName: "UserCard", id: "User:1" })
-  ).toStrictEqualTyped({ __typename: "User", id: "1", avatar: "large.png" });
+  ).toStrictEqualTyped({
+    __typename: "User",
+    id: "1",
+    avatar: "large.png",
+    [fragmentVariablesSymbol]: { UserAvatar: { size: 96 } },
+  });
 });
 
 test("uses variables directly when the root fragment declares no variables", () => {
@@ -303,6 +320,7 @@ test("uses variables in a nested fragment that declares no variables when the ro
     id: "1",
     avatar: "large.png",
     nestedAvatar: "large.png",
+    [fragmentVariablesSymbol]: { UserAvatar: { size: 96 } },
   });
 });
 

@@ -4,7 +4,7 @@ import {
   enableExperimentalFragmentVariables,
   gql,
 } from "@apollo/client";
-import { InMemoryCache } from "@apollo/client/cache";
+import { createFragmentRegistry, InMemoryCache } from "@apollo/client/cache";
 import { dateScalar } from "@apollo/client/testing/internal";
 import { fragmentInfoSymbol } from "@apollo/client/utilities/internal";
 
@@ -430,5 +430,49 @@ test("applies custom scalar fragment argument defaults of the root fragment", ()
     __typename: "Event",
     id: "1",
     attendees: 10,
+  });
+});
+
+test("passes a root fragment argument through a nested fragment spread from the fragment registry", () => {
+  const fragment = gql`
+    fragment UserCard($size: Int) on User {
+      id
+      ...UserAvatar(size: $size)
+    }
+  `;
+
+  const client = new ApolloClient({
+    link: ApolloLink.empty(),
+    cache: new InMemoryCache({
+      fragments: createFragmentRegistry(gql`
+        fragment UserAvatar($size: Int) on User {
+          avatar(size: $size)
+        }
+      `),
+    }).restore({
+      "User:1": {
+        __typename: "User",
+        id: "1",
+        'avatar({"size":32})': "small.png",
+        'avatar({"size":96})': "large.png",
+      },
+    }),
+  });
+
+  expect(
+    client.readFragment({
+      fragment,
+      fragmentName: "UserCard",
+      id: "User:1",
+      variables: { size: 96 },
+    })
+  ).toStrictEqualTyped({
+    __typename: "User",
+    id: "1",
+    avatar: "large.png",
+    [fragmentInfoSymbol]: {
+      operationVariables: { size: 96 },
+      fragments: { UserAvatar: { variables: { size: 96 } } },
+    },
   });
 });

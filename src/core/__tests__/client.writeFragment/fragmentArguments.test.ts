@@ -5,7 +5,7 @@ import {
   enableExperimentalFragmentVariables,
   gql,
 } from "@apollo/client";
-import { InMemoryCache } from "@apollo/client/cache";
+import { createFragmentRegistry, InMemoryCache } from "@apollo/client/cache";
 import type { WithFragmentInfo } from "@apollo/client/testing/internal";
 import { dateScalar, spyOnConsole } from "@apollo/client/testing/internal";
 import { fragmentInfoSymbol } from "@apollo/client/utilities/internal";
@@ -692,6 +692,43 @@ test("serializes custom scalar variables bound to root fragment arguments", () =
       __typename: "Event",
       id: "1",
       'attendees({"since":"2026-01-01"})': 10,
+    },
+  });
+});
+
+test("passes a root fragment argument through a nested fragment spread from the fragment registry", () => {
+  const fragment = gql`
+    fragment UserCard($size: Int) on User {
+      id
+      ...UserAvatar(size: $size)
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      fragments: createFragmentRegistry(gql`
+        fragment UserAvatar($size: Int) on User {
+          avatar(size: $size)
+        }
+      `),
+    }),
+    link: ApolloLink.empty(),
+  });
+
+  client.writeFragment({
+    fragment,
+    fragmentName: "UserCard",
+    id: "User:1",
+    variables: { size: 96 },
+    data: { __typename: "User", id: "1", avatar: "large.png" },
+  });
+
+  expect(client.extract()).toStrictEqualTyped({
+    __META: { extraRootIds: ["User:1"] },
+    "User:1": {
+      __typename: "User",
+      id: "1",
+      'avatar({"size":96})': "large.png",
     },
   });
 });

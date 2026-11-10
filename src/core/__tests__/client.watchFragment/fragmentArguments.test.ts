@@ -1,5 +1,7 @@
 import assert from "node:assert";
 
+import { delay, of } from "rxjs";
+
 import type { TypedDocumentNode } from "@apollo/client";
 import {
   ApolloClient,
@@ -8,7 +10,7 @@ import {
   gql,
   NetworkStatus,
 } from "@apollo/client";
-import { InMemoryCache } from "@apollo/client/cache";
+import { createFragmentRegistry, InMemoryCache } from "@apollo/client/cache";
 import { MockLink } from "@apollo/client/testing";
 import type { WithFragmentInfo } from "@apollo/client/testing/internal";
 import {
@@ -3931,6 +3933,327 @@ test("serializes custom scalar variables bound to root fragment arguments", asyn
 
   await expect(stream).toEmitTypedValue({
     data: { __typename: "Event", id: "1", attendees: 10 },
+    dataState: "complete",
+    complete: true,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("binds fragment arguments for fragments from the fragment registry from a query result passed to from", async () => {
+  const fragment = gql`
+    fragment UserCard($size: Int) on User {
+      id
+      avatar(size: $size)
+    }
+  `;
+
+  const query: TypedDocumentNode<
+    WithFragmentInfo<{ lead: MaskedUser }>,
+    Record<string, never>
+  > = gql`
+    query Team {
+      lead {
+        id
+        ...UserCard(size: 96)
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache({ fragments: createFragmentRegistry(fragment) }),
+    link: new ApolloLink(() => {
+      return of({
+        data: {
+          lead: { __typename: "User", id: "1", avatar: "large.png" },
+        },
+      }).pipe(delay(20));
+    }),
+  });
+
+  using queryStream = new ObservableStream(client.watchQuery({ query }));
+
+  await expect(queryStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  const result = await queryStream.takeNext();
+
+  expect(result).toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        [fragmentInfoSymbol]: {
+          operationVariables: {},
+          fragments: { UserCard: { variables: { size: 96 } } },
+        },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+  assert(result.dataState === "complete");
+  const data = result.data;
+
+  using stream = new ObservableStream(
+    client.watchFragment({ fragment, from: data.lead })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: { __typename: "User", id: "1", avatar: "large.png" },
+    dataState: "complete",
+    complete: true,
+  });
+
+  client.writeFragment({
+    fragment,
+    variables: { size: 32 },
+    data: { __typename: "User", id: "1", avatar: "small.png" },
+  });
+
+  await expect(stream).not.toEmitAnything();
+
+  client.writeFragment({
+    fragment,
+    variables: { size: 96 },
+    data: { __typename: "User", id: "1", avatar: "large-updated.png" },
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { __typename: "User", id: "1", avatar: "large-updated.png" },
+    dataState: "complete",
+    complete: true,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("binds fragment arguments of a nested fragment from the fragment registry from a fragment result passed to from", async () => {
+  const avatarFragment = gql`
+    fragment UserAvatar($size: Int) on User {
+      avatar(size: $size)
+    }
+  `;
+
+  const cardFragment: TypedDocumentNode<WithFragmentInfo<MaskedUser>> = gql`
+    fragment UserCard on User {
+      id
+      ...UserAvatar(size: 96)
+    }
+  `;
+
+  const query: TypedDocumentNode<
+    WithFragmentInfo<{ lead: MaskedUser }>,
+    Record<string, never>
+  > = gql`
+    query Team {
+      lead {
+        id
+        ...UserCard
+      }
+    }
+
+    ${cardFragment}
+  `;
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache({
+      fragments: createFragmentRegistry(avatarFragment),
+    }),
+    link: new ApolloLink(() => {
+      return of({
+        data: {
+          lead: { __typename: "User", id: "1", avatar: "large.png" },
+        },
+      }).pipe(delay(20));
+    }),
+  });
+
+  using queryStream = new ObservableStream(client.watchQuery({ query }));
+
+  await expect(queryStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  const queryResult = await queryStream.takeNext();
+
+  expect(queryResult).toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+  assert(queryResult.dataState === "complete");
+  const queryData = queryResult.data;
+
+  using cardStream = new ObservableStream(
+    client.watchFragment({
+      fragment: cardFragment,
+      fragmentName: "UserCard",
+      from: queryData.lead,
+    })
+  );
+
+  const cardResult = await cardStream.takeNext();
+
+  expect(cardResult).toStrictEqualTyped({
+    data: {
+      __typename: "User",
+      id: "1",
+      [fragmentInfoSymbol]: {
+        operationVariables: {},
+        fragments: { UserAvatar: { variables: { size: 96 } } },
+      },
+    },
+    dataState: "complete",
+    complete: true,
+  });
+  assert(cardResult.dataState === "complete");
+  const cardData = cardResult.data;
+
+  using stream = new ObservableStream(
+    client.watchFragment({ fragment: avatarFragment, from: cardData })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: { __typename: "User", avatar: "large.png" },
+    dataState: "complete",
+    complete: true,
+  });
+
+  client.writeFragment({
+    fragment: avatarFragment,
+    variables: { size: 32 },
+    data: { __typename: "User", id: "1", avatar: "small.png" },
+  });
+
+  await expect(stream).not.toEmitAnything();
+
+  client.writeFragment({
+    fragment: avatarFragment,
+    variables: { size: 96 },
+    data: { __typename: "User", id: "1", avatar: "large-updated.png" },
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { __typename: "User", avatar: "large-updated.png" },
+    dataState: "complete",
+    complete: true,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("binds operation variables used by a fragment from the fragment registry from a query result passed to from", async () => {
+  const fragment = gql`
+    fragment UserCard on User {
+      id
+      avatar(size: $size)
+    }
+  `;
+
+  const query: TypedDocumentNode<
+    WithFragmentInfo<{ lead: MaskedUser }>,
+    { size: number }
+  > = gql`
+    query Team($size: Int) {
+      lead {
+        id
+        ...UserCard
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache({ fragments: createFragmentRegistry(fragment) }),
+    link: new ApolloLink(() => {
+      return of({
+        data: {
+          lead: { __typename: "User", id: "1", avatar: "large.png" },
+        },
+      }).pipe(delay(20));
+    }),
+  });
+
+  using queryStream = new ObservableStream(
+    client.watchQuery({ query, variables: { size: 96 } })
+  );
+
+  await expect(queryStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  const result = await queryStream.takeNext();
+
+  expect(result).toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        [fragmentInfoSymbol]: {
+          operationVariables: { size: 96 },
+          fragments: { UserCard: { variables: { size: 96 } } },
+        },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+  assert(result.dataState === "complete");
+  const data = result.data;
+
+  using stream = new ObservableStream(
+    client.watchFragment({ fragment, from: data.lead })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: { __typename: "User", id: "1", avatar: "large.png" },
+    dataState: "complete",
+    complete: true,
+  });
+
+  client.writeFragment({
+    fragment,
+    variables: { size: 32 },
+    data: { __typename: "User", id: "1", avatar: "small.png" },
+  });
+
+  await expect(stream).not.toEmitAnything();
+
+  client.writeFragment({
+    fragment,
+    variables: { size: 96 },
+    data: { __typename: "User", id: "1", avatar: "large-updated.png" },
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { __typename: "User", id: "1", avatar: "large-updated.png" },
     dataState: "complete",
     complete: true,
   });

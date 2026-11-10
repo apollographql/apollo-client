@@ -1823,15 +1823,15 @@ test("binds fragment arguments for sibling fragments of a nested fragment from a
   `;
 
   const cardFragment: TypedDocumentNode<MaskedUser> = gql`
-      fragment UserCard on User {
-        id
-        ...UserAvatar(size: 96)
-        ...UserBadge(size: 32)
-      }
+    fragment UserCard on User {
+      id
+      ...UserAvatar(size: 96)
+      ...UserBadge(size: 32)
+    }
 
-      ${avatarFragment}
-      ${badgeFragment}
-    `;
+    ${avatarFragment}
+    ${badgeFragment}
+  `;
 
   const query: TypedDocumentNode<
     { lead: MaskedUser },

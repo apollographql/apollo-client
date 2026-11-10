@@ -1833,6 +1833,7 @@ test("masks result when dataMasking is `true`", async () => {
           __typename: "Character",
           id: "1",
           [fragmentInfoSymbol]: {
+            operationVariables: { id: "1" },
             fragments: { CharacterFragment: { variables: { id: "1" } } },
           },
         },

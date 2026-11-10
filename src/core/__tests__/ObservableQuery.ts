@@ -3171,6 +3171,7 @@ describe("ObservableQuery", () => {
           isTabby: true,
           __typename: "Cat",
           [fragmentInfoSymbol]: {
+            operationVariables: { id: 1 },
             fragments: {
               PetInfo: { variables: { id: 1 } },
               CatInfo: { variables: { id: 1 } },
@@ -3184,6 +3185,7 @@ describe("ObservableQuery", () => {
           isTabby: false,
           __typename: "Cat",
           [fragmentInfoSymbol]: {
+            operationVariables: { id: 1 },
             fragments: {
               PetInfo: { variables: { id: 1 } },
               CatInfo: { variables: { id: 1 } },
@@ -3197,6 +3199,7 @@ describe("ObservableQuery", () => {
           hasBrindleCoat: true,
           __typename: "Dog",
           [fragmentInfoSymbol]: {
+            operationVariables: { id: 1 },
             fragments: {
               PetInfo: { variables: { id: 1 } },
               DogInfo: { variables: { id: 1 } },

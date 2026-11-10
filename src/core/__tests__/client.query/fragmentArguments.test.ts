@@ -48,6 +48,7 @@ test("binds different fragment arguments at different paths", async () => {
         id: "1",
         avatar: "lead.png",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { size: 96 } } },
         },
       },
@@ -57,6 +58,7 @@ test("binds different fragment arguments at different paths", async () => {
           id: "2",
           avatar: "member.png",
           [fragmentInfoSymbol]: {
+            operationVariables: {},
             fragments: { UserCard: { variables: { size: 32 } } },
           },
         },
@@ -120,6 +122,7 @@ test("passes an operation variable through a fragment spread", async () => {
         id: "1",
         avatar: "lead.png",
         [fragmentInfoSymbol]: {
+          operationVariables: { n: 96 },
           fragments: { UserCard: { variables: { n: 96, size: 96 } } },
         },
       },
@@ -176,6 +179,7 @@ test("reads bound fragment arguments from the cache without a network request", 
         id: "1",
         avatar: "lead.png",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { size: 96 } } },
         },
       },
@@ -185,6 +189,7 @@ test("reads bound fragment arguments from the cache without a network request", 
           id: "2",
           avatar: "member.png",
           [fragmentInfoSymbol]: {
+            operationVariables: {},
             fragments: { UserCard: { variables: { size: 32 } } },
           },
         },

@@ -2742,6 +2742,7 @@ describe("ApolloClient", () => {
           id: 5,
           text: "Item #5",
           [fragmentInfoSymbol]: {
+            operationVariables: { withText: true },
             fragments: { IncludedFragment: { variables: { withText: true } } },
           },
         },
@@ -2764,6 +2765,7 @@ describe("ApolloClient", () => {
           id: 5,
           text: "changed Item #5",
           [fragmentInfoSymbol]: {
+            operationVariables: { withText: true },
             fragments: { IncludedFragment: { variables: { withText: true } } },
           },
         },

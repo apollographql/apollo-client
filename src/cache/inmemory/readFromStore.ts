@@ -753,6 +753,7 @@ export class StoreReader {
       result = {
         ...result,
         [fragmentInfoSymbol]: {
+          operationVariables: context.operationVariables ?? {},
           fragments: { ...childFragments, ...fragments },
         } satisfies FragmentInfo,
       };

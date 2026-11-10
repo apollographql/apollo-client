@@ -181,6 +181,7 @@ test("passes a root fragment argument through a nested fragment spread", () => {
     id: "1",
     avatar: "large.png",
     [fragmentInfoSymbol]: {
+      operationVariables: { size: 96 },
       fragments: { UserAvatar: { variables: { size: 96 } } },
     },
   });
@@ -213,6 +214,7 @@ test("binds variables to the root fragment selected by fragmentName", () => {
     id: "1",
     avatar: "large.png",
     [fragmentInfoSymbol]: {
+      operationVariables: { size: 96 },
       fragments: { UserAvatar: { variables: { size: 96, avatarSize: 96 } } },
     },
   });
@@ -255,6 +257,7 @@ test("binds a literal fragment argument on a nested spread instead of variables"
     avatar: "large.png",
     smallAvatar: "small.png",
     [fragmentInfoSymbol]: {
+      operationVariables: { size: 96 },
       fragments: { UserAvatar: { variables: { size: 32 } } },
     },
   });
@@ -281,6 +284,7 @@ test("binds fragment arguments of a nested spread when the root fragment declare
     id: "1",
     avatar: "large.png",
     [fragmentInfoSymbol]: {
+      operationVariables: {},
       fragments: { UserAvatar: { variables: { size: 96 } } },
     },
   });
@@ -329,6 +333,7 @@ test("uses variables in a nested fragment that declares no variables when the ro
     avatar: "large.png",
     nestedAvatar: "large.png",
     [fragmentInfoSymbol]: {
+      operationVariables: { size: 96 },
       fragments: { UserAvatar: { variables: { size: 96 } } },
     },
   });

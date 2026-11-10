@@ -322,6 +322,7 @@ test("passes a root fragment argument through a nested fragment spread", async (
       id: "1",
       avatar: "large.png",
       [fragmentInfoSymbol]: {
+        operationVariables: { size: 96 },
         fragments: { UserAvatar: { variables: { size: 96 } } },
       },
     },
@@ -343,6 +344,7 @@ test("passes a root fragment argument through a nested fragment spread", async (
       id: "1",
       avatar: "large-updated.png",
       [fragmentInfoSymbol]: {
+        operationVariables: { size: 96 },
         fragments: { UserAvatar: { variables: { size: 96 } } },
       },
     },
@@ -477,6 +479,7 @@ test("masks nested fragment spreads with arguments when data masking is enabled"
       id: "1",
       avatar: "large.png",
       [fragmentInfoSymbol]: {
+        operationVariables: { size: 96 },
         fragments: { UserAvatar: { variables: { size: 32 } } },
       },
     },
@@ -513,6 +516,7 @@ test("masks nested fragment spreads with arguments when data masking is enabled"
       id: "1",
       avatar: "large-updated.png",
       [fragmentInfoSymbol]: {
+        operationVariables: { size: 96 },
         fragments: { UserAvatar: { variables: { size: 32 } } },
       },
     },
@@ -578,6 +582,7 @@ test("binds fragment arguments from a query result passed to from", async () => 
         __typename: "User",
         id: "1",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { size: 96 } } },
         },
       },
@@ -685,6 +690,7 @@ test("binds fragment arguments from a query result passed to from without data m
         id: "1",
         avatar: "large.png",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { size: 96 } } },
         },
       },
@@ -787,6 +793,7 @@ test("binds fragment arguments set from operation variables from a query result 
         __typename: "User",
         id: "1",
         [fragmentInfoSymbol]: {
+          operationVariables: { avatarSize: 96 },
           fragments: { UserCard: { variables: { avatarSize: 96, size: 96 } } },
         },
       },
@@ -869,6 +876,7 @@ test("binds operation variables used by a fragment from a query result passed to
         __typename: "User",
         id: "1",
         [fragmentInfoSymbol]: {
+          operationVariables: { size: 96 },
           fragments: { UserCard: { variables: { size: 96 } } },
         },
       },
@@ -964,6 +972,7 @@ test("applies fragment argument defaults instead of operation variables with the
         id: "1",
         largeAvatar: "large.png",
         [fragmentInfoSymbol]: {
+          operationVariables: { size: 96 },
           fragments: { UserCard: { variables: { size: 48 } } },
         },
       },
@@ -1049,6 +1058,7 @@ test("binds fragment arguments for each item from query results passed to from a
         __typename: "User",
         id: "1",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { size: 96 } } },
         },
       },
@@ -1056,6 +1066,7 @@ test("binds fragment arguments for each item from query results passed to from a
         __typename: "User",
         id: "1",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { size: 32 } } },
         },
       },
@@ -1158,6 +1169,7 @@ test("binds fragment arguments for each list item from a query result passed to 
           __typename: "User",
           id: "1",
           [fragmentInfoSymbol]: {
+            operationVariables: {},
             fragments: { UserCard: { variables: { size: 32 } } },
           },
         },
@@ -1165,6 +1177,7 @@ test("binds fragment arguments for each list item from a query result passed to 
           __typename: "User",
           id: "2",
           [fragmentInfoSymbol]: {
+            operationVariables: {},
             fragments: { UserCard: { variables: { size: 32 } } },
           },
         },
@@ -1257,6 +1270,7 @@ test("binds fragment arguments of a nested fragment from a fragment result passe
         __typename: "User",
         id: "1",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { size: 96 } } },
         },
       },
@@ -1284,6 +1298,7 @@ test("binds fragment arguments of a nested fragment from a fragment result passe
       __typename: "User",
       id: "1",
       [fragmentInfoSymbol]: {
+        operationVariables: {},
         fragments: { UserAvatar: { variables: { size: 96 } } },
       },
     },
@@ -1371,6 +1386,7 @@ test("binds fragment arguments of a nested fragment from a fragment result passe
         __typename: "User",
         id: "1",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { size: 96 } } },
         },
       },
@@ -1398,6 +1414,7 @@ test("binds fragment arguments of a nested fragment from a fragment result passe
       __typename: "User",
       id: "1",
       [fragmentInfoSymbol]: {
+        operationVariables: {},
         fragments: { UserAvatar: { variables: { size: 96 } } },
       },
     },
@@ -1496,6 +1513,7 @@ test("binds fragment arguments of a nested fragment from a fragment result passe
         id: "1",
         avatar: "large.png",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: {
             UserCard: { variables: { size: 96 } },
             UserAvatar: { variables: { size: 96 } },
@@ -1527,6 +1545,7 @@ test("binds fragment arguments of a nested fragment from a fragment result passe
       id: "1",
       avatar: "large.png",
       [fragmentInfoSymbol]: {
+        operationVariables: {},
         fragments: { UserAvatar: { variables: { size: 96 } } },
       },
     },
@@ -1621,7 +1640,10 @@ test("binds operation variables of a nested fragment shadowed by a parent fragme
       user: {
         __typename: "User",
         id: "1",
-        [fragmentInfoSymbol]: { fragments: { Foo: { variables: { x: 1 } } } },
+        [fragmentInfoSymbol]: {
+          operationVariables: { x: 99 },
+          fragments: { Foo: { variables: { x: 1 } } },
+        },
       },
     },
     dataState: "complete",
@@ -1646,7 +1668,10 @@ test("binds operation variables of a nested fragment shadowed by a parent fragme
       id: "1",
       fooValue: 1,
       value: 99,
-      [fragmentInfoSymbol]: { fragments: { Bar: { variables: { x: 99 } } } },
+      [fragmentInfoSymbol]: {
+        operationVariables: { x: 99 },
+        fragments: { Bar: { variables: { x: 99 } } },
+      },
     },
     dataState: "complete",
     complete: true,
@@ -1726,7 +1751,10 @@ test("binds operation variables of a masked nested fragment shadowed by a parent
       user: {
         __typename: "User",
         id: "1",
-        [fragmentInfoSymbol]: { fragments: { Foo: { variables: { x: 1 } } } },
+        [fragmentInfoSymbol]: {
+          operationVariables: { x: 99 },
+          fragments: { Foo: { variables: { x: 1 } } },
+        },
       },
     },
     dataState: "complete",
@@ -1752,7 +1780,10 @@ test("binds operation variables of a masked nested fragment shadowed by a parent
       __typename: "User",
       id: "1",
       fooValue: 1,
-      [fragmentInfoSymbol]: { fragments: { Bar: { variables: { x: 99 } } } },
+      [fragmentInfoSymbol]: {
+        operationVariables: { x: 99 },
+        fragments: { Bar: { variables: { x: 99 } } },
+      },
     },
     dataState: "complete",
     complete: true,
@@ -1840,6 +1871,7 @@ test("binds new fragment arguments from a query result after refetch with new va
         __typename: "User",
         id: "1",
         [fragmentInfoSymbol]: {
+          operationVariables: { avatarSize: 96 },
           fragments: { UserCard: { variables: { avatarSize: 96, size: 96 } } },
         },
       },
@@ -1870,6 +1902,7 @@ test("binds new fragment arguments from a query result after refetch with new va
         __typename: "User",
         id: "1",
         [fragmentInfoSymbol]: {
+          operationVariables: { avatarSize: 32 },
           fragments: { UserCard: { variables: { avatarSize: 32, size: 32 } } },
         },
       },
@@ -1892,6 +1925,7 @@ test("binds new fragment arguments from a query result after refetch with new va
         __typename: "User",
         id: "1",
         [fragmentInfoSymbol]: {
+          operationVariables: { avatarSize: 32 },
           fragments: { UserCard: { variables: { avatarSize: 32, size: 32 } } },
         },
       },
@@ -1985,6 +2019,7 @@ test("binds new fragment arguments from a query result after setVariables", asyn
         __typename: "User",
         id: "1",
         [fragmentInfoSymbol]: {
+          operationVariables: { avatarSize: 96 },
           fragments: { UserCard: { variables: { avatarSize: 96, size: 96 } } },
         },
       },
@@ -2015,6 +2050,7 @@ test("binds new fragment arguments from a query result after setVariables", asyn
         __typename: "User",
         id: "1",
         [fragmentInfoSymbol]: {
+          operationVariables: { avatarSize: 32 },
           fragments: { UserCard: { variables: { avatarSize: 32, size: 32 } } },
         },
       },
@@ -2037,6 +2073,7 @@ test("binds new fragment arguments from a query result after setVariables", asyn
         __typename: "User",
         id: "1",
         [fragmentInfoSymbol]: {
+          operationVariables: { avatarSize: 32 },
           fragments: { UserCard: { variables: { avatarSize: 32, size: 32 } } },
         },
       },
@@ -2130,6 +2167,7 @@ test("binds new fragment arguments from a query result after reobserve with new 
         __typename: "User",
         id: "1",
         [fragmentInfoSymbol]: {
+          operationVariables: { avatarSize: 96 },
           fragments: { UserCard: { variables: { avatarSize: 96, size: 96 } } },
         },
       },
@@ -2160,6 +2198,7 @@ test("binds new fragment arguments from a query result after reobserve with new 
         __typename: "User",
         id: "1",
         [fragmentInfoSymbol]: {
+          operationVariables: { avatarSize: 32 },
           fragments: { UserCard: { variables: { avatarSize: 32, size: 32 } } },
         },
       },
@@ -2182,6 +2221,7 @@ test("binds new fragment arguments from a query result after reobserve with new 
         __typename: "User",
         id: "1",
         [fragmentInfoSymbol]: {
+          operationVariables: { avatarSize: 32 },
           fragments: { UserCard: { variables: { avatarSize: 32, size: 32 } } },
         },
       },
@@ -2277,6 +2317,7 @@ test("binds fragment arguments for each sibling fragment from a query result pas
         __typename: "User",
         id: "1",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: {
             UserCard: { variables: { size: 96 } },
             UserBadge: { variables: { size: 32 } },
@@ -2387,6 +2428,7 @@ test("binds fragment arguments for each sibling fragment with different fragment
         __typename: "User",
         id: "1",
         [fragmentInfoSymbol]: {
+          operationVariables: { badgeColor: "gold" },
           fragments: {
             UserCard: { variables: { badgeColor: "gold", size: 96 } },
             UserBadge: { variables: { badgeColor: "gold", color: "gold" } },
@@ -2506,6 +2548,7 @@ test("binds fragment arguments for each sibling fragment with different fragment
         avatar: "large.png",
         badge: "gold-badge.png",
         [fragmentInfoSymbol]: {
+          operationVariables: { badgeColor: "gold" },
           fragments: {
             UserCard: { variables: { badgeColor: "gold", size: 96 } },
             UserBadge: { variables: { badgeColor: "gold", color: "gold" } },
@@ -2616,6 +2659,7 @@ test("binds operation variables for a fragment with a sibling fragment argument 
         __typename: "User",
         id: "1",
         [fragmentInfoSymbol]: {
+          operationVariables: { size: 32 },
           fragments: {
             UserCard: { variables: { size: 96 } },
             UserBadge: { variables: { size: 32 } },
@@ -2750,6 +2794,7 @@ test("binds fragment arguments for sibling fragments of a nested fragment from a
       __typename: "User",
       id: "1",
       [fragmentInfoSymbol]: {
+        operationVariables: {},
         fragments: {
           UserAvatar: { variables: { size: 96 } },
           UserBadge: { variables: { size: 32 } },
@@ -2863,10 +2908,12 @@ test("binds fragment arguments for the same fragment at different depths from a 
           __typename: "User",
           id: "2",
           [fragmentInfoSymbol]: {
+            operationVariables: {},
             fragments: { UserCard: { variables: { size: 32 } } },
           },
         },
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { size: 96 } } },
         },
       },
@@ -2960,6 +3007,7 @@ test("binds fragment arguments of a fragment spread inside an inline fragment fr
         __typename: "User",
         id: "1",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { size: 96 } } },
         },
       },
@@ -3047,6 +3095,7 @@ test("binds fragment arguments of an unmasked fragment from a query result passe
         id: "1",
         avatar: "large.png",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { size: 96 } } },
         },
       },
@@ -3154,6 +3203,7 @@ test("binds fragment arguments passed through an unmasked fragment from a query 
         id: "1",
         name: "Alice",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: {
             UserDetails: { variables: { size: 96 } },
             UserCard: { variables: { size: 96 } },
@@ -3239,6 +3289,7 @@ test("binds input object fragment arguments that contain operation variables fro
         __typename: "User",
         id: "1",
         [fragmentInfoSymbol]: {
+          operationVariables: { avatarSize: 96 },
           fragments: {
             UserCard: {
               variables: {
@@ -3358,6 +3409,7 @@ test("binds fragment arguments of a sibling fragment and a fragment nested in an
         id: "1",
         name: "Alice",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: {
             UserDetails: { variables: { size: 96 } },
             UserCard: { variables: { size: 96 } },
@@ -3488,6 +3540,7 @@ test("binds fragment arguments of fragments nested in sibling unmasked fragments
         name: "Alice",
         email: "alice@example.com",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: {
             UserCard: { variables: { size: 96 } },
             UserBadge: { variables: { color: "gold" } },
@@ -3621,6 +3674,7 @@ test("binds fragment arguments of fragments nested in sibling fragments from a q
         avatar: "large.png",
         badge: "gold-badge.png",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: {
             UserCard: { variables: { size: 96 } },
             UserBadge: { variables: { color: "gold" } },
@@ -3723,10 +3777,12 @@ test("binds fragment arguments passed through an unmasked fragment spread on the
         __typename: "User",
         id: "1",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { size: 96 } } },
         },
       },
       [fragmentInfoSymbol]: {
+        operationVariables: {},
         fragments: { TeamFields: { variables: { size: 96 } } },
       },
     },

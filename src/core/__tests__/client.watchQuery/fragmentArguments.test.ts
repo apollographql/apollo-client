@@ -80,6 +80,7 @@ test("binds a fragment argument", async () => {
         id: "1",
         avatar: "large.png",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { size: 96 } } },
         },
       },
@@ -154,6 +155,7 @@ test("binds different fragment arguments at different paths", async () => {
         id: "1",
         avatar: "lead.png",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { size: 96 } } },
         },
       },
@@ -163,6 +165,7 @@ test("binds different fragment arguments at different paths", async () => {
           id: "2",
           avatar: "member.png",
           [fragmentInfoSymbol]: {
+            operationVariables: {},
             fragments: { UserCard: { variables: { size: 32 } } },
           },
         },
@@ -240,6 +243,7 @@ test("applies fragment argument defaults when the spread omits an argument", asy
         id: "1",
         avatar: "default.png",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { size: 48 } } },
         },
       },
@@ -312,6 +316,7 @@ test("passes an operation variable through a fragment spread", async () => {
         id: "1",
         avatar: "lead.png",
         [fragmentInfoSymbol]: {
+          operationVariables: { n: 96 },
           fragments: { UserCard: { variables: { n: 96, size: 96 } } },
         },
       },
@@ -391,6 +396,7 @@ test("shadows an operation variable with a fragment argument of the same name", 
         photo: "photo-32.png",
         avatar: "avatar-96.png",
         [fragmentInfoSymbol]: {
+          operationVariables: { size: 32 },
           fragments: { UserCard: { variables: { size: 96 } } },
         },
       },
@@ -466,6 +472,7 @@ test("passes a fragment argument through a nested fragment spread", async () => 
         id: "1",
         avatar: "lead.png",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: {
             Outer: { variables: { size: 96 } },
             Inner: { variables: { size: 96 } },
@@ -547,6 +554,7 @@ test("does not leak a fragment argument into a child fragment that does not decl
         fooValue: 1,
         value: 99,
         [fragmentInfoSymbol]: {
+          operationVariables: { x: 99 },
           fragments: {
             Foo: { variables: { x: 1 } },
             Bar: { variables: { x: 99 } },
@@ -635,6 +643,7 @@ test("uses a fragment argument in @include", async () => {
         id: "1",
         avatar: "lead.png",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { includeAvatar: true } } },
         },
       },
@@ -642,6 +651,7 @@ test("uses a fragment argument in @include", async () => {
         __typename: "User",
         id: "2",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { includeAvatar: false } } },
         },
       },
@@ -730,6 +740,7 @@ test("emits cache updates to fields in @include with a fragment argument when th
         avatar: "lead.png",
         name: "Lead",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { includeAvatar: true } } },
         },
       },
@@ -758,6 +769,7 @@ test("emits cache updates to fields in @include with a fragment argument when th
         avatar: "updated.png",
         name: "Lead",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { includeAvatar: true } } },
         },
       },
@@ -833,6 +845,7 @@ test("uses fragment arguments in child selection sets", async () => {
         id: "1",
         friends: [{ __typename: "User", id: "3", avatar: "large.png" }],
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { size: 96 } } },
         },
       },
@@ -842,6 +855,7 @@ test("uses fragment arguments in child selection sets", async () => {
           id: "2",
           friends: [{ __typename: "User", id: "4", avatar: "small.png" }],
           [fragmentInfoSymbol]: {
+            operationVariables: {},
             fragments: { UserCard: { variables: { size: 32 } } },
           },
         },
@@ -933,6 +947,7 @@ test("binds different fragment arguments for the same entity at different paths"
         id: "1",
         avatar: "large.png",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { size: 96 } } },
         },
       },
@@ -942,6 +957,7 @@ test("binds different fragment arguments for the same entity at different paths"
           id: "1",
           avatar: "small.png",
           [fragmentInfoSymbol]: {
+            operationVariables: {},
             fragments: { UserCard: { variables: { size: 32 } } },
           },
         },
@@ -1030,6 +1046,7 @@ test("binds different fragment arguments for a shared child entity at different 
         id: "1",
         bestFriend: { __typename: "User", id: "3", avatar: "large.png" },
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { size: 96 } } },
         },
       },
@@ -1038,6 +1055,7 @@ test("binds different fragment arguments for a shared child entity at different 
         id: "2",
         bestFriend: { __typename: "User", id: "3", avatar: "small.png" },
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { size: 32 } } },
         },
       },
@@ -1138,6 +1156,7 @@ test("passes fragment arguments to read functions of @client fields", async () =
         id: "1",
         localAvatar: "local-96.png",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { size: 96 } } },
         },
       },
@@ -1147,6 +1166,7 @@ test("passes fragment arguments to read functions of @client fields", async () =
           id: "2",
           localAvatar: "local-32.png",
           [fragmentInfoSymbol]: {
+            operationVariables: {},
             fragments: { UserCard: { variables: { size: 32 } } },
           },
         },
@@ -1225,6 +1245,7 @@ test("removes fragment variables that are only used by @client fields from the r
         id: "1",
         localAvatar: "local-96.png",
         [fragmentInfoSymbol]: {
+          operationVariables: { n: 96 },
           fragments: { UserCard: { variables: { n: 96, size: 96 } } },
         },
       },
@@ -1291,6 +1312,7 @@ test("reads bound fragment arguments from the cache without a network request", 
         id: "1",
         avatar: "lead.png",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { size: 96 } } },
         },
       },
@@ -1300,6 +1322,7 @@ test("reads bound fragment arguments from the cache without a network request", 
           id: "2",
           avatar: "member.png",
           [fragmentInfoSymbol]: {
+            operationVariables: {},
             fragments: { UserCard: { variables: { size: 32 } } },
           },
         },
@@ -1381,6 +1404,7 @@ test("emits only the path whose fragment argument scope changes in the cache", a
         id: "1",
         avatar: "large.png",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { size: 96 } } },
         },
       },
@@ -1390,6 +1414,7 @@ test("emits only the path whose fragment argument scope changes in the cache", a
           id: "1",
           avatar: "small.png",
           [fragmentInfoSymbol]: {
+            operationVariables: {},
             fragments: { UserCard: { variables: { size: 32 } } },
           },
         },
@@ -1416,6 +1441,7 @@ test("emits only the path whose fragment argument scope changes in the cache", a
         id: "1",
         avatar: "large.png",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { size: 96 } } },
         },
       },
@@ -1425,6 +1451,7 @@ test("emits only the path whose fragment argument scope changes in the cache", a
           id: "1",
           avatar: "small-updated.png",
           [fragmentInfoSymbol]: {
+            operationVariables: {},
             fragments: { UserCard: { variables: { size: 32 } } },
           },
         },
@@ -1505,6 +1532,7 @@ test("emits a previously read result written under a different fragment argument
         id: "2",
         bestFriend: { __typename: "User", id: "4", avatar: "small.png" },
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { size: 32 } } },
         },
       },
@@ -1532,6 +1560,7 @@ test("emits a previously read result written under a different fragment argument
         id: "2",
         bestFriend: { __typename: "User", id: "3", avatar: "default.png" },
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { size: 32 } } },
         },
       },
@@ -1635,6 +1664,7 @@ test("evaluates directives on a fragment spread with the parent fragment scope",
         id: "1",
         name: "Lead",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: {
             UserCard: { variables: { flag: false } },
             UserName: { variables: { flag: true } },
@@ -1715,6 +1745,7 @@ test("does not warn about fields excluded by a fragment argument in @include", a
         id: "1",
         avatar: "lead.png",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { includeAvatar: true } } },
         },
       },
@@ -1722,6 +1753,7 @@ test("does not warn about fields excluded by a fragment argument in @include", a
         __typename: "User",
         id: "2",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { includeAvatar: false } } },
         },
       },
@@ -1784,6 +1816,7 @@ test("binds fragment arguments on a deferred fragment spread", async () => {
         __typename: "User",
         id: "1",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { size: 96 } } },
         },
       },
@@ -1807,6 +1840,7 @@ test("binds fragment arguments on a deferred fragment spread", async () => {
         id: "1",
         avatar: "lead.png",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { size: 96 } } },
         },
       },
@@ -1887,6 +1921,7 @@ test("uses a fragment argument in @defer", async () => {
         __typename: "User",
         id: "1",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { deferAvatar: true } } },
         },
       },
@@ -1895,6 +1930,7 @@ test("uses a fragment argument in @defer", async () => {
         id: "2",
         avatar: "member.png",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { deferAvatar: false } } },
         },
       },
@@ -1918,6 +1954,7 @@ test("uses a fragment argument in @defer", async () => {
         id: "1",
         avatar: "lead.png",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { deferAvatar: true } } },
         },
       },
@@ -1926,6 +1963,7 @@ test("uses a fragment argument in @defer", async () => {
         id: "2",
         avatar: "member.png",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { deferAvatar: false } } },
         },
       },
@@ -1992,6 +2030,7 @@ test("uses a fragment argument in @include while a deferred fragment is pending"
         id: "1",
         avatar: "lead.png",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { includeAvatar: true } } },
         },
       },
@@ -2016,6 +2055,7 @@ test("uses a fragment argument in @include while a deferred fragment is pending"
         avatar: "lead.png",
         name: "Lead",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { includeAvatar: true } } },
         },
       },
@@ -2083,6 +2123,7 @@ test("binds new operation variables passed through a fragment spread on refetch"
         id: "1",
         avatar: "large.png",
         [fragmentInfoSymbol]: {
+          operationVariables: { n: 96 },
           fragments: { UserCard: { variables: { n: 96, size: 96 } } },
         },
       },
@@ -2100,6 +2141,7 @@ test("binds new operation variables passed through a fragment spread on refetch"
         id: "1",
         avatar: "small.png",
         [fragmentInfoSymbol]: {
+          operationVariables: { n: 32 },
           fragments: { UserCard: { variables: { n: 32, size: 32 } } },
         },
       },
@@ -2121,6 +2163,7 @@ test("binds new operation variables passed through a fragment spread on refetch"
         id: "1",
         avatar: "small.png",
         [fragmentInfoSymbol]: {
+          operationVariables: { n: 32 },
           fragments: { UserCard: { variables: { n: 32, size: 32 } } },
         },
       },
@@ -2222,6 +2265,7 @@ test("updates the matching fragment argument scope with a mutation result", asyn
         id: "1",
         avatar: "large.png",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { size: 96 } } },
         },
       },
@@ -2231,6 +2275,7 @@ test("updates the matching fragment argument scope with a mutation result", asyn
           id: "1",
           avatar: "small.png",
           [fragmentInfoSymbol]: {
+            operationVariables: {},
             fragments: { UserCard: { variables: { size: 32 } } },
           },
         },
@@ -2249,6 +2294,7 @@ test("updates the matching fragment argument scope with a mutation result", asyn
         id: "1",
         avatar: "large-updated.png",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { size: 96 } } },
         },
       },
@@ -2262,6 +2308,7 @@ test("updates the matching fragment argument scope with a mutation result", asyn
         id: "1",
         avatar: "large-updated.png",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { size: 96 } } },
         },
       },
@@ -2271,6 +2318,7 @@ test("updates the matching fragment argument scope with a mutation result", asyn
           id: "1",
           avatar: "small.png",
           [fragmentInfoSymbol]: {
+            operationVariables: {},
             fragments: { UserCard: { variables: { size: 32 } } },
           },
         },
@@ -2377,6 +2425,7 @@ test("updates the matching fragment argument scope with an optimistic response",
         id: "1",
         avatar: "large.png",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { size: 96 } } },
         },
       },
@@ -2386,6 +2435,7 @@ test("updates the matching fragment argument scope with an optimistic response",
           id: "1",
           avatar: "small.png",
           [fragmentInfoSymbol]: {
+            operationVariables: {},
             fragments: { UserCard: { variables: { size: 32 } } },
           },
         },
@@ -2415,6 +2465,7 @@ test("updates the matching fragment argument scope with an optimistic response",
         id: "1",
         avatar: "large-optimistic.png",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { size: 96 } } },
         },
       },
@@ -2424,6 +2475,7 @@ test("updates the matching fragment argument scope with an optimistic response",
           id: "1",
           avatar: "small.png",
           [fragmentInfoSymbol]: {
+            operationVariables: {},
             fragments: { UserCard: { variables: { size: 32 } } },
           },
         },
@@ -2442,6 +2494,7 @@ test("updates the matching fragment argument scope with an optimistic response",
         id: "1",
         avatar: "large-updated.png",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { size: 96 } } },
         },
       },
@@ -2455,6 +2508,7 @@ test("updates the matching fragment argument scope with an optimistic response",
         id: "1",
         avatar: "large-updated.png",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { size: 96 } } },
         },
       },
@@ -2464,6 +2518,7 @@ test("updates the matching fragment argument scope with an optimistic response",
           id: "1",
           avatar: "small.png",
           [fragmentInfoSymbol]: {
+            operationVariables: {},
             fragments: { UserCard: { variables: { size: 32 } } },
           },
         },
@@ -2541,6 +2596,7 @@ test("passes the fragment argument scope to keyArgs, merge, and read functions",
         id: "1",
         avatar: "lead.png?arg=96&variable=96&readArg=96&readVariable=96",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { size: 96 } } },
         },
       },
@@ -2550,6 +2606,7 @@ test("passes the fragment argument scope to keyArgs, merge, and read functions",
           id: "2",
           avatar: "member.png?arg=32&variable=32&readArg=32&readVariable=32",
           [fragmentInfoSymbol]: {
+            operationVariables: {},
             fragments: { UserCard: { variables: { size: 32 } } },
           },
         },
@@ -2646,6 +2703,7 @@ test("passes the fragment argument scope to keyArgs, merge, and read functions w
         id: "1",
         avatar: "lead.png?size=96&avatarSize=96&readSize=96&readAvatarSize=96",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { avatarSize: 96 } } },
         },
       },
@@ -2656,6 +2714,7 @@ test("passes the fragment argument scope to keyArgs, merge, and read functions w
           avatar:
             "member.png?size=32&avatarSize=32&readSize=32&readAvatarSize=32",
           [fragmentInfoSymbol]: {
+            operationVariables: {},
             fragments: { UserCard: { variables: { avatarSize: 32 } } },
           },
         },
@@ -2741,6 +2800,7 @@ test("uses fragment arguments in inline fragments", async () => {
         id: "1",
         avatar: "lead.png",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { size: 96 } } },
         },
       },
@@ -2750,6 +2810,7 @@ test("uses fragment arguments in inline fragments", async () => {
           id: "2",
           avatar: "member.png",
           [fragmentInfoSymbol]: {
+            operationVariables: {},
             fragments: { UserCard: { variables: { size: 32 } } },
           },
         },
@@ -2834,6 +2895,7 @@ test("binds fragment arguments for fragments from the fragment registry", async 
         id: "1",
         avatar: "lead.png",
         [fragmentInfoSymbol]: {
+          operationVariables: {},
           fragments: { UserCard: { variables: { size: 96 } } },
         },
       },
@@ -2843,6 +2905,7 @@ test("binds fragment arguments for fragments from the fragment registry", async 
           id: "2",
           avatar: "member.png",
           [fragmentInfoSymbol]: {
+            operationVariables: {},
             fragments: { UserCard: { variables: { size: 32 } } },
           },
         },

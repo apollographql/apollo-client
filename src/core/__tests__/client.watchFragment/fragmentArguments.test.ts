@@ -6,9 +6,11 @@ import {
   ApolloLink,
   enableExperimentalFragmentVariables,
   gql,
+  NetworkStatus,
 } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { MockLink } from "@apollo/client/testing";
+import type { WithFragmentInfo } from "@apollo/client/testing/internal";
 import {
   ObservableStream,
   withProdMode,
@@ -522,7 +524,7 @@ test("binds fragment arguments from a query result passed to from", async () => 
   `;
 
   const query: TypedDocumentNode<
-    { lead: MaskedUser },
+    WithFragmentInfo<{ lead: MaskedUser }>,
     Record<string, never>
   > = gql`
       query Team {
@@ -552,9 +554,29 @@ test("binds fragment arguments from a query result passed to from", async () => 
 
   using queryStream = new ObservableStream(client.watchQuery({ query }));
 
-  await queryStream.takeNext();
+  await expect(queryStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
   const result = await queryStream.takeNext();
 
+  expect(result).toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        [fragmentVariablesSymbol]: { UserCard: { size: 96 } },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
   assert(result.dataState === "complete");
   const data = result.data;
 
@@ -600,7 +622,13 @@ test("binds fragment arguments from a query result passed to from without data m
   `;
 
   const query: TypedDocumentNode<
-    { lead: MaskedUser },
+    WithFragmentInfo<{
+      lead: {
+        __typename: "User";
+        id: string;
+        avatar: string;
+      };
+    }>,
     Record<string, never>
   > = gql`
       query Team {
@@ -630,9 +658,30 @@ test("binds fragment arguments from a query result passed to from without data m
 
   using queryStream = new ObservableStream(client.watchQuery({ query }));
 
-  await queryStream.takeNext();
+  await expect(queryStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
   const result = await queryStream.takeNext();
 
+  expect(result).toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        avatar: "large.png",
+        [fragmentVariablesSymbol]: { UserCard: { size: 96 } },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
   assert(result.dataState === "complete");
   const data = result.data;
 
@@ -677,8 +726,10 @@ test("binds fragment arguments set from operation variables from a query result 
     }
   `;
 
-  const query: TypedDocumentNode<{ lead: MaskedUser }, { avatarSize: number }> =
-    gql`
+  const query: TypedDocumentNode<
+    WithFragmentInfo<{ lead: MaskedUser }>,
+    { avatarSize: number }
+  > = gql`
     query Team($avatarSize: Int) {
       lead {
         id
@@ -708,8 +759,29 @@ test("binds fragment arguments set from operation variables from a query result 
     client.watchQuery({ query, variables: { avatarSize: 96 } })
   );
 
-  await queryStream.takeNext();
+  await expect(queryStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
   const result = await queryStream.takeNext();
+
+  expect(result).toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        [fragmentVariablesSymbol]: { UserCard: { size: 96 } },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
   assert(result.dataState === "complete");
   const data = result.data;
 
@@ -734,7 +806,10 @@ test("binds operation variables used by a fragment from a query result passed to
     }
   `;
 
-  const query: TypedDocumentNode<{ lead: MaskedUser }, { size: number }> = gql`
+  const query: TypedDocumentNode<
+    WithFragmentInfo<{ lead: MaskedUser }>,
+    { size: number }
+  > = gql`
     query Team($size: Int) {
       lead {
         id
@@ -764,8 +839,29 @@ test("binds operation variables used by a fragment from a query result passed to
     client.watchQuery({ query, variables: { size: 96 } })
   );
 
-  await queryStream.takeNext();
+  await expect(queryStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
   const result = await queryStream.takeNext();
+
+  expect(result).toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        [fragmentVariablesSymbol]: { UserCard: { size: 96 } },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
   assert(result.dataState === "complete");
   const data = result.data;
 
@@ -791,7 +887,13 @@ test("applies fragment argument defaults instead of operation variables with the
   `;
 
   const query: TypedDocumentNode<
-    { lead: MaskedUser & { largeAvatar: string } },
+    WithFragmentInfo<{
+      lead: {
+        __typename: "User";
+        id: string;
+        largeAvatar: string;
+      };
+    }>,
     { size: number }
   > = gql`
     query Team($size: Int) {
@@ -829,8 +931,30 @@ test("applies fragment argument defaults instead of operation variables with the
     client.watchQuery({ query, variables: { size: 96 } })
   );
 
-  await queryStream.takeNext();
+  await expect(queryStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
   const result = await queryStream.takeNext();
+
+  expect(result).toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        largeAvatar: "large.png",
+        [fragmentVariablesSymbol]: { UserCard: { size: 48 } },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
   assert(result.dataState === "complete");
   const data = result.data;
 
@@ -856,7 +980,7 @@ test("binds fragment arguments for each item from query results passed to from a
   `;
 
   const query: TypedDocumentNode<
-    { lead: MaskedUser; member: MaskedUser },
+    WithFragmentInfo<{ lead: MaskedUser; member: MaskedUser }>,
     Record<string, never>
   > = gql`
       query Team {
@@ -891,8 +1015,34 @@ test("binds fragment arguments for each item from query results passed to from a
 
   using queryStream = new ObservableStream(client.watchQuery({ query }));
 
-  await queryStream.takeNext();
+  await expect(queryStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
   const result = await queryStream.takeNext();
+
+  expect(result).toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        [fragmentVariablesSymbol]: { UserCard: { size: 96 } },
+      },
+      member: {
+        __typename: "User",
+        id: "1",
+        [fragmentVariablesSymbol]: { UserCard: { size: 32 } },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
   assert(result.dataState === "complete");
   const data = result.data;
 
@@ -936,7 +1086,7 @@ test("binds fragment arguments for each list item from a query result passed to 
   `;
 
   const query: TypedDocumentNode<
-    { members: MaskedUser[] },
+    WithFragmentInfo<{ members: MaskedUser[] }>,
     Record<string, never>
   > = gql`
       query Team {
@@ -969,8 +1119,36 @@ test("binds fragment arguments for each list item from a query result passed to 
 
   using queryStream = new ObservableStream(client.watchQuery({ query }));
 
-  await queryStream.takeNext();
+  await expect(queryStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
   const result = await queryStream.takeNext();
+
+  expect(result).toStrictEqualTyped({
+    data: {
+      members: [
+        {
+          __typename: "User",
+          id: "1",
+          [fragmentVariablesSymbol]: { UserCard: { size: 32 } },
+        },
+        {
+          __typename: "User",
+          id: "2",
+          [fragmentVariablesSymbol]: { UserCard: { size: 32 } },
+        },
+      ],
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
   assert(result.dataState === "complete");
   const data = result.data;
 
@@ -997,7 +1175,7 @@ test("binds fragment arguments of a nested fragment from a fragment result passe
     }
   `;
 
-  const cardFragment: TypedDocumentNode<MaskedUser> = gql`
+  const cardFragment: TypedDocumentNode<WithFragmentInfo<MaskedUser>> = gql`
     fragment UserCard($size: Int) on User {
       id
       ...UserAvatar(size: $size)
@@ -1007,7 +1185,7 @@ test("binds fragment arguments of a nested fragment from a fragment result passe
   `;
 
   const query: TypedDocumentNode<
-    { lead: MaskedUser },
+    WithFragmentInfo<{ lead: MaskedUser }>,
     Record<string, never>
   > = gql`
     query Team {
@@ -1037,8 +1215,29 @@ test("binds fragment arguments of a nested fragment from a fragment result passe
 
   using queryStream = new ObservableStream(client.watchQuery({ query }));
 
-  await queryStream.takeNext();
+  await expect(queryStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
   const queryResult = await queryStream.takeNext();
+
+  expect(queryResult).toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        [fragmentVariablesSymbol]: { UserCard: { size: 96 } },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
   assert(queryResult.dataState === "complete");
   const queryData = queryResult.data;
 
@@ -1052,8 +1251,16 @@ test("binds fragment arguments of a nested fragment from a fragment result passe
 
   const cardResult = await cardStream.takeNext();
 
+  expect(cardResult).toStrictEqualTyped({
+    data: {
+      __typename: "User",
+      id: "1",
+      [fragmentVariablesSymbol]: { UserAvatar: { size: 96 } },
+    },
+    dataState: "complete",
+    complete: true,
+  });
   assert(cardResult.dataState === "complete");
-
   const cardData = cardResult.data;
 
   using stream = new ObservableStream(
@@ -1078,7 +1285,7 @@ test("binds fragment arguments of a nested fragment from a fragment result passe
     }
   `;
 
-  const cardFragment: TypedDocumentNode<MaskedUser> = gql`
+  const cardFragment: TypedDocumentNode<WithFragmentInfo<MaskedUser>> = gql`
     fragment UserCard($size: Int) on User {
       id
       ...UserAvatar(size: $size)
@@ -1088,7 +1295,7 @@ test("binds fragment arguments of a nested fragment from a fragment result passe
   `;
 
   const query: TypedDocumentNode<
-    { lead: MaskedUser },
+    WithFragmentInfo<{ lead: MaskedUser }>,
     Record<string, never>
   > = gql`
     query Team {
@@ -1118,8 +1325,29 @@ test("binds fragment arguments of a nested fragment from a fragment result passe
 
   using queryStream = new ObservableStream(client.watchQuery({ query }));
 
-  await queryStream.takeNext();
+  await expect(queryStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
   const queryResult = await queryStream.takeNext();
+
+  expect(queryResult).toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        [fragmentVariablesSymbol]: { UserCard: { size: 96 } },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
   assert(queryResult.dataState === "complete");
   const queryData = queryResult.data;
 
@@ -1132,6 +1360,16 @@ test("binds fragment arguments of a nested fragment from a fragment result passe
   );
 
   const cardResult = await cardStream.takeNext();
+
+  expect(cardResult).toStrictEqualTyped({
+    data: {
+      __typename: "User",
+      id: "1",
+      [fragmentVariablesSymbol]: { UserAvatar: { size: 96 } },
+    },
+    dataState: "complete",
+    complete: true,
+  });
   assert(cardResult.dataState === "complete");
   const cardData = cardResult.data;
 
@@ -1155,7 +1393,13 @@ test("binds fragment arguments of a nested fragment from a fragment result passe
     }
   `;
 
-  const cardFragment: TypedDocumentNode<MaskedUser> = gql`
+  const cardFragment: TypedDocumentNode<
+    WithFragmentInfo<{
+      __typename: "User";
+      id: string;
+      avatar: string;
+    }>
+  > = gql`
       fragment UserCard($size: Int) on User {
         id
         ...UserAvatar(size: $size)
@@ -1165,7 +1409,13 @@ test("binds fragment arguments of a nested fragment from a fragment result passe
     `;
 
   const query: TypedDocumentNode<
-    { lead: MaskedUser },
+    WithFragmentInfo<{
+      lead: {
+        __typename: "User";
+        id: string;
+        avatar: string;
+      };
+    }>,
     Record<string, never>
   > = gql`
       query Team {
@@ -1195,8 +1445,33 @@ test("binds fragment arguments of a nested fragment from a fragment result passe
 
   using queryStream = new ObservableStream(client.watchQuery({ query }));
 
-  await queryStream.takeNext();
+  await expect(queryStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
   const queryResult = await queryStream.takeNext();
+
+  expect(queryResult).toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        avatar: "large.png",
+        [fragmentVariablesSymbol]: {
+          UserCard: { size: 96 },
+          UserAvatar: { size: 96 },
+        },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
   assert(queryResult.dataState === "complete");
   const queryData = queryResult.data;
 
@@ -1210,8 +1485,17 @@ test("binds fragment arguments of a nested fragment from a fragment result passe
 
   const cardResult = await cardStream.takeNext();
 
+  expect(cardResult).toStrictEqualTyped({
+    data: {
+      __typename: "User",
+      id: "1",
+      avatar: "large.png",
+      [fragmentVariablesSymbol]: { UserAvatar: { size: 96 } },
+    },
+    dataState: "complete",
+    complete: true,
+  });
   assert(cardResult.dataState === "complete");
-
   const cardData = cardResult.data;
 
   using stream = new ObservableStream(
@@ -1235,8 +1519,10 @@ test("binds new fragment arguments from a query result after refetch with new va
     }
   `;
 
-  const query: TypedDocumentNode<{ lead: MaskedUser }, { avatarSize: number }> =
-    gql`
+  const query: TypedDocumentNode<
+    WithFragmentInfo<{ lead: MaskedUser }>,
+    { avatarSize: number }
+  > = gql`
       query Team($avatarSize: Int) {
         lead {
           id
@@ -1276,8 +1562,29 @@ test("binds new fragment arguments from a query result after refetch with new va
   });
   using queryStream = new ObservableStream(observable);
 
-  await queryStream.takeNext();
+  await expect(queryStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
   const largeResult = await queryStream.takeNext();
+
+  expect(largeResult).toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        [fragmentVariablesSymbol]: { UserCard: { size: 96 } },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
   assert(largeResult.dataState === "complete");
   const largeData = largeResult.data;
 
@@ -1291,10 +1598,41 @@ test("binds new fragment arguments from a query result after refetch with new va
     complete: true,
   });
 
-  await observable.refetch({ avatarSize: 32 });
+  await expect(
+    observable.refetch({ avatarSize: 32 })
+  ).resolves.toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        [fragmentVariablesSymbol]: { UserCard: { size: 32 } },
+      },
+    },
+  });
 
-  await queryStream.takeNext();
+  await expect(queryStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.refetch,
+    partial: true,
+  });
+
   const smallResult = await queryStream.takeNext();
+
+  expect(smallResult).toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        [fragmentVariablesSymbol]: { UserCard: { size: 32 } },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
   assert(smallResult.dataState === "complete");
   const smallData = smallResult.data;
 
@@ -1320,8 +1658,10 @@ test("binds new fragment arguments from a query result after setVariables", asyn
     }
   `;
 
-  const query: TypedDocumentNode<{ lead: MaskedUser }, { avatarSize: number }> =
-    gql`
+  const query: TypedDocumentNode<
+    WithFragmentInfo<{ lead: MaskedUser }>,
+    { avatarSize: number }
+  > = gql`
       query Team($avatarSize: Int) {
         lead {
           id
@@ -1361,8 +1701,29 @@ test("binds new fragment arguments from a query result after setVariables", asyn
   });
   using queryStream = new ObservableStream(observable);
 
-  await queryStream.takeNext();
+  await expect(queryStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
   const largeResult = await queryStream.takeNext();
+
+  expect(largeResult).toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        [fragmentVariablesSymbol]: { UserCard: { size: 96 } },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
   assert(largeResult.dataState === "complete");
   const largeData = largeResult.data;
 
@@ -1376,10 +1737,41 @@ test("binds new fragment arguments from a query result after setVariables", asyn
     complete: true,
   });
 
-  await observable.setVariables({ avatarSize: 32 });
+  await expect(
+    observable.setVariables({ avatarSize: 32 })
+  ).resolves.toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        [fragmentVariablesSymbol]: { UserCard: { size: 32 } },
+      },
+    },
+  });
 
-  await queryStream.takeNext();
+  await expect(queryStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.setVariables,
+    partial: true,
+  });
+
   const smallResult = await queryStream.takeNext();
+
+  expect(smallResult).toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        [fragmentVariablesSymbol]: { UserCard: { size: 32 } },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
   assert(smallResult.dataState === "complete");
   const smallData = smallResult.data;
 
@@ -1405,8 +1797,10 @@ test("binds new fragment arguments from a query result after reobserve with new 
     }
   `;
 
-  const query: TypedDocumentNode<{ lead: MaskedUser }, { avatarSize: number }> =
-    gql`
+  const query: TypedDocumentNode<
+    WithFragmentInfo<{ lead: MaskedUser }>,
+    { avatarSize: number }
+  > = gql`
       query Team($avatarSize: Int) {
         lead {
           id
@@ -1446,8 +1840,29 @@ test("binds new fragment arguments from a query result after reobserve with new 
   });
   using queryStream = new ObservableStream(observable);
 
-  await queryStream.takeNext();
+  await expect(queryStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
   const largeResult = await queryStream.takeNext();
+
+  expect(largeResult).toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        [fragmentVariablesSymbol]: { UserCard: { size: 96 } },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
   assert(largeResult.dataState === "complete");
   const largeData = largeResult.data;
 
@@ -1461,10 +1876,41 @@ test("binds new fragment arguments from a query result after reobserve with new 
     complete: true,
   });
 
-  await observable.reobserve({ variables: { avatarSize: 32 } });
+  await expect(
+    observable.reobserve({ variables: { avatarSize: 32 } })
+  ).resolves.toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        [fragmentVariablesSymbol]: { UserCard: { size: 32 } },
+      },
+    },
+  });
 
-  await queryStream.takeNext();
+  await expect(queryStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.setVariables,
+    partial: true,
+  });
+
   const smallResult = await queryStream.takeNext();
+
+  expect(smallResult).toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        [fragmentVariablesSymbol]: { UserCard: { size: 32 } },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
   assert(smallResult.dataState === "complete");
   const smallData = smallResult.data;
 
@@ -1498,7 +1944,7 @@ test("binds fragment arguments for each sibling fragment from a query result pas
   `;
 
   const query: TypedDocumentNode<
-    { lead: MaskedUser },
+    WithFragmentInfo<{ lead: MaskedUser }>,
     Record<string, never>
   > = gql`
       query Team {
@@ -1535,8 +1981,32 @@ test("binds fragment arguments for each sibling fragment from a query result pas
 
   using queryStream = new ObservableStream(client.watchQuery({ query }));
 
-  await queryStream.takeNext();
+  await expect(queryStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
   const result = await queryStream.takeNext();
+
+  expect(result).toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        [fragmentVariablesSymbol]: {
+          UserCard: { size: 96 },
+          UserBadge: { size: 32 },
+        },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
   assert(result.dataState === "complete");
   const data = result.data;
 
@@ -1579,8 +2049,10 @@ test("binds fragment arguments for each sibling fragment with different fragment
     }
   `;
 
-  const query: TypedDocumentNode<{ lead: MaskedUser }, { badgeColor: string }> =
-    gql`
+  const query: TypedDocumentNode<
+    WithFragmentInfo<{ lead: MaskedUser }>,
+    { badgeColor: string }
+  > = gql`
       query Team($badgeColor: String) {
         lead {
           id
@@ -1617,8 +2089,32 @@ test("binds fragment arguments for each sibling fragment with different fragment
     client.watchQuery({ query, variables: { badgeColor: "gold" } })
   );
 
-  await queryStream.takeNext();
+  await expect(queryStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
   const result = await queryStream.takeNext();
+
+  expect(result).toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        [fragmentVariablesSymbol]: {
+          UserCard: { size: 96 },
+          UserBadge: { color: "gold" },
+        },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
   assert(result.dataState === "complete");
   const data = result.data;
 
@@ -1661,8 +2157,17 @@ test("binds fragment arguments for each sibling fragment with different fragment
     }
   `;
 
-  const query: TypedDocumentNode<{ lead: MaskedUser }, { badgeColor: string }> =
-    gql`
+  const query: TypedDocumentNode<
+    WithFragmentInfo<{
+      lead: {
+        __typename: "User";
+        id: string;
+        avatar: string;
+        badge: string;
+      };
+    }>,
+    { badgeColor: string }
+  > = gql`
       query Team($badgeColor: String) {
         lead {
           id
@@ -1699,8 +2204,34 @@ test("binds fragment arguments for each sibling fragment with different fragment
     client.watchQuery({ query, variables: { badgeColor: "gold" } })
   );
 
-  await queryStream.takeNext();
+  await expect(queryStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
   const result = await queryStream.takeNext();
+
+  expect(result).toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        avatar: "large.png",
+        badge: "gold-badge.png",
+        [fragmentVariablesSymbol]: {
+          UserCard: { size: 96 },
+          UserBadge: { color: "gold" },
+        },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
   assert(result.dataState === "complete");
   const data = result.data;
 
@@ -1743,7 +2274,10 @@ test("binds operation variables for a fragment with a sibling fragment argument 
     }
   `;
 
-  const query: TypedDocumentNode<{ lead: MaskedUser }, { size: number }> = gql`
+  const query: TypedDocumentNode<
+    WithFragmentInfo<{ lead: MaskedUser }>,
+    { size: number }
+  > = gql`
         query Team($size: Int) {
           lead {
             id
@@ -1780,8 +2314,32 @@ test("binds operation variables for a fragment with a sibling fragment argument 
     client.watchQuery({ query, variables: { size: 32 } })
   );
 
-  await queryStream.takeNext();
+  await expect(queryStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
   const result = await queryStream.takeNext();
+
+  expect(result).toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        [fragmentVariablesSymbol]: {
+          UserCard: { size: 96 },
+          UserBadge: { size: 32 },
+        },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
   assert(result.dataState === "complete");
   const data = result.data;
 
@@ -1822,7 +2380,7 @@ test("binds fragment arguments for sibling fragments of a nested fragment from a
     }
   `;
 
-  const cardFragment: TypedDocumentNode<MaskedUser> = gql`
+  const cardFragment: TypedDocumentNode<WithFragmentInfo<MaskedUser>> = gql`
     fragment UserCard on User {
       id
       ...UserAvatar(size: 96)
@@ -1834,7 +2392,7 @@ test("binds fragment arguments for sibling fragments of a nested fragment from a
   `;
 
   const query: TypedDocumentNode<
-    { lead: MaskedUser },
+    WithFragmentInfo<{ lead: MaskedUser }>,
     Record<string, never>
   > = gql`
     query Team {
@@ -1869,8 +2427,23 @@ test("binds fragment arguments for sibling fragments of a nested fragment from a
 
   using queryStream = new ObservableStream(client.watchQuery({ query }));
 
-  await queryStream.takeNext();
+  await expect(queryStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
   const queryResult = await queryStream.takeNext();
+
+  expect(queryResult).toStrictEqualTyped({
+    data: { lead: { __typename: "User", id: "1" } },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
   assert(queryResult.dataState === "complete");
   const queryData = queryResult.data;
 
@@ -1883,6 +2456,19 @@ test("binds fragment arguments for sibling fragments of a nested fragment from a
   );
 
   const cardResult = await cardStream.takeNext();
+
+  expect(cardResult).toStrictEqualTyped({
+    data: {
+      __typename: "User",
+      id: "1",
+      [fragmentVariablesSymbol]: {
+        UserAvatar: { size: 96 },
+        UserBadge: { size: 32 },
+      },
+    },
+    dataState: "complete",
+    complete: true,
+  });
   assert(cardResult.dataState === "complete");
   const cardData = cardResult.data;
 
@@ -1919,7 +2505,13 @@ test("binds fragment arguments for the same fragment at different depths from a 
   `;
 
   const query: TypedDocumentNode<
-    { lead: MaskedUser & { bestFriend: MaskedUser } },
+    WithFragmentInfo<{
+      lead: {
+        __typename: "User";
+        id: string;
+        bestFriend: MaskedUser;
+      };
+    }>,
     Record<string, never>
   > = gql`
       query Team {
@@ -1962,8 +2554,34 @@ test("binds fragment arguments for the same fragment at different depths from a 
 
   using queryStream = new ObservableStream(client.watchQuery({ query }));
 
-  await queryStream.takeNext();
+  await expect(queryStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
   const result = await queryStream.takeNext();
+
+  expect(result).toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        bestFriend: {
+          __typename: "User",
+          id: "2",
+          [fragmentVariablesSymbol]: { UserCard: { size: 32 } },
+        },
+        [fragmentVariablesSymbol]: { UserCard: { size: 96 } },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
   assert(result.dataState === "complete");
   const data = result.data;
 
@@ -2000,7 +2618,7 @@ test("binds fragment arguments of a fragment spread inside an inline fragment fr
   `;
 
   const query: TypedDocumentNode<
-    { lead: MaskedUser },
+    WithFragmentInfo<{ lead: MaskedUser }>,
     Record<string, never>
   > = gql`
       query Team {
@@ -2032,8 +2650,29 @@ test("binds fragment arguments of a fragment spread inside an inline fragment fr
 
   using queryStream = new ObservableStream(client.watchQuery({ query }));
 
-  await queryStream.takeNext();
+  await expect(queryStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
   const result = await queryStream.takeNext();
+
+  expect(result).toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        [fragmentVariablesSymbol]: { UserCard: { size: 96 } },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
   assert(result.dataState === "complete");
   const data = result.data;
 
@@ -2059,7 +2698,13 @@ test("binds fragment arguments of an unmasked fragment from a query result passe
   `;
 
   const query: TypedDocumentNode<
-    { lead: MaskedUser & { avatar: string } },
+    WithFragmentInfo<{
+      lead: {
+        __typename: "User";
+        id: string;
+        avatar: string;
+      };
+    }>,
     Record<string, never>
   > = gql`
     query Team {
@@ -2089,8 +2734,30 @@ test("binds fragment arguments of an unmasked fragment from a query result passe
 
   using queryStream = new ObservableStream(client.watchQuery({ query }));
 
-  await queryStream.takeNext();
+  await expect(queryStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
   const result = await queryStream.takeNext();
+
+  expect(result).toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        avatar: "large.png",
+        [fragmentVariablesSymbol]: { UserCard: { size: 96 } },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
   assert(result.dataState === "complete");
   const data = result.data;
 
@@ -2132,7 +2799,13 @@ test("binds fragment arguments passed through an unmasked fragment from a query 
   `;
 
   const query: TypedDocumentNode<
-    { lead: MaskedUser & { name: string } },
+    WithFragmentInfo<{
+      lead: {
+        __typename: "User";
+        id: string;
+        name: string;
+      };
+    }>,
     Record<string, never>
   > = gql`
       query Team {
@@ -2166,8 +2839,33 @@ test("binds fragment arguments passed through an unmasked fragment from a query 
 
   using queryStream = new ObservableStream(client.watchQuery({ query }));
 
-  await queryStream.takeNext();
+  await expect(queryStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
   const result = await queryStream.takeNext();
+
+  expect(result).toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        name: "Alice",
+        [fragmentVariablesSymbol]: {
+          UserDetails: { size: 96 },
+          UserCard: { size: 96 },
+        },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
   assert(result.dataState === "complete");
   const data = result.data;
 
@@ -2192,8 +2890,10 @@ test("binds input object fragment arguments that contain operation variables fro
     }
   `;
 
-  const query: TypedDocumentNode<{ lead: MaskedUser }, { avatarSize: number }> =
-    gql`
+  const query: TypedDocumentNode<
+    WithFragmentInfo<{ lead: MaskedUser }>,
+    { avatarSize: number }
+  > = gql`
       query Team($avatarSize: Int) {
         lead {
           id
@@ -2223,8 +2923,31 @@ test("binds input object fragment arguments that contain operation variables fro
     client.watchQuery({ query, variables: { avatarSize: 96 } })
   );
 
-  await queryStream.takeNext();
+  await expect(queryStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
   const result = await queryStream.takeNext();
+
+  expect(result).toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        [fragmentVariablesSymbol]: {
+          UserCard: { options: { size: 96, format: "png" } },
+        },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
   assert(result.dataState === "complete");
   const data = result.data;
 
@@ -2267,7 +2990,13 @@ test("binds fragment arguments of a sibling fragment and a fragment nested in an
   `;
 
   const query: TypedDocumentNode<
-    { lead: MaskedUser & { name: string } },
+    WithFragmentInfo<{
+      lead: {
+        __typename: "User";
+        id: string;
+        name: string;
+      };
+    }>,
     Record<string, never>
   > = gql`
     query Team {
@@ -2305,8 +3034,34 @@ test("binds fragment arguments of a sibling fragment and a fragment nested in an
 
   using queryStream = new ObservableStream(client.watchQuery({ query }));
 
-  await queryStream.takeNext();
+  await expect(queryStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
   const result = await queryStream.takeNext();
+
+  expect(result).toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        name: "Alice",
+        [fragmentVariablesSymbol]: {
+          UserDetails: { size: 96 },
+          UserCard: { size: 96 },
+          UserBadge: { color: "gold" },
+        },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
   assert(result.dataState === "complete");
   const data = result.data;
 
@@ -2350,7 +3105,14 @@ test("binds fragment arguments of fragments nested in sibling unmasked fragments
   `;
 
   const query: TypedDocumentNode<
-    { lead: MaskedUser & { name: string; email: string } },
+    WithFragmentInfo<{
+      lead: {
+        __typename: "User";
+        id: string;
+        name: string;
+        email: string;
+      };
+    }>,
     Record<string, never>
   > = gql`
     query Team {
@@ -2399,8 +3161,34 @@ test("binds fragment arguments of fragments nested in sibling unmasked fragments
 
   using queryStream = new ObservableStream(client.watchQuery({ query }));
 
-  await queryStream.takeNext();
+  await expect(queryStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
   const result = await queryStream.takeNext();
+
+  expect(result).toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        name: "Alice",
+        email: "alice@example.com",
+        [fragmentVariablesSymbol]: {
+          UserCard: { size: 96 },
+          UserBadge: { color: "gold" },
+        },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
   assert(result.dataState === "complete");
   const data = result.data;
 
@@ -2444,7 +3232,16 @@ test("binds fragment arguments of fragments nested in sibling fragments from a q
   `;
 
   const query: TypedDocumentNode<
-    { lead: MaskedUser & { name: string; email: string } },
+    WithFragmentInfo<{
+      lead: {
+        __typename: "User";
+        id: string;
+        name: string;
+        email: string;
+        avatar: string;
+        badge: string;
+      };
+    }>,
     Record<string, never>
   > = gql`
     query Team {
@@ -2493,8 +3290,36 @@ test("binds fragment arguments of fragments nested in sibling fragments from a q
 
   using queryStream = new ObservableStream(client.watchQuery({ query }));
 
-  await queryStream.takeNext();
+  await expect(queryStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
   const result = await queryStream.takeNext();
+
+  expect(result).toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        name: "Alice",
+        email: "alice@example.com",
+        avatar: "large.png",
+        badge: "gold-badge.png",
+        [fragmentVariablesSymbol]: {
+          UserCard: { size: 96 },
+          UserBadge: { color: "gold" },
+        },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
   assert(result.dataState === "complete");
   const data = result.data;
 
@@ -2531,7 +3356,10 @@ test("binds fragment arguments passed through an unmasked fragment spread on the
   `;
 
   const query: TypedDocumentNode<
-    { lead: MaskedUser },
+    WithFragmentInfo<{
+      __typename: "Query";
+      lead: MaskedUser;
+    }>,
     Record<string, never>
   > = gql`
       query Team {
@@ -2565,8 +3393,31 @@ test("binds fragment arguments passed through an unmasked fragment spread on the
 
   using queryStream = new ObservableStream(client.watchQuery({ query }));
 
-  await queryStream.takeNext();
+  await expect(queryStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
   const result = await queryStream.takeNext();
+
+  expect(result).toStrictEqualTyped({
+    data: {
+      __typename: "Query",
+      lead: {
+        __typename: "User",
+        id: "1",
+        [fragmentVariablesSymbol]: { UserCard: { size: 96 } },
+      },
+      [fragmentVariablesSymbol]: { TeamFields: { size: 96 } },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
   assert(result.dataState === "complete");
   const data = result.data;
 

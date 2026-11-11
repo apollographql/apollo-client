@@ -178,19 +178,19 @@ function maskSelectionSet(
       );
 
       const mode = getFragmentMaskMode(selection);
-      const dataFragmentInfo = (data as ObjectWithFragmentInfo)[
-        fragmentInfoSymbol
-      ];
-      const fragmentInfo = dataFragmentInfo?.fragments[fragmentName];
+      const fragmentInfo = (data as ObjectWithFragmentInfo)[fragmentInfoSymbol];
 
-      if (dataFragmentInfo && fragmentInfo) {
-        const memoFragmentInfo = ((memo as ObjectWithFragmentInfo)[
-          fragmentInfoSymbol
-        ] ||= {
-          operationVariables: dataFragmentInfo.operationVariables,
+      if (fragmentInfo) {
+        const memoWithInfo = memo as ObjectWithFragmentInfo;
+        memoWithInfo[fragmentInfoSymbol] ||= {
+          operationVariables: fragmentInfo.operationVariables,
           fragments: {},
-        });
-        memoFragmentInfo.fragments[fragmentName] = fragmentInfo;
+        };
+
+        if (fragmentInfo.fragments[fragmentName]) {
+          memoWithInfo[fragmentInfoSymbol].fragments[fragmentName] =
+            fragmentInfo.fragments[fragmentName];
+        }
       }
 
       if (mode !== "mask") {

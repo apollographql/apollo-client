@@ -520,6 +520,7 @@ export class StoreReader {
     }
 
     let fragments: FragmentInfo["fragments"] | undefined;
+    let hasFragmentSpread = false;
     const workSet = new Set(selectionSet.selections);
 
     workSet.forEach((selection) => {
@@ -670,10 +671,13 @@ export class StoreReader {
               };
             }
 
-            if (
-              !isFragmentRoot(selection) &&
-              isNonEmptyObject(fragmentVariables)
-            ) {
+            const isRoot = isFragmentRoot(selection);
+
+            if (!isRoot) {
+              hasFragmentSpread = true;
+            }
+
+            if (!isRoot && isNonEmptyObject(fragmentVariables)) {
               fragments ||= {};
               fragments[fragment.name.value] = { variables: fragmentVariables };
             }
@@ -756,7 +760,11 @@ export class StoreReader {
         : memo;
     }, undefined);
 
-    if (isNonEmptyObject(childFragments) || isNonEmptyObject(fragments)) {
+    if (
+      childFragments ||
+      fragments ||
+      (hasFragmentSpread && isNonEmptyObject(context.operationVariables))
+    ) {
       // Always copy since `result` might be a frozen fragment result when
       // `objectsToMerge` contains a single object.
       result = {

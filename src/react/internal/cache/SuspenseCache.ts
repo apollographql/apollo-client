@@ -1,15 +1,11 @@
 import { Trie } from "@wry/trie";
 
-import type {
-  ApolloClient,
-  DataState,
-  ObservableQuery,
-  OperationVariables,
-} from "@apollo/client";
+import type { DataState, ObservableQuery } from "@apollo/client";
+import type { ApolloCache } from "@apollo/client/cache";
 
 import { FragmentReference } from "./FragmentReference.js";
 import { InternalQueryReference } from "./QueryReference.js";
-import type { CacheKey, FragmentCacheKey } from "./types.js";
+import type { CacheKey } from "./types.js";
 
 export interface SuspenseCacheOptions {
   /**
@@ -56,19 +52,15 @@ export class SuspenseCache {
     return ref.current;
   }
 
-  getFragmentRef<TData, TVariables extends OperationVariables>(
-    cacheKey: FragmentCacheKey,
-    client: ApolloClient,
-    options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
-      from: string | null | Array<string | null>;
-    }
+  getFragmentRef<TData>(
+    observable: ApolloCache.ObservableFragment<TData | null>
   ) {
-    const ref = this.fragmentRefs.lookupArray(cacheKey) as {
-      current?: FragmentReference<TData, TVariables>;
+    const ref = this.fragmentRefs.lookup(observable) as {
+      current?: FragmentReference<TData>;
     };
 
     if (!ref.current) {
-      ref.current = new FragmentReference(client, options, {
+      ref.current = new FragmentReference(observable, {
         autoDisposeTimeoutMs: this.options.autoDisposeTimeoutMs,
         onDispose: () => {
           delete ref.current;

@@ -8,7 +8,6 @@ import type {
   TypedDocumentNode,
 } from "@apollo/client";
 import type { ApolloCache } from "@apollo/client/cache";
-import { canonicalStringify } from "@apollo/client/cache";
 import type { MaybeMasked } from "@apollo/client/masking";
 import type { FragmentKey } from "@apollo/client/react/internal";
 import { getSuspenseCache } from "@apollo/client/react/internal";
@@ -18,7 +17,7 @@ import type {
 } from "@apollo/client/utilities/internal";
 
 import { __use } from "./internal/__use.js";
-import { useDeepMemo, wrapHook } from "./internal/index.js";
+import { wrapHook } from "./internal/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 
 export declare namespace useSuspenseFragment {
@@ -192,24 +191,9 @@ function useSuspenseFragment_<
   options: useSuspenseFragment.Options<TData, TVariables>
 ): useSuspenseFragment.Result<TData | null> {
   const client = useApolloClient(options.client);
-  const { from, variables } = options;
-  const { cache } = client;
 
-  const ids = useDeepMemo(() => {
-    return Array.isArray(from) ?
-        from.map((id) => toStringId(cache, id))
-      : toStringId(cache, from);
-  }, [cache, from]);
-  const idString = React.useMemo(
-    () => (Array.isArray(ids) ? ids.join(",") : ids),
-    [ids]
-  );
-
-  const fragmentRef = getSuspenseCache(client).getFragmentRef(
-    [options.fragment, canonicalStringify(variables), idString],
-    client,
-    { ...options, variables: variables as TVariables, from: ids }
-  );
+  const observable = client.watchFragment(options);
+  const fragmentRef = getSuspenseCache(client).getFragmentRef(observable);
 
   let [current, setPromise] = React.useState<
     [FragmentKey, Promise<MaybeMasked<TData> | null>]
@@ -237,14 +221,4 @@ function useSuspenseFragment_<
   const data = __use(current[1]);
 
   return { data };
-}
-
-function toStringId(
-  cache: ApolloCache,
-  from: useSuspenseFragment.FromOptionValue<any> | null
-) {
-  return (
-    typeof from === "string" ? from
-    : from === null ? null
-    : cache.identify(from)) as string | null;
 }

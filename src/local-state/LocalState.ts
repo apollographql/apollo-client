@@ -37,6 +37,7 @@ import {
   createFragmentMap,
   dealias,
   getFragmentDefinitions,
+  getFragmentScope,
   getFragmentVariables,
   getMainDefinition,
   hasDirectives,
@@ -602,10 +603,12 @@ export class LocalState<
 
         if (matches) {
           let context = execContext;
-          const variables = getFragmentVariables(selection, {
-            fragment,
-            variables: execContext.operationVariables,
-            parentScope: execContext.variables,
+          const variables = getFragmentScope(fragment, {
+            operationVariables: execContext.operationVariables,
+            fragmentVariables: getFragmentVariables(selection, {
+              fragment,
+              scope: execContext.variables,
+            }),
           });
 
           if (variables !== execContext.variables) {

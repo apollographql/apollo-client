@@ -21,6 +21,15 @@ export const fragmentInfoSymbol = Symbol.for("apollo.fragments.info");
 
 /**
  * @internal
+ * Used to pass root fragment arguments to cache.read and cache.write when the
+ * cache supports fragment variables. Only use internally!
+ */
+export const rootFragmentVariablesSymbol = Symbol.for(
+  "apollo.fragments.rootVariables"
+);
+
+/**
+ * @internal
  * Used as key for `ApolloClient.WatchQueryOptions`.
  *
  * Meant for framework integrators only!

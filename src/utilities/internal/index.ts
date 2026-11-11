@@ -96,6 +96,7 @@ export {
   extensionsSymbol,
   fragmentInfoSymbol,
   handleIncrementalSymbol,
+  rootFragmentVariablesSymbol,
   streamInfoSymbol,
   supportsFragmentVariablesSymbol,
   variablesUnknownSymbol,

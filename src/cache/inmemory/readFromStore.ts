@@ -66,6 +66,7 @@ import {
 import {
   extractFragmentContext,
   getTypenameFromStoreObject,
+  makeVarString,
 } from "./helpers.js";
 import type { InMemoryCache } from "./inMemoryCache.js";
 import type { Policies } from "./policies.js";
@@ -344,7 +345,7 @@ export class StoreReader {
       query,
       policies,
       variables,
-      varString: canonicalStringify(variables),
+      varString: makeVarString({ operationVariables: variables }),
       operationVariables: variables,
       ...extractFragmentContext(query, this.config.fragments),
       ...options[handleIncrementalSymbol],
@@ -667,9 +668,10 @@ export class StoreReader {
               fragmentContext = {
                 ...fragmentContext,
                 variables,
-                varString:
-                  canonicalStringify(variables) +
-                  canonicalStringify(context.operationVariables),
+                varString: makeVarString({
+                  operationVariables: context.operationVariables,
+                  scope: variables,
+                }),
               };
             }
 

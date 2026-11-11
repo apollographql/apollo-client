@@ -54,6 +54,7 @@ import {
   extractFragmentContext,
   fieldNameFromStoreName,
   makeProcessedFieldsMerger,
+  makeVarString,
   storeValueIsStoreObject,
 } from "./helpers.js";
 import type { InMemoryCache } from "./inMemoryCache.js";
@@ -68,13 +69,14 @@ import type {
   MergeTree,
   NormalizedCache,
   ReadMergeModifyContext,
+  VarString,
 } from "./types.js";
 
 export interface WriteContext extends ReadMergeModifyContext {
   readonly written: {
     [dataId: string]: Array<{
       selectionSet: SelectionSetNode;
-      varString: string | undefined;
+      varString: VarString | undefined;
     }>;
   };
   readonly fragmentMap: FragmentMap;
@@ -181,7 +183,7 @@ export class StoreWriter {
         return merger.merge(existing, incoming) as T;
       },
       variables: variables as OperationVariables,
-      varString: canonicalStringify(variables),
+      varString: makeVarString({ operationVariables: variables }),
       operationVariables: variables,
       ...extractFragmentContext(query, this.fragments),
       overwrite: !!overwrite,
@@ -588,6 +590,7 @@ export class StoreWriter {
       | "lookupFragment"
       | "variables"
       | "operationVariables"
+      | "varString"
     >,
   >(
     selectionSet: SelectionSetNode,
@@ -726,7 +729,10 @@ export class StoreWriter {
               fragmentContext = {
                 ...fragmentContext,
                 variables,
-                varString: canonicalStringify(variables),
+                varString: makeVarString({
+                  operationVariables: context.operationVariables,
+                  scope: inheritedContext.variables,
+                }),
                 flavors: new Map(),
               };
             }

@@ -11,11 +11,11 @@ export function getFragmentScope(
   {
     fragment,
     variables,
-    scope,
+    parentScope,
   }: {
     fragment: FragmentDefinitionNode;
     variables: OperationVariables | undefined;
-    scope: OperationVariables | undefined;
+    parentScope: OperationVariables | undefined;
   }
 ) {
   if (
@@ -33,6 +33,6 @@ export function getFragmentScope(
 
   return compact(
     operationScope,
-    getFragmentVariables(fragmentSpread, { fragment, scope })
+    getFragmentVariables(fragmentSpread, { fragment, scope: parentScope })
   );
 }

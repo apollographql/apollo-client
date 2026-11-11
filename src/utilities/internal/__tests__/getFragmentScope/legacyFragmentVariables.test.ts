@@ -51,7 +51,7 @@ test("uses operation variables for variables declared by the fragment", () => {
     getFragmentScope(getFragmentSpread(document, "UserCard"), {
       fragment: getFragment(document, "UserCard"),
       variables: { size: 96 },
-      scope: { size: 96 },
+      parentScope: { size: 96 },
     })
   ).toStrictEqual({ size: 96 });
 });
@@ -71,7 +71,7 @@ test("ignores default values of variables declared by the fragment", () => {
     getFragmentScope(getFragmentSpread(document, "UserCard"), {
       fragment: getFragment(document, "UserCard"),
       variables: {},
-      scope: {},
+      parentScope: {},
     })
   ).toStrictEqual({});
 });
@@ -94,7 +94,7 @@ test("passes through operation variables not declared by the fragment", () => {
     getFragmentScope(getFragmentSpread(document, "UserCard"), {
       fragment: getFragment(document, "UserCard"),
       variables,
-      scope: variables,
+      parentScope: variables,
     })
   ).toStrictEqual({ size: 96, locale: "en" });
 });

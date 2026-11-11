@@ -134,7 +134,7 @@ function equalBySelectionSet(
           const variablesScope = getFragmentScope(selection, {
             fragment,
             variables: context.variables,
-            scope: context.variablesScope,
+            parentScope: context.variablesScope,
           });
           fragmentContext = { ...fragmentContext, variablesScope };
         }

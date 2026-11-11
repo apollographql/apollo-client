@@ -51,7 +51,7 @@ test("adds fragment arguments to the scope", () => {
     getFragmentScope(getFragmentSpread(document, "UserCard"), {
       fragment: getFragment(document, "UserCard"),
       variables: {},
-      scope: {},
+      parentScope: {},
     })
   ).toStrictEqual({ size: 32 });
 });
@@ -72,7 +72,7 @@ test("keeps operation variables that the fragment does not declare", () => {
     getFragmentScope(getFragmentSpread(document, "Test"), {
       fragment: getFragment(document, "Test"),
       variables: { two: 2 },
-      scope: { two: 2 },
+      parentScope: { two: 2 },
     })
   ).toStrictEqual({ one: 1, two: 2 });
 });
@@ -92,7 +92,7 @@ test("returns the operation variables when the fragment declares no variables", 
     getFragmentScope(getFragmentSpread(document, "Test"), {
       fragment: getFragment(document, "Test"),
       variables: { two: 2 },
-      scope: { two: 2 },
+      parentScope: { two: 2 },
     })
   ).toStrictEqual({ two: 2 });
 });
@@ -113,7 +113,7 @@ test("returns the same operation variables object when the fragment declares no 
     getFragmentScope(getFragmentSpread(document, "Test"), {
       fragment: getFragment(document, "Test"),
       variables,
-      scope: variables,
+      parentScope: variables,
     })
   ).toBe(variables);
 });
@@ -133,7 +133,7 @@ test("returns an empty object when the operation variables are undefined and the
     getFragmentScope(getFragmentSpread(document, "Test"), {
       fragment: getFragment(document, "Test"),
       variables: undefined,
-      scope: undefined,
+      parentScope: undefined,
     })
   ).toStrictEqual({});
 });
@@ -153,7 +153,7 @@ test("adds fragment arguments when the operation variables are undefined", () =>
     getFragmentScope(getFragmentSpread(document, "UserCard"), {
       fragment: getFragment(document, "UserCard"),
       variables: undefined,
-      scope: undefined,
+      parentScope: undefined,
     })
   ).toStrictEqual({ size: 32 });
 });
@@ -173,7 +173,7 @@ test("resolves variable arguments against the scope", () => {
     getFragmentScope(getFragmentSpread(document, "UserCard"), {
       fragment: getFragment(document, "UserCard"),
       variables: { avatarSize: 96 },
-      scope: { avatarSize: 64 },
+      parentScope: { avatarSize: 64 },
     })
   ).toStrictEqual({ avatarSize: 96, size: 64 });
 });
@@ -193,7 +193,7 @@ test("uses the default value of a fragment variable without an argument", () => 
     getFragmentScope(getFragmentSpread(document, "UserCard"), {
       fragment: getFragment(document, "UserCard"),
       variables: {},
-      scope: {},
+      parentScope: {},
     })
   ).toStrictEqual({ size: 48 });
 });
@@ -213,7 +213,7 @@ test("fragment arguments shadow operation variables with the same name", () => {
     getFragmentScope(getFragmentSpread(document, "UserCard"), {
       fragment: getFragment(document, "UserCard"),
       variables: { size: 96 },
-      scope: { size: 96 },
+      parentScope: { size: 96 },
     })
   ).toStrictEqual({ size: 32 });
 });
@@ -233,7 +233,7 @@ test("hides an operation variable that the fragment declares without an argument
     getFragmentScope(getFragmentSpread(document, "UserCard"), {
       fragment: getFragment(document, "UserCard"),
       variables: { size: 96 },
-      scope: { size: 96 },
+      parentScope: { size: 96 },
     })
   ).toStrictEqual({});
 });
@@ -256,7 +256,7 @@ test("hides only the operation variables that the fragment declares", () => {
     getFragmentScope(getFragmentSpread(document, "UserCard"), {
       fragment: getFragment(document, "UserCard"),
       variables,
-      scope: variables,
+      parentScope: variables,
     })
   ).toStrictEqual({ format: "png", locale: "en" });
 });
@@ -278,7 +278,7 @@ test("object fragment arguments replace operation variables with the same name",
     getFragmentScope(getFragmentSpread(document, "UserCard"), {
       fragment: getFragment(document, "UserCard"),
       variables,
-      scope: variables,
+      parentScope: variables,
     })
   ).toStrictEqual({ input: { a: 3 } });
 });
@@ -300,7 +300,7 @@ test("list fragment arguments replace operation variables with the same name", (
     getFragmentScope(getFragmentSpread(document, "UserCard"), {
       fragment: getFragment(document, "UserCard"),
       variables,
-      scope: variables,
+      parentScope: variables,
     })
   ).toStrictEqual({ tags: ["c"] });
 });
@@ -323,7 +323,7 @@ test("keeps null fragment arguments and null operation variables", () => {
     getFragmentScope(getFragmentSpread(document, "UserCard"), {
       fragment: getFragment(document, "UserCard"),
       variables,
-      scope: variables,
+      parentScope: variables,
     })
   ).toStrictEqual({ n: null, size: null });
 });
@@ -349,7 +349,7 @@ test("does not add parent fragment arguments to a nested fragment scope", () => 
   const fooScope = getFragmentScope(getFragmentSpread(document, "Foo"), {
     fragment: getFragment(document, "Foo"),
     variables,
-    scope: variables,
+    parentScope: variables,
   });
 
   expect(fooScope).toStrictEqual({ x: 1 });
@@ -357,7 +357,7 @@ test("does not add parent fragment arguments to a nested fragment scope", () => 
     getFragmentScope(getFragmentSpread(document, "Bar"), {
       fragment: getFragment(document, "Bar"),
       variables,
-      scope: fooScope,
+      parentScope: fooScope,
     })
   ).toStrictEqual({ x: 99 });
 });
@@ -383,7 +383,7 @@ test("resolves nested fragment arguments against the parent fragment scope", () 
   const outerScope = getFragmentScope(getFragmentSpread(document, "Outer"), {
     fragment: getFragment(document, "Outer"),
     variables,
-    scope: variables,
+    parentScope: variables,
   });
 
   expect(outerScope).toStrictEqual({ size: 32 });
@@ -391,7 +391,7 @@ test("resolves nested fragment arguments against the parent fragment scope", () 
     getFragmentScope(getFragmentSpread(document, "Inner"), {
       fragment: getFragment(document, "Inner"),
       variables,
-      scope: outerScope,
+      parentScope: outerScope,
     })
   ).toStrictEqual({ size: 96, innerSize: 32 });
 });
@@ -412,12 +412,12 @@ test("does not read fragment variables from the object prototype", () => {
     getFragmentScope(getFragmentSpread(document, "UserCard"), {
       fragment: getFragment(document, "UserCard"),
       variables: {},
-      scope: {},
+      parentScope: {},
     })
   ).toStrictEqual({ toString: 5 });
 });
 
-test("does not modify the given operation variables or scope", () => {
+test("does not modify the given operation variables or parent scope", () => {
   const document = gql`
     query ($size: Int, $locale: String) {
       ...UserCard(size: 32)
@@ -430,14 +430,14 @@ test("does not modify the given operation variables or scope", () => {
   `;
 
   const variables = { size: 96, locale: "en" };
-  const scope = { size: 64, locale: "fr" };
+  const parentScope = { size: 64, locale: "fr" };
 
   getFragmentScope(getFragmentSpread(document, "UserCard"), {
     fragment: getFragment(document, "UserCard"),
     variables,
-    scope,
+    parentScope,
   });
 
   expect(variables).toStrictEqual({ size: 96, locale: "en" });
-  expect(scope).toStrictEqual({ size: 64, locale: "fr" });
+  expect(parentScope).toStrictEqual({ size: 64, locale: "fr" });
 });

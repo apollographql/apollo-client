@@ -710,7 +710,7 @@ export class StoreWriter {
               getFragmentScope(selection, {
                 fragment,
                 variables: context.variables,
-                scope: inheritedContext.variablesScope,
+                parentScope: inheritedContext.variablesScope,
               })
             : inheritedContext.variablesScope;
 

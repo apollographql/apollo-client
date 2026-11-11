@@ -606,7 +606,7 @@ export class LocalState<
           const variablesScope = getFragmentScope(selection, {
             fragment,
             variables: execContext.variables,
-            scope: execContext.variablesScope,
+            parentScope: execContext.variablesScope,
           });
 
           if (variablesScope !== execContext.variablesScope) {

@@ -8,10 +8,10 @@ import { compact } from "./compact.js";
 export function getFragmentScope(
   fragment: FragmentDefinitionNode,
   {
-    operationVariables,
+    variables,
     fragmentVariables,
   }: {
-    operationVariables: OperationVariables | undefined;
+    variables: OperationVariables | undefined;
     fragmentVariables: OperationVariables;
   }
 ) {
@@ -19,10 +19,10 @@ export function getFragmentScope(
     Kind.FRAGMENT_ARGUMENT === undefined ||
     !fragment.variableDefinitions?.length
   ) {
-    return operationVariables ?? {};
+    return variables ?? {};
   }
 
-  const globalScope = { ...operationVariables };
+  const globalScope = { ...variables };
 
   for (const def of fragment.variableDefinitions) {
     delete globalScope[def.variable.name.value];

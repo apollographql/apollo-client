@@ -286,7 +286,7 @@ export class StoreReader {
       (options) => {
         const { field, context, path } = options;
 
-        if (isStreamField(field, context.variables)) {
+        if (isStreamField(field, context.variablesScope)) {
           context.streamInfo?.lookupArray(path).state.depend();
         }
 
@@ -348,12 +348,9 @@ export class StoreReader {
       store,
       query,
       policies,
-      variables: rootFragmentVariables ?? variables,
-      varString: makeVarString({
-        operationVariables: variables,
-        scope: rootFragmentVariables,
-      }),
-      operationVariables: variables,
+      variables,
+      variablesScope: rootFragmentVariables ?? variables,
+      varString: makeVarString({ variables, scope: rootFragmentVariables }),
       ...extractFragmentContext(query, this.config.fragments),
       ...options[handleIncrementalSymbol],
     };
@@ -499,7 +496,7 @@ export class StoreReader {
       };
     }
 
-    const { variables, policies, store } = context;
+    const { variablesScope, policies, store } = context;
     const typename = store.getFieldValue<string>(
       objectOrReference,
       "__typename"
@@ -534,14 +531,14 @@ export class StoreReader {
     workSet.forEach((selection) => {
       // Omit fields with directives @skip(if: <truthy value>) or
       // @include(if: <falsy value>).
-      if (!shouldInclude(selection, variables)) return;
+      if (!shouldInclude(selection, variablesScope)) return;
 
       if (isField(selection)) {
         let fieldValue = policies.readField(
           {
             fieldName: selection.name.value,
             field: selection,
-            variables: context.variables,
+            variables: context.variablesScope,
             from: objectOrReference,
           },
           context
@@ -663,21 +660,21 @@ export class StoreReader {
           ) {
             const fragmentVariables = getFragmentVariables(selection, {
               fragment,
-              scope: context.variables,
+              scope: context.variablesScope,
             });
 
-            const variables = getFragmentScope(fragment, {
-              operationVariables: context.operationVariables,
+            const variablesScope = getFragmentScope(fragment, {
+              variables: context.variables,
               fragmentVariables,
             });
 
-            if (variables !== context.variables) {
+            if (variablesScope !== context.variablesScope) {
               fragmentContext = {
                 ...fragmentContext,
-                variables,
+                variablesScope,
                 varString: makeVarString({
-                  operationVariables: context.operationVariables,
-                  scope: variables,
+                  variables: context.variables,
+                  scope: variablesScope,
                 }),
               };
             }
@@ -700,7 +697,7 @@ export class StoreReader {
 
           const isDeferBoundary = isDeferredFragment(
             selection,
-            context.variables
+            context.variablesScope
           );
           // Prior to 4.3, this branch just flattened the fragment's
           // selectionSet into the existing workSet so that it continued
@@ -774,14 +771,14 @@ export class StoreReader {
     if (
       childFragments ||
       fragments ||
-      (hasFragmentSpread && isNonEmptyObject(context.operationVariables))
+      (hasFragmentSpread && isNonEmptyObject(context.variables))
     ) {
       // Always copy since `result` might be a frozen fragment result when
       // `objectsToMerge` contains a single object.
       result = {
         ...result,
         [fragmentInfoSymbol]: {
-          operationVariables: context.operationVariables ?? {},
+          operationVariables: context.variables ?? {},
           fragments: { ...childFragments, ...fragments },
         } satisfies FragmentInfo,
       };
@@ -815,7 +812,7 @@ export class StoreReader {
     let missing: MissingTree | undefined;
     let missingMerger = new DeepMerger();
     const partialBoundaries = new PartialBoundaries();
-    const isStreamed = isStreamField(field, context.variables);
+    const isStreamed = isStreamField(field, context.variablesScope);
 
     function handleMissing<T>(childResult: ExecResult<T>, i: number): T {
       if (childResult.missing) {
@@ -926,9 +923,9 @@ export class StoreReader {
       selectionSet.selections.map((selection) => [selection, context])
     );
     workSet.forEach((context, selection) => {
-      const { variables } = context;
+      const { variablesScope } = context;
 
-      if (!shouldInclude(selection, variables)) return;
+      if (!shouldInclude(selection, variablesScope)) return;
 
       if (isField(selection)) {
         const resultName = resultKeyNameFromField(selection);
@@ -1002,7 +999,10 @@ export class StoreReader {
       const fragment = getFragmentFromSelection(selection, lookupFragment);
       let prune = false;
 
-      if (context.isDeferPending && isDeferredFragment(selection, variables)) {
+      if (
+        context.isDeferPending &&
+        isDeferredFragment(selection, variablesScope)
+      ) {
         const directive = selection.directives?.find(
           (d) => d.name.value === "defer"
         );
@@ -1022,16 +1022,16 @@ export class StoreReader {
             selection.kind === Kind.FRAGMENT_SPREAD &&
             fragment.kind === Kind.FRAGMENT_DEFINITION
           ) {
-            const variables = getFragmentScope(fragment, {
-              operationVariables: context.operationVariables,
+            const variablesScope = getFragmentScope(fragment, {
+              variables: context.variables,
               fragmentVariables: getFragmentVariables(selection, {
                 fragment,
-                scope: context.variables,
+                scope: context.variablesScope,
               }),
             });
 
-            if (variables !== context.variables) {
-              fragmentContext = { ...context, variables };
+            if (variablesScope !== context.variablesScope) {
+              fragmentContext = { ...context, variablesScope };
             }
           }
 

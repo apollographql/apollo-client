@@ -1170,7 +1170,7 @@ function makeFieldFunctionOptions(
 ): FieldFunctionOptions {
   const storeFieldName = policies.getStoreFieldName(fieldSpec);
   const fieldName = fieldNameFromStoreName(storeFieldName);
-  const variables = fieldSpec.variables || context.variables;
+  const variables = fieldSpec.variables || context.variablesScope;
   const { toReference, canRead } = context.store;
 
   return {

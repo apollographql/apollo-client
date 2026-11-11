@@ -181,12 +181,9 @@ export class StoreWriter {
       merge<T>(existing: T, incoming: T) {
         return merger.merge(existing, incoming) as T;
       },
-      variables: rootFragmentVariables ?? variables,
-      varString: makeVarString({
-        operationVariables: variables,
-        scope: rootFragmentVariables,
-      }),
-      operationVariables: variables,
+      variables,
+      variablesScope: rootFragmentVariables ?? variables,
+      varString: makeVarString({ variables, scope: rootFragmentVariables }),
       ...extractFragmentContext(query, this.fragments),
       overwrite: !!overwrite,
       incomingById: new Map(),
@@ -324,7 +321,7 @@ export class StoreWriter {
       const options = normalizeReadFieldOptions(
         args,
         incoming,
-        context.variables
+        context.variablesScope
       );
 
       if (isReference(options.from)) {
@@ -370,7 +367,7 @@ export class StoreWriter {
           typename,
           fieldName: field.name.value,
           field,
-          variables: context.variables,
+          variables: context.variablesScope,
         });
 
         const childTree = getChildMergeTree(mergeTree, storeFieldName);
@@ -419,19 +416,19 @@ export class StoreWriter {
             typename,
             merge,
             path,
-            variables: context.variables,
+            variables: context.variablesScope,
           };
         } else if (
           context.extensions?.[streamInfoSymbol] &&
           Array.isArray(incomingValue) &&
-          isStreamField(field, context.variables)
+          isStreamField(field, context.variablesScope)
         ) {
           childTree.info = {
             field,
             typename,
             merge: defaultStreamFieldMergeFn,
             path,
-            variables: context.variables,
+            variables: context.variablesScope,
           };
         } else {
           maybeRecycleChildMergeTree(mergeTree, storeFieldName);
@@ -591,7 +588,7 @@ export class StoreWriter {
       | "isDeferPending"
       | "lookupFragment"
       | "variables"
-      | "operationVariables"
+      | "variablesScope"
       | "varString"
     >,
   >(
@@ -634,7 +631,7 @@ export class StoreWriter {
       visitedNode.visited = true;
 
       selectionSet.selections.forEach((selection) => {
-        if (!shouldInclude(selection, inheritedContext.variables)) return;
+        if (!shouldInclude(selection, inheritedContext.variablesScope)) return;
 
         let { clientOnly, deferred } = inheritedContext;
         if (
@@ -650,7 +647,7 @@ export class StoreWriter {
             if (name === "defer") {
               const args = argumentsObjectFromField(
                 dir,
-                inheritedContext.variables
+                inheritedContext.variablesScope
               );
               // The @defer directive takes an optional args.if boolean
               // argument, similar to @include(if: boolean). Note that
@@ -706,34 +703,36 @@ export class StoreWriter {
 
           if (!fragment) return;
 
-          const variables =
+          const variablesScope =
             (
               selection.kind === Kind.FRAGMENT_SPREAD &&
               fragment.kind === Kind.FRAGMENT_DEFINITION
             ) ?
               getFragmentScope(fragment, {
-                operationVariables: context.operationVariables,
+                variables: context.variables,
                 fragmentVariables: getFragmentVariables(selection, {
                   fragment,
-                  scope: inheritedContext.variables,
+                  scope: inheritedContext.variablesScope,
                 }),
               })
-            : inheritedContext.variables;
+            : inheritedContext.variablesScope;
 
-          if (policies.fragmentMatches(fragment, typename, result, variables)) {
+          if (
+            policies.fragmentMatches(fragment, typename, result, variablesScope)
+          ) {
             let fragmentContext = getContextFlavor(
               inheritedContext,
               clientOnly,
               deferred
             );
 
-            if (variables !== inheritedContext.variables) {
+            if (variablesScope !== inheritedContext.variablesScope) {
               fragmentContext = {
                 ...fragmentContext,
-                variables,
+                variablesScope,
                 varString: makeVarString({
-                  operationVariables: context.operationVariables,
-                  scope: variables,
+                  variables: context.variables,
+                  scope: variablesScope,
                 }),
                 flavors: new Map(),
               };

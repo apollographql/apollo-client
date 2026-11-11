@@ -179,23 +179,23 @@ const varStringCache = new WeakMap<OperationVariables, string>();
 
 export function makeVarString({
   scope,
-  operationVariables,
+  variables,
 }: {
   scope?: OperationVariables | undefined;
-  operationVariables: OperationVariables | undefined;
+  variables: OperationVariables | undefined;
 }): VarString {
-  let operationVarString: string | undefined;
+  let varString: string | undefined;
 
-  if (operationVariables) {
-    operationVarString = varStringCache.get(operationVariables);
+  if (variables) {
+    varString = varStringCache.get(variables);
 
-    if (!operationVarString) {
+    if (!varString) {
       varStringCache.set(
-        operationVariables,
-        (operationVarString = canonicalStringify(operationVariables))
+        variables,
+        (varString = canonicalStringify(variables))
       );
     }
   }
 
-  return (canonicalStringify(scope ?? null) + operationVarString) as VarString;
+  return (canonicalStringify(scope ?? null) + varString) as VarString;
 }

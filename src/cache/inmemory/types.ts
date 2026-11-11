@@ -195,17 +195,18 @@ export interface MergeTree {
 
 export interface ReadMergeModifyContext {
   store: NormalizedCache;
+  // The operation variables.
   variables?: OperationVariables;
-  // A JSON.stringify-serialized version of context.variables.
+  // The variables in scope for the current selection set. This is the same as
+  // variables except in fragments that have arguments.
+  variablesScope?: OperationVariables;
+  // A serialized version of variablesScope and variables.
   varString?: VarString;
   extensions?: ExtensionsWithStreamInfo;
   isDeferPending?: (
     path: Incremental.Path,
     label: string | undefined
   ) => boolean;
-  // Keep a copy of the operation variables. variables reflects the current
-  // scoped variables in fragments that have arguments
-  operationVariables?: OperationVariables;
 }
 
 type ListOf<T extends string> = `[${T}]`;

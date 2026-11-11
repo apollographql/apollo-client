@@ -37,8 +37,8 @@ export function equalByQuery(
     equal(aRest, bRest) &&
     equalBySelectionSet(getMainDefinition(query).selectionSet, aData, bData, {
       fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
-      variables: rootFragmentVariables ?? variables,
-      operationVariables: variables,
+      variables,
+      variablesScope: rootFragmentVariables ?? variables,
     })
   );
 }
@@ -48,7 +48,7 @@ export function equalByQuery(
 interface CompareContext<TVariables extends OperationVariables> {
   fragmentMap: FragmentMap;
   variables: TVariables | undefined;
-  operationVariables: TVariables | undefined;
+  variablesScope: TVariables | undefined;
 }
 
 function equalBySelectionSet(
@@ -73,7 +73,7 @@ function equalBySelectionSet(
     seenSelections.add(selection);
 
     // Ignore @skip(if: true) and @include(if: false) fields.
-    if (!shouldInclude(selection, context.variables)) return true;
+    if (!shouldInclude(selection, context.variablesScope)) return true;
 
     // If the field or (named) fragment spread has a @nonreactive directive on
     // it, we don't care if it's different, so we pretend it's the same.
@@ -132,14 +132,14 @@ function equalBySelectionSet(
           selection.kind === Kind.FRAGMENT_SPREAD &&
           fragment.kind === Kind.FRAGMENT_DEFINITION
         ) {
-          const variables = getFragmentScope(fragment, {
-            operationVariables: context.operationVariables,
+          const variablesScope = getFragmentScope(fragment, {
+            variables: context.variables,
             fragmentVariables: getFragmentVariables(selection, {
               fragment,
-              scope: context.variables,
+              scope: context.variablesScope,
             }),
           });
-          fragmentContext = { ...fragmentContext, variables };
+          fragmentContext = { ...fragmentContext, variablesScope };
         }
 
         return equalBySelectionSet(

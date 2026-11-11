@@ -31,7 +31,7 @@ test("adds fragment variables to the scope", () => {
 
   expect(
     getFragmentScope(fragment, {
-      operationVariables: {},
+      variables: {},
       fragmentVariables: { size: 32 },
     })
   ).toStrictEqual({ size: 32 });
@@ -50,7 +50,7 @@ test("keeps operation variables that the fragment does not declare", () => {
 
   expect(
     getFragmentScope(fragment, {
-      operationVariables: { two: 2 },
+      variables: { two: 2 },
       fragmentVariables: { one: 1 },
     })
   ).toStrictEqual({ one: 1, two: 2 });
@@ -68,7 +68,7 @@ test("returns the operation variables when the fragment declares no variables", 
 
   expect(
     getFragmentScope(fragment, {
-      operationVariables: { two: 2 },
+      variables: { two: 2 },
       fragmentVariables: {},
     })
   ).toStrictEqual({ two: 2 });
@@ -83,11 +83,11 @@ test("returns the same operation variables object when the fragment declares no 
     `,
     "Test"
   );
-  const operationVariables = { two: 2 };
+  const variables = { two: 2 };
 
-  expect(
-    getFragmentScope(fragment, { operationVariables, fragmentVariables: {} })
-  ).toBe(operationVariables);
+  expect(getFragmentScope(fragment, { variables, fragmentVariables: {} })).toBe(
+    variables
+  );
 });
 
 test("returns an empty object when the operation variables are undefined and the fragment declares no variables", () => {
@@ -102,7 +102,7 @@ test("returns an empty object when the operation variables are undefined and the
 
   expect(
     getFragmentScope(fragment, {
-      operationVariables: undefined,
+      variables: undefined,
       fragmentVariables: {},
     })
   ).toStrictEqual({});
@@ -120,7 +120,7 @@ test("adds fragment variables when the operation variables are undefined", () =>
 
   expect(
     getFragmentScope(fragment, {
-      operationVariables: undefined,
+      variables: undefined,
       fragmentVariables: { size: 32 },
     })
   ).toStrictEqual({ size: 32 });
@@ -138,7 +138,7 @@ test("fragment variables shadow operation variables with the same name", () => {
 
   expect(
     getFragmentScope(fragment, {
-      operationVariables: { size: 96 },
+      variables: { size: 96 },
       fragmentVariables: { size: 32 },
     })
   ).toStrictEqual({ size: 32 });
@@ -156,7 +156,7 @@ test("hides an operation variable that the fragment declares without a value", (
 
   expect(
     getFragmentScope(fragment, {
-      operationVariables: { size: 96 },
+      variables: { size: 96 },
       fragmentVariables: {},
     })
   ).toStrictEqual({});
@@ -175,7 +175,7 @@ test("hides only the operation variables that the fragment declares", () => {
 
   expect(
     getFragmentScope(fragment, {
-      operationVariables: { size: 96, format: "jpg", locale: "en" },
+      variables: { size: 96, format: "jpg", locale: "en" },
       fragmentVariables: { format: "png" },
     })
   ).toStrictEqual({ format: "png", locale: "en" });
@@ -193,7 +193,7 @@ test("object fragment variables replace operation variables with the same name",
 
   expect(
     getFragmentScope(fragment, {
-      operationVariables: { input: { a: 1, b: 2 } },
+      variables: { input: { a: 1, b: 2 } },
       fragmentVariables: { input: { a: 3 } },
     })
   ).toStrictEqual({ input: { a: 3 } });
@@ -211,7 +211,7 @@ test("list fragment variables replace operation variables with the same name", (
 
   expect(
     getFragmentScope(fragment, {
-      operationVariables: { tags: ["a", "b"] },
+      variables: { tags: ["a", "b"] },
       fragmentVariables: { tags: ["c"] },
     })
   ).toStrictEqual({ tags: ["c"] });
@@ -230,7 +230,7 @@ test("keeps null fragment variables and null operation variables", () => {
 
   expect(
     getFragmentScope(fragment, {
-      operationVariables: { n: null },
+      variables: { n: null },
       fragmentVariables: { size: null },
     })
   ).toStrictEqual({ n: null, size: null });
@@ -248,17 +248,17 @@ test("does not add parent fragment variables to a nested fragment scope", () => 
     }
   `;
 
-  const operationVariables = { x: 99 };
+  const variables = { x: 99 };
 
   expect(
     getFragmentScope(getFragment(document, "Foo"), {
-      operationVariables,
+      variables,
       fragmentVariables: { x: 1 },
     })
   ).toStrictEqual({ x: 1 });
   expect(
     getFragmentScope(getFragment(document, "Bar"), {
-      operationVariables,
+      variables,
       fragmentVariables: {},
     })
   ).toStrictEqual({ x: 99 });
@@ -276,17 +276,17 @@ test("uses operation variables in a nested fragment scope that the parent fragme
     }
   `;
 
-  const operationVariables = { size: 96 };
+  const variables = { size: 96 };
 
   expect(
     getFragmentScope(getFragment(document, "Outer"), {
-      operationVariables,
+      variables,
       fragmentVariables: { size: 32 },
     })
   ).toStrictEqual({ size: 32 });
   expect(
     getFragmentScope(getFragment(document, "Inner"), {
-      operationVariables,
+      variables,
       fragmentVariables: { innerSize: 32 },
     })
   ).toStrictEqual({ size: 96, innerSize: 32 });
@@ -305,7 +305,7 @@ test("does not read fragment variables from the object prototype", () => {
 
   expect(
     getFragmentScope(fragment, {
-      operationVariables: {},
+      variables: {},
       fragmentVariables: { toString: 5 },
     })
   ).toStrictEqual({ toString: 5 });
@@ -322,11 +322,11 @@ test("does not modify the given operation variables or fragment variables", () =
     "UserCard"
   );
 
-  const operationVariables = { size: 96, locale: "en" };
+  const variables = { size: 96, locale: "en" };
   const fragmentVariables = { size: 32 };
 
-  getFragmentScope(fragment, { operationVariables, fragmentVariables });
+  getFragmentScope(fragment, { variables, fragmentVariables });
 
-  expect(operationVariables).toStrictEqual({ size: 96, locale: "en" });
+  expect(variables).toStrictEqual({ size: 96, locale: "en" });
   expect(fragmentVariables).toStrictEqual({ size: 32 });
 });

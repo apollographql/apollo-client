@@ -1,3 +1,4 @@
+import type { TypedDocumentNode } from "@apollo/client";
 import {
   ApolloClient,
   ApolloLink,
@@ -5,6 +6,7 @@ import {
   gql,
 } from "@apollo/client";
 import { createFragmentRegistry, InMemoryCache } from "@apollo/client/cache";
+import type { WithFragmentInfo } from "@apollo/client/testing/internal";
 import { dateScalar } from "@apollo/client/testing/internal";
 import { fragmentInfoSymbol } from "@apollo/client/utilities/internal";
 
@@ -473,6 +475,194 @@ test("passes a root fragment argument through a nested fragment spread from the 
     [fragmentInfoSymbol]: {
       operationVariables: { size: 96 },
       fragments: { UserAvatar: { variables: { size: 96 } } },
+    },
+  });
+});
+
+test("binds fragment arguments from a query result passed to from", () => {
+  const fragment = gql`
+    fragment UserCard($size: Int) on User {
+      id
+      avatar(size: $size)
+    }
+  `;
+
+  const query: TypedDocumentNode<
+    WithFragmentInfo<{
+      user: { __typename: "User"; id: string; avatar: string };
+    }>,
+    Record<string, never>
+  > = gql`
+    query Example {
+      user {
+        id
+        ...UserCard(size: 96)
+      }
+    }
+
+    ${fragment}
+  `;
+
+  const client = createClient();
+
+  client.writeQuery({
+    query,
+    data: { user: { __typename: "User", id: "1", avatar: "large.png" } },
+  });
+
+  const data = client.readQuery({ query });
+
+  expect(data).toStrictEqualTyped({
+    user: {
+      __typename: "User",
+      id: "1",
+      avatar: "large.png",
+      [fragmentInfoSymbol]: {
+        operationVariables: {},
+        fragments: { UserCard: { variables: { size: 96 } } },
+      },
+    },
+  });
+
+  expect(
+    client.readFragment({ fragment, from: data!.user })
+  ).toStrictEqualTyped({ __typename: "User", id: "1", avatar: "large.png" });
+});
+
+test("uses explicit variables instead of the fragment info of a query result passed to from", () => {
+  const fragment = gql`
+    fragment UserCard($size: Int) on User {
+      id
+      avatar(size: $size)
+    }
+  `;
+
+  const query: TypedDocumentNode<
+    WithFragmentInfo<{
+      user: { __typename: "User"; id: string; avatar: string };
+    }>,
+    Record<string, never>
+  > = gql`
+    query Example {
+      user {
+        id
+        ...UserCard(size: 96)
+      }
+    }
+
+    ${fragment}
+  `;
+
+  const client = createClient();
+
+  client.writeQuery({
+    query,
+    data: { user: { __typename: "User", id: "1", avatar: "large.png" } },
+  });
+
+  const data = client.readQuery({ query });
+
+  expect(data).toStrictEqualTyped({
+    user: {
+      __typename: "User",
+      id: "1",
+      avatar: "large.png",
+      [fragmentInfoSymbol]: {
+        operationVariables: {},
+        fragments: { UserCard: { variables: { size: 96 } } },
+      },
+    },
+  });
+
+  expect(
+    client.readFragment({
+      fragment,
+      from: data!.user,
+      variables: { size: 32 },
+    })
+  ).toStrictEqualTyped({ __typename: "User", id: "1", avatar: "small.png" });
+});
+
+test("reads operation variables of a nested fragment shadowed by a parent fragment argument from a query result passed to from", () => {
+  const barFragment = gql`
+    fragment Bar on User {
+      value(x: $x)
+    }
+  `;
+
+  const fooFragment = gql`
+    fragment Foo($x: Int!) on User {
+      id
+      fooValue: value(x: $x)
+      ...Bar
+    }
+
+    ${barFragment}
+  `;
+
+  const query: TypedDocumentNode<
+    WithFragmentInfo<{
+      user: {
+        __typename: "User";
+        id: string;
+        fooValue: number;
+        value: number;
+      };
+    }>,
+    { x: number }
+  > = gql`
+    query Example($x: Int) {
+      user {
+        id
+        ...Foo(x: 1)
+      }
+    }
+
+    ${fooFragment}
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  client.writeQuery({
+    query,
+    variables: { x: 99 },
+    data: {
+      user: { __typename: "User", id: "1", fooValue: 1, value: 99 },
+    },
+  });
+
+  const data = client.readQuery({ query, variables: { x: 99 } });
+
+  expect(data).toStrictEqualTyped({
+    user: {
+      __typename: "User",
+      id: "1",
+      fooValue: 1,
+      value: 99,
+      [fragmentInfoSymbol]: {
+        operationVariables: { x: 99 },
+        fragments: { Foo: { variables: { x: 1 } } },
+      },
+    },
+  });
+
+  expect(
+    client.readFragment({
+      fragment: fooFragment,
+      fragmentName: "Foo",
+      from: data!.user,
+    })
+  ).toStrictEqualTyped({
+    __typename: "User",
+    id: "1",
+    fooValue: 1,
+    value: 99,
+    [fragmentInfoSymbol]: {
+      operationVariables: { x: 99 },
+      fragments: {},
     },
   });
 });

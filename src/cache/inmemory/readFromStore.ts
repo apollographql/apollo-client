@@ -11,6 +11,7 @@ import { Kind } from "graphql";
 import type { OptimisticWrapperFunction } from "optimism";
 import { wrap } from "optimism";
 
+import type { OperationVariables } from "@apollo/client";
 import type { Reference, StoreObject } from "@apollo/client/utilities";
 import {
   addTypenameToDocument,
@@ -48,6 +49,7 @@ import {
   maybeDeepFreeze,
   mergeDeepArray,
   resultKeyNameFromField,
+  rootFragmentVariablesSymbol,
   shouldInclude,
 } from "@apollo/client/utilities/internal";
 import {
@@ -329,9 +331,11 @@ export class StoreReader {
     rootId = "ROOT_QUERY",
     variables,
     returnPartialData = true,
+    [rootFragmentVariablesSymbol]: rootFragmentVariables,
     ...options
   }: DiffQueryAgainstStoreOptions & {
     [handleIncrementalSymbol]?: DiffIncrementalInfo;
+    [rootFragmentVariablesSymbol]?: OperationVariables;
   }): Cache.DiffResult<T> & {
     dataState?: "empty" | "partial" | "streaming" | "complete";
   } {
@@ -345,8 +349,11 @@ export class StoreReader {
       store,
       query,
       policies,
-      variables,
-      varString: makeVarString({ operationVariables: variables }),
+      variables: rootFragmentVariables ?? variables,
+      varString: makeVarString({
+        operationVariables: variables,
+        scope: rootFragmentVariables,
+      }),
       operationVariables: variables,
       ...extractFragmentContext(query, this.config.fragments),
       ...options[handleIncrementalSymbol],

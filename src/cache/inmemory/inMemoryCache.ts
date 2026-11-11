@@ -433,15 +433,20 @@ export class InMemoryCache extends ApolloCache {
   public read<TData = unknown>(
     options: Cache.ReadOptions<TData, OperationVariables> & {
       returnPartialData: true;
+      [rootFragmentVariablesSymbol]?: OperationVariables | undefined;
     }
   ): TData | DeepPartial<TData> | null;
 
   public read<TData = unknown>(
-    options: Cache.ReadOptions<TData, OperationVariables>
+    options: Cache.ReadOptions<TData, OperationVariables> & {
+      [rootFragmentVariablesSymbol]?: OperationVariables | undefined;
+    }
   ): TData | null;
 
   public read<TData = unknown>(
-    options: Cache.ReadOptions<TData, OperationVariables>
+    options: Cache.ReadOptions<TData, OperationVariables> & {
+      [rootFragmentVariablesSymbol]?: OperationVariables | undefined;
+    }
   ): TData | DeepPartial<TData> | null {
     const {
       query,

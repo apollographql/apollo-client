@@ -241,7 +241,11 @@ export abstract class ApolloCache {
   public abstract read<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
-  >(query: Cache.ReadOptions<TData, TVariables>): Unmasked<TData> | null;
+  >(
+    query: Cache.ReadOptions<TData, TVariables> & {
+      [rootFragmentVariablesSymbol]?: OperationVariables | undefined;
+    }
+  ): Unmasked<TData> | null;
   public abstract write<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
@@ -939,14 +943,31 @@ export abstract class ApolloCache {
     options: Cache.ReadFragmentOptions<TData, TVariables>,
     optimistic = !!options.optimistic
   ): Unmasked<TData> | null {
-    const id =
-      options.from !== undefined ? this.toCacheId(options.from) : options.id;
+    const { from, fragment, fragmentName, variables } = options;
+    const id = from !== undefined ? this.toCacheId(from) : options.id;
+    const fragmentInfo = (from as ObjectWithFragmentInfo | null)?.[
+      fragmentInfoSymbol
+    ];
+    const query = this.getFragmentDoc(fragment, fragmentName);
 
     return this.read({
       ...options,
-      query: this.getFragmentDoc(options.fragment, options.fragmentName),
+      query,
       rootId: id,
       optimistic,
+      ...((
+        this[supportsFragmentVariablesSymbol] &&
+        fragmentInfo &&
+        !isNonEmptyObject(variables)
+      ) ?
+        {
+          variables: fragmentInfo.operationVariables,
+          [rootFragmentVariablesSymbol]:
+            fragmentInfo.fragments[
+              fragmentName ?? getFragmentDefinition(fragment).name.value
+            ]?.variables,
+        }
+      : {}),
     });
   }
 

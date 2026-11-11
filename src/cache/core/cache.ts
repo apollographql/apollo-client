@@ -273,13 +273,18 @@ export abstract class ApolloCache {
   >(
     query: Cache.DiffOptions<TData, TVariables> & {
       [handleIncrementalSymbol]: DiffIncrementalInfo | undefined;
+      [rootFragmentVariablesSymbol]?: OperationVariables | undefined;
     }
   ): Cache.InternalDiffResultWithDataState<TData> | Cache.DiffResult<TData>;
 
   public abstract diff<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
-  >(query: Cache.DiffOptions<TData, TVariables>): Cache.DiffResult<TData>;
+  >(
+    query: Cache.DiffOptions<TData, TVariables> & {
+      [rootFragmentVariablesSymbol]?: OperationVariables | undefined;
+    }
+  ): Cache.DiffResult<TData>;
   public abstract watch<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,

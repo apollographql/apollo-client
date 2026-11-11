@@ -38,7 +38,6 @@ import {
   dealias,
   getFragmentDefinitions,
   getFragmentScope,
-  getFragmentVariables,
   getMainDefinition,
   hasDirectives,
   mergeDeep,
@@ -604,12 +603,10 @@ export class LocalState<
 
         if (matches) {
           let context = execContext;
-          const variablesScope = getFragmentScope(fragment, {
+          const variablesScope = getFragmentScope(selection, {
+            fragment,
             variables: execContext.variables,
-            fragmentVariables: getFragmentVariables(selection, {
-              fragment,
-              scope: execContext.variablesScope,
-            }),
+            scope: execContext.variablesScope,
           });
 
           if (variablesScope !== execContext.variablesScope) {

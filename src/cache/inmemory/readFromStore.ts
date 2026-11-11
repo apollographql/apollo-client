@@ -663,9 +663,10 @@ export class StoreReader {
               scope: context.variablesScope,
             });
 
-            const variablesScope = getFragmentScope(fragment, {
+            const variablesScope = getFragmentScope(selection, {
+              fragment,
               variables: context.variables,
-              fragmentVariables,
+              scope: context.variablesScope,
             });
 
             if (variablesScope !== context.variablesScope) {
@@ -1022,12 +1023,10 @@ export class StoreReader {
             selection.kind === Kind.FRAGMENT_SPREAD &&
             fragment.kind === Kind.FRAGMENT_DEFINITION
           ) {
-            const variablesScope = getFragmentScope(fragment, {
+            const variablesScope = getFragmentScope(selection, {
+              fragment,
               variables: context.variables,
-              fragmentVariables: getFragmentVariables(selection, {
-                fragment,
-                scope: context.variablesScope,
-              }),
+              scope: context.variablesScope,
             });
 
             if (variablesScope !== context.variablesScope) {

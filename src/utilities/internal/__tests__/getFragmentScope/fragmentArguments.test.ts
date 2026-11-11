@@ -1,4 +1,5 @@
-import type { DocumentNode } from "graphql";
+import type { DocumentNode, FragmentSpreadNode } from "graphql";
+import { visit } from "graphql";
 
 import { enableExperimentalFragmentVariables, gql } from "@apollo/client";
 import {
@@ -19,225 +20,320 @@ function getFragment(document: DocumentNode, name: string) {
   return fragment;
 }
 
-test("adds fragment variables to the scope", () => {
-  const fragment = getFragment(
-    gql`
-      fragment UserCard($size: Int) on User {
-        avatar(size: $size)
+function getFragmentSpread(document: DocumentNode, name: string) {
+  let fragmentSpread: FragmentSpreadNode | undefined;
+
+  visit(document, {
+    FragmentSpread(node) {
+      if (node.name.value === name) {
+        fragmentSpread ??= node;
       }
-    `,
-    "UserCard"
-  );
+    },
+  });
+
+  invariant(fragmentSpread, `Could not find fragment spread "${name}"`);
+
+  return fragmentSpread;
+}
+
+test("adds fragment arguments to the scope", () => {
+  const document = gql`
+    query {
+      ...UserCard(size: 32)
+    }
+
+    fragment UserCard($size: Int) on User {
+      avatar(size: $size)
+    }
+  `;
 
   expect(
-    getFragmentScope(fragment, {
+    getFragmentScope(getFragmentSpread(document, "UserCard"), {
+      fragment: getFragment(document, "UserCard"),
       variables: {},
-      fragmentVariables: { size: 32 },
+      scope: {},
     })
   ).toStrictEqual({ size: 32 });
 });
 
 test("keeps operation variables that the fragment does not declare", () => {
-  const fragment = getFragment(
-    gql`
-      fragment Test($one: Int) on User {
-        a(one: $one)
-        b(two: $two)
-      }
-    `,
-    "Test"
-  );
+  const document = gql`
+    query ($two: Int) {
+      ...Test(one: 1)
+    }
+
+    fragment Test($one: Int) on User {
+      a(one: $one)
+      b(two: $two)
+    }
+  `;
 
   expect(
-    getFragmentScope(fragment, {
+    getFragmentScope(getFragmentSpread(document, "Test"), {
+      fragment: getFragment(document, "Test"),
       variables: { two: 2 },
-      fragmentVariables: { one: 1 },
+      scope: { two: 2 },
     })
   ).toStrictEqual({ one: 1, two: 2 });
 });
 
 test("returns the operation variables when the fragment declares no variables", () => {
-  const fragment = getFragment(
-    gql`
-      fragment Test on User {
-        b(two: $two)
-      }
-    `,
-    "Test"
-  );
+  const document = gql`
+    query ($two: Int) {
+      ...Test
+    }
+
+    fragment Test on User {
+      b(two: $two)
+    }
+  `;
 
   expect(
-    getFragmentScope(fragment, {
+    getFragmentScope(getFragmentSpread(document, "Test"), {
+      fragment: getFragment(document, "Test"),
       variables: { two: 2 },
-      fragmentVariables: {},
+      scope: { two: 2 },
     })
   ).toStrictEqual({ two: 2 });
 });
 
 test("returns the same operation variables object when the fragment declares no variables", () => {
-  const fragment = getFragment(
-    gql`
-      fragment Test on User {
-        b(two: $two)
-      }
-    `,
-    "Test"
-  );
+  const document = gql`
+    query ($two: Int) {
+      ...Test
+    }
+
+    fragment Test on User {
+      b(two: $two)
+    }
+  `;
   const variables = { two: 2 };
 
-  expect(getFragmentScope(fragment, { variables, fragmentVariables: {} })).toBe(
-    variables
-  );
+  expect(
+    getFragmentScope(getFragmentSpread(document, "Test"), {
+      fragment: getFragment(document, "Test"),
+      variables,
+      scope: variables,
+    })
+  ).toBe(variables);
 });
 
 test("returns an empty object when the operation variables are undefined and the fragment declares no variables", () => {
-  const fragment = getFragment(
-    gql`
-      fragment Test on User {
-        id
-      }
-    `,
-    "Test"
-  );
+  const document = gql`
+    query {
+      ...Test
+    }
+
+    fragment Test on User {
+      id
+    }
+  `;
 
   expect(
-    getFragmentScope(fragment, {
+    getFragmentScope(getFragmentSpread(document, "Test"), {
+      fragment: getFragment(document, "Test"),
       variables: undefined,
-      fragmentVariables: {},
+      scope: undefined,
     })
   ).toStrictEqual({});
 });
 
-test("adds fragment variables when the operation variables are undefined", () => {
-  const fragment = getFragment(
-    gql`
-      fragment UserCard($size: Int) on User {
-        avatar(size: $size)
-      }
-    `,
-    "UserCard"
-  );
+test("adds fragment arguments when the operation variables are undefined", () => {
+  const document = gql`
+    query {
+      ...UserCard(size: 32)
+    }
+
+    fragment UserCard($size: Int) on User {
+      avatar(size: $size)
+    }
+  `;
 
   expect(
-    getFragmentScope(fragment, {
+    getFragmentScope(getFragmentSpread(document, "UserCard"), {
+      fragment: getFragment(document, "UserCard"),
       variables: undefined,
-      fragmentVariables: { size: 32 },
+      scope: undefined,
     })
   ).toStrictEqual({ size: 32 });
 });
 
-test("fragment variables shadow operation variables with the same name", () => {
-  const fragment = getFragment(
-    gql`
-      fragment UserCard($size: Int) on User {
-        avatar(size: $size)
-      }
-    `,
-    "UserCard"
-  );
+test("resolves variable arguments against the scope", () => {
+  const document = gql`
+    query ($avatarSize: Int) {
+      ...UserCard(size: $avatarSize)
+    }
+
+    fragment UserCard($size: Int) on User {
+      avatar(size: $size)
+    }
+  `;
 
   expect(
-    getFragmentScope(fragment, {
+    getFragmentScope(getFragmentSpread(document, "UserCard"), {
+      fragment: getFragment(document, "UserCard"),
+      variables: { avatarSize: 96 },
+      scope: { avatarSize: 64 },
+    })
+  ).toStrictEqual({ avatarSize: 96, size: 64 });
+});
+
+test("uses the default value of a fragment variable without an argument", () => {
+  const document = gql`
+    query {
+      ...UserCard
+    }
+
+    fragment UserCard($size: Int = 48) on User {
+      avatar(size: $size)
+    }
+  `;
+
+  expect(
+    getFragmentScope(getFragmentSpread(document, "UserCard"), {
+      fragment: getFragment(document, "UserCard"),
+      variables: {},
+      scope: {},
+    })
+  ).toStrictEqual({ size: 48 });
+});
+
+test("fragment arguments shadow operation variables with the same name", () => {
+  const document = gql`
+    query ($size: Int) {
+      ...UserCard(size: 32)
+    }
+
+    fragment UserCard($size: Int) on User {
+      avatar(size: $size)
+    }
+  `;
+
+  expect(
+    getFragmentScope(getFragmentSpread(document, "UserCard"), {
+      fragment: getFragment(document, "UserCard"),
       variables: { size: 96 },
-      fragmentVariables: { size: 32 },
+      scope: { size: 96 },
     })
   ).toStrictEqual({ size: 32 });
 });
 
-test("hides an operation variable that the fragment declares without a value", () => {
-  const fragment = getFragment(
-    gql`
-      fragment UserCard($size: Int) on User {
-        avatar(size: $size)
-      }
-    `,
-    "UserCard"
-  );
+test("hides an operation variable that the fragment declares without an argument", () => {
+  const document = gql`
+    query ($size: Int) {
+      ...UserCard
+    }
+
+    fragment UserCard($size: Int) on User {
+      avatar(size: $size)
+    }
+  `;
 
   expect(
-    getFragmentScope(fragment, {
+    getFragmentScope(getFragmentSpread(document, "UserCard"), {
+      fragment: getFragment(document, "UserCard"),
       variables: { size: 96 },
-      fragmentVariables: {},
+      scope: { size: 96 },
     })
   ).toStrictEqual({});
 });
 
 test("hides only the operation variables that the fragment declares", () => {
-  const fragment = getFragment(
-    gql`
-      fragment UserCard($size: Int, $format: String) on User {
-        avatar(size: $size, format: $format)
-        bio(locale: $locale)
-      }
-    `,
-    "UserCard"
-  );
+  const document = gql`
+    query ($size: Int, $format: String, $locale: String) {
+      ...UserCard(format: "png")
+    }
+
+    fragment UserCard($size: Int, $format: String) on User {
+      avatar(size: $size, format: $format)
+      bio(locale: $locale)
+    }
+  `;
+
+  const variables = { size: 96, format: "jpg", locale: "en" };
 
   expect(
-    getFragmentScope(fragment, {
-      variables: { size: 96, format: "jpg", locale: "en" },
-      fragmentVariables: { format: "png" },
+    getFragmentScope(getFragmentSpread(document, "UserCard"), {
+      fragment: getFragment(document, "UserCard"),
+      variables,
+      scope: variables,
     })
   ).toStrictEqual({ format: "png", locale: "en" });
 });
 
-test("object fragment variables replace operation variables with the same name", () => {
-  const fragment = getFragment(
-    gql`
-      fragment UserCard($input: Input) on User {
-        avatar(input: $input)
-      }
-    `,
-    "UserCard"
-  );
+test("object fragment arguments replace operation variables with the same name", () => {
+  const document = gql`
+    query ($input: Input) {
+      ...UserCard(input: { a: 3 })
+    }
+
+    fragment UserCard($input: Input) on User {
+      avatar(input: $input)
+    }
+  `;
+
+  const variables = { input: { a: 1, b: 2 } };
 
   expect(
-    getFragmentScope(fragment, {
-      variables: { input: { a: 1, b: 2 } },
-      fragmentVariables: { input: { a: 3 } },
+    getFragmentScope(getFragmentSpread(document, "UserCard"), {
+      fragment: getFragment(document, "UserCard"),
+      variables,
+      scope: variables,
     })
   ).toStrictEqual({ input: { a: 3 } });
 });
 
-test("list fragment variables replace operation variables with the same name", () => {
-  const fragment = getFragment(
-    gql`
-      fragment UserCard($tags: [String]) on User {
-        avatar(tags: $tags)
-      }
-    `,
-    "UserCard"
-  );
+test("list fragment arguments replace operation variables with the same name", () => {
+  const document = gql`
+    query ($tags: [String]) {
+      ...UserCard(tags: ["c"])
+    }
+
+    fragment UserCard($tags: [String]) on User {
+      avatar(tags: $tags)
+    }
+  `;
+
+  const variables = { tags: ["a", "b"] };
 
   expect(
-    getFragmentScope(fragment, {
-      variables: { tags: ["a", "b"] },
-      fragmentVariables: { tags: ["c"] },
+    getFragmentScope(getFragmentSpread(document, "UserCard"), {
+      fragment: getFragment(document, "UserCard"),
+      variables,
+      scope: variables,
     })
   ).toStrictEqual({ tags: ["c"] });
 });
 
-test("keeps null fragment variables and null operation variables", () => {
-  const fragment = getFragment(
-    gql`
-      fragment UserCard($size: Int) on User {
-        avatar(size: $size)
-        photo(size: $n)
-      }
-    `,
-    "UserCard"
-  );
+test("keeps null fragment arguments and null operation variables", () => {
+  const document = gql`
+    query ($n: Int) {
+      ...UserCard(size: null)
+    }
+
+    fragment UserCard($size: Int) on User {
+      avatar(size: $size)
+      photo(size: $n)
+    }
+  `;
+
+  const variables = { n: null };
 
   expect(
-    getFragmentScope(fragment, {
-      variables: { n: null },
-      fragmentVariables: { size: null },
+    getFragmentScope(getFragmentSpread(document, "UserCard"), {
+      fragment: getFragment(document, "UserCard"),
+      variables,
+      scope: variables,
     })
   ).toStrictEqual({ n: null, size: null });
 });
 
-test("does not add parent fragment variables to a nested fragment scope", () => {
+test("does not add parent fragment arguments to a nested fragment scope", () => {
   const document = gql`
+    query ($x: Int) {
+      ...Foo(x: 1)
+    }
+
     fragment Foo($x: Int) on User {
       fooValue: value(x: $x)
       ...Bar
@@ -250,22 +346,28 @@ test("does not add parent fragment variables to a nested fragment scope", () => 
 
   const variables = { x: 99 };
 
+  const fooScope = getFragmentScope(getFragmentSpread(document, "Foo"), {
+    fragment: getFragment(document, "Foo"),
+    variables,
+    scope: variables,
+  });
+
+  expect(fooScope).toStrictEqual({ x: 1 });
   expect(
-    getFragmentScope(getFragment(document, "Foo"), {
+    getFragmentScope(getFragmentSpread(document, "Bar"), {
+      fragment: getFragment(document, "Bar"),
       variables,
-      fragmentVariables: { x: 1 },
-    })
-  ).toStrictEqual({ x: 1 });
-  expect(
-    getFragmentScope(getFragment(document, "Bar"), {
-      variables,
-      fragmentVariables: {},
+      scope: fooScope,
     })
   ).toStrictEqual({ x: 99 });
 });
 
-test("uses operation variables in a nested fragment scope that the parent fragment declares", () => {
+test("resolves nested fragment arguments against the parent fragment scope", () => {
   const document = gql`
+    query ($size: Int) {
+      ...Outer(size: 32)
+    }
+
     fragment Outer($size: Int) on User {
       ...Inner(innerSize: $size)
     }
@@ -278,55 +380,64 @@ test("uses operation variables in a nested fragment scope that the parent fragme
 
   const variables = { size: 96 };
 
+  const outerScope = getFragmentScope(getFragmentSpread(document, "Outer"), {
+    fragment: getFragment(document, "Outer"),
+    variables,
+    scope: variables,
+  });
+
+  expect(outerScope).toStrictEqual({ size: 32 });
   expect(
-    getFragmentScope(getFragment(document, "Outer"), {
+    getFragmentScope(getFragmentSpread(document, "Inner"), {
+      fragment: getFragment(document, "Inner"),
       variables,
-      fragmentVariables: { size: 32 },
-    })
-  ).toStrictEqual({ size: 32 });
-  expect(
-    getFragmentScope(getFragment(document, "Inner"), {
-      variables,
-      fragmentVariables: { innerSize: 32 },
+      scope: outerScope,
     })
   ).toStrictEqual({ size: 96, innerSize: 32 });
 });
 
 test("does not read fragment variables from the object prototype", () => {
-  const fragment = getFragment(
-    gql`
-      fragment UserCard($constructor: Int, $toString: Int = 5) on User {
-        first: value(x: $constructor)
-        second: value(x: $toString)
-      }
-    `,
-    "UserCard"
-  );
+  const document = gql`
+    query {
+      ...UserCard
+    }
+
+    fragment UserCard($constructor: Int, $toString: Int = 5) on User {
+      first: value(x: $constructor)
+      second: value(x: $toString)
+    }
+  `;
 
   expect(
-    getFragmentScope(fragment, {
+    getFragmentScope(getFragmentSpread(document, "UserCard"), {
+      fragment: getFragment(document, "UserCard"),
       variables: {},
-      fragmentVariables: { toString: 5 },
+      scope: {},
     })
   ).toStrictEqual({ toString: 5 });
 });
 
-test("does not modify the given operation variables or fragment variables", () => {
-  const fragment = getFragment(
-    gql`
-      fragment UserCard($size: Int) on User {
-        avatar(size: $size)
-        bio(locale: $locale)
-      }
-    `,
-    "UserCard"
-  );
+test("does not modify the given operation variables or scope", () => {
+  const document = gql`
+    query ($size: Int, $locale: String) {
+      ...UserCard(size: 32)
+    }
+
+    fragment UserCard($size: Int) on User {
+      avatar(size: $size)
+      bio(locale: $locale)
+    }
+  `;
 
   const variables = { size: 96, locale: "en" };
-  const fragmentVariables = { size: 32 };
+  const scope = { size: 64, locale: "fr" };
 
-  getFragmentScope(fragment, { variables, fragmentVariables });
+  getFragmentScope(getFragmentSpread(document, "UserCard"), {
+    fragment: getFragment(document, "UserCard"),
+    variables,
+    scope,
+  });
 
   expect(variables).toStrictEqual({ size: 96, locale: "en" });
-  expect(fragmentVariables).toStrictEqual({ size: 32 });
+  expect(scope).toStrictEqual({ size: 64, locale: "fr" });
 });

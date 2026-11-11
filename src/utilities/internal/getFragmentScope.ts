@@ -1,18 +1,21 @@
-import type { FragmentDefinitionNode } from "graphql";
+import type { FragmentDefinitionNode, FragmentSpreadNode } from "graphql";
 import { Kind } from "graphql";
 
 import type { OperationVariables } from "@apollo/client";
 
 import { compact } from "./compact.js";
+import { getFragmentVariables } from "./getFragmentVariables.js";
 
 export function getFragmentScope(
-  fragment: FragmentDefinitionNode,
+  fragmentSpread: FragmentSpreadNode,
   {
+    fragment,
     variables,
-    fragmentVariables,
+    scope,
   }: {
+    fragment: FragmentDefinitionNode;
     variables: OperationVariables | undefined;
-    fragmentVariables: OperationVariables;
+    scope: OperationVariables | undefined;
   }
 ) {
   if (
@@ -28,5 +31,8 @@ export function getFragmentScope(
     delete operationScope[def.variable.name.value];
   }
 
-  return compact(operationScope, fragmentVariables);
+  return compact(
+    operationScope,
+    getFragmentVariables(fragmentSpread, { fragment, scope })
+  );
 }

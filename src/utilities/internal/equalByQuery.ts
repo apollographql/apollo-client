@@ -17,7 +17,6 @@ import { createFragmentMap } from "./createFragmentMap.js";
 import { getFragmentDefinitions } from "./getFragmentDefinitions.js";
 import { getFragmentFromSelection } from "./getFragmentFromSelection.js";
 import { getFragmentScope } from "./getFragmentScope.js";
-import { getFragmentVariables } from "./getFragmentVariables.js";
 import { getMainDefinition } from "./getMainDefinition.js";
 import { isField } from "./isField.js";
 import { resultKeyNameFromField } from "./resultKeyNameFromField.js";
@@ -132,12 +131,10 @@ function equalBySelectionSet(
           selection.kind === Kind.FRAGMENT_SPREAD &&
           fragment.kind === Kind.FRAGMENT_DEFINITION
         ) {
-          const variablesScope = getFragmentScope(fragment, {
+          const variablesScope = getFragmentScope(selection, {
+            fragment,
             variables: context.variables,
-            fragmentVariables: getFragmentVariables(selection, {
-              fragment,
-              scope: context.variablesScope,
-            }),
+            scope: context.variablesScope,
           });
           fragmentContext = { ...fragmentContext, variablesScope };
         }

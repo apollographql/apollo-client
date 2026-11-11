@@ -26,7 +26,6 @@ import {
   getDefaultValues,
   getFragmentFromSelection,
   getFragmentScope,
-  getFragmentVariables,
   getOperationDefinition,
   handleIncrementalSymbol,
   isArray,
@@ -708,12 +707,10 @@ export class StoreWriter {
               selection.kind === Kind.FRAGMENT_SPREAD &&
               fragment.kind === Kind.FRAGMENT_DEFINITION
             ) ?
-              getFragmentScope(fragment, {
+              getFragmentScope(selection, {
+                fragment,
                 variables: context.variables,
-                fragmentVariables: getFragmentVariables(selection, {
-                  fragment,
-                  scope: inheritedContext.variablesScope,
-                }),
+                scope: inheritedContext.variablesScope,
               })
             : inheritedContext.variablesScope;
 

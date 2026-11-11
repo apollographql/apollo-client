@@ -10,12 +10,10 @@ export function getFragmentVariables(
   fragmentSpread: FragmentSpreadNode,
   {
     fragment,
-    variables,
-    parentScope = variables,
+    scope,
   }: {
     fragment: FragmentDefinitionNode;
-    variables: OperationVariables | undefined;
-    parentScope?: OperationVariables;
+    scope?: OperationVariables;
   }
 ) {
   if (
@@ -26,7 +24,7 @@ export function getFragmentVariables(
     return {};
   }
 
-  const scope: OperationVariables = {};
+  const variables: OperationVariables = {};
   const argumentsByName = new Map(
     fragmentSpread.arguments?.map((arg) => [arg.name.value, arg])
   );
@@ -36,16 +34,17 @@ export function getFragmentVariables(
     const argument = argumentsByName.get(name.value);
 
     if (argument) {
-      valueToObjectRepresentation(scope, name, argument.value, parentScope);
+      valueToObjectRepresentation(variables, name, argument.value, scope);
     }
 
     if (
-      (!Object.hasOwn(scope, name.value) || scope[name.value] === undefined) &&
+      (!Object.hasOwn(variables, name.value) ||
+        variables[name.value] === undefined) &&
       def.defaultValue
     ) {
-      valueToObjectRepresentation(scope, name, def.defaultValue);
+      valueToObjectRepresentation(variables, name, def.defaultValue);
     }
   });
 
-  return compact(scope);
+  return compact(variables);
 }

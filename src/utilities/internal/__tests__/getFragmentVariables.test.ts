@@ -50,7 +50,7 @@ test("adds literal fragment arguments to the variables scope", () => {
   expect(
     getFragmentVariables(fragmentSpread, {
       fragment,
-      variables: {},
+      scope: {},
     })
   ).toStrictEqual({ size: 32 });
 });
@@ -94,7 +94,7 @@ test("adds fragment arguments of each literal kind", () => {
   expect(
     getFragmentVariables(fragmentSpread, {
       fragment,
-      variables: {},
+      scope: {},
     })
   ).toStrictEqual({
     int: 1,
@@ -125,7 +125,7 @@ test("does not include operation variables that the fragment does not declare", 
   expect(
     getFragmentVariables(fragmentSpread, {
       fragment,
-      variables: { two: 2 },
+      scope: { two: 2 },
     })
   ).toStrictEqual({ one: 1 });
 });
@@ -148,12 +148,12 @@ test("does not include operation variables when the fragment declares no variabl
   expect(
     getFragmentVariables(fragmentSpread, {
       fragment,
-      variables: { two: 2 },
+      scope: { two: 2 },
     })
   ).toStrictEqual({});
 });
 
-test("returns an empty object when there are no variables and no arguments", () => {
+test("returns an empty object when the scope is undefined and there are no arguments", () => {
   const query = gql`
     query {
       user {
@@ -171,12 +171,12 @@ test("returns an empty object when there are no variables and no arguments", () 
   expect(
     getFragmentVariables(fragmentSpread, {
       fragment,
-      variables: undefined,
+      scope: undefined,
     })
   ).toStrictEqual({});
 });
 
-test("adds fragment arguments when the operation variables are undefined", () => {
+test("adds fragment arguments when the scope is undefined", () => {
   const query = gql`
     query {
       user {
@@ -194,7 +194,7 @@ test("adds fragment arguments when the operation variables are undefined", () =>
   expect(
     getFragmentVariables(fragmentSpread, {
       fragment,
-      variables: undefined,
+      scope: undefined,
     })
   ).toStrictEqual({ size: 32 });
 });
@@ -218,12 +218,12 @@ test("fragment arguments shadow operation variables with the same name", () => {
   expect(
     getFragmentVariables(fragmentSpread, {
       fragment,
-      variables: { size: 96 },
+      scope: { size: 96 },
     })
   ).toStrictEqual({ size: 32 });
 });
 
-test("resolves variable arguments against the operation variables without a parent scope", () => {
+test("resolves variable arguments against the scope", () => {
   const query = gql`
     query ($avatarSize: Int) {
       user {
@@ -241,7 +241,7 @@ test("resolves variable arguments against the operation variables without a pare
   expect(
     getFragmentVariables(fragmentSpread, {
       fragment,
-      variables: { avatarSize: 64 },
+      scope: { avatarSize: 64 },
     })
   ).toStrictEqual({ size: 64 });
 });
@@ -264,7 +264,7 @@ test("resolves variables nested in object and list arguments", () => {
   expect(
     getFragmentVariables(fragmentSpread, {
       fragment,
-      variables: { width: 5, tag: "a" },
+      scope: { width: 5, tag: "a" },
     })
   ).toStrictEqual({
     dimensions: { width: 5, height: 10 },
@@ -297,14 +297,13 @@ test("resolves nested spread arguments against the parent scope", () => {
   expect(
     getFragmentVariables(outer.fragmentSpread, {
       fragment: outer.fragment,
-      variables,
+      scope: variables,
     })
   ).toStrictEqual({ size: 32 });
   expect(
     getFragmentVariables(inner.fragmentSpread, {
       fragment: inner.fragment,
-      variables,
-      parentScope: { size: 32 },
+      scope: { size: 32 },
     })
   ).toStrictEqual({ innerSize: 32 });
 });
@@ -334,14 +333,13 @@ test("resolves nested spread arguments to operation variables that the parent do
   expect(
     getFragmentVariables(outer.fragmentSpread, {
       fragment: outer.fragment,
-      variables,
+      scope: variables,
     })
   ).toStrictEqual({ size: 32 });
   expect(
     getFragmentVariables(inner.fragmentSpread, {
       fragment: inner.fragment,
-      variables,
-      parentScope: { n: 5, size: 32 },
+      scope: { n: 5, size: 32 },
     })
   ).toStrictEqual({ innerSize: 5 });
 });
@@ -371,14 +369,13 @@ test("does not add parent fragment arguments to a nested fragment scope", () => 
   expect(
     getFragmentVariables(foo.fragmentSpread, {
       fragment: foo.fragment,
-      variables,
+      scope: variables,
     })
   ).toStrictEqual({ x: 1 });
   expect(
     getFragmentVariables(bar.fragmentSpread, {
       fragment: bar.fragment,
-      variables,
-      parentScope: { x: 1 },
+      scope: { x: 1 },
     })
   ).toStrictEqual({});
 });
@@ -402,7 +399,7 @@ test("object arguments replace operation variables with the same name", () => {
   expect(
     getFragmentVariables(fragmentSpread, {
       fragment,
-      variables: { input: { a: 1, b: 2 } },
+      scope: { input: { a: 1, b: 2 } },
     })
   ).toStrictEqual({ input: { a: 3 } });
 });
@@ -426,12 +423,12 @@ test("list arguments replace operation variables with the same name", () => {
   expect(
     getFragmentVariables(fragmentSpread, {
       fragment,
-      variables: { tags: ["a", "b"] },
+      scope: { tags: ["a", "b"] },
     })
   ).toStrictEqual({ tags: ["c"] });
 });
 
-test("does not modify the given variables or parent scope", () => {
+test("does not modify the given scope", () => {
   const query = gql`
     query ($size: Int, $input: Input) {
       user {
@@ -451,17 +448,11 @@ test("does not modify the given variables or parent scope", () => {
   `;
 
   const { fragment, fragmentSpread } = getFragment(query, "Inner");
-  const variables = { size: 96, input: { a: 1, b: 2 } };
-  const parentScope = { size: 32, input: { a: 1, b: 2 } };
+  const scope = { size: 32, input: { a: 1, b: 2 } };
 
-  getFragmentVariables(fragmentSpread, {
-    fragment,
-    variables,
-    parentScope,
-  });
+  getFragmentVariables(fragmentSpread, { fragment, scope });
 
-  expect(variables).toStrictEqual({ size: 96, input: { a: 1, b: 2 } });
-  expect(parentScope).toStrictEqual({ size: 32, input: { a: 1, b: 2 } });
+  expect(scope).toStrictEqual({ size: 32, input: { a: 1, b: 2 } });
 });
 
 test("uses the fragment default when the spread omits the argument", () => {
@@ -482,7 +473,7 @@ test("uses the fragment default when the spread omits the argument", () => {
   expect(
     getFragmentVariables(fragmentSpread, {
       fragment,
-      variables: {},
+      scope: {},
     })
   ).toStrictEqual({ size: 48 });
 });
@@ -506,7 +497,7 @@ test("uses the fragment default over an operation variable with the same name", 
   expect(
     getFragmentVariables(fragmentSpread, {
       fragment,
-      variables: { size: 96 },
+      scope: { size: 96 },
     })
   ).toStrictEqual({ size: 48 });
 });
@@ -529,7 +520,7 @@ test("uses the spread argument over the fragment default", () => {
   expect(
     getFragmentVariables(fragmentSpread, {
       fragment,
-      variables: {},
+      scope: {},
     })
   ).toStrictEqual({ size: 32 });
 });
@@ -552,7 +543,7 @@ test("uses the fragment default when a variable argument has no value", () => {
   expect(
     getFragmentVariables(fragmentSpread, {
       fragment,
-      variables: {},
+      scope: {},
     })
   ).toStrictEqual({ size: 48 });
 });
@@ -575,7 +566,7 @@ test("does not use the fragment default when a variable argument is null", () =>
   expect(
     getFragmentVariables(fragmentSpread, {
       fragment,
-      variables: { n: null },
+      scope: { n: null },
     })
   ).toStrictEqual({ size: null });
 });
@@ -598,7 +589,7 @@ test("does not use the fragment default when the spread argument is null", () =>
   expect(
     getFragmentVariables(fragmentSpread, {
       fragment,
-      variables: {},
+      scope: {},
     })
   ).toStrictEqual({ size: null });
 });
@@ -625,7 +616,7 @@ test("uses object and list fragment defaults", () => {
   expect(
     getFragmentVariables(fragmentSpread, {
       fragment,
-      variables: {},
+      scope: {},
     })
   ).toStrictEqual({
     input: { a: 1, b: 2 },
@@ -653,7 +644,7 @@ test("hides an operation variable that the fragment declares without a default",
   expect(
     getFragmentVariables(fragmentSpread, {
       fragment,
-      variables: { size: 96 },
+      scope: { size: 96 },
     })
   ).toStrictEqual({});
 });
@@ -676,7 +667,7 @@ test("does not add a fragment variable that is declared without a default and ha
   expect(
     getFragmentVariables(fragmentSpread, {
       fragment,
-      variables: {},
+      scope: {},
     })
   ).toStrictEqual({});
 });
@@ -706,14 +697,13 @@ test("resolves a nested spread argument to the parent fragment default", () => {
   expect(
     getFragmentVariables(outer.fragmentSpread, {
       fragment: outer.fragment,
-      variables,
+      scope: variables,
     })
   ).toStrictEqual({ size: 10 });
   expect(
     getFragmentVariables(inner.fragmentSpread, {
       fragment: inner.fragment,
-      variables,
-      parentScope: { size: 10 },
+      scope: { size: 10 },
     })
   ).toStrictEqual({ innerSize: 10 });
 });
@@ -743,14 +733,13 @@ test("does not resolve a nested spread argument to an operation variable that th
   expect(
     getFragmentVariables(outer.fragmentSpread, {
       fragment: outer.fragment,
-      variables,
+      scope: variables,
     })
   ).toStrictEqual({});
   expect(
     getFragmentVariables(inner.fragmentSpread, {
       fragment: inner.fragment,
-      variables,
-      parentScope: {},
+      scope: {},
     })
   ).toStrictEqual({});
 });
@@ -775,7 +764,7 @@ test("does not add spread arguments that the fragment does not declare", () => {
   expect(
     getFragmentVariables(fragmentSpread, {
       fragment,
-      variables: {},
+      scope: {},
     })
   ).toStrictEqual({ size: 1 });
 });
@@ -798,7 +787,7 @@ test("does not add spread arguments when the fragment declares no variables", ()
   expect(
     getFragmentVariables(fragmentSpread, {
       fragment,
-      variables: {},
+      scope: {},
     })
   ).toStrictEqual({});
 });
@@ -821,7 +810,7 @@ test("does not add an undeclared spread argument or an operation variable with t
   expect(
     getFragmentVariables(fragmentSpread, {
       fragment,
-      variables: { other: 99 },
+      scope: { other: 99 },
     })
   ).toStrictEqual({});
 });
@@ -845,7 +834,7 @@ test("does not read fragment variables from the object prototype", () => {
   expect(
     getFragmentVariables(fragmentSpread, {
       fragment,
-      variables: {},
+      scope: {},
     })
   ).toStrictEqual({ toString: 5 });
 });

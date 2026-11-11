@@ -50,7 +50,7 @@ test("does not include operation variables for variables declared by the fragmen
   expect(
     getFragmentVariables(fragmentSpread, {
       fragment,
-      variables: { size: 96 },
+      scope: { size: 96 },
     })
   ).toStrictEqual({});
 });
@@ -73,7 +73,7 @@ test("ignores default values of variables declared by the fragment", () => {
   expect(
     getFragmentVariables(fragmentSpread, {
       fragment,
-      variables: {},
+      scope: {},
     })
   ).toStrictEqual({});
 });
@@ -97,7 +97,7 @@ test("does not include operation variables not declared by the fragment", () => 
   expect(
     getFragmentVariables(fragmentSpread, {
       fragment,
-      variables: { size: 96, locale: "en" },
+      scope: { size: 96, locale: "en" },
     })
   ).toStrictEqual({});
 });

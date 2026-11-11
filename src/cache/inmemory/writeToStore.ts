@@ -29,6 +29,7 @@ import {
   cloneDeep,
   getDefaultValues,
   getFragmentFromSelection,
+  getFragmentScope,
   getFragmentVariables,
   getOperationDefinition,
   handleIncrementalSymbol,
@@ -705,10 +706,12 @@ export class StoreWriter {
               selection.kind === Kind.FRAGMENT_SPREAD &&
               fragment.kind === Kind.FRAGMENT_DEFINITION
             ) ?
-              getFragmentVariables(selection, {
-                fragment,
-                variables: context.operationVariables,
-                parentScope: inheritedContext.variables,
+              getFragmentScope(fragment, {
+                operationVariables: context.operationVariables,
+                fragmentVariables: getFragmentVariables(selection, {
+                  fragment,
+                  scope: inheritedContext.variables,
+                }),
               })
             : inheritedContext.variables;
 

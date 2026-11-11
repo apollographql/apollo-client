@@ -649,13 +649,13 @@ export abstract class ApolloCache {
   ):
     | ApolloCache.ObservableFragment<Unmasked<TData> | null>
     | ApolloCache.ObservableFragment<Array<Unmasked<TData> | null>> {
-    const { fragment, fragmentName, from } = options;
+    const { fragment, from } = options;
     const query = this.getFragmentDoc(
       fragment,
-      fragmentName
+      options.fragmentName
     ) as TypedDocumentNode<TData, TVariables>;
-    const actualFragmentName =
-      fragmentName || getFragmentDefinition(fragment).name.value;
+    const fragmentName =
+      options.fragmentName || getFragmentDefinition(fragment).name.value;
 
     const fromArray = Array.isArray(from) ? from : [from];
 
@@ -672,7 +672,7 @@ export abstract class ApolloCache {
         if (id === undefined) {
           invariant.warn(
             "Could not identify object passed to `from` for '%s' fragment, either because the object is non-normalized or the key fields are missing. If you are masking this object, please ensure the key fields are requested by the parent object.",
-            actualFragmentName
+            fragmentName
           );
         }
       }
@@ -684,8 +684,8 @@ export abstract class ApolloCache {
       const observable = this.watchSingleFragment(ids[0], query, {
         ...options,
         ...this.getFragmentVariablesOptions(
-          actualFragmentName,
-          (from as ObjectWithFragmentInfo)[fragmentInfoSymbol],
+          fragmentName,
+          (from as ObjectWithFragmentInfo | null)?.[fragmentInfoSymbol],
           options.variables
         ),
       });
@@ -750,7 +750,7 @@ export abstract class ApolloCache {
       this.watchSingleFragment(id, query, {
         ...options,
         ...this.getFragmentVariablesOptions(
-          actualFragmentName,
+          fragmentName,
           (from as ObjectWithFragmentInfo[])[idx]?.[fragmentInfoSymbol],
           options.variables
         ),

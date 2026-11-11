@@ -846,7 +846,8 @@ export abstract class ApolloCache {
             fragmentQuery,
             { data: currentResult.data },
             { data },
-            options.variables
+            options.variables,
+            rootFragmentVariables
           )
         ) {
           currentResult = {

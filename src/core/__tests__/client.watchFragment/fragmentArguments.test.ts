@@ -4852,3 +4852,78 @@ test("returns data for fragment arguments from a query result passed to from wit
     complete: true,
   });
 });
+
+test("emits when data selected with a root fragment argument used in @include changes from a query result passed to from", async () => {
+  const fragment = gql`
+    fragment UserCard($showName: Boolean!) on User {
+      id
+      name @include(if: $showName)
+    }
+  `;
+
+  const query: TypedDocumentNode<
+    WithFragmentInfo<{ lead: MaskedUser }>,
+    Record<string, never>
+  > = gql`
+    query Team {
+      lead {
+        id
+        ...UserCard(showName: true)
+      }
+    }
+
+    ${fragment}
+  `;
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query },
+        result: {
+          data: { lead: { __typename: "User", id: "1", name: "Alice" } },
+        },
+      },
+    ]),
+  });
+
+  const result = await client.query({ query });
+
+  expect(result).toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        [fragmentInfoSymbol]: {
+          operationVariables: {},
+          fragments: { UserCard: { variables: { showName: true } } },
+        },
+      },
+    },
+  });
+
+  using stream = new ObservableStream(
+    client.watchFragment({ fragment, from: result.data!.lead })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: { __typename: "User", id: "1", name: "Alice" },
+    dataState: "complete",
+    complete: true,
+  });
+
+  client.writeFragment({
+    fragment,
+    variables: { showName: true },
+    data: { __typename: "User", id: "1", name: "Alice (updated)" },
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { __typename: "User", id: "1", name: "Alice (updated)" },
+    dataState: "complete",
+    complete: true,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});

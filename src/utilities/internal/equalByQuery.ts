@@ -31,13 +31,14 @@ export function equalByQuery(
   query: DocumentNode,
   { data: aData, ...aRest }: Partial<ObservableQuery.Result<unknown>>,
   { data: bData, ...bRest }: Partial<ObservableQuery.Result<unknown>>,
-  variables?: OperationVariables
+  variables?: OperationVariables,
+  rootFragmentVariables?: OperationVariables
 ): boolean {
   return (
     equal(aRest, bRest) &&
     equalBySelectionSet(getMainDefinition(query).selectionSet, aData, bData, {
       fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
-      variables,
+      variables: rootFragmentVariables ?? variables,
       operationVariables: variables,
     })
   );

@@ -3,7 +3,10 @@ import { Kind } from "graphql";
 
 import type { ApolloCache } from "@apollo/client/cache";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import type { FragmentMap } from "@apollo/client/utilities/internal";
+import type {
+  FragmentMap,
+  ObjectWithFragmentInfo,
+} from "@apollo/client/utilities/internal";
 import {
   fragmentInfoSymbol,
   maybeDeepFreeze,
@@ -175,15 +178,19 @@ function maskSelectionSet(
       );
 
       const mode = getFragmentMaskMode(selection);
-      const fragmentInfo = data[fragmentInfoSymbol]?.fragments[fragmentName];
+      const dataFragmentInfo = (data as ObjectWithFragmentInfo)[
+        fragmentInfoSymbol
+      ];
+      const fragmentInfo = dataFragmentInfo?.fragments[fragmentName];
 
-      if (fragmentInfo) {
-        (memo as any)[fragmentInfoSymbol] ||= {
-          operationVariables: data[fragmentInfoSymbol]?.operationVariables,
+      if (dataFragmentInfo && fragmentInfo) {
+        const memoFragmentInfo = ((memo as ObjectWithFragmentInfo)[
+          fragmentInfoSymbol
+        ] ||= {
+          operationVariables: dataFragmentInfo.operationVariables,
           fragments: {},
-        };
-        (memo as any)[fragmentInfoSymbol].fragments[fragmentName] =
-          fragmentInfo;
+        });
+        memoFragmentInfo.fragments[fragmentName] = fragmentInfo;
       }
 
       if (mode !== "mask") {

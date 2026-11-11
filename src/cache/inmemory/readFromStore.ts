@@ -23,6 +23,7 @@ import type {
   FragmentInfo,
   FragmentMap,
   FragmentMapFunction,
+  ObjectWithFragmentInfo,
   StreamInfoTrie,
 } from "@apollo/client/utilities/internal";
 import {
@@ -1048,7 +1049,9 @@ export class StoreReader {
     }
 
     if (Object.hasOwn(data, fragmentInfoSymbol)) {
-      (result as any)[fragmentInfoSymbol] = (data as any)[fragmentInfoSymbol];
+      (result as ObjectWithFragmentInfo)[fragmentInfoSymbol] = (
+        data as ObjectWithFragmentInfo
+      )[fragmentInfoSymbol];
     }
 
     return { result: changed ? result : data, dataState };

@@ -35,6 +35,7 @@ import type {
   ApplyHKTImplementationWithDefault,
   handleIncrementalSymbol,
   IsAny,
+  ObjectWithFragmentInfo,
   Prettify,
 } from "@apollo/client/utilities/internal";
 import {
@@ -667,8 +668,10 @@ export abstract class ApolloCache {
         ...options,
         variables:
           options.variables ??
-          (from as any)?.[fragmentInfoSymbol]?.fragments[actualFragmentName]
-            ?.variables,
+          ((from as ObjectWithFragmentInfo | null)?.[fragmentInfoSymbol]
+            ?.fragments[actualFragmentName]?.variables as
+            | TVariables
+            | undefined),
       });
       // Unfortunately we forgot to allow for `null` on watchFragment in 4.0
       // when `from` is a single record. As such, we need to fallback to {}
@@ -732,9 +735,11 @@ export abstract class ApolloCache {
         ...options,
         variables:
           options.variables ??
-          (from as any[])[idx]?.[fragmentInfoSymbol]?.fragments[
-            actualFragmentName
-          ]?.variables,
+          ((from as Array<ObjectWithFragmentInfo | null>)[idx]?.[
+            fragmentInfoSymbol
+          ]?.fragments[actualFragmentName]?.variables as
+            | TVariables
+            | undefined),
       })
     ) as Array<ApolloCache.ObservableFragment<TData>>;
 

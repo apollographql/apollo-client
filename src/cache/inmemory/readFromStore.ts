@@ -32,6 +32,7 @@ import {
   getDefaultValues,
   getDirectiveArgValue,
   getFragmentFromSelection,
+  getFragmentScope,
   getFragmentVariables,
   getMainDefinition,
   getQueryDefinition,
@@ -650,10 +651,14 @@ export class StoreReader {
             selection.kind === Kind.FRAGMENT_SPREAD &&
             fragment.kind === Kind.FRAGMENT_DEFINITION
           ) {
-            const variables = getFragmentVariables(selection, {
+            const fragmentVariables = getFragmentVariables(selection, {
               fragment,
-              variables: context.operationVariables,
-              parentScope: context.variables,
+              scope: context.variables,
+            });
+
+            const variables = getFragmentScope(fragment, {
+              operationVariables: context.operationVariables,
+              fragmentVariables,
             });
 
             if (variables !== context.variables) {
@@ -664,9 +669,12 @@ export class StoreReader {
               };
             }
 
-            if (!isFragmentRoot(selection) && Object.keys(variables).length) {
+            if (
+              !isFragmentRoot(selection) &&
+              Object.keys(fragmentVariables).length
+            ) {
               fragments ||= {};
-              fragments[fragment.name.value] = { variables };
+              fragments[fragment.name.value] = { variables: fragmentVariables };
             }
 
             if (isMaskedSpread(selection)) {

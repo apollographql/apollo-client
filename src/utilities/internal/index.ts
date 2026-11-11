@@ -62,6 +62,7 @@ export { isDeferredFragment } from "./isDeferredFragment.js";
 export { isDocumentNode } from "./isDocumentNode.js";
 export { isField } from "./isField.js";
 export { isNonEmptyArray } from "./isNonEmptyArray.js";
+export { isNonEmptyObject } from "./isNonEmptyObject.js";
 export { isNonNullObject } from "./isNonNullObject.js";
 export { isPlainObject } from "./isPlainObject.js";
 export { isStreamField } from "./isStreamField.js";

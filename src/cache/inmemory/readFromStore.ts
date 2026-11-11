@@ -1013,10 +1013,12 @@ export class StoreReader {
             selection.kind === Kind.FRAGMENT_SPREAD &&
             fragment.kind === Kind.FRAGMENT_DEFINITION
           ) {
-            const variables = getFragmentVariables(selection, {
-              fragment,
-              variables: context.operationVariables,
-              parentScope: context.variables,
+            const variables = getFragmentScope(fragment, {
+              operationVariables: context.operationVariables,
+              fragmentVariables: getFragmentVariables(selection, {
+                fragment,
+                scope: context.variables,
+              }),
             });
 
             if (variables !== context.variables) {
@@ -1045,6 +1047,10 @@ export class StoreReader {
       // We perform a deep equality check to verify whether anything was
       // actually dropped by the partial @defer fragment.
       changed = !equal(result, data);
+    }
+
+    if (Object.hasOwn(data, fragmentInfoSymbol)) {
+      (result as any)[fragmentInfoSymbol] = (data as any)[fragmentInfoSymbol];
     }
 
     return { result: changed ? result : data, dataState };

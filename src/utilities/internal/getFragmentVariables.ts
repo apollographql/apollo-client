@@ -6,6 +6,7 @@ import type { OperationVariables } from "@apollo/client";
 import { compact } from "./compact.js";
 import { valueToObjectRepresentation } from "./valueToObjectRepresentation.js";
 
+/** @internal */
 export function getFragmentVariables(
   fragmentSpread: FragmentSpreadNode,
   {

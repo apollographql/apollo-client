@@ -731,7 +731,7 @@ export class StoreWriter {
                 variables,
                 varString: makeVarString({
                   operationVariables: context.operationVariables,
-                  scope: inheritedContext.variables,
+                  scope: variables,
                 }),
                 flavors: new Map(),
               };

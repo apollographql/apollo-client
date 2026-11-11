@@ -672,7 +672,7 @@ export class StoreReader {
 
             if (
               !isFragmentRoot(selection) &&
-              Object.keys(fragmentVariables).length
+              isNonEmptyObject(fragmentVariables)
             ) {
               fragments ||= {};
               fragments[fragment.name.value] = { variables: fragmentVariables };

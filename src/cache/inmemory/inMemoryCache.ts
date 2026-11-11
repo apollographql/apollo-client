@@ -26,13 +26,13 @@ import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
   handleIncrementalSymbol,
   IsLooselyEqual,
-  rootFragmentVariablesSymbol,
 } from "@apollo/client/utilities/internal";
 import {
   getInMemoryCacheMemoryInternals,
   getOperationDefinition,
   isPlainObject,
   matchScalarList,
+  rootFragmentVariablesSymbol,
   supportsFragmentVariablesSymbol,
   unwrapScalarType,
 } from "@apollo/client/utilities/internal";
@@ -187,7 +187,11 @@ export class InMemoryCache extends ApolloCache {
         max:
           cacheSizes["inMemoryCache.maybeBroadcastWatch"] ||
           defaultCacheSizes["inMemoryCache.maybeBroadcastWatch"],
-        makeCacheKey: (c: Cache.WatchOptions) => {
+        makeCacheKey: (
+          c: Cache.WatchOptions & {
+            [rootFragmentVariablesSymbol]?: OperationVariables;
+          }
+        ) => {
           // Return a cache key (thus enabling result caching) only if we're
           // currently using a data store that can track cache dependencies.
           const store = c.optimistic ? this.optimisticData : this.data;
@@ -203,7 +207,12 @@ export class InMemoryCache extends ApolloCache {
               // separation is to include c.callback in the cache key for
               // maybeBroadcastWatch calls. See issue #5733.
               c.callback,
-              canonicalStringify({ optimistic, id, variables })
+              canonicalStringify({
+                optimistic,
+                id,
+                variables,
+                rootFragmentVariables: c[rootFragmentVariablesSymbol],
+              })
             );
           }
         },

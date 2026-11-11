@@ -667,7 +667,9 @@ export class StoreReader {
               fragmentContext = {
                 ...fragmentContext,
                 variables,
-                varString: canonicalStringify(variables),
+                varString:
+                  canonicalStringify(variables) +
+                  canonicalStringify(context.operationVariables),
               };
             }
 

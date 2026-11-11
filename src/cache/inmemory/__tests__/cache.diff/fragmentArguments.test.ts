@@ -273,3 +273,116 @@ test("resolves nested fragment arguments set from the parent fragment scope when
     missing: undefined,
   });
 });
+
+test("prunes a pending @defer boundary with the current operation variables inside a fragment whose argument shadows the operation variable", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query Team($x: Boolean!) {
+      user {
+        ...Foo(x: false)
+      }
+    }
+
+    fragment Foo($x: Boolean!) on User {
+      id
+      nickname @include(if: $x)
+      friend {
+        id
+        ...Bar
+        ... @defer {
+          details {
+            a
+            b
+          }
+        }
+      }
+    }
+
+    fragment Bar on User {
+      name @include(if: $x)
+    }
+  `;
+
+  cache.restore({
+    ROOT_QUERY: {
+      __typename: "Query",
+      user: { __ref: "User:1" },
+    },
+    "User:1": {
+      __typename: "User",
+      id: "1",
+      friend: { __ref: "User:2" },
+    },
+    "User:2": {
+      __typename: "User",
+      id: "2",
+      name: "Friend",
+      details: { __typename: "Details", a: "A" },
+    },
+  });
+
+  expect(
+    cache.diff({
+      query,
+      variables: { x: true },
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: undefined,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      user: {
+        __typename: "User",
+        id: "1",
+        friend: {
+          __typename: "User",
+          id: "2",
+          name: "Friend",
+          [fragmentInfoSymbol]: {
+            operationVariables: { x: true },
+            fragments: {},
+          },
+        },
+        [fragmentInfoSymbol]: {
+          operationVariables: { x: true },
+          fragments: { Foo: { variables: { x: false } } },
+        },
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+
+  expect(
+    cache.diff({
+      query,
+      variables: { x: false },
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: undefined,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      user: {
+        __typename: "User",
+        id: "1",
+        friend: {
+          __typename: "User",
+          id: "2",
+          [fragmentInfoSymbol]: {
+            operationVariables: { x: false },
+            fragments: {},
+          },
+        },
+        [fragmentInfoSymbol]: {
+          operationVariables: { x: false },
+          fragments: { Foo: { variables: { x: false } } },
+        },
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});

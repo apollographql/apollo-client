@@ -10,6 +10,7 @@ import {
 import { markAsStreaming, spyOnConsole } from "@apollo/client/testing/internal";
 import { addTypenameToDocument } from "@apollo/client/utilities";
 import {
+  fragmentInfoSymbol,
   handleIncrementalSymbol,
   makeStreamInfoTrie,
 } from "@apollo/client/utilities/internal";
@@ -10500,3 +10501,69 @@ function getIsDeferPending(
   return (path: ReadonlyArray<string | number>, label: string | undefined) =>
     entries.some((entry) => equal(entry.path, path) && entry.label === label);
 }
+
+test("evaluates @include with operation variables inside a named fragment when pruning a pending @defer boundary", () => {
+  const cache = new InMemoryCache();
+  const query = gql`
+    query ($show: Boolean!) {
+      greeting {
+        ...GreetingFields
+        ... on Greeting @defer {
+          recipient {
+            name
+            email
+          }
+        }
+      }
+    }
+
+    fragment GreetingFields on Greeting {
+      message
+      sender @include(if: $show)
+    }
+  `;
+
+  {
+    using _ = spyOnConsole("error");
+    cache.writeQuery({
+      query,
+      variables: { show: true },
+      data: {
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+          sender: "Alice",
+          recipient: {
+            __typename: "Person",
+            name: "Cached Alice",
+          },
+        },
+      },
+    });
+  }
+
+  expect(
+    cache.diff({
+      query,
+      variables: { show: true },
+      optimistic: true,
+      returnPartialData: false,
+      [handleIncrementalSymbol]: undefined,
+    })
+  ).toStrictEqualTyped({
+    result: markAsStreaming({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        sender: "Alice",
+        [fragmentInfoSymbol]: {
+          operationVariables: { show: true },
+          fragments: {},
+        },
+      },
+    }),
+    dataState: "streaming",
+    complete: false,
+    missing: undefined,
+  });
+});

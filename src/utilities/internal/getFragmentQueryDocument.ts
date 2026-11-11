@@ -99,6 +99,10 @@ export function getFragmentQueryDocument(
         kind: "OperationDefinition" as Kind.OPERATION_DEFINITION,
         // OperationTypeNode is an enum
         operation: "query" as OperationTypeNode,
+        variableDefinitions: fragment?.variableDefinitions?.map((def) => ({
+          ...def,
+          defaultValue: undefined,
+        })),
         selectionSet: {
           kind: "SelectionSet" as Kind.SELECTION_SET,
           selections: [

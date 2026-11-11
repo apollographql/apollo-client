@@ -85,15 +85,20 @@ export namespace ApolloCache {
 
 // @public (undocumented)
 export abstract class ApolloCache {
+    // @internal @deprecated
+    readonly [supportsFragmentVariablesSymbol]?: boolean;
     // (undocumented)
     readonly assumeImmutableResults: boolean;
     batch<U>(options: Cache_2.BatchOptions<this, U>): U;
     configuresScalars(): boolean;
     abstract diff<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: Cache_2.DiffOptions<TData, TVariables> & {
         [handleIncrementalSymbol]: DiffIncrementalInfo | undefined;
+        [rootFragmentVariablesSymbol]?: OperationVariables | undefined;
     }): Cache_2.InternalDiffResultWithDataState<TData> | Cache_2.DiffResult<TData>;
     // (undocumented)
-    abstract diff<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: Cache_2.DiffOptions<TData, TVariables>): Cache_2.DiffResult<TData>;
+    abstract diff<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: Cache_2.DiffOptions<TData, TVariables> & {
+        [rootFragmentVariablesSymbol]?: OperationVariables | undefined;
+    }): Cache_2.DiffResult<TData>;
     // (undocumented)
     abstract evict(options: Cache_2.EvictOptions): boolean;
     abstract extract(optimistic?: boolean): unknown;
@@ -119,7 +124,9 @@ export abstract class ApolloCache {
     // (undocumented)
     abstract performTransaction(transaction: Transaction, optimisticId?: string | null): void;
     // (undocumented)
-    abstract read<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: Cache_2.ReadOptions<TData, TVariables>): Unmasked<TData> | null;
+    abstract read<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: Cache_2.ReadOptions<TData, TVariables> & {
+        [rootFragmentVariablesSymbol]?: OperationVariables | undefined;
+    }): Unmasked<TData> | null;
     readFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(input: Cache_2.ReadFragmentOptions<TData, TVariables>): Unmasked<TData> | null;
     // (undocumented)
     readFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: Cache_2.ReadFragmentOptions<TData, TVariables>,
@@ -146,7 +153,9 @@ export abstract class ApolloCache {
     // (undocumented)
     updateQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: Cache_2.UpdateQueryOptions<TData, TVariables>, update: (data: Unmasked<TData> | null) => Unmasked<TData> | null | void): Unmasked<TData> | null;
     // (undocumented)
-    abstract watch<TData = unknown, TVariables extends OperationVariables = OperationVariables>(watch: Cache_2.WatchOptions<TData, TVariables>): () => void;
+    abstract watch<TData = unknown, TVariables extends OperationVariables = OperationVariables>(watch: Cache_2.WatchOptions<TData, TVariables> & {
+        [rootFragmentVariablesSymbol]?: OperationVariables | undefined;
+    }): () => void;
     // (undocumented)
     watchFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: ApolloCache.WatchFragmentOptions<TData, TVariables> & {
         from: Array<ApolloCache.FromOptionValue<TData>>;
@@ -172,6 +181,7 @@ export abstract class ApolloCache {
     // (undocumented)
     abstract write<TData = unknown, TVariables extends OperationVariables = OperationVariables>(write: Cache_2.WriteOptions<TData, TVariables> & {
         [handleIncrementalSymbol]?: DiffIncrementalInfo | undefined;
+        [rootFragmentVariablesSymbol]?: OperationVariables | undefined;
     }): Reference | undefined;
     writeFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(input: Cache_2.WriteFragmentOptions<TData, TVariables>): Reference | undefined;
     writeQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(input: Cache_2.WriteQueryOptions<TData, TVariables>): Reference | undefined;
@@ -1731,6 +1741,8 @@ export namespace InMemoryCache {
 
 // @public (undocumented)
 export class InMemoryCache extends ApolloCache {
+    // @internal @deprecated (undocumented)
+    readonly [supportsFragmentVariablesSymbol] = true;
     constructor(...args: {} extends InMemoryCache.ScalarsOption ? [
     config?: InMemoryCacheConfig
     ] : [config: InMemoryCacheConfig]);
@@ -1748,9 +1760,12 @@ export class InMemoryCache extends ApolloCache {
     // (undocumented)
     diff<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: Cache_2.DiffOptions<TData, TVariables> & {
         [handleIncrementalSymbol]: DiffIncrementalInfo | undefined;
+        [rootFragmentVariablesSymbol]?: OperationVariables | undefined;
     }): Cache_2.InternalDiffResultWithDataState<TData>;
     // (undocumented)
-    diff<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: Cache_2.DiffOptions<TData, TVariables>): Cache_2.DiffResult<TData>;
+    diff<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: Cache_2.DiffOptions<TData, TVariables> & {
+        [rootFragmentVariablesSymbol]?: OperationVariables | undefined;
+    }): Cache_2.DiffResult<TData>;
     // (undocumented)
     evict(options: Cache_2.EvictOptions): boolean;
     // (undocumented)
@@ -1785,9 +1800,12 @@ export class InMemoryCache extends ApolloCache {
     // (undocumented)
     read<TData = unknown>(options: Cache_2.ReadOptions<TData, OperationVariables> & {
         returnPartialData: true;
+        [rootFragmentVariablesSymbol]?: OperationVariables | undefined;
     }): TData | DeepPartial<TData> | null;
     // (undocumented)
-    read<TData = unknown>(options: Cache_2.ReadOptions<TData, OperationVariables>): TData | null;
+    read<TData = unknown>(options: Cache_2.ReadOptions<TData, OperationVariables> & {
+        [rootFragmentVariablesSymbol]?: OperationVariables | undefined;
+    }): TData | null;
     // (undocumented)
     release(rootId: string, optimistic?: boolean): number;
     // (undocumented)
@@ -1805,10 +1823,13 @@ export class InMemoryCache extends ApolloCache {
     // (undocumented)
     transformDocument(document: DocumentNode): DocumentNode;
     // (undocumented)
-    watch<TData = unknown, TVariables extends OperationVariables = OperationVariables>(watch: Cache_2.WatchOptions<TData, TVariables>): () => void;
+    watch<TData = unknown, TVariables extends OperationVariables = OperationVariables>(watch: Cache_2.WatchOptions<TData, TVariables> & {
+        [rootFragmentVariablesSymbol]?: OperationVariables | undefined;
+    }): () => void;
     // (undocumented)
     write<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: Cache_2.WriteOptions<TData, TVariables> & {
         [handleIncrementalSymbol]?: DiffIncrementalInfo | undefined;
+        [rootFragmentVariablesSymbol]?: OperationVariables | undefined;
     }): Reference | undefined;
 }
 
@@ -2840,8 +2861,10 @@ export interface ReadMergeModifyContext {
     store: NormalizedCache;
     // (undocumented)
     variables?: OperationVariables;
+    // Warning: (ae-forgotten-export) The symbol "VarString" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
-    varString?: string;
+    varString?: VarString;
 }
 
 // @public (undocumented)
@@ -2986,6 +3009,9 @@ class Root extends EntityStore {
     // (undocumented)
     readonly stump: Stump;
 }
+
+// @internal @deprecated
+const rootFragmentVariablesSymbol: unique symbol;
 
 // @public (undocumented)
 type SafeReadonly<T> = T extends object ? Readonly<T> : T;
@@ -3195,6 +3221,9 @@ export interface SubscriptionObservable<T> extends Observable<T> {
 // @public @deprecated (undocumented)
 export type SubscriptionOptions<TVariables extends OperationVariables = OperationVariables, TData = unknown> = ApolloClient.SubscribeOptions<TData, TVariables>;
 
+// @internal @deprecated
+const supportsFragmentVariablesSymbol: unique symbol;
+
 // @public (undocumented)
 type ToReferenceFunction = (objOrIdOrRef: StoreObject | string | Reference, mergeIntoStore?: boolean) => Reference | undefined;
 
@@ -3290,6 +3319,14 @@ type VariablesOption<TVariables extends OperationVariables> = {} extends TVariab
 // @internal @deprecated
 const variablesUnknownSymbol: unique symbol;
 
+// @internal @deprecated (undocumented)
+type VarString = string & {
+    readonly [varStringBrand]: true;
+};
+
+// @public (undocumented)
+const varStringBrand: unique symbol;
+
 // Warning: (ae-forgotten-export) The symbol "verbosityLevels" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
@@ -3352,27 +3389,27 @@ interface WriteContext extends ReadMergeModifyContext {
     readonly written: {
         [dataId: string]: Array<{
             selectionSet: SelectionSetNode;
-            varString: string | undefined;
+            varString: VarString | undefined;
         }>;
     };
 }
 
 // Warnings were encountered during analysis:
 //
-// src/cache/core/cache.ts:179:11 - (ae-forgotten-export) The symbol "MissingTree" needs to be exported by the entry point index.d.ts
-// src/cache/core/cache.ts:238:7 - (ae-forgotten-export) The symbol "DiffIncrementalInfo" needs to be exported by the entry point index.d.ts
+// src/cache/core/cache.ts:185:11 - (ae-forgotten-export) The symbol "MissingTree" needs to be exported by the entry point index.d.ts
+// src/cache/core/cache.ts:255:7 - (ae-forgotten-export) The symbol "DiffIncrementalInfo" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:109:3 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:187:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:187:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:155:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:170:3 - (ae-forgotten-export) The symbol "FragmentRegistryAPI" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:202:5 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
-// src/core/ApolloClient.ts:673:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:203:5 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
+// src/core/ApolloClient.ts:674:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:406:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:197:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/local-state/LocalState.ts:150:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
-// src/local-state/LocalState.ts:203:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
-// src/local-state/LocalState.ts:246:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
+// src/local-state/LocalState.ts:151:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
+// src/local-state/LocalState.ts:204:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
+// src/local-state/LocalState.ts:247:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
 // src/utilities/internal/types/StreamInfoTrie.ts:10:3 - (ae-forgotten-export) The symbol "StreamArrayState" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)

@@ -221,7 +221,7 @@ export namespace DocumentationTypes {
 }
 
 // @public (undocumented)
-export function equalByQuery(query: DocumentNode, input: Partial<ObservableQuery.Result<unknown>>, input2: Partial<ObservableQuery.Result<unknown>>, variables?: OperationVariables): boolean;
+export function equalByQuery(query: DocumentNode, input: Partial<ObservableQuery.Result<unknown>>, input2: Partial<ObservableQuery.Result<unknown>>, variables?: OperationVariables, rootFragmentVariables?: OperationVariables): boolean;
 
 // @public (undocumented)
 export type Exact<in out T> = (x: T) => T;
@@ -242,6 +242,19 @@ export function filterMap<T, R>(fn: (value: T, context: undefined) => R | undefi
 
 // @public (undocumented)
 export function filterMap<T, R, Context>(fn: (value: T, context: Context) => R | undefined, makeContext: () => NoInfer<Context>): OperatorFunction<T, R>;
+
+// @internal @deprecated
+export interface FragmentInfo {
+    // (undocumented)
+    fragments: Record<string, {
+        variables: OperationVariables;
+    }>;
+    // (undocumented)
+    operationVariables: OperationVariables;
+}
+
+// @internal @deprecated
+export const fragmentInfoSymbol: unique symbol;
 
 // @internal @deprecated
 export interface FragmentMap {
@@ -322,10 +335,15 @@ export function getFragmentFromSelection(selection: SelectionNode, fragmentMap?:
 export function getFragmentQueryDocument(document: DocumentNode, fragmentName?: string): DocumentNode;
 
 // @public (undocumented)
+export function getFragmentScope(fragment: FragmentDefinitionNode, input: {
+    operationVariables: OperationVariables | undefined;
+    fragmentVariables: OperationVariables;
+}): OperationVariables;
+
+// @public (undocumented)
 export function getFragmentVariables(fragmentSpread: FragmentSpreadNode, input: {
     fragment: FragmentDefinitionNode;
-    variables: OperationVariables | undefined;
-    parentScope?: OperationVariables;
+    scope?: OperationVariables;
 }): OperationVariables;
 
 // @internal @deprecated (undocumented)
@@ -423,6 +441,9 @@ Exclude<V, undefined>
 export function isNonEmptyArray<T>(value: ArrayLike<T> | null | undefined): value is Array<T>;
 
 // @internal @deprecated (undocumented)
+export function isNonEmptyObject<T extends object>(obj: T | undefined): obj is T;
+
+// @internal @deprecated (undocumented)
 export function isNonNullObject(obj: unknown): obj is Record<string | number, any>;
 
 // @internal @deprecated (undocumented)
@@ -449,7 +470,8 @@ export function makeStreamInfoTrie(): StreamInfoTrie;
 export function makeUniqueId(prefix: string): string;
 
 // @public (undocumented)
-export const mapObservableFragmentMemoized: <From, To>(observable: ApolloCache_2.ObservableFragment<From>, _cacheKey: symbol, mapFn: (from: ApolloCache_2.WatchFragmentResult<From>) => ApolloCache_2.WatchFragmentResult<To>) => ApolloCache_2.ObservableFragment<To>;
+export function mapObservableFragmentMemoized<From, To>(observable: ApolloCache_2.ObservableFragment<From>,
+_cacheKey: symbol, mapFn: (from: ApolloCache_2.WatchFragmentResult<From>) => ApolloCache_2.WatchFragmentResult<To>): ApolloCache_2.ObservableFragment<To>;
 
 // @internal @deprecated (undocumented)
 export function matchScalarList(scalarType: ScalarType): RegExpMatchArray | null;
@@ -467,6 +489,12 @@ export function mergeDeepArray<T>(sources: T[]): T;
 //
 // @internal @deprecated (undocumented)
 export function mergeOptions<TDefaultOptions extends Partial<OptionsUnion<any, any>>, TOptions extends TDefaultOptions>(defaults: TDefaultOptions | Partial<TDefaultOptions> | undefined, options: TOptions | Partial<TOptions>): TOptions & TDefaultOptions;
+
+// @internal @deprecated
+export interface ObjectWithFragmentInfo {
+    // (undocumented)
+    [fragmentInfoSymbol]?: FragmentInfo;
+}
 
 // @internal @deprecated (undocumented)
 export function omitDeep<T, K extends string>(value: T, key: K): DeepOmit<T, K>;
@@ -539,13 +567,25 @@ export type RemoveIndexSignature<T> = {
 };
 
 // @public (undocumented)
-export function removeMaskedFragmentSpreads(document: DocumentNode): DocumentNode;
+export function removeMaskedFragmentSpreads(document: DocumentNode, input?: removeMaskedFragmentSpreads.Options): DocumentNode;
+
+// @public (undocumented)
+export namespace removeMaskedFragmentSpreads {
+    // (undocumented)
+    export interface Options {
+        // @internal @deprecated
+        mode?: "remove" | "mark";
+    }
+}
 
 // @public (undocumented)
 type ReplaceUndefinedWithDefault<Value, Default> = Value extends any ? Value extends undefined ? Default : Value : never;
 
 // @internal @deprecated (undocumented)
 export function resultKeyNameFromField(field: FieldNode): string;
+
+// @internal @deprecated
+export const rootFragmentVariablesSymbol: unique symbol;
 
 // @internal @deprecated (undocumented)
 export function shouldInclude(input: SelectionNode, variables?: Record<string, any>): boolean;
@@ -591,6 +631,9 @@ export type StreamInfoTrie = Trie<{
 
 // @internal @deprecated (undocumented)
 export function stringifyForDisplay(value: any, space?: number): string;
+
+// @internal @deprecated
+export const supportsFragmentVariablesSymbol: unique symbol;
 
 // @internal @deprecated (undocumented)
 export function toDiffWithDataState<TData>(diff: Cache_2.DiffResult<TData> | Cache_2.InternalDiffResultWithDataState<TData>): Cache_2.InternalDiffResultWithDataState<TData>;

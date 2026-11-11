@@ -14,11 +14,7 @@ import type {
   StoreObject,
   StoreValue,
 } from "@apollo/client/utilities";
-import {
-  addTypenameToDocument,
-  canonicalStringify,
-  isReference,
-} from "@apollo/client/utilities";
+import { addTypenameToDocument, isReference } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
   FragmentMap,

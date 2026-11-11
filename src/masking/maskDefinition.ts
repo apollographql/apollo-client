@@ -9,6 +9,7 @@ import type {
 } from "@apollo/client/utilities/internal";
 import {
   fragmentInfoSymbol,
+  isNonEmptyObject,
   maybeDeepFreeze,
   resultKeyNameFromField,
 } from "@apollo/client/utilities/internal";
@@ -182,14 +183,21 @@ function maskSelectionSet(
 
       if (fragmentInfo) {
         const memoWithInfo = memo as ObjectWithFragmentInfo;
-        memoWithInfo[fragmentInfoSymbol] ||= {
-          operationVariables: fragmentInfo.operationVariables,
-          fragments: {},
-        };
+        const fragmentValue = fragmentInfo.fragments[fragmentName];
 
-        if (fragmentInfo.fragments[fragmentName]) {
-          memoWithInfo[fragmentInfoSymbol].fragments[fragmentName] =
-            fragmentInfo.fragments[fragmentName];
+        if (
+          isNonEmptyObject(fragmentInfo.operationVariables) ||
+          isNonEmptyObject(fragmentValue?.variables)
+        ) {
+          memoWithInfo[fragmentInfoSymbol] ||= {
+            operationVariables: fragmentInfo.operationVariables,
+            fragments: {},
+          };
+
+          if (fragmentValue) {
+            memoWithInfo[fragmentInfoSymbol].fragments[fragmentName] =
+              fragmentValue;
+          }
         }
       }
 

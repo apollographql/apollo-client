@@ -23,10 +23,10 @@ export function getFragmentVariables(
     !fragment.variableDefinitions ||
     !fragment.variableDefinitions.length
   ) {
-    return variables ?? {};
+    return {};
   }
 
-  const scope = { ...variables };
+  const scope: OperationVariables = {};
   const argumentsByName = new Map(
     fragmentSpread.arguments?.map((arg) => [arg.name.value, arg])
   );
@@ -34,13 +34,6 @@ export function getFragmentVariables(
   fragment.variableDefinitions.forEach((def) => {
     const name = def.variable.name;
     const argument = argumentsByName.get(name.value);
-
-    // We want to prevent operation variables from leaking into the fragment
-    // variables scope for any variables the fragment declares in its fragment
-    // definition. If a fragment defines a variable, but no argument is given,
-    // that value should be treated as `undefined` unless it has a default
-    // value, even if it shadows a variable named the same from the operation.
-    delete scope[name.value];
 
     if (argument) {
       valueToObjectRepresentation(scope, name, argument.value, parentScope);

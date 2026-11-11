@@ -106,7 +106,7 @@ test("adds fragment arguments of each literal kind", () => {
   });
 });
 
-test("keeps operation variables that the fragment does not declare", () => {
+test("does not include operation variables that the fragment does not declare", () => {
   const query = gql`
     query ($two: Int) {
       user {
@@ -127,10 +127,10 @@ test("keeps operation variables that the fragment does not declare", () => {
       fragment,
       variables: { two: 2 },
     })
-  ).toStrictEqual({ one: 1, two: 2 });
+  ).toStrictEqual({ one: 1 });
 });
 
-test("returns the operation variables when the spread has no arguments", () => {
+test("does not include operation variables when the fragment declares no variables", () => {
   const query = gql`
     query ($two: Int) {
       user {
@@ -150,7 +150,7 @@ test("returns the operation variables when the spread has no arguments", () => {
       fragment,
       variables: { two: 2 },
     })
-  ).toStrictEqual({ two: 2 });
+  ).toStrictEqual({});
 });
 
 test("returns an empty object when there are no variables and no arguments", () => {
@@ -243,7 +243,7 @@ test("resolves variable arguments against the operation variables without a pare
       fragment,
       variables: { avatarSize: 64 },
     })
-  ).toStrictEqual({ avatarSize: 64, size: 64 });
+  ).toStrictEqual({ size: 64 });
 });
 
 test("resolves variables nested in object and list arguments", () => {
@@ -267,8 +267,6 @@ test("resolves variables nested in object and list arguments", () => {
       variables: { width: 5, tag: "a" },
     })
   ).toStrictEqual({
-    width: 5,
-    tag: "a",
     dimensions: { width: 5, height: 10 },
     tags: ["a", "b"],
   });
@@ -295,19 +293,20 @@ test("resolves nested spread arguments against the parent scope", () => {
   const outer = getFragment(query, "Outer");
   const inner = getFragment(query, "Inner");
   const variables = { size: 96 };
-  const outerScope = getFragmentVariables(outer.fragmentSpread, {
-    fragment: outer.fragment,
-    variables,
-  });
 
-  expect(outerScope).toStrictEqual({ size: 32 });
+  expect(
+    getFragmentVariables(outer.fragmentSpread, {
+      fragment: outer.fragment,
+      variables,
+    })
+  ).toStrictEqual({ size: 32 });
   expect(
     getFragmentVariables(inner.fragmentSpread, {
       fragment: inner.fragment,
       variables,
-      parentScope: outerScope,
+      parentScope: { size: 32 },
     })
-  ).toStrictEqual({ size: 96, innerSize: 32 });
+  ).toStrictEqual({ innerSize: 32 });
 });
 
 test("resolves nested spread arguments to operation variables that the parent does not declare", () => {
@@ -331,19 +330,20 @@ test("resolves nested spread arguments to operation variables that the parent do
   const outer = getFragment(query, "Outer");
   const inner = getFragment(query, "Inner");
   const variables = { n: 5 };
-  const outerScope = getFragmentVariables(outer.fragmentSpread, {
-    fragment: outer.fragment,
-    variables,
-  });
 
-  expect(outerScope).toStrictEqual({ n: 5, size: 32 });
+  expect(
+    getFragmentVariables(outer.fragmentSpread, {
+      fragment: outer.fragment,
+      variables,
+    })
+  ).toStrictEqual({ size: 32 });
   expect(
     getFragmentVariables(inner.fragmentSpread, {
       fragment: inner.fragment,
       variables,
-      parentScope: outerScope,
+      parentScope: { n: 5, size: 32 },
     })
-  ).toStrictEqual({ n: 5, innerSize: 5 });
+  ).toStrictEqual({ innerSize: 5 });
 });
 
 test("does not add parent fragment arguments to a nested fragment scope", () => {
@@ -367,19 +367,20 @@ test("does not add parent fragment arguments to a nested fragment scope", () => 
   const foo = getFragment(query, "Foo");
   const bar = getFragment(query, "Bar");
   const variables = { x: 99 };
-  const fooScope = getFragmentVariables(foo.fragmentSpread, {
-    fragment: foo.fragment,
-    variables,
-  });
 
-  expect(fooScope).toStrictEqual({ x: 1 });
+  expect(
+    getFragmentVariables(foo.fragmentSpread, {
+      fragment: foo.fragment,
+      variables,
+    })
+  ).toStrictEqual({ x: 1 });
   expect(
     getFragmentVariables(bar.fragmentSpread, {
       fragment: bar.fragment,
       variables,
-      parentScope: fooScope,
+      parentScope: { x: 1 },
     })
-  ).toStrictEqual({ x: 99 });
+  ).toStrictEqual({});
 });
 
 test("object arguments replace operation variables with the same name", () => {
@@ -576,7 +577,7 @@ test("does not use the fragment default when a variable argument is null", () =>
       fragment,
       variables: { n: null },
     })
-  ).toStrictEqual({ n: null, size: null });
+  ).toStrictEqual({ size: null });
 });
 
 test("does not use the fragment default when the spread argument is null", () => {
@@ -701,19 +702,20 @@ test("resolves a nested spread argument to the parent fragment default", () => {
   const outer = getFragment(query, "Outer");
   const inner = getFragment(query, "Inner");
   const variables = { size: 96 };
-  const outerScope = getFragmentVariables(outer.fragmentSpread, {
-    fragment: outer.fragment,
-    variables,
-  });
 
-  expect(outerScope).toStrictEqual({ size: 10 });
+  expect(
+    getFragmentVariables(outer.fragmentSpread, {
+      fragment: outer.fragment,
+      variables,
+    })
+  ).toStrictEqual({ size: 10 });
   expect(
     getFragmentVariables(inner.fragmentSpread, {
       fragment: inner.fragment,
       variables,
-      parentScope: outerScope,
+      parentScope: { size: 10 },
     })
-  ).toStrictEqual({ size: 96, innerSize: 10 });
+  ).toStrictEqual({ innerSize: 10 });
 });
 
 test("does not resolve a nested spread argument to an operation variable that the parent declares without a value", () => {
@@ -737,19 +739,20 @@ test("does not resolve a nested spread argument to an operation variable that th
   const outer = getFragment(query, "Outer");
   const inner = getFragment(query, "Inner");
   const variables = { size: 96 };
-  const outerScope = getFragmentVariables(outer.fragmentSpread, {
-    fragment: outer.fragment,
-    variables,
-  });
 
-  expect(outerScope).toStrictEqual({});
+  expect(
+    getFragmentVariables(outer.fragmentSpread, {
+      fragment: outer.fragment,
+      variables,
+    })
+  ).toStrictEqual({});
   expect(
     getFragmentVariables(inner.fragmentSpread, {
       fragment: inner.fragment,
       variables,
-      parentScope: outerScope,
+      parentScope: {},
     })
-  ).toStrictEqual({ size: 96 });
+  ).toStrictEqual({});
 });
 
 // GraphQL validation rejects arguments that the fragment does not declare, but
@@ -800,7 +803,7 @@ test("does not add spread arguments when the fragment declares no variables", ()
   ).toStrictEqual({});
 });
 
-test("does not shadow an operation variable with an undeclared spread argument", () => {
+test("does not add an undeclared spread argument or an operation variable with the same name", () => {
   const query = gql`
     query ($other: Int) {
       user {
@@ -820,7 +823,7 @@ test("does not shadow an operation variable with an undeclared spread argument",
       fragment,
       variables: { other: 99 },
     })
-  ).toStrictEqual({ other: 99 });
+  ).toStrictEqual({});
 });
 
 test("does not read fragment variables from the object prototype", () => {
@@ -845,25 +848,4 @@ test("does not read fragment variables from the object prototype", () => {
       variables: {},
     })
   ).toStrictEqual({ toString: 5 });
-});
-
-test("returns the same variables object when the fragment declares no variables", () => {
-  const query = gql`
-    query ($two: Int) {
-      user {
-        ...Test
-      }
-    }
-
-    fragment Test on User {
-      b(two: $two)
-    }
-  `;
-
-  const { fragment, fragmentSpread } = getFragment(query, "Test");
-  const variables = { two: 2 };
-
-  expect(getFragmentVariables(fragmentSpread, { fragment, variables })).toBe(
-    variables
-  );
 });

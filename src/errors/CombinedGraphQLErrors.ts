@@ -200,7 +200,9 @@ export class CombinedGraphQLErrors extends AggregateError {
 
   constructor(
     result: ApolloLink.Result<any> | FormattedExecutionResult<any>,
-    errors = (result as FormattedExecutionResult<any>).errors || []
+    errors: ReadonlyArray<GraphQLFormattedError> = (
+      result as FormattedExecutionResult<any>
+    ).errors || []
   ) {
     super(
       errors,
@@ -209,6 +211,7 @@ export class CombinedGraphQLErrors extends AggregateError {
         defaultFormatMessage,
       })
     );
+    Object.defineProperty(this, "errors", { enumerable: true });
     this.data = (result as Partial<FormattedExecutionResult>).data;
     this.extensions = (result as Partial<FormattedExecutionResult>).extensions;
     this.name = "CombinedGraphQLErrors";

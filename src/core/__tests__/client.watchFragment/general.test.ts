@@ -10,7 +10,11 @@ import {
 } from "@apollo/client";
 import { MockLink } from "@apollo/client/testing";
 import type { WithFragmentInfo } from "@apollo/client/testing/internal";
-import { ObservableStream, wait } from "@apollo/client/testing/internal";
+import {
+  ObservableStream,
+  wait,
+  withProdMode,
+} from "@apollo/client/testing/internal";
 import { fragmentInfoSymbol } from "@apollo/client/utilities/internal";
 
 test("can subscribe multiple times to watchFragment", async () => {
@@ -403,4 +407,305 @@ test("binds operation variables used by a nested masked fragment from a fragment
   });
 
   await expect(stream).not.toEmitAnything();
+});
+
+test("returns the same observable for new from objects that identify the same entity", () => {
+  const fragment = gql`
+    fragment UserFields on User {
+      id
+      name
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  const observable = client.watchFragment({
+    fragment,
+    from: { __typename: "User", id: "1" },
+  });
+
+  expect(
+    client.watchFragment({
+      fragment,
+      from: { __typename: "User", id: "1" },
+    })
+  ).toBe(observable);
+});
+
+test("returns the same observable in production for new from objects that identify the same entity", () => {
+  const fragment = gql`
+    fragment UserFields on User {
+      id
+      name
+    }
+  `;
+
+  using _ = withProdMode();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  const observable = client.watchFragment({
+    fragment,
+    from: { __typename: "User", id: "1" },
+  });
+
+  expect(
+    client.watchFragment({
+      fragment,
+      from: { __typename: "User", id: "1" },
+    })
+  ).toBe(observable);
+});
+
+test("returns the same observable when fields other than key fields of from change", () => {
+  const fragment = gql`
+    fragment UserFields on User {
+      id
+      name
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  const observable = client.watchFragment({
+    fragment,
+    from: { __typename: "User", id: "1", name: "Alice" },
+  });
+
+  expect(
+    client.watchFragment({
+      fragment,
+      from: { __typename: "User", id: "1", name: "Alice (updated)" },
+    })
+  ).toBe(observable);
+});
+
+test("returns the same observable for each entity when calls for different entities are interleaved", () => {
+  const fragment = gql`
+    fragment UserFields on User {
+      id
+      name
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  const first = client.watchFragment({
+    fragment,
+    from: { __typename: "User", id: "1" },
+  });
+  const second = client.watchFragment({
+    fragment,
+    from: { __typename: "User", id: "2" },
+  });
+
+  expect(second).not.toBe(first);
+  expect(
+    client.watchFragment({ fragment, from: { __typename: "User", id: "1" } })
+  ).toBe(first);
+  expect(
+    client.watchFragment({ fragment, from: { __typename: "User", id: "2" } })
+  ).toBe(second);
+});
+
+test("returns the same observable for each entity when calls for different entities are interleaved across ticks", async () => {
+  const fragment = gql`
+    fragment UserFields on User {
+      id
+      name
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  const first = client.watchFragment({
+    fragment,
+    from: { __typename: "User", id: "1" },
+  });
+  const second = client.watchFragment({
+    fragment,
+    from: { __typename: "User", id: "2" },
+  });
+
+  // Memoization caches clean up 100ms after they grow over their limit.
+  await wait(150);
+
+  expect(
+    client.watchFragment({ fragment, from: { __typename: "User", id: "1" } })
+  ).toBe(first);
+  expect(
+    client.watchFragment({ fragment, from: { __typename: "User", id: "2" } })
+  ).toBe(second);
+});
+
+test("returns the same observable in production for each entity when calls for different entities are interleaved across ticks", async () => {
+  const fragment = gql`
+    fragment UserFields on User {
+      id
+      name
+    }
+  `;
+
+  using _ = withProdMode();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  const first = client.watchFragment({
+    fragment,
+    from: { __typename: "User", id: "1" },
+  });
+  const second = client.watchFragment({
+    fragment,
+    from: { __typename: "User", id: "2" },
+  });
+
+  // Memoization caches clean up 100ms after they grow over their limit.
+  await wait(150);
+
+  expect(
+    client.watchFragment({ fragment, from: { __typename: "User", id: "1" } })
+  ).toBe(first);
+  expect(
+    client.watchFragment({ fragment, from: { __typename: "User", id: "2" } })
+  ).toBe(second);
+});
+
+test("returns a different observable for a different entity", () => {
+  const fragment = gql`
+    fragment UserFields on User {
+      id
+      name
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  const observable = client.watchFragment({
+    fragment,
+    from: { __typename: "User", id: "1" },
+  });
+
+  expect(
+    client.watchFragment({ fragment, from: { __typename: "User", id: "2" } })
+  ).not.toBe(observable);
+});
+
+test("returns a different observable for different variables", () => {
+  const fragment = gql`
+    fragment UserFields on User {
+      id
+      avatar(size: $size)
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  const observable = client.watchFragment({
+    fragment,
+    from: { __typename: "User", id: "1" },
+    variables: { size: 96 },
+  });
+
+  expect(
+    client.watchFragment({
+      fragment,
+      from: { __typename: "User", id: "1" },
+      variables: { size: 96 },
+    })
+  ).toBe(observable);
+  expect(
+    client.watchFragment({
+      fragment,
+      from: { __typename: "User", id: "1" },
+      variables: { size: 32 },
+    })
+  ).not.toBe(observable);
+});
+
+test("returns the same observable for new from arrays that identify the same entities", () => {
+  const fragment = gql`
+    fragment UserFields on User {
+      id
+      name
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  const observable = client.watchFragment({
+    fragment,
+    from: [
+      { __typename: "User", id: "1" },
+      { __typename: "User", id: "2" },
+    ],
+  });
+
+  expect(
+    client.watchFragment({
+      fragment,
+      from: [
+        { __typename: "User", id: "1", name: "Alice" },
+        { __typename: "User", id: "2", name: "Bob" },
+      ],
+    })
+  ).toBe(observable);
+});
+
+test("returns a different observable for from arrays with entities in a different order", () => {
+  const fragment = gql`
+    fragment UserFields on User {
+      id
+      name
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  const observable = client.watchFragment({
+    fragment,
+    from: [
+      { __typename: "User", id: "1" },
+      { __typename: "User", id: "2" },
+    ],
+  });
+
+  expect(
+    client.watchFragment({
+      fragment,
+      from: [
+        { __typename: "User", id: "2" },
+        { __typename: "User", id: "1" },
+      ],
+    })
+  ).not.toBe(observable);
 });

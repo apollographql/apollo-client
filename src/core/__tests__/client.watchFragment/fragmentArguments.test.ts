@@ -4927,3 +4927,209 @@ test("emits when data selected with a root fragment argument used in @include ch
 
   await expect(stream).not.toEmitAnything();
 });
+
+test("returns the same observable for query results with the same fragment info passed to from", async () => {
+  const fragment = gql`
+    fragment UserCard($size: Int) on User {
+      id
+      avatar(size: $size)
+    }
+  `;
+
+  const query: TypedDocumentNode<
+    WithFragmentInfo<{ lead: MaskedUser }>,
+    Record<string, never>
+  > = gql`
+    query Team {
+      lead {
+        id
+        ...UserCard(size: 96)
+      }
+    }
+
+    ${fragment}
+  `;
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query },
+        result: {
+          data: { lead: { __typename: "User", id: "1", avatar: "large.png" } },
+        },
+      },
+    ]),
+  });
+
+  const result = await client.query({ query });
+
+  expect(result).toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        [fragmentInfoSymbol]: {
+          operationVariables: {},
+          fragments: { UserCard: { variables: { size: 96 } } },
+        },
+      },
+    },
+  });
+
+  const observable = client.watchFragment({
+    fragment,
+    from: result.data!.lead,
+  });
+
+  expect(
+    client.watchFragment({ fragment, from: { ...result.data!.lead } })
+  ).toBe(observable);
+});
+
+test("returns a different observable for query results with different root fragment arguments for the same entity passed to from", async () => {
+  const fragment = gql`
+    fragment UserCard($size: Int) on User {
+      id
+      avatar(size: $size)
+    }
+  `;
+
+  const query: TypedDocumentNode<
+    WithFragmentInfo<{ lead: MaskedUser; member: MaskedUser }>,
+    Record<string, never>
+  > = gql`
+    query Team {
+      lead {
+        id
+        ...UserCard(size: 96)
+      }
+      member {
+        id
+        ...UserCard(size: 32)
+      }
+    }
+
+    ${fragment}
+  `;
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query },
+        result: {
+          data: {
+            lead: { __typename: "User", id: "1", avatar: "large.png" },
+            member: { __typename: "User", id: "1", avatar: "small.png" },
+          },
+        },
+      },
+    ]),
+  });
+
+  const result = await client.query({ query });
+
+  expect(result).toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        [fragmentInfoSymbol]: {
+          operationVariables: {},
+          fragments: { UserCard: { variables: { size: 96 } } },
+        },
+      },
+      member: {
+        __typename: "User",
+        id: "1",
+        [fragmentInfoSymbol]: {
+          operationVariables: {},
+          fragments: { UserCard: { variables: { size: 32 } } },
+        },
+      },
+    },
+  });
+
+  expect(
+    client.watchFragment({ fragment, from: result.data!.member })
+  ).not.toBe(client.watchFragment({ fragment, from: result.data!.lead }));
+});
+
+test("returns a different observable for query results with different operation variables for the same entity passed to from", async () => {
+  const fragment = gql`
+    fragment UserCard on User {
+      id
+      avatar(size: $size)
+    }
+  `;
+
+  const query: TypedDocumentNode<
+    WithFragmentInfo<{ lead: MaskedUser }>,
+    { size: number }
+  > = gql`
+    query Team($size: Int) {
+      lead {
+        id
+        ...UserCard
+      }
+    }
+
+    ${fragment}
+  `;
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query, variables: { size: 96 } },
+        result: {
+          data: { lead: { __typename: "User", id: "1", avatar: "large.png" } },
+        },
+      },
+      {
+        request: { query, variables: { size: 32 } },
+        result: {
+          data: { lead: { __typename: "User", id: "1", avatar: "small.png" } },
+        },
+      },
+    ]),
+  });
+
+  const largeResult = await client.query({ query, variables: { size: 96 } });
+
+  expect(largeResult).toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        [fragmentInfoSymbol]: {
+          operationVariables: { size: 96 },
+          fragments: {},
+        },
+      },
+    },
+  });
+
+  const smallResult = await client.query({ query, variables: { size: 32 } });
+
+  expect(smallResult).toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        [fragmentInfoSymbol]: {
+          operationVariables: { size: 32 },
+          fragments: {},
+        },
+      },
+    },
+  });
+
+  expect(
+    client.watchFragment({ fragment, from: smallResult.data!.lead })
+  ).not.toBe(client.watchFragment({ fragment, from: largeResult.data!.lead }));
+});

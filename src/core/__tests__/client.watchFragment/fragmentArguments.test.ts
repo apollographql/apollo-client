@@ -4692,3 +4692,163 @@ test("binds fragment arguments of a nested fragment for each item from fragment 
 
   await expect(stream).not.toEmitAnything();
 });
+
+test("binds different fragment arguments for the same entity from separate query results passed to from", async () => {
+  const fragment = gql`
+    fragment UserCard($size: Int) on User {
+      id
+      avatar(size: $size)
+    }
+  `;
+
+  const query: TypedDocumentNode<
+    WithFragmentInfo<{ lead: MaskedUser; member: MaskedUser }>,
+    Record<string, never>
+  > = gql`
+    query Team {
+      lead {
+        id
+        ...UserCard(size: 96)
+      }
+      member {
+        id
+        ...UserCard(size: 32)
+      }
+    }
+
+    ${fragment}
+  `;
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query },
+        result: {
+          data: {
+            lead: { __typename: "User", id: "1", avatar: "large.png" },
+            member: { __typename: "User", id: "1", avatar: "small.png" },
+          },
+        },
+      },
+    ]),
+  });
+
+  const result = await client.query({ query });
+
+  expect(result).toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        [fragmentInfoSymbol]: {
+          operationVariables: {},
+          fragments: { UserCard: { variables: { size: 96 } } },
+        },
+      },
+      member: {
+        __typename: "User",
+        id: "1",
+        [fragmentInfoSymbol]: {
+          operationVariables: {},
+          fragments: { UserCard: { variables: { size: 32 } } },
+        },
+      },
+    },
+  });
+
+  using leadStream = new ObservableStream(
+    client.watchFragment({ fragment, from: result.data!.lead })
+  );
+  using memberStream = new ObservableStream(
+    client.watchFragment({ fragment, from: result.data!.member })
+  );
+
+  await expect(leadStream).toEmitTypedValue({
+    data: { __typename: "User", id: "1", avatar: "large.png" },
+    dataState: "complete",
+    complete: true,
+  });
+  await expect(memberStream).toEmitTypedValue({
+    data: { __typename: "User", id: "1", avatar: "small.png" },
+    dataState: "complete",
+    complete: true,
+  });
+
+  client.writeFragment({
+    fragment,
+    variables: { size: 32 },
+    data: { __typename: "User", id: "1", avatar: "small-updated.png" },
+  });
+
+  await expect(memberStream).toEmitTypedValue({
+    data: { __typename: "User", id: "1", avatar: "small-updated.png" },
+    dataState: "complete",
+    complete: true,
+  });
+  await expect(leadStream).not.toEmitAnything();
+  await expect(memberStream).not.toEmitAnything();
+});
+
+test("returns data for fragment arguments from a query result passed to from with getCurrentResult before subscribing", async () => {
+  const fragment = gql`
+    fragment UserCard($size: Int) on User {
+      id
+      avatar(size: $size)
+    }
+  `;
+
+  const query: TypedDocumentNode<
+    WithFragmentInfo<{ lead: MaskedUser }>,
+    Record<string, never>
+  > = gql`
+    query Team {
+      lead {
+        id
+        ...UserCard(size: 96)
+      }
+    }
+
+    ${fragment}
+  `;
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query },
+        result: {
+          data: { lead: { __typename: "User", id: "1", avatar: "large.png" } },
+        },
+      },
+    ]),
+  });
+
+  const result = await client.query({ query });
+
+  expect(result).toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        [fragmentInfoSymbol]: {
+          operationVariables: {},
+          fragments: { UserCard: { variables: { size: 96 } } },
+        },
+      },
+    },
+  });
+
+  const observable = client.watchFragment({
+    fragment,
+    from: result.data!.lead,
+  });
+
+  expect(observable.getCurrentResult()).toStrictEqualTyped({
+    data: { __typename: "User", id: "1", avatar: "large.png" },
+    dataState: "complete",
+    complete: true,
+  });
+});

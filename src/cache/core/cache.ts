@@ -911,6 +911,7 @@ export abstract class ApolloCache {
               returnPartialData: true,
               optimistic,
               variables,
+              [rootFragmentVariablesSymbol]: rootFragmentVariables,
             })
           );
         },

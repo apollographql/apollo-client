@@ -33,6 +33,7 @@ import { cacheSizes, canonicalStringify } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
   ApplyHKTImplementationWithDefault,
+  FragmentInfo,
   handleIncrementalSymbol,
   IsAny,
   ObjectWithFragmentInfo,
@@ -658,26 +659,6 @@ export abstract class ApolloCache {
 
     const fromArray = Array.isArray(from) ? from : [from];
 
-    const getFragmentOptions = (
-      from: string | StoreObject | Reference | null
-    ) => {
-      const fragmentInfo = (from as ObjectWithFragmentInfo | null)?.[
-        fragmentInfoSymbol
-      ];
-
-      if (
-        this[supportsFragmentVariablesSymbol] &&
-        fragmentInfo &&
-        !isNonEmptyObject(options.variables)
-      ) {
-        return {
-          variables: fragmentInfo.operationVariables as TVariables,
-          [rootFragmentVariablesSymbol]:
-            fragmentInfo.fragments[actualFragmentName]?.variables,
-        };
-      }
-    };
-
     const ids = fromArray.map((value) => {
       // While our TypeScript types do not allow for `undefined` as a valid
       // `from`, its possible `useFragment` gives us an `undefined` since it
@@ -702,7 +683,11 @@ export abstract class ApolloCache {
     if (!Array.isArray(from)) {
       const observable = this.watchSingleFragment(ids[0], query, {
         ...options,
-        ...getFragmentOptions(from),
+        ...this.getFragmentVariablesOptions(
+          actualFragmentName,
+          (from as ObjectWithFragmentInfo)[fragmentInfoSymbol],
+          options.variables
+        ),
       });
       // Unfortunately we forgot to allow for `null` on watchFragment in 4.0
       // when `from` is a single record. As such, we need to fallback to {}
@@ -764,7 +749,11 @@ export abstract class ApolloCache {
     const observables = ids.map((id, idx) =>
       this.watchSingleFragment(id, query, {
         ...options,
-        ...getFragmentOptions((from as any[])[idx]),
+        ...this.getFragmentVariablesOptions(
+          actualFragmentName,
+          (from as ObjectWithFragmentInfo[])[idx]?.[fragmentInfoSymbol],
+          options.variables
+        ),
       })
     ) as Array<ApolloCache.ObservableFragment<TData>>;
 
@@ -972,29 +961,17 @@ export abstract class ApolloCache {
   ): Unmasked<TData> | null {
     const { from, fragment, fragmentName, variables } = options;
     const id = from !== undefined ? this.toCacheId(from) : options.id;
-    const fragmentInfo = (from as ObjectWithFragmentInfo | null)?.[
-      fragmentInfoSymbol
-    ];
-    const query = this.getFragmentDoc(fragment, fragmentName);
 
     return this.read({
       ...options,
-      query,
+      query: this.getFragmentDoc(fragment, fragmentName),
       rootId: id,
       optimistic,
-      ...((
-        this[supportsFragmentVariablesSymbol] &&
-        fragmentInfo &&
-        !isNonEmptyObject(variables)
-      ) ?
-        {
-          variables: fragmentInfo.operationVariables,
-          [rootFragmentVariablesSymbol]:
-            fragmentInfo.fragments[
-              fragmentName ?? getFragmentDefinition(fragment).name.value
-            ]?.variables,
-        }
-      : {}),
+      ...this.getFragmentVariablesOptions(
+        fragmentName ?? getFragmentDefinition(fragment).name.value,
+        (from as ObjectWithFragmentInfo | null)?.[fragmentInfoSymbol],
+        variables
+      ),
     });
   }
 
@@ -1067,30 +1044,19 @@ export abstract class ApolloCache {
     from,
     ...options
   }: Cache.WriteFragmentOptions<TData, TVariables>): Reference | undefined {
-    const fragmentInfo =
-      (from as ObjectWithFragmentInfo | undefined)?.[fragmentInfoSymbol] ||
-      (data as ObjectWithFragmentInfo)[fragmentInfoSymbol];
     const id = from !== undefined ? this.toCacheId(from) : options.id;
-    const query = this.getFragmentDoc(fragment, fragmentName);
 
     return this.write(
       Object.assign(options, {
-        query,
+        query: this.getFragmentDoc(fragment, fragmentName),
         dataId: id,
         result: data,
-        ...((
-          this[supportsFragmentVariablesSymbol] &&
-          fragmentInfo &&
-          !isNonEmptyObject(options.variables)
-        ) ?
-          {
-            variables: fragmentInfo.operationVariables,
-            [rootFragmentVariablesSymbol]:
-              fragmentInfo.fragments[
-                fragmentName || getFragmentDefinition(fragment).name.value
-              ]?.variables,
-          }
-        : {}),
+        ...this.getFragmentVariablesOptions(
+          fragmentName || getFragmentDefinition(fragment).name.value,
+          (from as ObjectWithFragmentInfo | undefined)?.[fragmentInfoSymbol] ||
+            (data as ObjectWithFragmentInfo)[fragmentInfoSymbol],
+          options.variables
+        ),
       })
     );
   }
@@ -1133,6 +1099,26 @@ export abstract class ApolloCache {
 
   private toCacheId(from: ApolloCache.FromOptionValue<any>) {
     return typeof from === "string" ? from : this.identify(from);
+  }
+
+  private getFragmentVariablesOptions<
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    fragmentName: string,
+    fragmentInfo: FragmentInfo | undefined,
+    variables: TVariables | undefined
+  ) {
+    if (
+      this[supportsFragmentVariablesSymbol] &&
+      fragmentInfo &&
+      !isNonEmptyObject(variables)
+    ) {
+      return {
+        variables: fragmentInfo.operationVariables as TVariables,
+        [rootFragmentVariablesSymbol]:
+          fragmentInfo.fragments[fragmentName]?.variables,
+      };
+    }
   }
 
   /**

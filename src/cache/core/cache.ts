@@ -588,6 +588,10 @@ export abstract class ApolloCache {
     observable?: ApolloCache.ObservableFragment<any> & { dirty: boolean };
   }>(true);
 
+  private fragmentArrayWatches = new Trie<{
+    observable?: ApolloCache.ObservableFragment<any>;
+  }>(true);
+
   public watchFragment<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
@@ -759,6 +763,12 @@ export abstract class ApolloCache {
       })
     ) as Array<ApolloCache.ObservableFragment<TData>>;
 
+    const cacheEntry = this.fragmentArrayWatches.lookupArray(observables);
+
+    if (cacheEntry.observable) {
+      return cacheEntry.observable;
+    }
+
     const observable = combineLatestBatched(observables).pipe(
       map(toResult),
       tap({
@@ -768,7 +778,7 @@ export abstract class ApolloCache {
       shareReplay({ bufferSize: 1, refCount: true })
     );
 
-    return Object.assign(observable, {
+    return (cacheEntry.observable = Object.assign(observable, {
       getCurrentResult: () => {
         if (subscribed && currentResult) {
           return currentResult as any;
@@ -784,7 +794,7 @@ export abstract class ApolloCache {
       | ApolloCache.ObservableFragment<Unmasked<TData> | null>
       | ApolloCache.ObservableFragment<Array<Unmasked<TData> | null>>,
       "getCurrentResult"
-    >) as any;
+    >)) as any;
   }
 
   /**

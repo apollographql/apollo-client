@@ -14,6 +14,7 @@ import { Kind } from "graphql";
 import type { ObservableQuery } from "@apollo/client";
 import type { OperationVariables } from "@apollo/client";
 import type { FragmentMap } from "@apollo/client/utilities/internal";
+import { getFragmentScope } from "@apollo/client/utilities/internal";
 
 import { createFragmentMap } from "./createFragmentMap.js";
 import { getFragmentDefinitions } from "./getFragmentDefinitions.js";
@@ -131,10 +132,12 @@ function equalBySelectionSet(
           selection.kind === Kind.FRAGMENT_SPREAD &&
           fragment.kind === Kind.FRAGMENT_DEFINITION
         ) {
-          const variables = getFragmentVariables(selection, {
-            fragment,
-            variables: context.operationVariables,
-            parentScope: context.variables,
+          const variables = getFragmentScope(fragment, {
+            operationVariables: context.operationVariables,
+            fragmentVariables: getFragmentVariables(selection, {
+              fragment,
+              scope: context.variables,
+            }),
           });
           fragmentContext = { ...fragmentContext, variables };
         }

@@ -24,7 +24,6 @@ import type {
 
 import type { FieldValueGetter } from "./entityStore.js";
 import type { FragmentRegistryAPI } from "./fragmentRegistry.js";
-import type { VarString } from "./helpers.js";
 import type { InMemoryCache } from "./inMemoryCache.js";
 import type {
   FieldMergeFunction,
@@ -198,7 +197,7 @@ export interface ReadMergeModifyContext {
   store: NormalizedCache;
   variables?: OperationVariables;
   // A JSON.stringify-serialized version of context.variables.
-  varString?: string;
+  varString?: VarString;
   extensions?: ExtensionsWithStreamInfo;
   isDeferPending?: (
     path: Incremental.Path,

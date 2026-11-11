@@ -1064,11 +1064,13 @@ export abstract class ApolloCache {
     data,
     fragment,
     fragmentName,
+    from,
     ...options
   }: Cache.WriteFragmentOptions<TData, TVariables>): Reference | undefined {
-    const fragmentInfo = (data as ObjectWithFragmentInfo)[fragmentInfoSymbol];
-    const id =
-      options.from !== undefined ? this.toCacheId(options.from) : options.id;
+    const fragmentInfo =
+      (from as ObjectWithFragmentInfo | undefined)?.[fragmentInfoSymbol] ||
+      (data as ObjectWithFragmentInfo)[fragmentInfoSymbol];
+    const id = from !== undefined ? this.toCacheId(from) : options.id;
     const query = this.getFragmentDoc(fragment, fragmentName);
 
     return this.write(

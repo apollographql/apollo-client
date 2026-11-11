@@ -557,7 +557,11 @@ export class InMemoryCache extends ApolloCache {
   public watch<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
-  >(watch: Cache.WatchOptions<TData, TVariables>): () => void {
+  >(
+    watch: Cache.WatchOptions<TData, TVariables> & {
+      [rootFragmentVariablesSymbol]?: OperationVariables | undefined;
+    }
+  ): () => void {
     if (!this.watches.size) {
       // In case we previously called forgetCache(this) because
       // this.watches became empty (see below), reattach this cache to any

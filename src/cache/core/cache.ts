@@ -283,7 +283,11 @@ export abstract class ApolloCache {
   public abstract watch<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
-  >(watch: Cache.WatchOptions<TData, TVariables>): () => void;
+  >(
+    watch: Cache.WatchOptions<TData, TVariables> & {
+      [rootFragmentVariablesSymbol]?: OperationVariables | undefined;
+    }
+  ): () => void;
 
   // Empty the cache and restart all current watches (unless
   // options.discardWatches is true).

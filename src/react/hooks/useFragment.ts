@@ -15,7 +15,7 @@ import type {
   VariablesOption,
 } from "@apollo/client/utilities/internal";
 
-import { useDeepMemo, wrapHook } from "./internal/index.js";
+import { wrapHook } from "./internal/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 

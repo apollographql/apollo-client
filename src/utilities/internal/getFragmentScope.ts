@@ -22,11 +22,11 @@ export function getFragmentScope(
     return variables ?? {};
   }
 
-  const globalScope = { ...variables };
+  const operationScope = { ...variables };
 
   for (const def of fragment.variableDefinitions) {
-    delete globalScope[def.variable.name.value];
+    delete operationScope[def.variable.name.value];
   }
 
-  return compact(globalScope, fragmentVariables);
+  return compact(operationScope, fragmentVariables);
 }

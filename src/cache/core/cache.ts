@@ -764,13 +764,7 @@ export abstract class ApolloCache {
     const observables = ids.map((id, idx) =>
       this.watchSingleFragment(id, query, {
         ...options,
-        variables:
-          options.variables ??
-          ((from as Array<ObjectWithFragmentInfo | null>)[idx]?.[
-            fragmentInfoSymbol
-          ]?.fragments[actualFragmentName]?.variables as
-            | TVariables
-            | undefined),
+        ...getFragmentOptions((from as any[])[idx]),
       })
     ) as Array<ApolloCache.ObservableFragment<TData>>;
 
@@ -827,11 +821,15 @@ export abstract class ApolloCache {
       return nullObservable as any;
     }
 
-    const { optimistic = true, variables } = options;
+    const {
+      optimistic = true,
+      variables,
+      [rootFragmentVariablesSymbol]: rootFragmentVariables,
+    } = options;
 
     const cacheKey = [
       fragmentQuery,
-      canonicalStringify({ id, optimistic, variables }),
+      canonicalStringify({ id, optimistic, variables, rootFragmentVariables }),
     ];
     const cacheEntry = this.fragmentWatches.lookupArray(cacheKey);
 
@@ -876,7 +874,7 @@ export abstract class ApolloCache {
           query: fragmentQuery,
           optimistic,
           immediate: true,
-          [rootFragmentVariablesSymbol]: options[rootFragmentVariablesSymbol],
+          [rootFragmentVariablesSymbol]: rootFragmentVariables,
           callback: (diff) => {
             observable.dirty = true;
             this.onAfterBroadcast(() => {

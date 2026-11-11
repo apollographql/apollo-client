@@ -4258,3 +4258,437 @@ test("binds operation variables used by a fragment from the fragment registry fr
 
   await expect(stream).not.toEmitAnything();
 });
+
+test("binds operation variables used by a fragment for each item from query results passed to from as an array", async () => {
+  const fragment = gql`
+    fragment UserCard on User {
+      id
+      avatar(size: $size)
+    }
+  `;
+
+  const query: TypedDocumentNode<
+    WithFragmentInfo<{ lead: MaskedUser; member: MaskedUser }>,
+    { size: number }
+  > = gql`
+    query Team($size: Int) {
+      lead {
+        id
+        ...UserCard
+      }
+      member {
+        id
+        ...UserCard
+      }
+    }
+
+    ${fragment}
+  `;
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query, variables: { size: 96 } },
+        result: {
+          data: {
+            lead: { __typename: "User", id: "1", avatar: "lead.png" },
+            member: { __typename: "User", id: "2", avatar: "member.png" },
+          },
+        },
+      },
+    ]),
+  });
+
+  const result = await client.query({ query, variables: { size: 96 } });
+
+  expect(result).toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        [fragmentInfoSymbol]: {
+          operationVariables: { size: 96 },
+          fragments: {},
+        },
+      },
+      member: {
+        __typename: "User",
+        id: "2",
+        [fragmentInfoSymbol]: {
+          operationVariables: { size: 96 },
+          fragments: {},
+        },
+      },
+    },
+  });
+
+  using stream = new ObservableStream(
+    client.watchFragment({
+      fragment,
+      from: [result.data!.lead, result.data!.member],
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: [
+      { __typename: "User", id: "1", avatar: "lead.png" },
+      { __typename: "User", id: "2", avatar: "member.png" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("binds operation variables of a nested fragment shadowed by a parent fragment argument for each item from query results passed to from as an array", async () => {
+  const barFragment = gql`
+    fragment Bar on User {
+      value(x: $x)
+    }
+  `;
+
+  const fooFragment: TypedDocumentNode<
+    WithFragmentInfo<{
+      __typename: "User";
+      id: string;
+      fooValue: number;
+      value: number;
+    }>
+  > = gql`
+    fragment Foo($x: Int!) on User {
+      id
+      fooValue: value(x: $x)
+      ...Bar @unmask
+    }
+
+    ${barFragment}
+  `;
+
+  const query: TypedDocumentNode<
+    WithFragmentInfo<{ lead: MaskedUser; member: MaskedUser }>,
+    { x: number }
+  > = gql`
+    query Team($x: Int) {
+      lead {
+        id
+        ...Foo(x: 1)
+      }
+      member {
+        id
+        ...Foo(x: 2)
+      }
+    }
+
+    ${fooFragment}
+  `;
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query, variables: { x: 99 } },
+        result: {
+          data: {
+            lead: { __typename: "User", id: "1", fooValue: 1, value: 99 },
+            member: { __typename: "User", id: "2", fooValue: 2, value: 99 },
+          },
+        },
+      },
+    ]),
+  });
+
+  const result = await client.query({ query, variables: { x: 99 } });
+
+  expect(result).toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        [fragmentInfoSymbol]: {
+          operationVariables: { x: 99 },
+          fragments: { Foo: { variables: { x: 1 } } },
+        },
+      },
+      member: {
+        __typename: "User",
+        id: "2",
+        [fragmentInfoSymbol]: {
+          operationVariables: { x: 99 },
+          fragments: { Foo: { variables: { x: 2 } } },
+        },
+      },
+    },
+  });
+
+  using stream = new ObservableStream(
+    client.watchFragment({
+      fragment: fooFragment,
+      fragmentName: "Foo",
+      from: [result.data!.lead, result.data!.member],
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: [
+      {
+        __typename: "User",
+        id: "1",
+        fooValue: 1,
+        value: 99,
+        [fragmentInfoSymbol]: {
+          operationVariables: { x: 99 },
+          fragments: {},
+        },
+      },
+      {
+        __typename: "User",
+        id: "2",
+        fooValue: 2,
+        value: 99,
+        [fragmentInfoSymbol]: {
+          operationVariables: { x: 99 },
+          fragments: {},
+        },
+      },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("binds the operation variables of each item from query results with different operation variables passed to from as an array", async () => {
+  const fragment = gql`
+    fragment UserCard on User {
+      id
+      avatar(size: $size)
+    }
+  `;
+
+  const query: TypedDocumentNode<
+    WithFragmentInfo<{ lead: MaskedUser }>,
+    { size: number }
+  > = gql`
+    query Team($size: Int) {
+      lead {
+        id
+        ...UserCard
+      }
+    }
+
+    ${fragment}
+  `;
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query, variables: { size: 96 } },
+        result: {
+          data: { lead: { __typename: "User", id: "1", avatar: "large.png" } },
+        },
+      },
+      {
+        request: { query, variables: { size: 32 } },
+        result: {
+          data: { lead: { __typename: "User", id: "1", avatar: "small.png" } },
+        },
+      },
+    ]),
+  });
+
+  const largeResult = await client.query({ query, variables: { size: 96 } });
+
+  expect(largeResult).toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        [fragmentInfoSymbol]: {
+          operationVariables: { size: 96 },
+          fragments: {},
+        },
+      },
+    },
+  });
+
+  const smallResult = await client.query({ query, variables: { size: 32 } });
+
+  expect(smallResult).toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        [fragmentInfoSymbol]: {
+          operationVariables: { size: 32 },
+          fragments: {},
+        },
+      },
+    },
+  });
+
+  using stream = new ObservableStream(
+    client.watchFragment({
+      fragment,
+      from: [largeResult.data!.lead, smallResult.data!.lead],
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: [
+      { __typename: "User", id: "1", avatar: "large.png" },
+      { __typename: "User", id: "1", avatar: "small.png" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
+
+  client.writeFragment({
+    fragment,
+    variables: { size: 32 },
+    data: { __typename: "User", id: "1", avatar: "small-updated.png" },
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: [
+      { __typename: "User", id: "1", avatar: "large.png" },
+      { __typename: "User", id: "1", avatar: "small-updated.png" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("binds fragment arguments of a nested fragment for each item from fragment results passed to from as an array", async () => {
+  const avatarFragment = gql`
+    fragment UserAvatar($size: Int) on User {
+      avatar(size: $size)
+    }
+  `;
+
+  const cardFragment: TypedDocumentNode<WithFragmentInfo<MaskedUser>> = gql`
+    fragment UserCard($size: Int) on User {
+      id
+      ...UserAvatar(size: $size)
+    }
+
+    ${avatarFragment}
+  `;
+
+  const query: TypedDocumentNode<
+    WithFragmentInfo<{ lead: MaskedUser; member: MaskedUser }>,
+    Record<string, never>
+  > = gql`
+    query Team {
+      lead {
+        id
+        ...UserCard(size: 96)
+      }
+      member {
+        id
+        ...UserCard(size: 32)
+      }
+    }
+
+    ${cardFragment}
+  `;
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query },
+        result: {
+          data: {
+            lead: { __typename: "User", id: "1", avatar: "large.png" },
+            member: { __typename: "User", id: "2", avatar: "small.png" },
+          },
+        },
+      },
+    ]),
+  });
+
+  const result = await client.query({ query });
+
+  expect(result).toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        [fragmentInfoSymbol]: {
+          operationVariables: {},
+          fragments: { UserCard: { variables: { size: 96 } } },
+        },
+      },
+      member: {
+        __typename: "User",
+        id: "2",
+        [fragmentInfoSymbol]: {
+          operationVariables: {},
+          fragments: { UserCard: { variables: { size: 32 } } },
+        },
+      },
+    },
+  });
+
+  using cardStream = new ObservableStream(
+    client.watchFragment({
+      fragment: cardFragment,
+      fragmentName: "UserCard",
+      from: [result.data!.lead, result.data!.member],
+    })
+  );
+
+  const cardResult = await cardStream.takeNext();
+
+  expect(cardResult).toStrictEqualTyped({
+    data: [
+      {
+        __typename: "User",
+        id: "1",
+        [fragmentInfoSymbol]: {
+          operationVariables: {},
+          fragments: { UserAvatar: { variables: { size: 96 } } },
+        },
+      },
+      {
+        __typename: "User",
+        id: "2",
+        [fragmentInfoSymbol]: {
+          operationVariables: {},
+          fragments: { UserAvatar: { variables: { size: 32 } } },
+        },
+      },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
+  assert(cardResult.dataState === "complete");
+
+  using stream = new ObservableStream(
+    client.watchFragment({
+      fragment: avatarFragment,
+      from: cardResult.data,
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: [
+      { __typename: "User", avatar: "large.png" },
+      { __typename: "User", avatar: "small.png" },
+    ],
+    dataState: "complete",
+    complete: true,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});

@@ -127,7 +127,7 @@ function defaultFormatMessage(errors: ReadonlyArray<GraphQLFormattedError>) {
  * }
  * ```
  */
-export class CombinedProtocolErrors extends Error {
+export class CombinedProtocolErrors extends AggregateError {
   /**
    * A method that determines whether an error is a `CombinedProtocolErrors`
    * object. This method enables TypeScript to narrow the error type.
@@ -150,7 +150,7 @@ export class CombinedProtocolErrors extends Error {
     defaultFormatMessage;
 
   /** {@inheritDoc @apollo/client!CombinedProtocolErrors.DocumentationTypes.InstanceProperties#errors:member} */
-  readonly errors: ReadonlyArray<GraphQLFormattedError>;
+  declare errors: Array<GraphQLFormattedError>;
 
   constructor(
     protocolErrors:
@@ -158,12 +158,13 @@ export class CombinedProtocolErrors extends Error {
       | ReadonlyArray<GraphQLFormattedError>
   ) {
     super(
+      protocolErrors,
       CombinedProtocolErrors.formatMessage(protocolErrors, {
         defaultFormatMessage,
       })
     );
     this.name = "CombinedProtocolErrors";
-    this.errors = protocolErrors;
+    Object.defineProperty(this, "errors", { enumerable: true });
 
     brand(this);
     Object.setPrototypeOf(this, CombinedProtocolErrors.prototype);

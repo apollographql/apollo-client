@@ -18,8 +18,7 @@ export function getFragmentVariables(
 ) {
   if (
     Kind.FRAGMENT_ARGUMENT === undefined ||
-    !fragment.variableDefinitions ||
-    !fragment.variableDefinitions.length
+    !fragment.variableDefinitions?.length
   ) {
     return {};
   }

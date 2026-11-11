@@ -47,7 +47,9 @@ import {
   getApolloCacheMemoryInternals,
   getFragmentDefinition,
   getFragmentQueryDocument,
+  isNonEmptyObject,
   mapObservableFragmentMemoized,
+  rootFragmentVariablesSymbol,
   supportsFragmentVariablesSymbol,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
@@ -246,6 +248,7 @@ export abstract class ApolloCache {
   >(
     write: Cache.WriteOptions<TData, TVariables> & {
       [handleIncrementalSymbol]?: DiffIncrementalInfo | undefined;
+      [rootFragmentVariablesSymbol]?: OperationVariables | undefined;
     }
   ): Reference | undefined;
 
@@ -1015,14 +1018,29 @@ export abstract class ApolloCache {
     fragmentName,
     ...options
   }: Cache.WriteFragmentOptions<TData, TVariables>): Reference | undefined {
+    const fragmentInfo = (data as ObjectWithFragmentInfo)[fragmentInfoSymbol];
     const id =
       options.from !== undefined ? this.toCacheId(options.from) : options.id;
+    const query = this.getFragmentDoc(fragment, fragmentName);
 
     return this.write(
       Object.assign(options, {
-        query: this.getFragmentDoc(fragment, fragmentName),
+        query,
         dataId: id,
         result: data,
+        ...((
+          this[supportsFragmentVariablesSymbol] &&
+          fragmentInfo &&
+          !isNonEmptyObject(options.variables)
+        ) ?
+          {
+            variables: fragmentInfo.operationVariables,
+            [rootFragmentVariablesSymbol]:
+              fragmentInfo.fragments[
+                fragmentName || getFragmentDefinition(fragment).name.value
+              ]?.variables,
+          }
+        : {}),
       })
     );
   }

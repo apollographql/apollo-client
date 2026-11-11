@@ -26,6 +26,7 @@ import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
   handleIncrementalSymbol,
   IsLooselyEqual,
+  rootFragmentVariablesSymbol,
 } from "@apollo/client/utilities/internal";
 import {
   getInMemoryCacheMemoryInternals,
@@ -470,6 +471,7 @@ export class InMemoryCache extends ApolloCache {
   >(
     options: Cache.WriteOptions<TData, TVariables> & {
       [handleIncrementalSymbol]?: DiffIncrementalInfo | undefined;
+      [rootFragmentVariablesSymbol]?: OperationVariables | undefined;
     }
   ): Reference | undefined {
     const { query, variables } = options;

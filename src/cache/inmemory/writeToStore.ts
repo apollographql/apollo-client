@@ -35,6 +35,7 @@ import {
   isStreamField,
   makeReference,
   resultKeyNameFromField,
+  rootFragmentVariablesSymbol,
   shouldInclude,
   streamInfoSymbol,
 } from "@apollo/client/utilities/internal";
@@ -160,8 +161,10 @@ export class StoreWriter {
       overwrite,
       extensions,
       [handleIncrementalSymbol]: incrementalInfo,
+      [rootFragmentVariablesSymbol]: rootFragmentVariables,
     }: Cache.WriteOptions<TData, TVariables> & {
       [handleIncrementalSymbol]?: DiffIncrementalInfo;
+      [rootFragmentVariablesSymbol]?: OperationVariables;
     }
   ): Reference | undefined {
     const operationDefinition = getOperationDefinition(query)!;
@@ -178,8 +181,11 @@ export class StoreWriter {
       merge<T>(existing: T, incoming: T) {
         return merger.merge(existing, incoming) as T;
       },
-      variables: variables as OperationVariables,
-      varString: makeVarString({ operationVariables: variables }),
+      variables: rootFragmentVariables ?? variables,
+      varString: makeVarString({
+        operationVariables: variables,
+        scope: rootFragmentVariables,
+      }),
       operationVariables: variables,
       ...extractFragmentContext(query, this.fragments),
       overwrite: !!overwrite,

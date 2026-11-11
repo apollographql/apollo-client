@@ -31,11 +31,11 @@ export namespace CombinedGraphQLErrors {
 }
 
 // @public
-export class CombinedGraphQLErrors extends Error {
+export class CombinedGraphQLErrors extends AggregateError {
     constructor(result: FormattedExecutionResult<any>);
     constructor(result: ApolloLink.Result<any>, errors: ReadonlyArray<GraphQLFormattedError>);
     readonly data: Record<string, unknown> | null | undefined;
-    readonly errors: ReadonlyArray<GraphQLFormattedError>;
+    errors: Array<GraphQLFormattedError>;
     readonly extensions: Record<string, unknown> | undefined;
     static formatMessage: CombinedGraphQLErrors.MessageFormatter;
     static is(error: unknown): error is CombinedGraphQLErrors;

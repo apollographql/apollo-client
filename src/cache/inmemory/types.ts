@@ -24,6 +24,7 @@ import type {
 
 import type { FieldValueGetter } from "./entityStore.js";
 import type { FragmentRegistryAPI } from "./fragmentRegistry.js";
+import type { VarString } from "./helpers.js";
 import type { InMemoryCache } from "./inMemoryCache.js";
 import type {
   FieldMergeFunction,
@@ -222,3 +223,8 @@ export type KnownScalars = RemoveIndexSignature<ApolloCache.Scalars>;
 export type ScalarType =
   | NestedScalarName<keyof KnownScalars & string>
   | (string extends keyof ApolloCache.Scalars ? string & {} : never);
+
+declare const varStringBrand: unique symbol;
+
+/** @internal */
+export type VarString = string & { readonly [varStringBrand]: true };

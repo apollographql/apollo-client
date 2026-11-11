@@ -9,6 +9,7 @@ import { createFragmentRegistry, InMemoryCache } from "@apollo/client/cache";
 import type { WithFragmentInfo } from "@apollo/client/testing/internal";
 import { dateScalar, spyOnConsole } from "@apollo/client/testing/internal";
 import { fragmentInfoSymbol } from "@apollo/client/utilities/internal";
+import { InvariantError } from "@apollo/client/utilities/invariant";
 
 enableExperimentalFragmentVariables();
 
@@ -729,4 +730,141 @@ test("passes a root fragment argument through a nested fragment spread from the 
       'avatar({"size":96})': "large.png",
     },
   });
+});
+
+test("uses explicit variables instead of the fragment info of data read from a query result", () => {
+  const fragment = gql`
+    fragment UserCard($size: Int) on User {
+      id
+      avatar(size: $size)
+    }
+  `;
+
+  const query: TypedDocumentNode<
+    WithFragmentInfo<{
+      user: { __typename: "User"; id: string; avatar: string };
+    }>,
+    Record<string, never>
+  > = gql`
+    query Example {
+      user {
+        id
+        ...UserCard(size: 96)
+      }
+    }
+
+    ${fragment}
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  client.writeQuery({
+    query,
+    data: { user: { __typename: "User", id: "1", avatar: "large.png" } },
+  });
+
+  const data = client.readQuery({ query });
+
+  expect(data).toStrictEqualTyped({
+    user: {
+      __typename: "User",
+      id: "1",
+      avatar: "large.png",
+      [fragmentInfoSymbol]: {
+        operationVariables: {},
+        fragments: { UserCard: { variables: { size: 96 } } },
+      },
+    },
+  });
+
+  client.writeFragment({
+    fragment,
+    variables: { size: 32 },
+    data: { ...data!.user, avatar: "small.png" },
+  });
+
+  expect(client.extract()).toStrictEqualTyped({
+    __META: { extraRootIds: ["User:1"] },
+    ROOT_QUERY: {
+      __typename: "Query",
+      user: { __ref: "User:1" },
+    },
+    "User:1": {
+      __typename: "User",
+      id: "1",
+      'avatar({"size":96})': "large.png",
+      'avatar({"size":32})': "small.png",
+    },
+  });
+});
+
+test("requires fragmentName for a document with more than one fragment when data has fragment info", () => {
+  const fragment = gql`
+    fragment UserCard($size: Int) on User {
+      id
+      avatar(size: $size)
+    }
+
+    fragment UserName on User {
+      id
+      name
+    }
+  `;
+
+  const query: TypedDocumentNode<
+    WithFragmentInfo<{
+      user: { __typename: "User"; id: string; avatar: string };
+    }>,
+    Record<string, never>
+  > = gql`
+    query Example {
+      user {
+        id
+        ...UserCard(size: 96)
+      }
+    }
+
+    fragment UserCard($size: Int) on User {
+      id
+      avatar(size: $size)
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  client.writeQuery({
+    query,
+    data: { user: { __typename: "User", id: "1", avatar: "large.png" } },
+  });
+
+  const data = client.readQuery({ query });
+
+  expect(data).toStrictEqualTyped({
+    user: {
+      __typename: "User",
+      id: "1",
+      avatar: "large.png",
+      [fragmentInfoSymbol]: {
+        operationVariables: {},
+        fragments: { UserCard: { variables: { size: 96 } } },
+      },
+    },
+  });
+
+  expect(() =>
+    client.writeFragment({
+      fragment,
+      data: { ...data!.user, avatar: "small.png" },
+    })
+  ).toThrow(
+    new InvariantError(
+      "Found 2 fragments. `fragmentName` must be provided when there is not exactly 1 fragment."
+    )
+  );
 });

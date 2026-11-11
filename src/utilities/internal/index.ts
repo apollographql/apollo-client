@@ -3,6 +3,7 @@ export type { DeepOmit } from "./types/DeepOmit.js";
 export type { Exact } from "./types/Exact.js";
 export type { ExtensionsWithStreamInfo } from "./types/ExtensionsWithStreamDetails.js";
 export type { FragmentInfo } from "./types/FragmentInfo.js";
+export type { ObjectWithFragmentInfo } from "./types/ObjectWithFragmentInfo.js";
 export type { FragmentMap } from "./types/FragmentMap.js";
 export type { FragmentMapFunction } from "./types/FragmentMapFunction.js";
 export type { FulfilledPromise } from "./types/FulfilledPromise.js";

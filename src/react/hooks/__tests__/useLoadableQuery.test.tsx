@@ -2968,22 +2968,20 @@ it("`refetch` works with startTransition to allow React to show stale UI until f
     }
   `;
 
-  const mocks: MockLink.MockedResponse<Data>[] = [
-    {
-      request: { query, variables: { id: "1" } },
-      result: {
-        data: { todo: { id: "1", name: "Clean room", completed: false } },
-      },
-      delay: 10,
-    },
-    {
-      request: { query, variables: { id: "1" } },
-      result: {
-        data: { todo: { id: "1", name: "Clean room", completed: true } },
-      },
-      delay: 10,
-    },
-  ];
+  // Keep requests pending until the loading and transition states are asserted.
+  const responses: Array<(completed: boolean) => void> = [];
+  const link = new ApolloLink((operation) => {
+    expect(operation.operationName).toBe("TodoItemQuery");
+    expect(operation.variables).toEqual({ id: "1" });
+    return new Observable((observer) => {
+      responses.push((completed) => {
+        observer.next({
+          data: { todo: { id: "1", name: "Clean room", completed } },
+        });
+        observer.complete();
+      });
+    });
+  });
 
   function SuspenseFallback() {
     return <p>Loading</p>;
@@ -3036,12 +3034,14 @@ it("`refetch` works with startTransition to allow React to show stale UI until f
     );
   }
 
-  await renderWithMocks(<App />, { mocks }, { render: renderAsync });
+  await renderWithMocks(<App />, { link }, { render: renderAsync });
   const user = userEvent.setup();
 
   await act(() => user.click(screen.getByText("Load query")));
 
   expect(screen.getByText("Loading")).toBeInTheDocument();
+  expect(responses).toHaveLength(1);
+  await act(async () => responses[0](false));
   expect(await screen.findByTestId("todo")).toBeInTheDocument();
 
   const todo = screen.getByTestId("todo");
@@ -3065,6 +3065,9 @@ it("`refetch` works with startTransition to allow React to show stale UI until f
 
   // Ensure we are showing the stale UI until the new todo has loaded
   expect(todo).toHaveTextContent("Clean room");
+
+  expect(responses).toHaveLength(2);
+  await act(async () => responses[1](true));
 
   // Eventually we should see the updated todo content once its done
   // suspending.

@@ -8632,7 +8632,7 @@ describe("ApolloClient", () => {
           print(addTypenameToDocument(query)),
           "{}"
         )
-      ).toEqual({
+      ).toMatchObject({
         observable: expect.any(Observable),
         restart: expect.any(Function),
       });

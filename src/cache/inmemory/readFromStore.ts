@@ -40,6 +40,7 @@ import {
   isArray,
   isDeferredFragment,
   isField,
+  isNonEmptyObject,
   isNonNullObject,
   isStreamField,
   makeReference,
@@ -755,7 +756,7 @@ export class StoreReader {
         : memo;
     }, undefined);
 
-    if (childFragments || fragments) {
+    if (isNonEmptyObject(childFragments) || isNonEmptyObject(fragments)) {
       // Always copy since `result` might be a frozen fragment result when
       // `objectsToMerge` contains a single object.
       result = {

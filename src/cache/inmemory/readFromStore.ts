@@ -1022,11 +1022,7 @@ export class StoreReader {
             });
 
             if (variables !== context.variables) {
-              fragmentContext = {
-                ...context,
-                variables,
-                varString: canonicalStringify(variables),
-              };
+              fragmentContext = { ...context, variables };
             }
           }
 

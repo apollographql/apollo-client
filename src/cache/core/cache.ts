@@ -658,6 +658,26 @@ export abstract class ApolloCache {
 
     const fromArray = Array.isArray(from) ? from : [from];
 
+    const getFragmentOptions = (
+      from: string | StoreObject | Reference | null
+    ) => {
+      const fragmentInfo = (from as ObjectWithFragmentInfo | null)?.[
+        fragmentInfoSymbol
+      ];
+
+      if (
+        this[supportsFragmentVariablesSymbol] &&
+        fragmentInfo &&
+        !isNonEmptyObject(options.variables)
+      ) {
+        return {
+          variables: fragmentInfo.operationVariables as TVariables,
+          [rootFragmentVariablesSymbol]:
+            fragmentInfo.fragments[actualFragmentName]?.variables,
+        };
+      }
+    };
+
     const ids = fromArray.map((value) => {
       // While our TypeScript types do not allow for `undefined` as a valid
       // `from`, its possible `useFragment` gives us an `undefined` since it
@@ -682,12 +702,7 @@ export abstract class ApolloCache {
     if (!Array.isArray(from)) {
       const observable = this.watchSingleFragment(ids[0], query, {
         ...options,
-        variables:
-          options.variables ??
-          ((from as ObjectWithFragmentInfo | null)?.[fragmentInfoSymbol]
-            ?.fragments[actualFragmentName]?.variables as
-            | TVariables
-            | undefined),
+        ...getFragmentOptions(from),
       });
       // Unfortunately we forgot to allow for `null` on watchFragment in 4.0
       // when `from` is a single record. As such, we need to fallback to {}
@@ -800,7 +815,9 @@ export abstract class ApolloCache {
     id: string | null,
     fragmentQuery: TypedDocumentNode<TData, TVariables>,
     options: Omit<
-      ApolloCache.WatchFragmentOptions<TData, TVariables>,
+      ApolloCache.WatchFragmentOptions<TData, TVariables> & {
+        [rootFragmentVariablesSymbol]?: OperationVariables | undefined;
+      },
       "from" | "fragment" | "fragmentName"
     >
   ): ApolloCache.ObservableFragment<Unmasked<TData> | null> & {
@@ -859,6 +876,7 @@ export abstract class ApolloCache {
           query: fragmentQuery,
           optimistic,
           immediate: true,
+          [rootFragmentVariablesSymbol]: options[rootFragmentVariablesSymbol],
           callback: (diff) => {
             observable.dirty = true;
             this.onAfterBroadcast(() => {

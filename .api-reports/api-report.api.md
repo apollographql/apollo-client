@@ -1075,9 +1075,9 @@ export namespace CombinedProtocolErrors {
 }
 
 // @public
-export class CombinedProtocolErrors extends Error {
+export class CombinedProtocolErrors extends AggregateError {
     constructor(protocolErrors: Array<GraphQLFormattedError> | ReadonlyArray<GraphQLFormattedError>);
-    readonly errors: ReadonlyArray<GraphQLFormattedError>;
+    errors: Array<GraphQLFormattedError>;
     static formatMessage: CombinedProtocolErrors.MessageFormatter;
     static is(error: unknown): error is CombinedProtocolErrors;
 }

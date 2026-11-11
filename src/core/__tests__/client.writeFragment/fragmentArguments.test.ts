@@ -623,7 +623,6 @@ test("writes operation variables of a nested fragment shadowed by a parent fragm
         operationVariables: { x: 99 },
         fragments: {
           Foo: { variables: { x: 1 } },
-          Bar: { variables: { x: 99 } },
         },
       },
     },
@@ -659,7 +658,6 @@ test("writes operation variables of a nested fragment shadowed by a parent fragm
         operationVariables: { x: 99 },
         fragments: {
           Foo: { variables: { x: 1 } },
-          Bar: { variables: { x: 99 } },
         },
       },
     },

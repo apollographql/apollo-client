@@ -3172,10 +3172,7 @@ describe("ObservableQuery", () => {
           __typename: "Cat",
           [fragmentInfoSymbol]: {
             operationVariables: { id: 1 },
-            fragments: {
-              PetInfo: { variables: { id: 1 } },
-              CatInfo: { variables: { id: 1 } },
-            },
+            fragments: {},
           },
         },
         {
@@ -3186,10 +3183,7 @@ describe("ObservableQuery", () => {
           __typename: "Cat",
           [fragmentInfoSymbol]: {
             operationVariables: { id: 1 },
-            fragments: {
-              PetInfo: { variables: { id: 1 } },
-              CatInfo: { variables: { id: 1 } },
-            },
+            fragments: {},
           },
         },
         {
@@ -3200,10 +3194,7 @@ describe("ObservableQuery", () => {
           __typename: "Dog",
           [fragmentInfoSymbol]: {
             operationVariables: { id: 1 },
-            fragments: {
-              PetInfo: { variables: { id: 1 } },
-              DogInfo: { variables: { id: 1 } },
-            },
+            fragments: {},
           },
         },
       ];

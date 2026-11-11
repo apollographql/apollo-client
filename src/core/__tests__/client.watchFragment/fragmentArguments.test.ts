@@ -797,7 +797,7 @@ test("binds fragment arguments set from operation variables from a query result 
         id: "1",
         [fragmentInfoSymbol]: {
           operationVariables: { avatarSize: 96 },
-          fragments: { UserCard: { variables: { avatarSize: 96, size: 96 } } },
+          fragments: { UserCard: { variables: { size: 96 } } },
         },
       },
     },
@@ -880,7 +880,7 @@ test("binds operation variables used by a fragment from a query result passed to
         id: "1",
         [fragmentInfoSymbol]: {
           operationVariables: { size: 96 },
-          fragments: { UserCard: { variables: { size: 96 } } },
+          fragments: {},
         },
       },
     },
@@ -1673,7 +1673,7 @@ test("binds operation variables of a nested fragment shadowed by a parent fragme
       value: 99,
       [fragmentInfoSymbol]: {
         operationVariables: { x: 99 },
-        fragments: { Bar: { variables: { x: 99 } } },
+        fragments: {},
       },
     },
     dataState: "complete",
@@ -1785,7 +1785,7 @@ test("binds operation variables of a masked nested fragment shadowed by a parent
       fooValue: 1,
       [fragmentInfoSymbol]: {
         operationVariables: { x: 99 },
-        fragments: { Bar: { variables: { x: 99 } } },
+        fragments: {},
       },
     },
     dataState: "complete",
@@ -1875,7 +1875,7 @@ test("binds new fragment arguments from a query result after refetch with new va
         id: "1",
         [fragmentInfoSymbol]: {
           operationVariables: { avatarSize: 96 },
-          fragments: { UserCard: { variables: { avatarSize: 96, size: 96 } } },
+          fragments: { UserCard: { variables: { size: 96 } } },
         },
       },
     },
@@ -1906,7 +1906,7 @@ test("binds new fragment arguments from a query result after refetch with new va
         id: "1",
         [fragmentInfoSymbol]: {
           operationVariables: { avatarSize: 32 },
-          fragments: { UserCard: { variables: { avatarSize: 32, size: 32 } } },
+          fragments: { UserCard: { variables: { size: 32 } } },
         },
       },
     },
@@ -1929,7 +1929,7 @@ test("binds new fragment arguments from a query result after refetch with new va
         id: "1",
         [fragmentInfoSymbol]: {
           operationVariables: { avatarSize: 32 },
-          fragments: { UserCard: { variables: { avatarSize: 32, size: 32 } } },
+          fragments: { UserCard: { variables: { size: 32 } } },
         },
       },
     },
@@ -2023,7 +2023,7 @@ test("binds new fragment arguments from a query result after setVariables", asyn
         id: "1",
         [fragmentInfoSymbol]: {
           operationVariables: { avatarSize: 96 },
-          fragments: { UserCard: { variables: { avatarSize: 96, size: 96 } } },
+          fragments: { UserCard: { variables: { size: 96 } } },
         },
       },
     },
@@ -2054,7 +2054,7 @@ test("binds new fragment arguments from a query result after setVariables", asyn
         id: "1",
         [fragmentInfoSymbol]: {
           operationVariables: { avatarSize: 32 },
-          fragments: { UserCard: { variables: { avatarSize: 32, size: 32 } } },
+          fragments: { UserCard: { variables: { size: 32 } } },
         },
       },
     },
@@ -2077,7 +2077,7 @@ test("binds new fragment arguments from a query result after setVariables", asyn
         id: "1",
         [fragmentInfoSymbol]: {
           operationVariables: { avatarSize: 32 },
-          fragments: { UserCard: { variables: { avatarSize: 32, size: 32 } } },
+          fragments: { UserCard: { variables: { size: 32 } } },
         },
       },
     },
@@ -2171,7 +2171,7 @@ test("binds new fragment arguments from a query result after reobserve with new 
         id: "1",
         [fragmentInfoSymbol]: {
           operationVariables: { avatarSize: 96 },
-          fragments: { UserCard: { variables: { avatarSize: 96, size: 96 } } },
+          fragments: { UserCard: { variables: { size: 96 } } },
         },
       },
     },
@@ -2202,7 +2202,7 @@ test("binds new fragment arguments from a query result after reobserve with new 
         id: "1",
         [fragmentInfoSymbol]: {
           operationVariables: { avatarSize: 32 },
-          fragments: { UserCard: { variables: { avatarSize: 32, size: 32 } } },
+          fragments: { UserCard: { variables: { size: 32 } } },
         },
       },
     },
@@ -2225,7 +2225,7 @@ test("binds new fragment arguments from a query result after reobserve with new 
         id: "1",
         [fragmentInfoSymbol]: {
           operationVariables: { avatarSize: 32 },
-          fragments: { UserCard: { variables: { avatarSize: 32, size: 32 } } },
+          fragments: { UserCard: { variables: { size: 32 } } },
         },
       },
     },
@@ -2433,8 +2433,8 @@ test("binds fragment arguments for each sibling fragment with different fragment
         [fragmentInfoSymbol]: {
           operationVariables: { badgeColor: "gold" },
           fragments: {
-            UserCard: { variables: { badgeColor: "gold", size: 96 } },
-            UserBadge: { variables: { badgeColor: "gold", color: "gold" } },
+            UserCard: { variables: { size: 96 } },
+            UserBadge: { variables: { color: "gold" } },
           },
         },
       },
@@ -2553,8 +2553,8 @@ test("binds fragment arguments for each sibling fragment with different fragment
         [fragmentInfoSymbol]: {
           operationVariables: { badgeColor: "gold" },
           fragments: {
-            UserCard: { variables: { badgeColor: "gold", size: 96 } },
-            UserBadge: { variables: { badgeColor: "gold", color: "gold" } },
+            UserCard: { variables: { size: 96 } },
+            UserBadge: { variables: { color: "gold" } },
           },
         },
       },
@@ -2665,7 +2665,6 @@ test("binds operation variables for a fragment with a sibling fragment argument 
           operationVariables: { size: 32 },
           fragments: {
             UserCard: { variables: { size: 96 } },
-            UserBadge: { variables: { size: 32 } },
           },
         },
       },
@@ -3296,7 +3295,6 @@ test("binds input object fragment arguments that contain operation variables fro
           fragments: {
             UserCard: {
               variables: {
-                avatarSize: 96,
                 options: { size: 96, format: "png" },
               },
             },
@@ -3868,7 +3866,7 @@ test("binds custom scalar fragment arguments from a query result passed to from"
           operationVariables: { date: "2026-01-01" },
           fragments: {
             EventFields: {
-              variables: { date: "2026-01-01", since: "2026-01-01" },
+              variables: { since: "2026-01-01" },
             },
           },
         },
@@ -4216,7 +4214,7 @@ test("binds operation variables used by a fragment from the fragment registry fr
         id: "1",
         [fragmentInfoSymbol]: {
           operationVariables: { size: 96 },
-          fragments: { UserCard: { variables: { size: 96 } } },
+          fragments: {},
         },
       },
     },

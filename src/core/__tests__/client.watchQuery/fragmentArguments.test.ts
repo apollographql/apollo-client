@@ -318,7 +318,7 @@ test("passes an operation variable through a fragment spread", async () => {
         avatar: "lead.png",
         [fragmentInfoSymbol]: {
           operationVariables: { n: 96 },
-          fragments: { UserCard: { variables: { n: 96, size: 96 } } },
+          fragments: { UserCard: { variables: { size: 96 } } },
         },
       },
     },
@@ -558,7 +558,6 @@ test("does not leak a fragment argument into a child fragment that does not decl
           operationVariables: { x: 99 },
           fragments: {
             Foo: { variables: { x: 1 } },
-            Bar: { variables: { x: 99 } },
           },
         },
       },
@@ -1247,7 +1246,7 @@ test("removes fragment variables that are only used by @client fields from the r
         localAvatar: "local-96.png",
         [fragmentInfoSymbol]: {
           operationVariables: { n: 96 },
-          fragments: { UserCard: { variables: { n: 96, size: 96 } } },
+          fragments: { UserCard: { variables: { size: 96 } } },
         },
       },
     },
@@ -2125,7 +2124,7 @@ test("binds new operation variables passed through a fragment spread on refetch"
         avatar: "large.png",
         [fragmentInfoSymbol]: {
           operationVariables: { n: 96 },
-          fragments: { UserCard: { variables: { n: 96, size: 96 } } },
+          fragments: { UserCard: { variables: { size: 96 } } },
         },
       },
     },
@@ -2143,7 +2142,7 @@ test("binds new operation variables passed through a fragment spread on refetch"
         avatar: "small.png",
         [fragmentInfoSymbol]: {
           operationVariables: { n: 32 },
-          fragments: { UserCard: { variables: { n: 32, size: 32 } } },
+          fragments: { UserCard: { variables: { size: 32 } } },
         },
       },
     },
@@ -2165,7 +2164,7 @@ test("binds new operation variables passed through a fragment spread on refetch"
         avatar: "small.png",
         [fragmentInfoSymbol]: {
           operationVariables: { n: 32 },
-          fragments: { UserCard: { variables: { n: 32, size: 32 } } },
+          fragments: { UserCard: { variables: { size: 32 } } },
         },
       },
     },
@@ -3006,7 +3005,7 @@ test("serializes custom scalar operation variables passed as fragment arguments"
           operationVariables: { date: "2026-01-01" },
           fragments: {
             EventFields: {
-              variables: { date: "2026-01-01", since: "2026-01-01" },
+              variables: { since: "2026-01-01" },
             },
           },
         },

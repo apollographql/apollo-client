@@ -1785,10 +1785,6 @@ describe("client.watchQuery", () => {
           __typename: "User",
           id: 1,
           name: "User 1",
-          [fragmentInfoSymbol]: {
-            operationVariables: { id: 1 },
-            fragments: { UserFields: { variables: { id: 1 } } },
-          },
         },
       });
     }
@@ -1800,10 +1796,6 @@ describe("client.watchQuery", () => {
         __typename: "User",
         id: 2,
         name: "User 2",
-        [fragmentInfoSymbol]: {
-          operationVariables: { id: 2 },
-          fragments: { UserFields: { variables: { id: 2 } } },
-        },
       },
     });
 
@@ -1821,10 +1813,6 @@ describe("client.watchQuery", () => {
           __typename: "User",
           id: 2,
           name: "User 2",
-          [fragmentInfoSymbol]: {
-            operationVariables: { id: 2 },
-            fragments: { UserFields: { variables: { id: 2 } } },
-          },
         },
       },
       dataState: "complete",
@@ -1921,10 +1909,6 @@ describe("client.watchQuery", () => {
           __typename: "User",
           id: 1,
           name: "User 1",
-          [fragmentInfoSymbol]: {
-            operationVariables: { id: 1 },
-            fragments: { UserFields: { variables: { id: 1 } } },
-          },
         },
       });
     }
@@ -1936,10 +1920,6 @@ describe("client.watchQuery", () => {
         __typename: "User",
         id: 2,
         name: "User 2",
-        [fragmentInfoSymbol]: {
-          operationVariables: { id: 2 },
-          fragments: { UserFields: { variables: { id: 2 } } },
-        },
       },
     });
 
@@ -1957,10 +1937,6 @@ describe("client.watchQuery", () => {
           __typename: "User",
           id: 2,
           name: "User 2",
-          [fragmentInfoSymbol]: {
-            operationVariables: { id: 2 },
-            fragments: { UserFields: { variables: { id: 2 } } },
-          },
         },
       },
       dataState: "complete",
@@ -2033,10 +2009,6 @@ describe("client.watchQuery", () => {
           __typename: "User",
           id: 1,
           name: "User 1",
-          [fragmentInfoSymbol]: {
-            operationVariables: { id: 1 },
-            fragments: { UserFields: { variables: { id: 1 } } },
-          },
         },
       });
     }
@@ -2066,7 +2038,7 @@ describe("client.watchQuery", () => {
           age: 30,
           [fragmentInfoSymbol]: {
             operationVariables: { id: 1 },
-            fragments: { UserFields: { variables: { id: 1 } } },
+            fragments: {},
           },
         },
       },
@@ -2081,7 +2053,7 @@ describe("client.watchQuery", () => {
             age: 30,
             [fragmentInfoSymbol]: {
               operationVariables: { id: 1 },
-              fragments: { UserFields: { variables: { id: 1 } } },
+              fragments: {},
             },
           },
         },
@@ -2096,10 +2068,6 @@ describe("client.watchQuery", () => {
           __typename: "User",
           id: 1,
           name: "User (updated)",
-          [fragmentInfoSymbol]: {
-            operationVariables: { id: 1 },
-            fragments: { UserFields: { variables: { id: 1 } } },
-          },
         },
       });
     }
@@ -2173,10 +2141,6 @@ describe("client.watchQuery", () => {
         greeting: {
           message: "Hello world",
           __typename: "Greeting",
-          [fragmentInfoSymbol]: {
-            operationVariables: { id: 1 },
-            fragments: { GreetingFragment: { variables: { id: 1 } } },
-          },
         },
       },
       dataState: "streaming",
@@ -2211,10 +2175,6 @@ describe("client.watchQuery", () => {
         greeting: {
           message: "Hello world",
           __typename: "Greeting",
-          [fragmentInfoSymbol]: {
-            operationVariables: { id: 1 },
-            fragments: { GreetingFragment: { variables: { id: 1 } } },
-          },
         },
       },
       dataState: "complete",
@@ -2301,10 +2261,6 @@ describe("client.watchQuery", () => {
         greeting: {
           message: "Hello world",
           __typename: "Greeting",
-          [fragmentInfoSymbol]: {
-            operationVariables: { id: 1 },
-            fragments: { GreetingFragment: { variables: { id: 1 } } },
-          },
         },
       });
     }
@@ -2336,10 +2292,6 @@ describe("client.watchQuery", () => {
           __typename: "Greeting",
           message: "Hello world",
           sentAt: "2024-01-01",
-          [fragmentInfoSymbol]: {
-            operationVariables: { id: 1 },
-            fragments: { GreetingFragment: { variables: { id: 1 } } },
-          },
         },
       });
     }
@@ -2426,7 +2378,7 @@ describe("client.watchQuery", () => {
           __typename: "Greeting",
           [fragmentInfoSymbol]: {
             operationVariables: { id: 1 },
-            fragments: { GreetingFragment: { variables: { id: 1 } } },
+            fragments: {},
           },
         },
       });
@@ -2460,7 +2412,7 @@ describe("client.watchQuery", () => {
           recipient: { __typename: "Person", name: "Alice" },
           [fragmentInfoSymbol]: {
             operationVariables: { id: 1 },
-            fragments: { GreetingFragment: { variables: { id: 1 } } },
+            fragments: {},
           },
         },
       });
@@ -2559,10 +2511,7 @@ describe("client.watchQuery", () => {
           __typename: "Greeting",
           [fragmentInfoSymbol]: {
             operationVariables: { id: 1 },
-            fragments: {
-              GreetingFragment: { variables: { id: 1 } },
-              TimeFieldsFragment: { variables: { id: 1 } },
-            },
+            fragments: {},
           },
         },
       });
@@ -2597,10 +2546,7 @@ describe("client.watchQuery", () => {
           recipient: { __typename: "Person", name: "Alice" },
           [fragmentInfoSymbol]: {
             operationVariables: { id: 1 },
-            fragments: {
-              GreetingFragment: { variables: { id: 1 } },
-              TimeFieldsFragment: { variables: { id: 1 } },
-            },
+            fragments: {},
           },
         },
       });
@@ -5814,7 +5760,7 @@ describe("observableQuery.subscribeToMore", () => {
               author: "Test User Jr.",
               [fragmentInfoSymbol]: {
                 operationVariables: { id: 1 },
-                fragments: { CommentFields: { variables: { id: 1 } } },
+                fragments: {},
               },
             },
           },

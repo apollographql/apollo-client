@@ -258,7 +258,7 @@ test("binds operation variables used by a masked fragment from a query result pa
         id: "1",
         [fragmentInfoSymbol]: {
           operationVariables: { size: 96 },
-          fragments: { UserCard: { variables: { size: 96 } } },
+          fragments: {},
         },
       },
     },
@@ -356,7 +356,7 @@ test("binds operation variables used by a nested masked fragment from a fragment
         id: "1",
         [fragmentInfoSymbol]: {
           operationVariables: { size: 96 },
-          fragments: { UserCard: { variables: { size: 96 } } },
+          fragments: {},
         },
       },
     },
@@ -384,7 +384,7 @@ test("binds operation variables used by a nested masked fragment from a fragment
       name: "Alice",
       [fragmentInfoSymbol]: {
         operationVariables: { size: 96 },
-        fragments: { UserAvatar: { variables: { size: 96 } } },
+        fragments: {},
       },
     },
     dataState: "complete",

@@ -216,7 +216,7 @@ test("binds variables to the root fragment selected by fragmentName", () => {
     avatar: "large.png",
     [fragmentInfoSymbol]: {
       operationVariables: { size: 96 },
-      fragments: { UserAvatar: { variables: { size: 96, avatarSize: 96 } } },
+      fragments: { UserAvatar: { variables: { avatarSize: 96 } } },
     },
   });
 
@@ -335,7 +335,7 @@ test("uses variables in a nested fragment that declares no variables when the ro
     nestedAvatar: "large.png",
     [fragmentInfoSymbol]: {
       operationVariables: { size: 96 },
-      fragments: { UserAvatar: { variables: { size: 96 } } },
+      fragments: {},
     },
   });
 });

@@ -202,7 +202,6 @@ test("updates operation variables of a nested fragment shadowed by a parent frag
         operationVariables: { x: 99 },
         fragments: {
           Foo: { variables: { x: 1 } },
-          Bar: { variables: { x: 99 } },
         },
       },
     },
@@ -227,7 +226,7 @@ test("updates operation variables of a nested fragment shadowed by a parent frag
     value: 99,
     [fragmentInfoSymbol]: {
       operationVariables: { x: 99 },
-      fragments: { Bar: { variables: { x: 99 } } },
+      fragments: {},
     },
   });
   expect(result).toStrictEqualTyped({
@@ -237,7 +236,7 @@ test("updates operation variables of a nested fragment shadowed by a parent frag
     value: 100,
     [fragmentInfoSymbol]: {
       operationVariables: { x: 99 },
-      fragments: { Bar: { variables: { x: 99 } } },
+      fragments: {},
     },
   });
 
@@ -265,7 +264,6 @@ test("updates operation variables of a nested fragment shadowed by a parent frag
         operationVariables: { x: 99 },
         fragments: {
           Foo: { variables: { x: 1 } },
-          Bar: { variables: { x: 99 } },
         },
       },
     },

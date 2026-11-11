@@ -71,7 +71,7 @@ test("uses variables in a nested fragment that declares variables", () => {
     avatar: "large.png",
     [fragmentInfoSymbol]: {
       operationVariables: { size: 96 },
-      fragments: { UserAvatar: { variables: { size: 96 } } },
+      fragments: {},
     },
   });
 });

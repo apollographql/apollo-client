@@ -63,10 +63,7 @@ test("uses operation variables in fragments that declare variables", async () =>
         avatar: "large.png",
         [fragmentInfoSymbol]: {
           operationVariables: { size: 96 },
-          fragments: {
-            UserCard: { variables: { size: 96 } },
-            UserAvatar: { variables: { size: 96 } },
-          },
+          fragments: {},
         },
       },
     },

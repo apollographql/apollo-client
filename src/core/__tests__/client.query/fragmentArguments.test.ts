@@ -123,7 +123,7 @@ test("passes an operation variable through a fragment spread", async () => {
         avatar: "lead.png",
         [fragmentInfoSymbol]: {
           operationVariables: { n: 96 },
-          fragments: { UserCard: { variables: { n: 96, size: 96 } } },
+          fragments: { UserCard: { variables: { size: 96 } } },
         },
       },
     },

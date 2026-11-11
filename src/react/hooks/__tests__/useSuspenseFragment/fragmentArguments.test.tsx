@@ -404,3 +404,97 @@ test("reads data for new fragment arguments when from changes to a query result 
 
   await expect(takeSnapshot).not.toRerender();
 });
+
+test("binds different fragment arguments for the same entity from separate query results in the same render", async () => {
+  const fragment = gql`
+    fragment UserCard($size: Int) on User {
+      id
+      avatar(size: $size)
+    }
+  `;
+
+  const query: TypedDocumentNode<
+    WithFragmentInfo<{ lead: MaskedUser; member: MaskedUser }>,
+    Record<string, never>
+  > = gql`
+    query Team {
+      lead {
+        id
+        ...UserCard(size: 96)
+      }
+      member {
+        id
+        ...UserCard(size: 32)
+      }
+    }
+
+    ${fragment}
+  `;
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query },
+        result: {
+          data: {
+            lead: { __typename: "User", id: "1", avatar: "large.png" },
+            member: { __typename: "User", id: "1", avatar: "small.png" },
+          },
+        },
+      },
+    ]),
+  });
+
+  const { data } = await client.query({ query });
+
+  expect(data).toStrictEqualTyped({
+    lead: {
+      __typename: "User",
+      id: "1",
+      [fragmentInfoSymbol]: {
+        operationVariables: {},
+        fragments: { UserCard: { variables: { size: 96 } } },
+      },
+    },
+    member: {
+      __typename: "User",
+      id: "1",
+      [fragmentInfoSymbol]: {
+        operationVariables: {},
+        fragments: { UserCard: { variables: { size: 32 } } },
+      },
+    },
+  });
+  assert(data);
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot } = await renderHookToSnapshotStream(
+    () => ({
+      lead: useSuspenseFragment({ fragment, from: data.lead }),
+      member: useSuspenseFragment({ fragment, from: data.member }),
+    }),
+    { wrapper: createClientWrapper(client) }
+  );
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    lead: { data: { __typename: "User", id: "1", avatar: "large.png" } },
+    member: { data: { __typename: "User", id: "1", avatar: "small.png" } },
+  });
+
+  client.writeFragment({
+    fragment,
+    variables: { size: 32 },
+    data: { __typename: "User", id: "1", avatar: "small-updated.png" },
+  });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    lead: { data: { __typename: "User", id: "1", avatar: "large.png" } },
+    member: {
+      data: { __typename: "User", id: "1", avatar: "small-updated.png" },
+    },
+  });
+
+  await expect(takeSnapshot).not.toRerender();
+});

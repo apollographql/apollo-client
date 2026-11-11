@@ -1925,6 +1925,79 @@ test("runs custom document transforms", async () => {
   await expect(takeRender).not.toRerender();
 });
 
+test("reads optimistic and non-optimistic data for the same entity in the same render", async () => {
+  interface User {
+    __typename: "User";
+    id: number;
+    name: string;
+  }
+
+  const fragment: TypedDocumentNode<User> = gql`
+    fragment UserFields on User {
+      id
+      name
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  client.writeFragment({
+    fragment,
+    data: { __typename: "User", id: 1, name: "Alice" },
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot } = await renderHookToSnapshotStream(
+    () => ({
+      optimistic: useSuspenseFragment({
+        fragment,
+        from: { __typename: "User", id: 1 },
+      }),
+      nonOptimistic: useSuspenseFragment({
+        fragment,
+        from: { __typename: "User", id: 1 },
+        optimistic: false,
+      }),
+    }),
+    {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    optimistic: { data: { __typename: "User", id: 1, name: "Alice" } },
+    nonOptimistic: { data: { __typename: "User", id: 1, name: "Alice" } },
+  });
+
+  client.cache.recordOptimisticTransaction((cache) => {
+    cache.writeFragment({
+      fragment,
+      data: { __typename: "User", id: 1, name: "Alice (optimistic)" },
+    });
+  }, "optimistic-update");
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    optimistic: {
+      data: { __typename: "User", id: 1, name: "Alice (optimistic)" },
+    },
+    nonOptimistic: { data: { __typename: "User", id: 1, name: "Alice" } },
+  });
+
+  client.cache.removeOptimistic("optimistic-update");
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    optimistic: { data: { __typename: "User", id: 1, name: "Alice" } },
+    nonOptimistic: { data: { __typename: "User", id: 1, name: "Alice" } },
+  });
+
+  await expect(takeSnapshot).not.toRerender();
+});
+
 describe.skip("type tests", () => {
   test("returns TData when from is a non-null value", () => {
     type Data = { foo: string };

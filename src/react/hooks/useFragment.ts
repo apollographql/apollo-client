@@ -198,34 +198,13 @@ function useFragment_<TData, TVariables extends OperationVariables>(
   options: useFragment.Options<TData, TVariables>
 ): useFragment.Result<TData> | useFragment.Result<Array<TData | null>> {
   const client = useApolloClient(options.client);
-  const { from, ...rest } = options;
-  const { cache } = client;
+  const { from } = options;
 
-  // We calculate the cache id seperately because we don't want changes to non
-  // key fields in the `from` property to recreate the observable. If the cache
-  // identifier stays the same between renders, we want to reuse the existing
-  // subscription.
-  const ids = useDeepMemo(() => {
-    const fromArray = Array.isArray(from) ? from : [from];
-
-    const ids = fromArray.map((value) =>
-      typeof value === "string" ? value
-      : value === null ? null
-      : cache.identify(value)
-    );
-
-    return Array.isArray(from) ? ids : ids[0];
-  }, [cache, from]);
-
-  const stableOptions = useDeepMemo(
-    () => ({ ...rest, from: ids as any }),
-    [rest, ids]
-  );
-
-  const observable = React.useMemo(
-    () => client.watchFragment(stableOptions),
-    [client, stableOptions]
-  );
+  // as of 4.4, client.watchFragment given the same options return the same
+  // observable so it is safe to call this every render.
+  const observable = client.watchFragment(
+    options
+  ) as ApolloCache.ObservableFragment<any>;
 
   // Unfortunately we forgot to update the use case of `from: null` on
   // useFragment in 4.0 to match `useSuspenseFragment`. As such, we need to

@@ -184,20 +184,18 @@ export function makeVarString({
   scope?: OperationVariables | undefined;
   operationVariables: OperationVariables | undefined;
 }): VarString {
-  function getVarString(variables: OperationVariables | undefined) {
-    if (!variables) return "";
+  let operationVarString: string | undefined;
 
-    let varString = varStringCache.get(variables);
+  if (operationVariables) {
+    operationVarString = varStringCache.get(operationVariables);
 
-    if (!varString) {
+    if (!operationVarString) {
       varStringCache.set(
-        variables,
-        (varString = canonicalStringify(variables))
+        operationVariables,
+        (operationVarString = canonicalStringify(operationVariables))
       );
     }
-
-    return varString;
   }
 
-  return (getVarString(scope) + getVarString(operationVariables)) as VarString;
+  return (canonicalStringify(scope ?? null) + operationVarString) as VarString;
 }

@@ -7,6 +7,20 @@ afterEach(() => {
   CombinedGraphQLErrors.formatMessage = defaultFormatMessage;
 });
 
+test("is an AggregateError with enumerable errors", () => {
+  const errors = [
+    { message: "Email already taken", extensions: { code: "BAD_USER_INPUT" } },
+    { message: "Username already in use" },
+  ];
+  const error = new CombinedGraphQLErrors({ errors });
+
+  expect(error).toBeInstanceOf(AggregateError);
+  expect(error.errors).toEqual(errors);
+  expect(Object.prototype.propertyIsEnumerable.call(error, "errors")).toBe(true);
+  expect({ ...error }).toHaveProperty("errors", errors);
+  expect(JSON.parse(JSON.stringify(error))).toHaveProperty("errors", errors);
+});
+
 test("uses default message format", () => {
   const error = new CombinedGraphQLErrors({
     errors: [{ message: "Email already taken" }],

@@ -38,17 +38,12 @@ export function removeMaskedFragmentSpreads(
 
   return visit(document, {
     FragmentSpread(node) {
-      const fragmentName = node.name.value;
-
       if (!node.directives?.some(({ name }) => name.value === "unmask")) {
         switch (mode) {
           case "remove":
             return null;
           case "mark": {
-            const fragment =
-              Object.hasOwn(fragments, fragmentName) ?
-                fragments[fragmentName]
-              : undefined;
+            const fragment = getFragment(fragments, node.name.value);
 
             if (
               !fragment ||
@@ -94,7 +89,13 @@ function hasVariables(
       return BREAK;
     },
     FragmentSpread(node) {
-      if (hasVariables(fragmentMap[node.name.value], fragmentMap, cache)) {
+      if (
+        hasVariables(
+          getFragment(fragmentMap, node.name.value),
+          fragmentMap,
+          cache
+        )
+      ) {
         usesVariables = true;
         return BREAK;
       }
@@ -103,4 +104,8 @@ function hasVariables(
 
   cache.set(fragment, usesVariables);
   return usesVariables;
+}
+
+function getFragment(fragmentMap: FragmentMap, name: string) {
+  return Object.hasOwn(fragmentMap, name) ? fragmentMap[name] : undefined;
 }

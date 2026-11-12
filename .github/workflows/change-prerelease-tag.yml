@@ -23,16 +23,17 @@ jobs:
       contents: write
 
     steps:
-      - uses: actions/create-github-app-token@d72941d797fd3113feb6b93fd0dec494b13a2547 # v1
+      - uses: actions/create-github-app-token@v1.12.0
         id: github-actions-bot-app-token
         with:
           app-id: 819772
           private-key: ${{ secrets.APOLLO_GITHUB_ACTIONS_BOT_PRIVATE_KEY }}
+          permission-contents: write
 
       # Check out the repository, using the Github Actions Bot app's token so
       # that we can push later.
       - name: Checkout repo
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        uses: actions/checkout@v7.0.0
         with:
           token: ${{ steps.github-actions-bot-app-token.outputs.token }}
           # Checkout release branch entered when workflow was kicked off
@@ -44,7 +45,7 @@ jobs:
           persist-credentials: true
 
       - name: Setup Node.js
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        uses: actions/setup-node@v6.4.0
         with:
           node-version: "24.x"
 
@@ -55,7 +56,7 @@ jobs:
           npm i
 
       - name: Update prerelease tag in .changeset/pre.json
-        uses: restackio/update-json-file-action@6f50afee9a03a456a30cd574123db793319f7544 # 2.1
+        uses: restackio/update-json-file-action@2.1
         with:
           file: .changeset/pre.json
           fields: '{"tag": "${{github.event.inputs.tag}}"}'

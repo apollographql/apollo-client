@@ -17,6 +17,7 @@ jobs:
           app-id: 819772
           private-key: ${{ secrets.APOLLO_GITHUB_ACTIONS_BOT_PRIVATE_KEY }}
           repositories: skills
+          permission-actions: write
       - uses: benc-uk/workflow-dispatch@v1.3.1
         with:
           workflow: sync-apollo-client-skill.yml

@@ -93,6 +93,7 @@ jobs:
           app-id: 819772
           private-key: ${{ secrets.APOLLO_GITHUB_ACTIONS_BOT_PRIVATE_KEY }}
           repositories: apollo-client-devtools
+          permission-actions: write
       - uses: benc-uk/workflow-dispatch@v1.3.1
         with:
           workflow: update-errorcodes.yml

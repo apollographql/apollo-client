@@ -657,3 +657,68 @@ test("marks masked fragment spreads to fragments whose earlier nested fragment s
     `
   );
 });
+
+test("checks each fragment for variables once in mark mode when many fragments spread the same fragments", () => {
+  // Each level spreads both fragments of the level below, so the number of
+  // paths from the top fragment to a bottom fragment doubles with each level.
+  const depth = 10;
+  const levels = Array.from({ length: depth }, (_, i) => i);
+
+  const query = parse(`
+    query {
+      user {
+        id
+        ...Level0A
+      }
+    }
+
+    ${levels
+      .map(
+        (i) => `
+          fragment Level${i}A on User {
+            a${i}: name
+            ...Level${i + 1}A
+            ...Level${i + 1}B
+          }
+
+          fragment Level${i}B on User {
+            b${i}: name
+            ...Level${i + 1}A
+            ...Level${i + 1}B
+          }
+        `
+      )
+      .join("\n")}
+
+    fragment Level${depth}A on User {
+      name
+    }
+
+    fragment Level${depth}B on User {
+      name
+    }
+  `);
+
+  const bottomFragment = query.definitions.find(
+    (definition): definition is FragmentDefinitionNode =>
+      definition.kind === Kind.FRAGMENT_DEFINITION &&
+      definition.name.value === `Level${depth}A`
+  );
+  invariant(bottomFragment, "Could not find bottom fragment");
+
+  let selectionSetReads = 0;
+  const { selectionSet } = bottomFragment;
+  Object.defineProperty(bottomFragment, "selectionSet", {
+    enumerable: true,
+    get() {
+      selectionSetReads++;
+      return selectionSet;
+    },
+  });
+
+  removeMaskedFragmentSpreads(query, { mode: "mark" });
+
+  // Without memoization, the bottom fragment is walked once for every path
+  // to it (2 ** depth times).
+  expect(selectionSetReads).toBeLessThanOrEqual(2);
+});

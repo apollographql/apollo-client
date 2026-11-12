@@ -34,6 +34,7 @@ export function removeMaskedFragmentSpreads(
   const fragments = createFragmentMap(
     document.definitions.filter((def) => def.kind === Kind.FRAGMENT_DEFINITION)
   );
+  const cache = new Map<FragmentDefinitionNode, boolean>();
 
   return visit(document, {
     FragmentSpread(node) {
@@ -53,7 +54,7 @@ export function removeMaskedFragmentSpreads(
               !fragment ||
               (!node.arguments?.length &&
                 !fragment?.variableDefinitions?.length &&
-                !hasVariables(fragment, fragments))
+                !hasVariables(fragment, fragments, cache))
             ) {
               return null;
             }
@@ -78,21 +79,28 @@ export function removeMaskedFragmentSpreads(
 
 function hasVariables(
   fragment: FragmentDefinitionNode | undefined,
-  fragmentMap: FragmentMap
+  fragmentMap: FragmentMap,
+  cache: Map<FragmentDefinitionNode, boolean>
 ) {
   if (!fragment) return false;
 
-  let usesVariables = false;
+  if (cache.has(fragment)) return cache.get(fragment)!;
+  cache.set(fragment, false);
 
+  let usesVariables = false;
   visit(fragment, {
     Variable() {
       usesVariables = true;
       return BREAK;
     },
     FragmentSpread(node) {
-      usesVariables ||= hasVariables(fragmentMap[node.name.value], fragmentMap);
+      if (hasVariables(fragmentMap[node.name.value], fragmentMap, cache)) {
+        usesVariables = true;
+        return BREAK;
+      }
     },
   });
 
+  cache.set(fragment, usesVariables);
   return usesVariables;
 }

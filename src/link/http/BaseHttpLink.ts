@@ -295,7 +295,7 @@ export class BaseHttpLink extends ApolloLink {
       const http = { ...context.http };
       if (isSubscriptionOperation(operation.query)) {
         http.accept = [
-          "multipart/mixed;boundary=graphql;subscriptionSpec=1.0",
+          "multipart/mixed;subscriptionSpec=1.0",
           ...(http.accept || []),
         ];
       }

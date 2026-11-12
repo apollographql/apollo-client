@@ -7,13 +7,16 @@ import { DeepMerger } from "./DeepMerger.js";
 // element type, which works perfectly when the sources array has a
 // consistent element type.
 /** @internal */
-export function mergeDeepArray<T>(sources: T[]): T {
+export function mergeDeepArray<T>(
+  sources: T[],
+  mergeOptions?: DeepMerger.MergeOptions
+): T {
   let target = sources[0] || ({} as T);
   const count = sources.length;
   if (count > 1) {
     const merger = new DeepMerger();
     for (let i = 1; i < count; ++i) {
-      target = merger.merge(target, sources[i]);
+      target = merger.merge(target, sources[i], mergeOptions);
     }
   }
   return target;

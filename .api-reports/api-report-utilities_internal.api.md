@@ -334,13 +334,14 @@ export function getFragmentFromSelection(selection: SelectionNode, fragmentMap?:
 // @internal @deprecated
 export function getFragmentQueryDocument(document: DocumentNode, fragmentName?: string): DocumentNode;
 
-// @public (undocumented)
-export function getFragmentScope(fragment: FragmentDefinitionNode, input: {
-    operationVariables: OperationVariables | undefined;
-    fragmentVariables: OperationVariables;
+// @internal @deprecated (undocumented)
+export function getFragmentScope(fragmentSpread: FragmentSpreadNode, input: {
+    fragment: FragmentDefinitionNode;
+    variables: OperationVariables | undefined;
+    parentScope: OperationVariables | undefined;
 }): OperationVariables;
 
-// @public (undocumented)
+// @internal @deprecated (undocumented)
 export function getFragmentVariables(fragmentSpread: FragmentSpreadNode, input: {
     fragment: FragmentDefinitionNode;
     scope?: OperationVariables;

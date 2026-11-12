@@ -2856,11 +2856,11 @@ export interface ReadMergeModifyContext {
     // (undocumented)
     isDeferPending?: (path: Incremental.Path, label: string | undefined) => boolean;
     // (undocumented)
-    operationVariables?: OperationVariables;
-    // (undocumented)
     store: NormalizedCache;
     // (undocumented)
     variables?: OperationVariables;
+    // (undocumented)
+    variablesScope?: OperationVariables;
     // Warning: (ae-forgotten-export) The symbol "VarString" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -3407,9 +3407,9 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/core/ApolloClient.ts:674:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:406:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:197:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/local-state/LocalState.ts:151:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
-// src/local-state/LocalState.ts:204:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
-// src/local-state/LocalState.ts:247:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
+// src/local-state/LocalState.ts:150:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
+// src/local-state/LocalState.ts:203:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
+// src/local-state/LocalState.ts:246:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
 // src/utilities/internal/types/StreamInfoTrie.ts:10:3 - (ae-forgotten-export) The symbol "StreamArrayState" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)

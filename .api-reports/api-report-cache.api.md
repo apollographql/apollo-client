@@ -1054,11 +1054,11 @@ export interface ReadMergeModifyContext {
     // (undocumented)
     isDeferPending?: (path: Incremental.Path, label: string | undefined) => boolean;
     // (undocumented)
-    operationVariables?: OperationVariables;
-    // (undocumented)
     store: NormalizedCache;
     // (undocumented)
     variables?: OperationVariables;
+    // (undocumented)
+    variablesScope?: OperationVariables;
     // Warning: (ae-incompatible-release-tags) The symbol "varString" is marked as @public, but its signature references "VarString" which is marked as @internal
     //
     // (undocumented)
@@ -1240,7 +1240,7 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/inMemoryCache.ts:542:7 - (ae-incompatible-release-tags) The symbol "[handleIncrementalSymbol]" is marked as @public, but its signature references "DiffIncrementalInfo" which is marked as @internal
 // src/cache/inmemory/policies.ts:187:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:155:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/writeToStore.ts:76:7 - (ae-incompatible-release-tags) The symbol "varString" is marked as @public, but its signature references "VarString" which is marked as @internal
+// src/cache/inmemory/writeToStore.ts:75:7 - (ae-incompatible-release-tags) The symbol "varString" is marked as @public, but its signature references "VarString" which is marked as @internal
 
 // (No @packageDocumentation comment for this package)
 

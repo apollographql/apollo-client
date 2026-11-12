@@ -9,14 +9,14 @@ import { DeepMerger } from "./DeepMerger.js";
 /** @internal */
 export function mergeDeepArray<T>(
   sources: T[],
-  mergeOptions?: DeepMerger.MergeOptions
+  options?: DeepMerger.Options
 ): T {
   let target = sources[0] || ({} as T);
   const count = sources.length;
   if (count > 1) {
-    const merger = new DeepMerger();
+    const merger = new DeepMerger(options);
     for (let i = 1; i < count; ++i) {
-      target = merger.merge(target, sources[i], mergeOptions);
+      target = merger.merge(target, sources[i]);
     }
   }
   return target;

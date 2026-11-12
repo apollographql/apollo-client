@@ -42,6 +42,7 @@ import {
   spyOnConsole,
   wait,
 } from "@apollo/client/testing/internal";
+import { fragmentInfoSymbol } from "@apollo/client/utilities/internal";
 
 function createDefaultClient(mocks: MockLink.MockedResponse[]) {
   return new ApolloClient({
@@ -1831,6 +1832,10 @@ test("masks result when dataMasking is `true`", async () => {
         character: {
           __typename: "Character",
           id: "1",
+          [fragmentInfoSymbol]: {
+            operationVariables: { id: "1" },
+            fragments: {},
+          },
         },
       },
       dataState: "complete",

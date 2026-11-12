@@ -89,8 +89,11 @@ export class DeepMerger {
     }
 
     if (isNonNullObject(source) && isNonNullObject(target)) {
-      const keys =
-        includeSymbols ? Reflect.ownKeys(source) : Object.keys(source);
+      const keys: Array<string | symbol> = Object.keys(source);
+      if (includeSymbols) {
+        keys.push(...Object.getOwnPropertySymbols(source));
+      }
+
       keys.forEach((sourceKey) => {
         if (hasOwnProperty.call(target, sourceKey)) {
           const targetValue = target[sourceKey];

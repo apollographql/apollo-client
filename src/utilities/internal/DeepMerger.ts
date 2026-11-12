@@ -27,6 +27,7 @@ export declare namespace DeepMerger {
   }
 
   export interface MergeOptions {
+    includeSymbols?: boolean;
     atPath?: ReadonlyArray<string | number>;
   }
 
@@ -55,7 +56,7 @@ export class DeepMerger {
     source: any,
     mergeOptions: DeepMerger.MergeOptions = {}
   ): any {
-    const atPath = mergeOptions.atPath;
+    const { atPath, includeSymbols } = mergeOptions;
 
     if (atPath?.length) {
       const [head, ...tail] = atPath;
@@ -88,7 +89,9 @@ export class DeepMerger {
     }
 
     if (isNonNullObject(source) && isNonNullObject(target)) {
-      Object.keys(source).forEach((sourceKey) => {
+      const keys =
+        includeSymbols ? Reflect.ownKeys(source) : Object.keys(source);
+      keys.forEach((sourceKey) => {
         if (hasOwnProperty.call(target, sourceKey)) {
           const targetValue = target[sourceKey];
           if (source[sourceKey] !== targetValue) {

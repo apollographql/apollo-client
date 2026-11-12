@@ -4,17 +4,19 @@ const { hasOwnProperty } = Object.prototype;
 
 type ReconcilerFunction = (
   this: DeepMerger,
-  target: Record<string | number, any>,
-  source: Record<string | number, any>,
-  property: string | number
+  target: Record<string | number | symbol, any>,
+  source: Record<string | number | symbol, any>,
+  property: string | number | symbol,
+  mergeOptions: DeepMerger.MergeOptions
 ) => any;
 
 const defaultReconciler: ReconcilerFunction = function (
   target,
   source,
-  property
+  property,
+  mergeOptions
 ) {
-  return this.merge(target[property], source[property]);
+  return this.merge(target[property], source[property], mergeOptions);
 };
 
 /** @internal */
@@ -90,7 +92,12 @@ export class DeepMerger {
         if (hasOwnProperty.call(target, sourceKey)) {
           const targetValue = target[sourceKey];
           if (source[sourceKey] !== targetValue) {
-            const result = this.reconciler(target, source, sourceKey);
+            const result = this.reconciler(
+              target,
+              source,
+              sourceKey,
+              mergeOptions
+            );
             // A well-implemented reconciler may return targetValue to indicate
             // the merge changed nothing about the structure of the target.
             if (result !== targetValue) {

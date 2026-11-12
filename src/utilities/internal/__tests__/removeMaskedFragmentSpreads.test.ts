@@ -1,5 +1,9 @@
+import type { FragmentDefinitionNode } from "graphql";
+import { Kind, parse } from "graphql";
+
 import { gql } from "@apollo/client";
 import { removeMaskedFragmentSpreads } from "@apollo/client/utilities/internal";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 test("removes masked fragment spreads", () => {
   const query = gql`
@@ -295,6 +299,8 @@ test("removes masked fragment spreads to fragments missing from the document in 
       user {
         id
         ...UserAvatar
+        ...toString
+        ...constructor
       }
     }
   `;

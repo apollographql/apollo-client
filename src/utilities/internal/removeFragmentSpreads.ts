@@ -37,12 +37,17 @@ export function removeMaskedFragmentSpreads(
 
   return visit(document, {
     FragmentSpread(node) {
+      const fragmentName = node.name.value;
+
       if (!node.directives?.some(({ name }) => name.value === "unmask")) {
         switch (mode) {
           case "remove":
             return null;
           case "mark": {
-            const fragment = fragments[node.name.value];
+            const fragment =
+              Object.hasOwn(fragments, fragmentName) ?
+                fragments[fragmentName]
+              : undefined;
 
             if (
               !fragment ||

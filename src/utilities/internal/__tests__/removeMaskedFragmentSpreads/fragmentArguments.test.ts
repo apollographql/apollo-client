@@ -238,6 +238,8 @@ test("removes masked fragment spreads with fragment arguments to fragments missi
       user {
         id
         ...UserAvatar(size: 96)
+        ...toString(size: 96)
+        ...constructor(size: 96)
       }
     }
   `;

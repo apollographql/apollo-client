@@ -1780,22 +1780,30 @@ describe("client.watchQuery", () => {
     {
       const { data } = await stream.takeNext();
 
-      expect(data).toEqual({
+      expect(data).toStrictEqualTyped({
         user: {
           __typename: "User",
           id: 1,
           name: "User 1",
+          [fragmentInfoSymbol]: {
+            operationVariables: { id: 1 },
+            fragments: {},
+          },
         },
       });
     }
 
     const result = await observable.setVariables({ id: 2 });
 
-    expect(result.data).toEqual({
+    expect(result.data).toStrictEqualTyped({
       user: {
         __typename: "User",
         id: 2,
         name: "User 2",
+        [fragmentInfoSymbol]: {
+          operationVariables: { id: 2 },
+          fragments: {},
+        },
       },
     });
 
@@ -1813,6 +1821,10 @@ describe("client.watchQuery", () => {
           __typename: "User",
           id: 2,
           name: "User 2",
+          [fragmentInfoSymbol]: {
+            operationVariables: { id: 2 },
+            fragments: {},
+          },
         },
       },
       dataState: "complete",
@@ -1904,22 +1916,30 @@ describe("client.watchQuery", () => {
     {
       const { data } = await stream.takeNext();
 
-      expect(data).toEqual({
+      expect(data).toStrictEqualTyped({
         user: {
           __typename: "User",
           id: 1,
           name: "User 1",
+          [fragmentInfoSymbol]: {
+            operationVariables: { id: 1 },
+            fragments: {},
+          },
         },
       });
     }
 
     const result = await observable.reobserve({ variables: { id: 2 } });
 
-    expect(result.data).toEqual({
+    expect(result.data).toStrictEqualTyped({
       user: {
         __typename: "User",
         id: 2,
         name: "User 2",
+        [fragmentInfoSymbol]: {
+          operationVariables: { id: 2 },
+          fragments: {},
+        },
       },
     });
 
@@ -1937,6 +1957,10 @@ describe("client.watchQuery", () => {
           __typename: "User",
           id: 2,
           name: "User 2",
+          [fragmentInfoSymbol]: {
+            operationVariables: { id: 2 },
+            fragments: {},
+          },
         },
       },
       dataState: "complete",
@@ -1965,7 +1989,7 @@ describe("client.watchQuery", () => {
       id: number;
     }
 
-    const query: TypedDocumentNode<Query, Variables> = gql`
+    const query: TypedDocumentNode<WithFragmentInfo<Query>, Variables> = gql`
       query UnmaskedQuery($id: ID!) {
         user(id: $id) {
           id
@@ -2004,11 +2028,15 @@ describe("client.watchQuery", () => {
     {
       const { data } = await stream.takeNext();
 
-      expect(data).toEqual({
+      expect(data).toStrictEqualTyped({
         user: {
           __typename: "User",
           id: 1,
           name: "User 1",
+          [fragmentInfoSymbol]: {
+            operationVariables: { id: 1 },
+            fragments: {},
+          },
         },
       });
     }
@@ -2063,11 +2091,15 @@ describe("client.watchQuery", () => {
     {
       const { data } = await stream.takeNext();
 
-      expect(data).toEqual({
+      expect(data).toStrictEqualTyped({
         user: {
           __typename: "User",
           id: 1,
           name: "User (updated)",
+          [fragmentInfoSymbol]: {
+            operationVariables: { id: 1 },
+            fragments: {},
+          },
         },
       });
     }

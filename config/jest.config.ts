@@ -67,14 +67,19 @@ const react17TestFileIgnoreList = [
   "src/react/ssr/__tests__/useQueryEndToEnd.test.tsx",
 ];
 
+const tsSharedTestFileIgnoreList = [
+  ignoreDTSFiles,
+  ignoreTSXFiles,
+  "src/local-state/__tests__/LocalState/testUtils.ts",
+  "src/local-state/__tests__/LocalState/fixtures/.*.ts$",
+];
+
 const tsStandardConfig = {
   ...defaults,
   displayName: "Core Tests",
   testPathIgnorePatterns: [
-    ignoreDTSFiles,
-    ignoreTSXFiles,
-    "src/local-state/__tests__/LocalState/testUtils.ts",
-    "src/local-state/__tests__/LocalState/fixtures/.*.ts$",
+    ...tsSharedTestFileIgnoreList,
+    "legacyFragmentVariables\\.test\\.tsx?$",
   ],
 };
 
@@ -94,6 +99,11 @@ const tsGraphql16Config = {
     ...tsStandardConfig.moduleNameMapper,
     "^graphql$": "graphql-16",
   },
+  testPathIgnorePatterns: [
+    ...tsSharedTestFileIgnoreList,
+    "fragmentArguments\\.test\\.tsx?$",
+    "getFragmentVariables\\.test\\.tsx?$",
+  ],
 };
 
 // For both React (Jest) "projects", ignore core tests (.ts files) as they

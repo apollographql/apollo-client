@@ -9,6 +9,7 @@ import type {
   SelectionNode,
   SelectionSetNode,
 } from "graphql";
+import { Kind } from "graphql";
 
 import type { ObservableQuery } from "@apollo/client";
 import type { OperationVariables } from "@apollo/client";
@@ -17,6 +18,7 @@ import type { FragmentMap } from "@apollo/client/utilities/internal";
 import { createFragmentMap } from "./createFragmentMap.js";
 import { getFragmentDefinitions } from "./getFragmentDefinitions.js";
 import { getFragmentFromSelection } from "./getFragmentFromSelection.js";
+import { getFragmentVariables } from "./getFragmentVariables.js";
 import { getMainDefinition } from "./getMainDefinition.js";
 import { isField } from "./isField.js";
 import { resultKeyNameFromField } from "./resultKeyNameFromField.js";
@@ -35,6 +37,7 @@ export function equalByQuery(
     equalBySelectionSet(getMainDefinition(query).selectionSet, aData, bData, {
       fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
       variables,
+      operationVariables: variables,
     })
   );
 }
@@ -44,6 +47,7 @@ export function equalByQuery(
 interface CompareContext<TVariables extends OperationVariables> {
   fragmentMap: FragmentMap;
   variables: TVariables | undefined;
+  operationVariables: TVariables | undefined;
 }
 
 function equalBySelectionSet(
@@ -122,6 +126,19 @@ function equalBySelectionSet(
         // could be !== if it's a named fragment ...spread.
         if (selectionHasNonreactiveDirective(fragment)) return true;
 
+        let fragmentContext = context;
+        if (
+          selection.kind === Kind.FRAGMENT_SPREAD &&
+          fragment.kind === Kind.FRAGMENT_DEFINITION
+        ) {
+          const variables = getFragmentVariables(selection, {
+            fragment,
+            variables: context.operationVariables,
+            parentScope: context.variables,
+          });
+          fragmentContext = { ...fragmentContext, variables };
+        }
+
         return equalBySelectionSet(
           fragment.selectionSet,
           // Notice that we reuse the same aResult and bResult values here,
@@ -130,7 +147,7 @@ function equalBySelectionSet(
           // that should be applied to the current result value(s).
           aResult,
           bResult,
-          context
+          fragmentContext
         );
       }
     }

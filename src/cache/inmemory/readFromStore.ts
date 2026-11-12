@@ -755,7 +755,10 @@ export class StoreReader {
 
     dataState ||= "complete";
 
-    let result = mergeDeepArray(objectsToMerge);
+    const merger = new DeepMerger();
+    let result = objectsToMerge.reduce((memo, obj) => {
+      return merger.merge(memo, obj, { includeSymbols: true });
+    });
 
     const childFragments = objectsToMerge.reduce<
       FragmentInfo["fragments"] | undefined

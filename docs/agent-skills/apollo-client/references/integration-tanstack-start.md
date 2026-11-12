@@ -178,48 +178,61 @@ function RouteComponent() {
 }
 ```
 
-### Multiple Queries in a Loader
+### One Query for Each Route
 
-You can preload multiple queries in a single loader:
+Put all data for the route in one query, and preload that one query in the loader. Each child component adds its fields with a fragment (see the [Fragments reference](fragments.md)). Do not preload several independent queries in one loader: that sends several requests, and the queries cannot share a loading or error state. If part of the route is slow, use `@defer` on that part.
 
 ```typescript
 import { gql } from "@apollo/client";
+import type { TypedDocumentNode } from "@apollo/client";
 import { useReadQuery } from "@apollo/client/react";
 import { createFileRoute } from "@tanstack/react-router";
+import { UserHeader, USER_HEADER_FRAGMENT } from "../components/UserHeader";
+import { PostListItem, POST_LIST_ITEM_FRAGMENT } from "../components/PostListItem";
+import type { UserPageQuery, UserPageQueryVariables } from "./user.generated";
 
-// TypedDocumentNode definitions omitted for brevity
+const USER_PAGE_QUERY: TypedDocumentNode<
+  UserPageQuery,
+  UserPageQueryVariables
+> = gql`
+  query UserPage($id: ID!) {
+    user(id: $id) {
+      id
+      ...UserHeader_user
+      posts {
+        id
+        ...PostListItem_post
+      }
+    }
+  }
+  ${USER_HEADER_FRAGMENT}
+  ${POST_LIST_ITEM_FRAGMENT}
+`;
 
-export const Route = createFileRoute("/dashboard")({
+export const Route = createFileRoute("/user/$userId")({
   component: RouteComponent,
-  loader: ({ context: { preloadQuery } }) => {
-    const userQueryRef = preloadQuery(GET_USER, {
-      variables: { id: "current" },
+  loader: ({ context: { preloadQuery }, params }) => {
+    const queryRef = preloadQuery(USER_PAGE_QUERY, {
+      variables: { id: params.userId },
     });
 
-    const statsQueryRef = preloadQuery(GET_STATS, {
-      variables: { period: "month" },
-    });
-
-    return {
-      userQueryRef,
-      statsQueryRef,
-    };
+    return { queryRef };
   },
 });
 
 function RouteComponent() {
-  const { userQueryRef, statsQueryRef } = Route.useLoaderData();
-  const { data: userData } = useReadQuery(userQueryRef);
-  const { data: statsData } = useReadQuery(statsQueryRef);
+  const { queryRef } = Route.useLoaderData();
+  const { data } = useReadQuery(queryRef);
 
   return (
     <div>
-      <h1>Welcome, {userData.user.name}</h1>
-      <div>
-        <h2>Monthly Stats</h2>
-        <p>Views: {statsData.stats.views}</p>
-        <p>Clicks: {statsData.stats.clicks}</p>
-      </div>
+      <UserHeader user={data.user} />
+      <h2>Posts</h2>
+      <ul>
+        {data.user.posts.map((post) => (
+          <PostListItem key={post.id} post={post} />
+        ))}
+      </ul>
     </div>
   );
 }
@@ -229,7 +242,7 @@ function RouteComponent() {
 
 When using `useReadQuery`, you can get refetch functionality from `useQueryRefHandlers`:
 
-> **Important:** Always call `useQueryRefHandlers` before `useReadQuery`. These two hooks interact with the same `queryRef`, and calling them in the wrong order could cause subtle bugs.
+> **Important:** Always call `useQueryRefHandlers` before `useReadQuery`. `refetch` and `fetchMore` give the `queryRef` a new promise, and `useQueryRefHandlers` applies it during render. If `useReadQuery` runs first, it reads the previous promise, which is already settled, so the component does not suspend and does not show the new result. This is a known issue that cannot be fixed without breaking transitions. See [#11772](https://github.com/apollographql/apollo-client/issues/11772) and [this comment](https://github.com/apollographql/apollo-client/issues/11772#issuecomment-3387822851) for the details.
 
 ```typescript
 import { useReadQuery, useQueryRefHandlers, QueryRef } from "@apollo/client/react";
@@ -256,7 +269,8 @@ function UserComponent({ queryRef }: { queryRef: QueryRef<GetUserQuery> }) {
 3. **Loader vs Component Queries:**
 
    - Use `preloadQuery` in loaders when you want to start fetching data before the component renders
-   - Use `useSuspenseQuery` directly in components for simpler cases or when data fetching can wait until render
+   - Use `useSuspenseQuery` directly in the route component for simpler cases or when data fetching can wait until render
+   - Either way, the route has one query. Other components read their data from fragments
 
 4. **Streaming SSR:** The integration fully supports React's streaming SSR capabilities. Place `Suspense` boundaries strategically for optimal user experience.
 

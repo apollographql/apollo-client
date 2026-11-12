@@ -196,46 +196,61 @@ export default function UserPage() {
 
 > **Important:** To provide better TypeScript support, `apolloLoader` is a method that you need to call twice: `apolloLoader<LoaderArgs>()(loader)`
 
-### Multiple Queries in a Loader
+### One Query for Each Route
 
-You can preload multiple queries in a single loader:
+Put all data for the route in one query, and preload that one query in the loader. Each child component adds its fields with a fragment (see the [Fragments reference](fragments.md)). Do not preload several independent queries in one loader: that sends several requests, and the queries cannot share a loading or error state. If part of the route is slow, use `@defer` on that part.
 
 ```typescript
 import { gql } from "@apollo/client";
+import type { TypedDocumentNode } from "@apollo/client";
 import { useReadQuery } from "@apollo/client/react";
 import { useLoaderData } from "react-router";
-import type { Route } from "./+types/my-route";
+import type { Route } from "./+types/user-page";
 import { apolloLoader } from "./apollo";
+import { UserHeader, USER_HEADER_FRAGMENT } from "./components/UserHeader";
+import { PostListItem, POST_LIST_ITEM_FRAGMENT } from "./components/PostListItem";
+import type { UserPageQuery, UserPageQueryVariables } from "./user-page.generated";
 
-// TypedDocumentNode definitions omitted for brevity
+const USER_PAGE_QUERY: TypedDocumentNode<
+  UserPageQuery,
+  UserPageQueryVariables
+> = gql`
+  query UserPage($id: ID!) {
+    user(id: $id) {
+      id
+      ...UserHeader_user
+      posts {
+        id
+        ...PostListItem_post
+      }
+    }
+  }
+  ${USER_HEADER_FRAGMENT}
+  ${POST_LIST_ITEM_FRAGMENT}
+`;
 
-export const loader = apolloLoader<Route.LoaderArgs>()(({ preloadQuery }) => {
-  const userQueryRef = preloadQuery(GET_USER, {
-    variables: { id: "1" },
+export const loader = apolloLoader<Route.LoaderArgs>()(({
+  preloadQuery,
+  params,
+}) => {
+  const queryRef = preloadQuery(USER_PAGE_QUERY, {
+    variables: { id: params.id },
   });
 
-  const postsQueryRef = preloadQuery(GET_POSTS, {
-    variables: { userId: "1" },
-  });
-
-  return {
-    userQueryRef,
-    postsQueryRef,
-  };
+  return { queryRef };
 });
 
 export default function UserPage() {
-  const { userQueryRef, postsQueryRef } = useLoaderData<typeof loader>();
-  const { data: userData } = useReadQuery(userQueryRef);
-  const { data: postsData } = useReadQuery(postsQueryRef);
+  const { queryRef } = useLoaderData<typeof loader>();
+  const { data } = useReadQuery(queryRef);
 
   return (
     <div>
-      <h1>{userData.user.name}</h1>
+      <UserHeader user={data.user} />
       <h2>Posts</h2>
       <ul>
-        {postsData.posts.map((post) => (
-          <li key={post.id}>{post.title}</li>
+        {data.user.posts.map((post) => (
+          <PostListItem key={post.id} post={post} />
         ))}
       </ul>
     </div>

@@ -80,62 +80,83 @@ function Root() {
 
 ### Step 3: Execute Query
 
+Only the route component calls a query hook. Child components read their data from fragments. See [Where Data Comes From](../SKILL.md#where-data-comes-from).
+
 ```tsx
 import { gql } from "@apollo/client";
+import type { TypedDocumentNode } from "@apollo/client";
 import { useQuery } from "@apollo/client/react";
+import {
+  UserListItem,
+  USER_LIST_ITEM_FRAGMENT,
+} from "../components/UserListItem";
+import type {
+  UsersPageQuery,
+  UsersPageQueryVariables,
+} from "./UsersPage.generated";
 
-const GET_USERS = gql`
-  query GetUsers {
+const USERS_PAGE_QUERY: TypedDocumentNode<
+  UsersPageQuery,
+  UsersPageQueryVariables
+> = gql`
+  query UsersPage {
     users {
       id
-      name
-      email
+      ...UserListItem_user
     }
   }
+  ${USER_LIST_ITEM_FRAGMENT}
 `;
 
-function UserList() {
-  const { loading, error, data, dataState } = useQuery(GET_USERS);
+export function UsersPage() {
+  const { data, dataState, loading, error } = useQuery(USERS_PAGE_QUERY);
 
-  if (loading) return <p>Loading...</p>;
   if (error) return <p>Error: {error.message}</p>;
+  if (dataState === "empty") return loading ? <p>Loading...</p> : null;
 
-  // TypeScript note: for stricter type narrowing, you can also check `dataState === "complete"` before accessing data
   return (
-    <ul>{data?.users.map((user) => <li key={user.id}>{user.name}</li>)}</ul>
+    <ul>
+      {data.users.map((user) => (
+        <UserListItem key={user.id} user={user} />
+      ))}
+    </ul>
   );
 }
 ```
+
+`UserListItem` is a child component that reads its data from a fragment. See the [Fragments reference](fragments.md) for the child component pattern.
 
 ## Basic Query Usage
 
 ### Using Variables
 
 ```tsx
-const GET_USER = gql`
-  query GetUser($id: ID!) {
+const USER_PAGE_QUERY: TypedDocumentNode<
+  UserPageQuery,
+  UserPageQueryVariables
+> = gql`
+  query UserPage($id: ID!) {
     user(id: $id) {
       id
-      name
-      email
+      ...UserProfile_user
     }
   }
+  ${USER_PROFILE_FRAGMENT}
 `;
 
-function UserProfile({ userId }: { userId: string }) {
-  const { loading, error, data, dataState } = useQuery(GET_USER, {
-    variables: { id: userId },
+export function UserPage({ params }: { params: { id: string } }) {
+  const { data, dataState, loading, error } = useQuery(USER_PAGE_QUERY, {
+    variables: { id: params.id },
   });
 
-  if (loading) return <p>Loading...</p>;
   if (error) return <p>Error: {error.message}</p>;
+  if (dataState === "empty") return loading ? <p>Loading...</p> : null;
 
-  // TypeScript note: for stricter type narrowing, you can also check `dataState === "complete"` before accessing data
-  return <div>{data?.user.name}</div>;
+  return <UserProfile user={data.user} />;
 }
 ```
 
-> **Note for TypeScript users**: Use [`dataState`](https://www.apollographql.com/docs/react/data/typescript#type-narrowing-data-with-datastate) for more robust type safety and better type narrowing in Apollo Client 4.x.
+Check [`dataState`](https://www.apollographql.com/docs/react/data/typescript#type-narrowing-data-with-datastate) before you read `data`. It narrows the type of `data`. See [Checking dataState](queries.md#checking-datastate).
 
 ### TypeScript Integration
 
@@ -165,11 +186,14 @@ if (false) {
   `;
 }
 
-function UserProfile({ userId }: { userId: string }) {
+export function UserPage({ params }: { params: { id: string } }) {
   // Types are automatically inferred from GetUserDocument
-  const { data } = useQuery(GetUserDocument, {
-    variables: { id: userId },
+  const { data, dataState, loading, error } = useQuery(GetUserDocument, {
+    variables: { id: params.id },
   });
+
+  if (error) return <p>Error: {error.message}</p>;
+  if (dataState === "empty") return loading ? <p>Loading...</p> : null;
 
   return <div>{data.user.name}</div>;
 }
@@ -206,10 +230,13 @@ const GET_USER: TypedDocumentNode<GetUserData, GetUserVariables> = gql`
   }
 `;
 
-function UserProfile({ userId }: { userId: string }) {
-  const { data } = useQuery(GET_USER, {
-    variables: { id: userId },
+export function UserPage({ params }: { params: { id: string } }) {
+  const { data, dataState, loading, error } = useQuery(GET_USER, {
+    variables: { id: params.id },
   });
+
+  if (error) return <p>Error: {error.message}</p>;
+  if (dataState === "empty") return loading ? <p>Loading...</p> : null;
 
   // data.user is automatically typed from GET_USER
   return <div>{data.user.name}</div>;
@@ -333,4 +360,4 @@ const client = new ApolloClient({
 
 4. **Environment Variables:** Store your GraphQL endpoint URL in environment variables for different environments (development, staging, production).
 
-5. **Error Handling:** Always handle `loading` and `error` states when using `useQuery` or `useLazyQuery`. For Suspense-based hooks (`useSuspenseQuery`), React handles this through `<Suspense>` boundaries and error boundaries.
+5. **Error Handling:** When you use `useQuery` or `useLazyQuery`, always check `error` first, then check `dataState === "empty"` with `loading` (see [Checking dataState](queries.md#checking-datastate)). For Suspense-based hooks (`useSuspenseQuery`), React handles this through `<Suspense>` boundaries and error boundaries.

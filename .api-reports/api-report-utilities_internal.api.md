@@ -141,16 +141,24 @@ export namespace DeepMerger {
     export interface Options {
         // (undocumented)
         arrayMerge?: DeepMerger.ArrayMergeStrategy;
-        // Warning: (ae-forgotten-export) The symbol "ReconcilerFunction" needs to be exported by the entry point index.d.ts
-        //
         // (undocumented)
-        reconciler?: ReconcilerFunction;
+        includeSymbols?: boolean;
     }
 }
 
 // @internal @deprecated (undocumented)
 export class DeepMerger {
-    constructor(options?: DeepMerger.Options);
+    constructor(options: DeepMerger.Options & {
+        includeSymbols?: false;
+        reconciler: ReconcilerFunction<string | number>;
+    });
+    constructor(options: DeepMerger.Options & {
+        includeSymbols: true;
+        reconciler: ReconcilerFunction<PropertyKey>;
+    });
+    constructor(options?: DeepMerger.Options & {
+        reconciler?: never;
+    });
     // (undocumented)
     isObject: typeof isNonNullObject;
     // (undocumented)
@@ -445,7 +453,7 @@ export function isNonEmptyArray<T>(value: ArrayLike<T> | null | undefined): valu
 export function isNonEmptyObject<T extends object>(obj: T | undefined): obj is T;
 
 // @internal @deprecated (undocumented)
-export function isNonNullObject(obj: unknown): obj is Record<string | number, any>;
+export function isNonNullObject(obj: unknown): obj is Record<string | number | symbol, any>;
 
 // @internal @deprecated (undocumented)
 export function isPlainObject(obj: unknown): obj is Record<string | number, any>;
@@ -484,7 +492,7 @@ export function maybeDeepFreeze<T>(obj: T): T;
 export function mergeDeep<T extends any[]>(...sources: T): TupleToIntersection<T>;
 
 // @internal @deprecated (undocumented)
-export function mergeDeepArray<T>(sources: T[]): T;
+export function mergeDeepArray<T>(sources: T[], options?: DeepMerger.Options): T;
 
 // Warning: (ae-forgotten-export) The symbol "OptionsUnion" needs to be exported by the entry point index.d.ts
 //
@@ -535,7 +543,7 @@ export type Primitive = null | undefined | string | number | boolean | symbol | 
 // Warning: (ae-incompatible-release-tags) The symbol "ReconcilerFunction" is marked as @public, but its signature references "DeepMerger" which is marked as @internal
 //
 // @public (undocumented)
-type ReconcilerFunction = (this: DeepMerger, target: Record<string | number, any>, source: Record<string | number, any>, property: string | number) => any;
+type ReconcilerFunction<TKey extends PropertyKey = string | number> = (this: DeepMerger, target: Record<TKey, any>, source: Record<TKey, any>, property: TKey) => any;
 
 // Warning: (ae-forgotten-export) The symbol "globalCaches" needs to be exported by the entry point index.d.ts
 //
@@ -668,6 +676,7 @@ export const variablesUnknownSymbol: unique symbol;
 
 // Warnings were encountered during analysis:
 //
+// src/utilities/internal/DeepMerger.ts:51:7 - (ae-forgotten-export) The symbol "ReconcilerFunction" needs to be exported by the entry point index.d.ts
 // src/utilities/internal/getStoreKeyName.ts:89:1 - (ae-forgotten-export) The symbol "storeKeyNameStringify" needs to be exported by the entry point index.d.ts
 // src/utilities/internal/types/ExtensionsWithStreamDetails.ts:11:5 - (ae-incompatible-release-tags) The symbol "deref" is marked as @public, but its signature references "StreamInfoTrie" which is marked as @internal
 

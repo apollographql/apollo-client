@@ -2118,7 +2118,7 @@ describe("client.watchQuery", () => {
       incrementalHandler: new Defer20220824Handler(),
     });
 
-    const observable = client.watchQuery({ query, variables: { id: 1 } });
+    const observable = client.watchQuery({ query });
     const stream = new ObservableStream(observable);
 
     await expect(stream).toEmitTypedValue({
@@ -2236,7 +2236,7 @@ describe("client.watchQuery", () => {
       incrementalHandler: new Defer20220824Handler(),
     });
 
-    const observable = client.watchQuery({ query, variables: { id: 1 } });
+    const observable = client.watchQuery({ query });
     const stream = new ObservableStream(observable);
 
     await expect(stream).toEmitTypedValue({

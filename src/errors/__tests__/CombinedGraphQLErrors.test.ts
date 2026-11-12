@@ -16,7 +16,9 @@ test("is an AggregateError with enumerable errors", () => {
 
   expect(error).toBeInstanceOf(AggregateError);
   expect(error.errors).toEqual(errors);
-  expect(Object.prototype.propertyIsEnumerable.call(error, "errors")).toBe(true);
+  expect(Object.prototype.propertyIsEnumerable.call(error, "errors")).toBe(
+    true
+  );
   expect({ ...error }).toHaveProperty("errors", errors);
   expect(JSON.parse(JSON.stringify(error))).toHaveProperty("errors", errors);
 });

@@ -179,3 +179,71 @@ test("reads operation variables used by a nested fragment on list items inside a
     },
   });
 });
+
+test("combines fragment info from overlapping selections of the same nested object", () => {
+  const query = gql`
+    query {
+      user {
+        id
+        profile {
+          id
+          ...ProfileAvatar(size: 32)
+        }
+        ... on User {
+          profile {
+            id
+            ...ProfileBio(locale: "en")
+          }
+        }
+      }
+    }
+
+    fragment ProfileAvatar($size: Int) on Profile {
+      avatar(size: $size)
+    }
+
+    fragment ProfileBio($locale: String) on Profile {
+      bio(locale: $locale)
+    }
+  `;
+
+  const cache = new InMemoryCache();
+
+  cache.restore({
+    ROOT_QUERY: {
+      __typename: "Query",
+      user: { __ref: "User:1" },
+    },
+    "User:1": {
+      __typename: "User",
+      id: "1",
+      profile: { __ref: "Profile:1" },
+    },
+    "Profile:1": {
+      __typename: "Profile",
+      id: "1",
+      'avatar({"size":32})': "small.png",
+      'bio({"locale":"en"})': "Hello",
+    },
+  });
+
+  expect(cache.readQuery({ query })).toStrictEqualTyped({
+    user: {
+      __typename: "User",
+      id: "1",
+      profile: {
+        __typename: "Profile",
+        id: "1",
+        avatar: "small.png",
+        bio: "Hello",
+        [fragmentInfoSymbol]: {
+          operationVariables: {},
+          fragments: {
+            ProfileAvatar: { variables: { size: 32 } },
+            ProfileBio: { variables: { locale: "en" } },
+          },
+        },
+      },
+    },
+  });
+});

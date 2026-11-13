@@ -32,7 +32,7 @@ function getFragment(document: DocumentNode, name: string) {
   return { fragment, fragmentSpread };
 }
 
-test("does not include operation variables for variables declared by the fragment", () => {
+test("returns undefined for variables declared by the fragment", () => {
   const query = gql`
     query ($size: Int) {
       user {
@@ -52,7 +52,7 @@ test("does not include operation variables for variables declared by the fragmen
       fragment,
       scope: { size: 96 },
     })
-  ).toStrictEqual({});
+  ).toBeUndefined();
 });
 
 test("ignores default values of variables declared by the fragment", () => {
@@ -75,10 +75,10 @@ test("ignores default values of variables declared by the fragment", () => {
       fragment,
       scope: {},
     })
-  ).toStrictEqual({});
+  ).toBeUndefined();
 });
 
-test("does not include operation variables not declared by the fragment", () => {
+test("returns undefined when the fragment uses operation variables it does not declare", () => {
   const query = gql`
     query ($size: Int, $locale: String) {
       user {
@@ -99,5 +99,5 @@ test("does not include operation variables not declared by the fragment", () => 
       fragment,
       scope: { size: 96, locale: "en" },
     })
-  ).toStrictEqual({});
+  ).toBeUndefined();
 });

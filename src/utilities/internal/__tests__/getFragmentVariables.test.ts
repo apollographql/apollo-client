@@ -150,10 +150,10 @@ test("does not include operation variables when the fragment declares no variabl
       fragment,
       scope: { two: 2 },
     })
-  ).toStrictEqual({});
+  ).toBeUndefined();
 });
 
-test("returns an empty object when the scope is undefined and there are no arguments", () => {
+test("returns undefined when the fragment declares no variables and the scope is undefined", () => {
   const query = gql`
     query {
       user {
@@ -173,7 +173,7 @@ test("returns an empty object when the scope is undefined and there are no argum
       fragment,
       scope: undefined,
     })
-  ).toStrictEqual({});
+  ).toBeUndefined();
 });
 
 test("adds fragment arguments when the scope is undefined", () => {
@@ -377,7 +377,7 @@ test("does not add parent fragment arguments to a nested fragment scope", () => 
       fragment: bar.fragment,
       scope: { x: 1 },
     })
-  ).toStrictEqual({});
+  ).toBeUndefined();
 });
 
 test("object arguments replace operation variables with the same name", () => {
@@ -789,7 +789,7 @@ test("does not add spread arguments when the fragment declares no variables", ()
       fragment,
       scope: {},
     })
-  ).toStrictEqual({});
+  ).toBeUndefined();
 });
 
 test("does not add an undeclared spread argument or an operation variable with the same name", () => {
@@ -812,7 +812,7 @@ test("does not add an undeclared spread argument or an operation variable with t
       fragment,
       scope: { other: 99 },
     })
-  ).toStrictEqual({});
+  ).toBeUndefined();
 });
 
 test("does not read fragment variables from the object prototype", () => {

@@ -7,6 +7,8 @@
     "@apollo/client-codemod-migrate-3-to-4": "1.0.2"
   },
   "changesets": [
-    "pink-cooks-remember"
+    "pink-cooks-remember",
+    "quiet-owls-travel",
+    "ten-paws-roll"
   ]
 }

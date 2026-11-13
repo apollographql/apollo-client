@@ -1,5 +1,44 @@
 # @apollo/client
 
+## 4.4.0-alpha.1
+
+### Minor Changes
+
+- [#13522](https://github.com/apollographql/apollo-client/pull/13522) [`6f94cfb`](https://github.com/apollographql/apollo-client/commit/6f94cfb11b2f386fdd22275113ef87e0282f2b23) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fragment APIs now read fragment arguments and operation variables from the object passed to `from`. When you pass an object from a query result, you no longer need to pass `variables` to read the fragment with the correct values.
+
+  ```ts
+  const fragment = gql`
+    fragment UserCard($avatarSize: Int) on User {
+      id
+      avatar(size: $avatarSize)
+    }
+  `;
+
+  const query = gql`
+    query GetUsers($friendAvatarSize: Int) {
+      currentUser {
+        ...UserCard(avatarSize: 96)
+        friends {
+          ...UserCard(avatarSize: $friendAvatarSize)
+        }
+      }
+    }
+  `;
+
+  const { data } = useQuery(query, { variables: { friendAvatarSize: 32 } });
+
+  // Reads the avatar with `size: 96`
+  useFragment({ fragment, from: data.currentUser });
+
+  // Reads the avatars with `size: 32`
+  useFragment({ fragment, from: data.currentUser.friends });
+  ```
+
+  This works with `useFragment`, `useSuspenseFragment`, `watchFragment`, `readFragment`, `writeFragment`, and `updateFragment`. The same applies to fragments that use operation variables without fragment arguments.
+
+- [#13521](https://github.com/apollographql/apollo-client/pull/13521) [`7bd29db`](https://github.com/apollographql/apollo-client/commit/7bd29db1297e3e909f5226fae9efd1cd196f81f1) Thanks [@phryneas](https://github.com/phryneas)! - `CombinedGraphQLErrors` and `CombinedProtocolErrors` now extend `AggregateError`.
+  This means that you will need to use at least `lib: ["es2021"]` or `lib: ["es2021.promise"]` in your TypeScript configuration.
+
 ## 4.4.0-alpha.0
 
 ### Minor Changes

@@ -968,6 +968,94 @@ it.failing(
   }
 );
 
+test("warns once across rerenders when passing parent object to `from` when key fields are missing", async () => {
+  using _ = spyOnConsole("warn");
+
+  interface Fragment {
+    age: number;
+  }
+
+  const fragment: TypedDocumentNode<Fragment, Record<string, never>> = gql`
+    fragment UserFields on User {
+      age
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  const { replaceSnapshot, render, takeRender } =
+    createDefaultRenderStream<Fragment>();
+  const { SuspenseFallback } = createDefaultTrackedComponents();
+
+  function App(_props: { count: number }) {
+    useTrackRenders();
+    const result = useSuspenseFragment({
+      fragment,
+      from: { __typename: "User" },
+    });
+
+    replaceSnapshot({ result });
+
+    return null;
+  }
+
+  using _disabledAct = disableActEnvironment();
+  const { rerender } = await render(
+    <Suspense fallback={<SuspenseFallback />}>
+      <App count={1} />
+    </Suspense>,
+    {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual([App]);
+    expect(snapshot.result).toStrictEqual({ data: {} });
+  }
+
+  await rerender(
+    <Suspense fallback={<SuspenseFallback />}>
+      <App count={2} />
+    </Suspense>
+  );
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual([App]);
+    expect(snapshot.result).toStrictEqual({ data: {} });
+  }
+
+  await rerender(
+    <Suspense fallback={<SuspenseFallback />}>
+      <App count={3} />
+    </Suspense>
+  );
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual([App]);
+    expect(snapshot.result).toStrictEqual({ data: {} });
+  }
+
+  await expect(takeRender).not.toRerender();
+
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    "Could not identify object passed to `from` for '%s' fragment, either because the object is non-normalized or the key fields are missing. If you are masking this object, please ensure the key fields are requested by the parent object.",
+    "UserFields"
+  );
+});
+
 test("returns null if `from` is `null`", async () => {
   interface ItemFragment {
     __typename: "Item";

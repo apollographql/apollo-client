@@ -183,7 +183,10 @@ function maskSelectionSet(
 
       if (fragmentInfo) {
         const memoWithInfo = memo as ObjectWithFragmentInfo;
-        const fragmentValue = fragmentInfo.fragments[fragmentName];
+        const fragmentValue =
+          Object.hasOwn(fragmentInfo.fragments, fragmentName) ?
+            fragmentInfo.fragments[fragmentName]
+          : undefined;
 
         if (
           isNonEmptyObject(fragmentInfo.operationVariables) ||

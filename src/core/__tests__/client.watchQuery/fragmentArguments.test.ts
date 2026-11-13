@@ -1,3 +1,5 @@
+import assert from "node:assert";
+
 import type { DocumentNode } from "graphql";
 import { delay, of } from "rxjs";
 
@@ -3028,6 +3030,87 @@ test("serializes custom scalar operation variables passed as fragment arguments"
       'attendees({"since":"2026-01-01"})': 10,
     },
   });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("does not record fragment info from Object.prototype for a masked fragment named after a prototype property", async () => {
+  const query: TypedDocumentNode<
+    WithFragmentInfo<{
+      lead: { __typename: "User"; id: string; avatar: string };
+    }>,
+    { size: number }
+  > = gql`
+    query Team($size: Int) {
+      lead {
+        id
+        avatar(size: $size)
+        ...constructor
+      }
+    }
+
+    fragment constructor on User {
+      name
+    }
+  `;
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query, variables: { size: 96 } },
+        result: {
+          data: {
+            lead: {
+              __typename: "User",
+              id: "1",
+              avatar: "large.png",
+              name: "Test User",
+            },
+          },
+        },
+      },
+    ]),
+  });
+
+  using stream = new ObservableStream(
+    client.watchQuery({ query, variables: { size: 96 } })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  const result = await stream.takeNext();
+
+  expect(result).toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        avatar: "large.png",
+        [fragmentInfoSymbol]: {
+          operationVariables: { size: 96 },
+          fragments: {},
+        },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+  assert(result.dataState === "complete");
+  // toStrictEqual does not detect an own `constructor` property, so check the
+  // keys directly.
+  expect(
+    Object.keys(result.data.lead[fragmentInfoSymbol]!.fragments)
+  ).toStrictEqual([]);
 
   await expect(stream).not.toEmitAnything();
 });

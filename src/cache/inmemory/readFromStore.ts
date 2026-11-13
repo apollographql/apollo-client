@@ -686,7 +686,18 @@ export class StoreReader {
               hasFragmentSpread = true;
             }
 
-            if (!isRoot && fragmentVariables) {
+            if (
+              !isRoot &&
+              fragmentVariables &&
+              // Always add an empty fragmentVariables if operation variables
+              // are non-empty. If operation variables are non-empty, we can
+              // omit fragment variables from the symbol so that we can omit
+              // the symbol altogether if no fragments include variables. This
+              // only works when operation variables are empty, otherwise the
+              // fallback variablesScope in diffQueryAgainstStore will be wrong.
+              (isNonEmptyObject(context.variables) ||
+                isNonEmptyObject(fragmentVariables))
+            ) {
               fragments ||= {};
               fragments[fragment.name.value] = { variables: fragmentVariables };
             }

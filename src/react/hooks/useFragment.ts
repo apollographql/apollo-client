@@ -203,7 +203,7 @@ function useFragment_<TData, TVariables extends OperationVariables>(
   const { from, ...rest } = options;
   const { cache } = client;
 
-  // We calculate the cache id seperately because we don't want changes to non
+  // We calculate the cache id separately because we don't want changes to non
   // key fields in the `from` property to recreate the observable. If the cache
   // identifier stays the same between renders, we want to reuse the existing
   // subscription.

@@ -1066,7 +1066,7 @@ export abstract class ApolloCache {
         ...this.getFragmentVariablesOptions(
           fragmentName || getFragmentDefinition(fragment).name.value,
           (from as ObjectWithFragmentInfo | undefined)?.[fragmentInfoSymbol] ||
-            (data as ObjectWithFragmentInfo)[fragmentInfoSymbol],
+            (data as ObjectWithFragmentInfo | null)?.[fragmentInfoSymbol],
           options.variables
         ),
       })

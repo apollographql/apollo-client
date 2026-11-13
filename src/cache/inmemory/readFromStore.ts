@@ -686,7 +686,7 @@ export class StoreReader {
               hasFragmentSpread = true;
             }
 
-            if (!isRoot && isNonEmptyObject(fragmentVariables)) {
+            if (!isRoot && fragmentVariables) {
               fragments ||= {};
               fragments[fragment.name.value] = { variables: fragmentVariables };
             }

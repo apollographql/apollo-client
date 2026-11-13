@@ -768,17 +768,9 @@ export class StoreReader {
 
     let result = mergeDeepArray(objectsToMerge, { includeSymbols: true });
 
-    const childFragments = objectsToMerge.reduce<
-      FragmentInfo["fragments"] | undefined
-    >((memo, obj) => {
-      const childFragmentInfo: FragmentInfo | undefined = (obj as any)[
-        fragmentInfoSymbol
-      ];
-
-      return childFragmentInfo ?
-          { ...memo, ...childFragmentInfo.fragments }
-        : memo;
-    }, undefined);
+    const childFragments = (result as ObjectWithFragmentInfo)[
+      fragmentInfoSymbol
+    ]?.fragments;
 
     if (
       childFragments ||

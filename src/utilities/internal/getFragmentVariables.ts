@@ -21,7 +21,7 @@ export function getFragmentVariables(
     Kind.FRAGMENT_ARGUMENT === undefined ||
     !fragment.variableDefinitions?.length
   ) {
-    return {};
+    return;
   }
 
   const variables: OperationVariables = {};

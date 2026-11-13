@@ -12,10 +12,12 @@ import type { ApolloCache, MissingTree } from "@apollo/client/cache";
 import type { MaybeMasked } from "@apollo/client/masking";
 import type {
   DocumentationTypes as UtilityDocumentationTypes,
+  ObjectWithFragmentInfo,
   VariablesOption,
 } from "@apollo/client/utilities/internal";
+import { fragmentInfoSymbol } from "@apollo/client/utilities/internal";
 
-import { wrapHook } from "./internal/index.js";
+import { useDeepMemo, wrapHook } from "./internal/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 
@@ -198,12 +200,43 @@ function useFragment_<TData, TVariables extends OperationVariables>(
   options: useFragment.Options<TData, TVariables>
 ): useFragment.Result<TData> | useFragment.Result<Array<TData | null>> {
   const client = useApolloClient(options.client);
-  const { from } = options;
+  const { from, ...rest } = options;
+  const { cache } = client;
 
-  // as of 4.4, client.watchFragment given the same options return the same
-  // observable so it is safe to call this every render.
-  const observable = client.watchFragment(
-    options
+  // We calculate the cache id seperately because we don't want changes to non
+  // key fields in the `from` property to recreate the observable. If the cache
+  // identifier stays the same between renders, we want to reuse the existing
+  // subscription.
+  const ids = useDeepMemo(() => {
+    const fromArray = Array.isArray(from) ? from : [from];
+
+    const ids = fromArray.map((value) =>
+      typeof value === "string" ? value
+      : value === null ? null
+      : cache.identify(value)
+    );
+
+    return Array.isArray(from) ? ids : ids[0];
+  }, [cache, from]);
+
+  // `useDeepMemo` does not compare symbol keys, so the fragment info is
+  // passed as a separate dependency to recreate the observable when it changes.
+  const fragmentInfo =
+    Array.isArray(from) ?
+      from.map(
+        (value) =>
+          (value as ObjectWithFragmentInfo | null)?.[fragmentInfoSymbol]
+      )
+    : (from as ObjectWithFragmentInfo | null)?.[fragmentInfoSymbol];
+
+  const stableOptions = useDeepMemo(
+    () => ({ ...rest, from }),
+    [rest, ids, fragmentInfo]
+  );
+
+  const observable = React.useMemo(
+    () => client.watchFragment(stableOptions),
+    [client, stableOptions]
   ) as ApolloCache.ObservableFragment<any>;
 
   // Unfortunately we forgot to update the use case of `from: null` on

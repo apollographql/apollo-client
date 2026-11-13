@@ -13,11 +13,13 @@ import type { FragmentKey } from "@apollo/client/react/internal";
 import { getSuspenseCache } from "@apollo/client/react/internal";
 import type {
   DocumentationTypes as UtilityDocumentationTypes,
+  ObjectWithFragmentInfo,
   VariablesOption,
 } from "@apollo/client/utilities/internal";
+import { fragmentInfoSymbol } from "@apollo/client/utilities/internal";
 
 import { __use } from "./internal/__use.js";
-import { wrapHook } from "./internal/index.js";
+import { useDeepMemo, wrapHook } from "./internal/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 
 export declare namespace useSuspenseFragment {
@@ -191,8 +193,34 @@ function useSuspenseFragment_<
   options: useSuspenseFragment.Options<TData, TVariables>
 ): useSuspenseFragment.Result<TData | null> {
   const client = useApolloClient(options.client);
+  const { from, ...rest } = options;
+  const { cache } = client;
 
-  const observable = client.watchFragment(options);
+  const ids = useDeepMemo(() => {
+    return Array.isArray(from) ?
+        from.map((id) => toStringId(cache, id))
+      : toStringId(cache, from);
+  }, [cache, from]);
+
+  // `useDeepMemo` does not compare symbol keys, so the fragment info is
+  // passed as a separate dependency to recreate the observable when it changes.
+  const fragmentInfo =
+    Array.isArray(from) ?
+      from.map(
+        (value) =>
+          (value as ObjectWithFragmentInfo | null)?.[fragmentInfoSymbol]
+      )
+    : (from as ObjectWithFragmentInfo | null)?.[fragmentInfoSymbol];
+
+  const stableOptions = useDeepMemo(
+    () => ({ ...rest, from }),
+    [rest, ids, fragmentInfo]
+  );
+
+  const observable = React.useMemo(
+    () => client.watchFragment(stableOptions),
+    [client, stableOptions]
+  );
   const fragmentRef = getSuspenseCache(client).getFragmentRef(observable);
 
   let [current, setPromise] = React.useState<
@@ -221,4 +249,14 @@ function useSuspenseFragment_<
   const data = __use(current[1]);
 
   return { data };
+}
+
+function toStringId(
+  cache: ApolloCache,
+  from: useSuspenseFragment.FromOptionValue<any> | null
+) {
+  return (
+    typeof from === "string" ? from
+    : from === null ? null
+    : cache.identify(from)) as string | null;
 }

@@ -353,7 +353,7 @@ export function getFragmentScope(fragmentSpread: FragmentSpreadNode, input: {
 export function getFragmentVariables(fragmentSpread: FragmentSpreadNode, input: {
     fragment: FragmentDefinitionNode;
     scope?: OperationVariables;
-}): OperationVariables;
+}): OperationVariables | undefined;
 
 // @internal @deprecated (undocumented)
 export function getGraphQLErrorsFromResult(result: {

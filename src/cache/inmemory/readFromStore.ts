@@ -663,23 +663,6 @@ export class StoreReader {
               scope: context.variablesScope,
             });
 
-            const variablesScope = getFragmentScope(selection, {
-              fragment,
-              variables: context.variables,
-              parentScope: context.variablesScope,
-            });
-
-            if (variablesScope !== context.variablesScope) {
-              fragmentContext = {
-                ...fragmentContext,
-                variablesScope,
-                varString: makeVarString({
-                  variables: context.variables,
-                  scope: variablesScope,
-                }),
-              };
-            }
-
             const isRoot = isFragmentRoot(selection);
 
             if (!isRoot) {
@@ -704,6 +687,23 @@ export class StoreReader {
 
             if (isMaskedSpread(selection)) {
               return;
+            }
+
+            const variablesScope = getFragmentScope(selection, {
+              fragment,
+              variables: context.variables,
+              parentScope: context.variablesScope,
+            });
+
+            if (variablesScope !== context.variablesScope) {
+              fragmentContext = {
+                ...fragmentContext,
+                variablesScope,
+                varString: makeVarString({
+                  variables: context.variables,
+                  scope: variablesScope,
+                }),
+              };
             }
           }
 

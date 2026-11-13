@@ -1001,6 +1001,117 @@ test("applies fragment argument defaults instead of operation variables with the
   await expect(stream).not.toEmitAnything();
 });
 
+test("does not bind operation variables to unset fragment arguments with the same name from a query result passed to from", async () => {
+  const fragment = gql`
+    fragment UserCard($size: Int) on User {
+      id
+      avatar(size: $size)
+    }
+  `;
+
+  const query: TypedDocumentNode<
+    WithFragmentInfo<{
+      lead: {
+        __typename: "User";
+        id: string;
+        largeAvatar: string;
+      };
+    }>,
+    { size: number }
+  > = gql`
+    query Team($size: Int) {
+      lead {
+        id
+        largeAvatar: avatar(size: $size)
+        ...UserCard
+      }
+    }
+
+    ${fragment}
+  `;
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query, variables: { size: 96 } },
+        result: {
+          data: {
+            lead: {
+              __typename: "User",
+              id: "1",
+              largeAvatar: "large.png",
+              avatar: "default.png",
+            },
+          },
+        },
+      },
+    ]),
+  });
+
+  using queryStream = new ObservableStream(
+    client.watchQuery({ query, variables: { size: 96 } })
+  );
+
+  await expect(queryStream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  const result = await queryStream.takeNext();
+
+  expect(result).toStrictEqualTyped({
+    data: {
+      lead: {
+        __typename: "User",
+        id: "1",
+        largeAvatar: "large.png",
+        [fragmentInfoSymbol]: {
+          operationVariables: { size: 96 },
+          fragments: {
+            UserCard: { variables: {} },
+          },
+        },
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+  assert(result.dataState === "complete");
+  const data = result.data;
+
+  expect(client.extract()).toStrictEqualTyped({
+    ROOT_QUERY: {
+      __typename: "Query",
+      lead: { __ref: "User:1" },
+    },
+    "User:1": {
+      __typename: "User",
+      id: "1",
+      'avatar({"size":96})': "large.png",
+      avatar: "default.png",
+    },
+  });
+
+  using stream = new ObservableStream(
+    client.watchFragment({ fragment, from: data.lead })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: { __typename: "User", id: "1", avatar: "default.png" },
+    dataState: "complete",
+    complete: true,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
 test("binds fragment arguments for each item from query results passed to from as an array", async () => {
   const fragment = gql`
     fragment UserCard($size: Int) on User {

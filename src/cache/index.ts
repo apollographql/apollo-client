@@ -66,4 +66,5 @@ export type {
   ScalarType,
   StoreObject,
   StoreValue,
+  VarString,
 } from "./inmemory/types.js";

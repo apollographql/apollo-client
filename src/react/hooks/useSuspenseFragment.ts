@@ -8,14 +8,15 @@ import type {
   TypedDocumentNode,
 } from "@apollo/client";
 import type { ApolloCache } from "@apollo/client/cache";
-import { canonicalStringify } from "@apollo/client/cache";
 import type { MaybeMasked } from "@apollo/client/masking";
 import type { FragmentKey } from "@apollo/client/react/internal";
 import { getSuspenseCache } from "@apollo/client/react/internal";
 import type {
   DocumentationTypes as UtilityDocumentationTypes,
+  ObjectWithFragmentInfo,
   VariablesOption,
 } from "@apollo/client/utilities/internal";
+import { fragmentInfoSymbol } from "@apollo/client/utilities/internal";
 
 import { __use } from "./internal/__use.js";
 import { useDeepMemo, wrapHook } from "./internal/index.js";
@@ -192,7 +193,7 @@ function useSuspenseFragment_<
   options: useSuspenseFragment.Options<TData, TVariables>
 ): useSuspenseFragment.Result<TData | null> {
   const client = useApolloClient(options.client);
-  const { from, variables } = options;
+  const { from, ...rest } = options;
   const { cache } = client;
 
   const ids = useDeepMemo(() => {
@@ -200,16 +201,27 @@ function useSuspenseFragment_<
         from.map((id) => toStringId(cache, id))
       : toStringId(cache, from);
   }, [cache, from]);
-  const idString = React.useMemo(
-    () => (Array.isArray(ids) ? ids.join(",") : ids),
-    [ids]
+
+  // `useDeepMemo` does not compare symbol keys, so the fragment info is
+  // passed as a separate dependency to recreate the observable when it changes.
+  const fragmentInfo =
+    Array.isArray(from) ?
+      from.map(
+        (value) =>
+          (value as ObjectWithFragmentInfo | null)?.[fragmentInfoSymbol]
+      )
+    : (from as ObjectWithFragmentInfo | null)?.[fragmentInfoSymbol];
+
+  const stableOptions = useDeepMemo(
+    () => ({ ...rest, from }),
+    [rest, ids, fragmentInfo]
   );
 
-  const fragmentRef = getSuspenseCache(client).getFragmentRef(
-    [options.fragment, canonicalStringify(variables), idString],
-    client,
-    { ...options, variables: variables as TVariables, from: ids }
+  const observable = React.useMemo(
+    () => client.watchFragment(stableOptions),
+    [client, stableOptions]
   );
+  const fragmentRef = getSuspenseCache(client).getFragmentRef(observable);
 
   let [current, setPromise] = React.useState<
     [FragmentKey, Promise<MaybeMasked<TData> | null>]

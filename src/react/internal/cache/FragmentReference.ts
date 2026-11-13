@@ -1,7 +1,8 @@
 import { equal } from "@wry/equality";
 import type { Subscription } from "rxjs";
 
-import type { ApolloClient, OperationVariables } from "@apollo/client";
+import type { ApolloClient } from "@apollo/client";
+import type { ApolloCache } from "@apollo/client/cache";
 import type { MaybeMasked } from "@apollo/client/masking";
 import type { DecoratedPromise } from "@apollo/client/utilities/internal";
 import {
@@ -19,10 +20,7 @@ interface FragmentReferenceOptions {
   onDispose?: () => void;
 }
 
-export class FragmentReference<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
-> {
+export class FragmentReference<TData = unknown> {
   public readonly observable: ApolloClient.ObservableFragment<TData | null>;
   public readonly key: FragmentKey = {};
   public promise!: FragmentRefPromise<MaybeMasked<TData>>;
@@ -37,20 +35,14 @@ export class FragmentReference<
   private references = 0;
 
   constructor(
-    client: ApolloClient,
-    watchFragmentOptions: ApolloClient.WatchFragmentOptions<
-      TData,
-      TVariables
-    > & {
-      from: string | null | Array<string | null>;
-    },
+    observable: ApolloCache.ObservableFragment<TData | null>,
     options: FragmentReferenceOptions
   ) {
     this.dispose = this.dispose.bind(this);
     this.handleNext = this.handleNext.bind(this);
     this.handleError = this.handleError.bind(this);
 
-    this.observable = client.watchFragment(watchFragmentOptions);
+    this.observable = observable;
 
     if (options.onDispose) {
       this.onDispose = options.onDispose;

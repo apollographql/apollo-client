@@ -3,8 +3,13 @@ import { Kind } from "graphql";
 
 import type { ApolloCache } from "@apollo/client/cache";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import type { FragmentMap } from "@apollo/client/utilities/internal";
+import type {
+  FragmentMap,
+  ObjectWithFragmentInfo,
+} from "@apollo/client/utilities/internal";
 import {
+  fragmentInfoSymbol,
+  isNonEmptyObject,
   maybeDeepFreeze,
   resultKeyNameFromField,
 } from "@apollo/client/utilities/internal";
@@ -174,6 +179,30 @@ function maskSelectionSet(
       );
 
       const mode = getFragmentMaskMode(selection);
+      const fragmentInfo = (data as ObjectWithFragmentInfo)[fragmentInfoSymbol];
+
+      if (fragmentInfo) {
+        const memoWithInfo = memo as ObjectWithFragmentInfo;
+        const fragmentValue =
+          Object.hasOwn(fragmentInfo.fragments, fragmentName) ?
+            fragmentInfo.fragments[fragmentName]
+          : undefined;
+
+        if (
+          isNonEmptyObject(fragmentInfo.operationVariables) ||
+          isNonEmptyObject(fragmentValue?.variables)
+        ) {
+          memoWithInfo[fragmentInfoSymbol] ||= {
+            operationVariables: fragmentInfo.operationVariables,
+            fragments: {},
+          };
+
+          if (fragmentValue) {
+            memoWithInfo[fragmentInfoSymbol].fragments[fragmentName] =
+              fragmentValue;
+          }
+        }
+      }
 
       if (mode !== "mask") {
         value = maskSelectionSet(

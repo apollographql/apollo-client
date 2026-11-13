@@ -1,8 +1,7 @@
+import { Trie } from "@wry/trie";
 import { map, shareReplay } from "rxjs";
 
 import type { ApolloCache } from "@apollo/client";
-
-import { memoize } from "./memoize.js";
 
 function mapObservableFragment<From, To>(
   observable: ApolloCache.ObservableFragment<From>,
@@ -34,18 +33,19 @@ function mapObservableFragment<From, To>(
   );
 }
 
-export const mapObservableFragmentMemoized = memoize(
-  function mapObservableFragmentMemoized<From, To>(
-    observable: ApolloCache.ObservableFragment<From>,
-    /**
-     * used together with `observable` as memoization key, `mapFn` is explicitly not used as memoization key
-     */
-    _cacheKey: symbol,
-    mapFn: (
-      from: ApolloCache.WatchFragmentResult<From>
-    ) => ApolloCache.WatchFragmentResult<To>
-  ): ApolloCache.ObservableFragment<To> {
-    return mapObservableFragment(observable, mapFn);
-  },
-  { max: 1, makeCacheKey: (args) => args.slice(0, 2) }
-);
+const cache = new Trie<{ mapped?: ApolloCache.ObservableFragment<any> }>(true);
+
+export function mapObservableFragmentMemoized<From, To>(
+  observable: ApolloCache.ObservableFragment<From>,
+  /**
+   * used together with `observable` as memoization key, `mapFn` is explicitly not used as memoization key
+   */
+  _cacheKey: symbol,
+  mapFn: (
+    from: ApolloCache.WatchFragmentResult<From>
+  ) => ApolloCache.WatchFragmentResult<To>
+): ApolloCache.ObservableFragment<To> {
+  const entry = cache.lookup(observable, _cacheKey);
+
+  return (entry.mapped ??= mapObservableFragment(observable, mapFn));
+}

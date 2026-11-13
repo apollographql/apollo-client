@@ -2,14 +2,14 @@ import { isNonNullObject } from "./isNonNullObject.js";
 
 const { hasOwnProperty } = Object.prototype;
 
-type ReconcilerFunction = (
+type ReconcilerFunction<TKey extends PropertyKey = string | number> = (
   this: DeepMerger,
-  target: Record<string | number, any>,
-  source: Record<string | number, any>,
-  property: string | number
+  target: Record<TKey, any>,
+  source: Record<TKey, any>,
+  property: TKey
 ) => any;
 
-const defaultReconciler: ReconcilerFunction = function (
+const defaultReconciler: ReconcilerFunction<PropertyKey> = function (
   target,
   source,
   property
@@ -21,7 +21,7 @@ const defaultReconciler: ReconcilerFunction = function (
 export declare namespace DeepMerger {
   export interface Options {
     arrayMerge?: DeepMerger.ArrayMergeStrategy;
-    reconciler?: ReconcilerFunction;
+    includeSymbols?: boolean;
   }
 
   export interface MergeOptions {
@@ -43,8 +43,26 @@ const objForKey = (key: string | number) => {
 
 /** @internal */
 export class DeepMerger {
-  private reconciler: ReconcilerFunction;
-  constructor(private options: DeepMerger.Options = {}) {
+  private reconciler: ReconcilerFunction<PropertyKey>;
+
+  constructor(
+    options: DeepMerger.Options & {
+      includeSymbols?: false;
+      reconciler: ReconcilerFunction<string | number>;
+    }
+  );
+  constructor(
+    options: DeepMerger.Options & {
+      includeSymbols: true;
+      reconciler: ReconcilerFunction<PropertyKey>;
+    }
+  );
+  constructor(options?: DeepMerger.Options & { reconciler?: never });
+  constructor(
+    private options: DeepMerger.Options & {
+      reconciler?: ReconcilerFunction<any>;
+    } = {}
+  ) {
     this.reconciler = options.reconciler || defaultReconciler;
   }
 
@@ -53,7 +71,7 @@ export class DeepMerger {
     source: any,
     mergeOptions: DeepMerger.MergeOptions = {}
   ): any {
-    const atPath = mergeOptions.atPath;
+    const { atPath } = mergeOptions;
 
     if (atPath?.length) {
       const [head, ...tail] = atPath;
@@ -86,7 +104,12 @@ export class DeepMerger {
     }
 
     if (isNonNullObject(source) && isNonNullObject(target)) {
-      Object.keys(source).forEach((sourceKey) => {
+      const keys: Array<string | symbol> = Object.keys(source);
+      if (this.options.includeSymbols) {
+        keys.push(...Object.getOwnPropertySymbols(source));
+      }
+
+      keys.forEach((sourceKey) => {
         if (hasOwnProperty.call(target, sourceKey)) {
           const targetValue = target[sourceKey];
           if (source[sourceKey] !== targetValue) {

@@ -4,6 +4,7 @@
 
 ```ts
 
+import type { ApolloCache } from '@apollo/client/cache';
 import type { ApolloClient } from '@apollo/client';
 import type { DataState } from '@apollo/client';
 import type { DecoratedPromise } from '@apollo/client/utilities/internal';
@@ -40,24 +41,15 @@ export type FetchMoreFunction<TData, TVariables extends OperationVariables> = <T
 }) => Promise<ApolloClient.QueryResult<MaybeMasked_2<TFetchData>, TErrorPolicy>>;
 
 // @public (undocumented)
-type FragmentCacheKey = [
-fragment: DocumentNode,
-stringifiedVariables: string,
-cacheId: string | null
-];
-
-// @public (undocumented)
 export interface FragmentKey {
     // (undocumented)
     __fragmentKey?: string;
 }
 
 // @public (undocumented)
-class FragmentReference<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
+class FragmentReference<TData = unknown> {
     // Warning: (ae-forgotten-export) The symbol "FragmentReferenceOptions" needs to be exported by the entry point index.d.ts
-    constructor(client: ApolloClient, watchFragmentOptions: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
-        from: string | null | Array<string | null>;
-    }, options: FragmentReferenceOptions);
+    constructor(observable: ApolloCache.ObservableFragment<TData | null>, options: FragmentReferenceOptions);
     // (undocumented)
     readonly key: FragmentKey;
     // Warning: (ae-forgotten-export) The symbol "Listener_2" needs to be exported by the entry point index.d.ts
@@ -216,13 +208,10 @@ class SuspenseCache {
     constructor(options?: SuspenseCacheOptions);
     // (undocumented)
     add(cacheKey: CacheKey, queryRef: InternalQueryReference<any, any>): void;
-    // Warning: (ae-forgotten-export) The symbol "FragmentCacheKey" needs to be exported by the entry point index.d.ts
     // Warning: (ae-forgotten-export) The symbol "FragmentReference" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    getFragmentRef<TData, TVariables extends OperationVariables>(cacheKey: FragmentCacheKey, client: ApolloClient, options: ApolloClient.WatchFragmentOptions<TData, TVariables> & {
-        from: string | null | Array<string | null>;
-    }): FragmentReference<TData, TVariables>;
+    getFragmentRef<TData>(observable: ApolloCache.ObservableFragment<TData | null>): FragmentReference<TData>;
     // (undocumented)
     getQueryRef<TData = unknown, TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"]>(cacheKey: CacheKey, createObservable: () => ObservableQuery<TData>): InternalQueryReference<TData, TStates>;
 }

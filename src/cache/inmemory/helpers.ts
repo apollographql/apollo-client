@@ -6,12 +6,13 @@ import type {
 } from "graphql";
 import { Kind } from "graphql";
 
+import type { OperationVariables } from "@apollo/client";
 import type {
   Reference,
   StoreObject,
   StoreValue,
 } from "@apollo/client/utilities";
-import { isReference } from "@apollo/client/utilities";
+import { canonicalStringify, isReference } from "@apollo/client/utilities";
 import type {
   FragmentMap,
   FragmentMapFunction,
@@ -30,7 +31,11 @@ import {
 
 import type { FragmentRegistryAPI } from "./fragmentRegistry.js";
 import type { KeyFieldsContext } from "./policies.js";
-import type { InMemoryCacheConfig, NormalizedCache } from "./types.js";
+import type {
+  InMemoryCacheConfig,
+  NormalizedCache,
+  VarString,
+} from "./types.js";
 
 export const { hasOwnProperty: hasOwn } = Object.prototype;
 
@@ -168,4 +173,29 @@ export function getScalarTypeFromTypeNode(node: TypeNode): string {
     case Kind.NON_NULL_TYPE:
       return getScalarTypeFromTypeNode(node.type);
   }
+}
+
+const varStringCache = new WeakMap<OperationVariables, string>();
+
+export function makeVarString({
+  scope,
+  variables,
+}: {
+  scope?: OperationVariables | undefined;
+  variables: OperationVariables | undefined;
+}): VarString {
+  let varString: string | undefined;
+
+  if (variables) {
+    varString = varStringCache.get(variables);
+
+    if (!varString) {
+      varStringCache.set(
+        variables,
+        (varString = canonicalStringify(variables))
+      );
+    }
+  }
+
+  return (canonicalStringify(scope ?? null) + varString) as VarString;
 }

@@ -37,7 +37,7 @@ import {
   createFragmentMap,
   dealias,
   getFragmentDefinitions,
-  getFragmentVariables,
+  getFragmentScope,
   getMainDefinition,
   hasDirectives,
   mergeDeep,
@@ -55,8 +55,8 @@ interface ExecContext {
   operationDefinition: OperationDefinitionNode;
   fragmentMap: FragmentMap;
   context: unknown;
-  operationVariables: OperationVariables;
   variables: OperationVariables;
+  variablesScope: OperationVariables;
   exportedVariables: OperationVariables;
   onlyRunForcedResolvers: boolean;
   selectionsToResolve: Set<SelectionNode>;
@@ -400,8 +400,8 @@ export class LocalState<
           phase: "resolve",
           variables: variables ?? {},
         }) ?? (requestContext as TContext),
-      operationVariables: variables,
       variables,
+      variablesScope: variables,
       exportedVariables: {},
       selectionsToResolve,
       onlyRunForcedResolvers,
@@ -482,8 +482,8 @@ export class LocalState<
           phase: "resolve",
           variables: variables ?? {},
         }) ?? (requestContext as TContext),
-      operationVariables: variables,
       variables,
+      variablesScope: variables,
       exportedVariables: {},
       selectionsToResolve: exportsToResolve,
       onlyRunForcedResolvers: false,
@@ -515,7 +515,8 @@ export class LocalState<
     execContext: ExecContext,
     path: LocalState.Path
   ) {
-    const { client, fragmentMap, variables, operationDefinition } = execContext;
+    const { client, fragmentMap, variablesScope, operationDefinition } =
+      execContext;
     const { cache } = client;
     const resultsToMerge: Array<Record<string, any>> = [];
 
@@ -528,7 +529,7 @@ export class LocalState<
         // (still processing if one of the ancestors or one of the child fields has @client directive)
         return;
       }
-      if (!shouldInclude(selection, variables)) {
+      if (!shouldInclude(selection, variablesScope)) {
         // Skip this entirely.
         return;
       }
@@ -602,14 +603,14 @@ export class LocalState<
 
         if (matches) {
           let context = execContext;
-          const variables = getFragmentVariables(selection, {
+          const variablesScope = getFragmentScope(selection, {
             fragment,
-            variables: execContext.operationVariables,
-            parentScope: execContext.variables,
+            variables: execContext.variables,
+            parentScope: execContext.variablesScope,
           });
 
-          if (variables !== execContext.variables) {
-            context = { ...context, variables };
+          if (variablesScope !== execContext.variablesScope) {
+            context = { ...context, variablesScope };
           }
 
           const fragmentResult = await this.resolveSelectionSet(
@@ -695,7 +696,7 @@ export class LocalState<
     const {
       client,
       diff,
-      variables,
+      variablesScope,
       operationDefinition,
       phase,
       onlyRunForcedResolvers,
@@ -771,10 +772,8 @@ export class LocalState<
               // set cacheSlot to the current cache instance.
               cacheSlot.withValue(client.cache, resolver, [
                 rootValue ? dealias(rootValue, parentSelectionSet) : {},
-                (argumentsObjectFromField(field, variables) ?? {}) as Record<
-                  string,
-                  unknown
-                >,
+                (argumentsObjectFromField(field, variablesScope) ??
+                  {}) as Record<string, unknown>,
                 { requestContext: execContext.context as any, client, phase },
                 { field, fragmentMap: execContext.fragmentMap, path },
               ])

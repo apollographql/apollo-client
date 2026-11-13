@@ -3,6 +3,7 @@ import { Trie } from "@wry/trie";
 import type {
   DocumentNode,
   FieldNode,
+  FragmentSpreadNode,
   SelectionNode,
   SelectionSetNode,
 } from "graphql";
@@ -10,25 +11,29 @@ import { Kind } from "graphql";
 import type { OptimisticWrapperFunction } from "optimism";
 import { wrap } from "optimism";
 
+import type { OperationVariables } from "@apollo/client";
 import type { Reference, StoreObject } from "@apollo/client/utilities";
 import {
   addTypenameToDocument,
   cacheSizes,
-  canonicalStringify,
   isReference,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
+  FragmentInfo,
   FragmentMap,
   FragmentMapFunction,
+  ObjectWithFragmentInfo,
   StreamInfoTrie,
 } from "@apollo/client/utilities/internal";
 import {
   compact,
   DeepMerger,
+  fragmentInfoSymbol,
   getDefaultValues,
   getDirectiveArgValue,
   getFragmentFromSelection,
+  getFragmentScope,
   getFragmentVariables,
   getMainDefinition,
   getQueryDefinition,
@@ -36,12 +41,14 @@ import {
   isArray,
   isDeferredFragment,
   isField,
+  isNonEmptyObject,
   isNonNullObject,
   isStreamField,
   makeReference,
   maybeDeepFreeze,
   mergeDeepArray,
   resultKeyNameFromField,
+  rootFragmentVariablesSymbol,
   shouldInclude,
 } from "@apollo/client/utilities/internal";
 import {
@@ -61,6 +68,7 @@ import {
 import {
   extractFragmentContext,
   getTypenameFromStoreObject,
+  makeVarString,
 } from "./helpers.js";
 import type { InMemoryCache } from "./inMemoryCache.js";
 import type { Policies } from "./policies.js";
@@ -278,7 +286,7 @@ export class StoreReader {
       (options) => {
         const { field, context, path } = options;
 
-        if (isStreamField(field, context.variables)) {
+        if (isStreamField(field, context.variablesScope)) {
           context.streamInfo?.lookupArray(path).state.depend();
         }
 
@@ -322,9 +330,11 @@ export class StoreReader {
     rootId = "ROOT_QUERY",
     variables,
     returnPartialData = true,
+    [rootFragmentVariablesSymbol]: rootFragmentVariables,
     ...options
   }: DiffQueryAgainstStoreOptions & {
     [handleIncrementalSymbol]?: DiffIncrementalInfo;
+    [rootFragmentVariablesSymbol]?: OperationVariables;
   }): Cache.DiffResult<T> & {
     dataState?: "empty" | "partial" | "streaming" | "complete";
   } {
@@ -339,8 +349,8 @@ export class StoreReader {
       query,
       policies,
       variables,
-      varString: canonicalStringify(variables),
-      operationVariables: variables,
+      variablesScope: rootFragmentVariables ?? variables,
+      varString: makeVarString({ variables, scope: rootFragmentVariables }),
       ...extractFragmentContext(query, this.config.fragments),
       ...options[handleIncrementalSymbol],
     };
@@ -486,7 +496,7 @@ export class StoreReader {
       };
     }
 
-    const { variables, policies, store } = context;
+    const { variablesScope, policies, store } = context;
     const typename = store.getFieldValue<string>(
       objectOrReference,
       "__typename"
@@ -514,19 +524,21 @@ export class StoreReader {
       return result;
     }
 
+    let fragments: FragmentInfo["fragments"] | undefined;
+    let hasFragmentSpread = false;
     const workSet = new Set(selectionSet.selections);
 
     workSet.forEach((selection) => {
       // Omit fields with directives @skip(if: <truthy value>) or
       // @include(if: <falsy value>).
-      if (!shouldInclude(selection, variables)) return;
+      if (!shouldInclude(selection, variablesScope)) return;
 
       if (isField(selection)) {
         let fieldValue = policies.readField(
           {
             fieldName: selection.name.value,
             field: selection,
-            variables: context.variables,
+            variables: context.variablesScope,
             from: objectOrReference,
           },
           context
@@ -646,24 +658,58 @@ export class StoreReader {
             selection.kind === Kind.FRAGMENT_SPREAD &&
             fragment.kind === Kind.FRAGMENT_DEFINITION
           ) {
-            const variables = getFragmentVariables(selection, {
+            const fragmentVariables = getFragmentVariables(selection, {
               fragment,
-              variables: context.operationVariables,
-              parentScope: context.variables,
+              scope: context.variablesScope,
             });
 
-            if (variables !== context.variables) {
+            const isRoot = isFragmentRoot(selection);
+
+            if (!isRoot) {
+              hasFragmentSpread = true;
+            }
+
+            if (
+              !isRoot &&
+              fragmentVariables &&
+              // Always add an empty fragmentVariables if operation variables
+              // are non-empty. If operation variables are non-empty, we can
+              // omit fragment variables from the symbol so that we can omit
+              // the symbol altogether if no fragments include variables. This
+              // only works when operation variables are empty, otherwise the
+              // fallback variablesScope in diffQueryAgainstStore will be wrong.
+              (isNonEmptyObject(context.variables) ||
+                isNonEmptyObject(fragmentVariables))
+            ) {
+              fragments ||= {};
+              fragments[fragment.name.value] = { variables: fragmentVariables };
+            }
+
+            if (isMaskedSpread(selection)) {
+              return;
+            }
+
+            const variablesScope = getFragmentScope(selection, {
+              fragment,
+              variables: context.variables,
+              parentScope: context.variablesScope,
+            });
+
+            if (variablesScope !== context.variablesScope) {
               fragmentContext = {
                 ...fragmentContext,
-                variables,
-                varString: canonicalStringify(variables),
+                variablesScope,
+                varString: makeVarString({
+                  variables: context.variables,
+                  scope: variablesScope,
+                }),
               };
             }
           }
 
           const isDeferBoundary = isDeferredFragment(
             selection,
-            context.variables
+            context.variablesScope
           );
           // Prior to 4.3, this branch just flattened the fragment's
           // selectionSet into the existing workSet so that it continued
@@ -720,7 +766,27 @@ export class StoreReader {
 
     dataState ||= "complete";
 
-    const result = mergeDeepArray(objectsToMerge);
+    let result = mergeDeepArray(objectsToMerge, { includeSymbols: true });
+
+    const childFragments = (result as ObjectWithFragmentInfo)[
+      fragmentInfoSymbol
+    ]?.fragments;
+
+    if (
+      childFragments ||
+      fragments ||
+      (hasFragmentSpread && isNonEmptyObject(context.variables))
+    ) {
+      // Always copy since `result` might be a frozen fragment result when
+      // `objectsToMerge` contains a single object.
+      result = {
+        ...result,
+        [fragmentInfoSymbol]: {
+          operationVariables: context.variables ?? {},
+          fragments: { ...childFragments, ...fragments },
+        } satisfies FragmentInfo,
+      };
+    }
 
     const finalResult: ExecResult = {
       result,
@@ -750,7 +816,7 @@ export class StoreReader {
     let missing: MissingTree | undefined;
     let missingMerger = new DeepMerger();
     const partialBoundaries = new PartialBoundaries();
-    const isStreamed = isStreamField(field, context.variables);
+    const isStreamed = isStreamField(field, context.variablesScope);
 
     function handleMissing<T>(childResult: ExecResult<T>, i: number): T {
       if (childResult.missing) {
@@ -861,9 +927,9 @@ export class StoreReader {
       selectionSet.selections.map((selection) => [selection, context])
     );
     workSet.forEach((context, selection) => {
-      const { variables } = context;
+      const { variablesScope } = context;
 
-      if (!shouldInclude(selection, variables)) return;
+      if (!shouldInclude(selection, variablesScope)) return;
 
       if (isField(selection)) {
         const resultName = resultKeyNameFromField(selection);
@@ -937,7 +1003,10 @@ export class StoreReader {
       const fragment = getFragmentFromSelection(selection, lookupFragment);
       let prune = false;
 
-      if (context.isDeferPending && isDeferredFragment(selection, variables)) {
+      if (
+        context.isDeferPending &&
+        isDeferredFragment(selection, variablesScope)
+      ) {
         const directive = selection.directives?.find(
           (d) => d.name.value === "defer"
         );
@@ -957,18 +1026,14 @@ export class StoreReader {
             selection.kind === Kind.FRAGMENT_SPREAD &&
             fragment.kind === Kind.FRAGMENT_DEFINITION
           ) {
-            const variables = getFragmentVariables(selection, {
+            const variablesScope = getFragmentScope(selection, {
               fragment,
-              variables: context.operationVariables,
-              parentScope: context.variables,
+              variables: context.variables,
+              parentScope: context.variablesScope,
             });
 
-            if (variables !== context.variables) {
-              fragmentContext = {
-                ...context,
-                variables,
-                varString: canonicalStringify(variables),
-              };
+            if (variablesScope !== context.variablesScope) {
+              fragmentContext = { ...context, variablesScope };
             }
           }
 
@@ -989,6 +1054,12 @@ export class StoreReader {
       // We perform a deep equality check to verify whether anything was
       // actually dropped by the partial @defer fragment.
       changed = !equal(result, data);
+    }
+
+    if (Object.hasOwn(data, fragmentInfoSymbol)) {
+      (result as ObjectWithFragmentInfo)[fragmentInfoSymbol] = (
+        data as ObjectWithFragmentInfo
+      )[fragmentInfoSymbol];
     }
 
     return { result: changed ? result : data, dataState };
@@ -1226,4 +1297,34 @@ function mergeDataState(
   }
 
   return DATA_STATE_MERGES[current][next] || current;
+}
+
+function isFragmentRoot(fragmentSpread: FragmentSpreadNode) {
+  return (
+    fragmentSpread.directives?.some(
+      (directive) =>
+        directive.name.value === "_apollo" &&
+        directive.arguments?.some(
+          (arg) =>
+            arg.name.value === "fragmentRoot" &&
+            arg.value.kind === Kind.BOOLEAN &&
+            arg.value.value
+        )
+    ) ?? false
+  );
+}
+
+function isMaskedSpread(fragmentSpread: FragmentSpreadNode) {
+  return (
+    fragmentSpread.directives?.some(
+      (directive) =>
+        directive.name.value === "_apollo" &&
+        directive.arguments?.some(
+          (arg) =>
+            arg.name.value === "mask" &&
+            arg.value.kind === Kind.BOOLEAN &&
+            arg.value.value
+        )
+    ) ?? false
+  );
 }

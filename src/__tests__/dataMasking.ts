@@ -15,12 +15,14 @@ import { createFragmentRegistry } from "@apollo/client/cache";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { Defer20220824Handler } from "@apollo/client/incremental";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
+import type { WithFragmentInfo } from "@apollo/client/testing/internal";
 import {
   ObservableStream,
   spyOnConsole,
   wait,
 } from "@apollo/client/testing/internal";
 import { isSubscriptionOperation } from "@apollo/client/utilities";
+import { fragmentInfoSymbol } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 const NO_CACHE_WARNING =
@@ -1715,7 +1717,7 @@ describe("client.watchQuery", () => {
       id: number;
     }
 
-    const query: TypedDocumentNode<Query, Variables> = gql`
+    const query: TypedDocumentNode<WithFragmentInfo<Query>, Variables> = gql`
       query UnmaskedQuery($id: ID!) {
         user(id: $id) {
           id
@@ -1778,22 +1780,30 @@ describe("client.watchQuery", () => {
     {
       const { data } = await stream.takeNext();
 
-      expect(data).toEqual({
+      expect(data).toStrictEqualTyped({
         user: {
           __typename: "User",
           id: 1,
           name: "User 1",
+          [fragmentInfoSymbol]: {
+            operationVariables: { id: 1 },
+            fragments: {},
+          },
         },
       });
     }
 
     const result = await observable.setVariables({ id: 2 });
 
-    expect(result.data).toEqual({
+    expect(result.data).toStrictEqualTyped({
       user: {
         __typename: "User",
         id: 2,
         name: "User 2",
+        [fragmentInfoSymbol]: {
+          operationVariables: { id: 2 },
+          fragments: {},
+        },
       },
     });
 
@@ -1811,6 +1821,10 @@ describe("client.watchQuery", () => {
           __typename: "User",
           id: 2,
           name: "User 2",
+          [fragmentInfoSymbol]: {
+            operationVariables: { id: 2 },
+            fragments: {},
+          },
         },
       },
       dataState: "complete",
@@ -1839,7 +1853,7 @@ describe("client.watchQuery", () => {
       id: number;
     }
 
-    const query: TypedDocumentNode<Query, Variables> = gql`
+    const query: TypedDocumentNode<WithFragmentInfo<Query>, Variables> = gql`
       query UnmaskedQuery($id: ID!) {
         user(id: $id) {
           id
@@ -1902,22 +1916,30 @@ describe("client.watchQuery", () => {
     {
       const { data } = await stream.takeNext();
 
-      expect(data).toEqual({
+      expect(data).toStrictEqualTyped({
         user: {
           __typename: "User",
           id: 1,
           name: "User 1",
+          [fragmentInfoSymbol]: {
+            operationVariables: { id: 1 },
+            fragments: {},
+          },
         },
       });
     }
 
     const result = await observable.reobserve({ variables: { id: 2 } });
 
-    expect(result.data).toEqual({
+    expect(result.data).toStrictEqualTyped({
       user: {
         __typename: "User",
         id: 2,
         name: "User 2",
+        [fragmentInfoSymbol]: {
+          operationVariables: { id: 2 },
+          fragments: {},
+        },
       },
     });
 
@@ -1935,6 +1957,10 @@ describe("client.watchQuery", () => {
           __typename: "User",
           id: 2,
           name: "User 2",
+          [fragmentInfoSymbol]: {
+            operationVariables: { id: 2 },
+            fragments: {},
+          },
         },
       },
       dataState: "complete",
@@ -1963,7 +1989,7 @@ describe("client.watchQuery", () => {
       id: number;
     }
 
-    const query: TypedDocumentNode<Query, Variables> = gql`
+    const query: TypedDocumentNode<WithFragmentInfo<Query>, Variables> = gql`
       query UnmaskedQuery($id: ID!) {
         user(id: $id) {
           id
@@ -2002,11 +2028,15 @@ describe("client.watchQuery", () => {
     {
       const { data } = await stream.takeNext();
 
-      expect(data).toEqual({
+      expect(data).toStrictEqualTyped({
         user: {
           __typename: "User",
           id: 1,
           name: "User 1",
+          [fragmentInfoSymbol]: {
+            operationVariables: { id: 1 },
+            fragments: {},
+          },
         },
       });
     }
@@ -2028,12 +2058,32 @@ describe("client.watchQuery", () => {
     observable.updateQuery(updateQuery);
 
     expect(updateQuery).toHaveBeenCalledWith(
-      { user: { __typename: "User", id: 1, name: "User 1", age: 30 } },
+      {
+        user: {
+          __typename: "User",
+          id: 1,
+          name: "User 1",
+          age: 30,
+          [fragmentInfoSymbol]: {
+            operationVariables: { id: 1 },
+            fragments: {},
+          },
+        },
+      },
       {
         variables: { id: 1 },
         complete: true,
         previousData: {
-          user: { __typename: "User", id: 1, name: "User 1", age: 30 },
+          user: {
+            __typename: "User",
+            id: 1,
+            name: "User 1",
+            age: 30,
+            [fragmentInfoSymbol]: {
+              operationVariables: { id: 1 },
+              fragments: {},
+            },
+          },
         },
       }
     );
@@ -2041,11 +2091,15 @@ describe("client.watchQuery", () => {
     {
       const { data } = await stream.takeNext();
 
-      expect(data).toEqual({
+      expect(data).toStrictEqualTyped({
         user: {
           __typename: "User",
           id: 1,
           name: "User (updated)",
+          [fragmentInfoSymbol]: {
+            operationVariables: { id: 1 },
+            fragments: {},
+          },
         },
       });
     }
@@ -2077,7 +2131,7 @@ describe("client.watchQuery", () => {
       }
     `;
 
-    const query: TypedDocumentNode<Query> = gql`
+    const query: TypedDocumentNode<WithFragmentInfo<Query>> = gql`
       query {
         greeting {
           message
@@ -2096,7 +2150,7 @@ describe("client.watchQuery", () => {
       incrementalHandler: new Defer20220824Handler(),
     });
 
-    const observable = client.watchQuery({ query, variables: { id: 1 } });
+    const observable = client.watchQuery({ query });
     const stream = new ObservableStream(observable);
 
     await expect(stream).toEmitTypedValue({
@@ -2116,7 +2170,10 @@ describe("client.watchQuery", () => {
 
     await expect(stream).toEmitTypedValue({
       data: {
-        greeting: { message: "Hello world", __typename: "Greeting" },
+        greeting: {
+          message: "Hello world",
+          __typename: "Greeting",
+        },
       },
       dataState: "streaming",
       loading: true,
@@ -2147,7 +2204,10 @@ describe("client.watchQuery", () => {
     // value.
     await expect(stream).toEmitTypedValue({
       data: {
-        greeting: { message: "Hello world", __typename: "Greeting" },
+        greeting: {
+          message: "Hello world",
+          __typename: "Greeting",
+        },
       },
       dataState: "complete",
       loading: false,
@@ -2208,7 +2268,7 @@ describe("client.watchQuery", () => {
       incrementalHandler: new Defer20220824Handler(),
     });
 
-    const observable = client.watchQuery({ query, variables: { id: 1 } });
+    const observable = client.watchQuery({ query });
     const stream = new ObservableStream(observable);
 
     await expect(stream).toEmitTypedValue({
@@ -2230,7 +2290,10 @@ describe("client.watchQuery", () => {
       const { data } = await stream.takeNext();
 
       expect(data).toEqual({
-        greeting: { message: "Hello world", __typename: "Greeting" },
+        greeting: {
+          message: "Hello world",
+          __typename: "Greeting",
+        },
       });
     }
 
@@ -2342,7 +2405,14 @@ describe("client.watchQuery", () => {
       const { data } = await stream.takeNext();
 
       expect(data).toEqual({
-        greeting: { message: "Hello world", __typename: "Greeting" },
+        greeting: {
+          message: "Hello world",
+          __typename: "Greeting",
+          [fragmentInfoSymbol]: {
+            operationVariables: { id: 1 },
+            fragments: {},
+          },
+        },
       });
     }
 
@@ -2372,6 +2442,10 @@ describe("client.watchQuery", () => {
           __typename: "Greeting",
           message: "Hello world",
           recipient: { __typename: "Person", name: "Alice" },
+          [fragmentInfoSymbol]: {
+            operationVariables: { id: 1 },
+            fragments: {},
+          },
         },
       });
     }
@@ -2464,7 +2538,14 @@ describe("client.watchQuery", () => {
       const { data } = await stream.takeNext();
 
       expect(data).toEqual({
-        greeting: { message: "Hello world", __typename: "Greeting" },
+        greeting: {
+          message: "Hello world",
+          __typename: "Greeting",
+          [fragmentInfoSymbol]: {
+            operationVariables: { id: 1 },
+            fragments: {},
+          },
+        },
       });
     }
 
@@ -2495,6 +2576,10 @@ describe("client.watchQuery", () => {
           __typename: "Greeting",
           message: "Hello world",
           recipient: { __typename: "Person", name: "Alice" },
+          [fragmentInfoSymbol]: {
+            operationVariables: { id: 1 },
+            fragments: {},
+          },
         },
       });
     }
@@ -5705,6 +5790,10 @@ describe("observableQuery.subscribeToMore", () => {
               id: 2,
               comment: "Most recent comment",
               author: "Test User Jr.",
+              [fragmentInfoSymbol]: {
+                operationVariables: { id: 1 },
+                fragments: {},
+              },
             },
           },
         },

@@ -6,6 +6,22 @@ afterEach(() => {
   CombinedProtocolErrors.formatMessage = defaultFormatMessage;
 });
 
+test("is an AggregateError with enumerable errors", () => {
+  const errors = [
+    { message: "Could not connect", extensions: { code: "CONNECTION_ERROR" } },
+    { message: "Connection closed" },
+  ];
+  const error = new CombinedProtocolErrors(errors);
+
+  expect(error).toBeInstanceOf(AggregateError);
+  expect(error.errors).toEqual(errors);
+  expect(Object.prototype.propertyIsEnumerable.call(error, "errors")).toBe(
+    true
+  );
+  expect({ ...error }).toHaveProperty("errors", errors);
+  expect(JSON.parse(JSON.stringify(error))).toHaveProperty("errors", errors);
+});
+
 test("uses default message format", () => {
   const error = new CombinedProtocolErrors([{ message: "Could not connect" }]);
 

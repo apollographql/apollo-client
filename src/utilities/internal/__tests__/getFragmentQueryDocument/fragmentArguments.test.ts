@@ -8,7 +8,7 @@ import { getFragmentQueryDocument } from "@apollo/client/utilities/internal";
 disableFragmentWarnings();
 enableExperimentalFragmentVariables();
 
-test("passes a variable as an argument to the root fragment spread for each fragment variable", () => {
+test("declares an operation variable and passes it as an argument to the root fragment spread for each fragment variable", () => {
   const document = getFragmentQueryDocument(gql`
     fragment UserCard($size: Int, $format: String) on User {
       id
@@ -17,8 +17,8 @@ test("passes a variable as an argument to the root fragment spread for each frag
   `);
 
   expect(document).toMatchDocument(gql`
-    {
-      ...UserCard(size: $size, format: $format)
+    query ($size: Int, $format: String) {
+      ...UserCard(size: $size, format: $format) @_apollo(fragmentRoot: true)
     }
 
     fragment UserCard($size: Int, $format: String) on User {
@@ -37,8 +37,8 @@ test("only passes arguments for fragment variables and not for operation variabl
   `);
 
   expect(document).toMatchDocument(gql`
-    {
-      ...UserCard(size: $size)
+    query ($size: Int) {
+      ...UserCard(size: $size) @_apollo(fragmentRoot: true)
     }
 
     fragment UserCard($size: Int) on User {
@@ -48,7 +48,7 @@ test("only passes arguments for fragment variables and not for operation variabl
   `);
 });
 
-test("does not pass arguments to the root fragment spread when the fragment declares no variables", () => {
+test("does not declare operation variables or pass arguments to the root fragment spread when the fragment declares no variables", () => {
   const document = getFragmentQueryDocument(gql`
     fragment UserCard on User {
       id
@@ -58,7 +58,7 @@ test("does not pass arguments to the root fragment spread when the fragment decl
 
   expect(document).toMatchDocument(gql`
     {
-      ...UserCard
+      ...UserCard @_apollo(fragmentRoot: true)
     }
 
     fragment UserCard on User {
@@ -68,7 +68,7 @@ test("does not pass arguments to the root fragment spread when the fragment decl
   `);
 });
 
-test("passes variables for fragment variables with default values", () => {
+test("declares operation variables without default values for fragment variables with default values", () => {
   const document = getFragmentQueryDocument(gql`
     fragment UserCard($size: Int = 48, $format: String! = "png") on User {
       id
@@ -77,8 +77,8 @@ test("passes variables for fragment variables with default values", () => {
   `);
 
   expect(document).toMatchDocument(gql`
-    {
-      ...UserCard(size: $size, format: $format)
+    query ($size: Int, $format: String!) {
+      ...UserCard(size: $size, format: $format) @_apollo(fragmentRoot: true)
     }
 
     fragment UserCard($size: Int = 48, $format: String! = "png") on User {
@@ -100,8 +100,8 @@ test("passes variables for non-null and list fragment variables", () => {
   `);
 
   expect(document).toMatchDocument(gql`
-    {
-      ...UserCard(size: $size, ids: $ids, tags: $tags)
+    query ($size: Int!, $ids: [ID!]!, $tags: [String]) {
+      ...UserCard(size: $size, ids: $ids, tags: $tags) @_apollo(fragmentRoot: true)
     }
 
     fragment UserCard($size: Int!, $ids: [ID!]!, $tags: [String]) on User {
@@ -122,8 +122,8 @@ test("passes variables for fragment variables that are not used in the fragment"
   `);
 
   expect(document).toMatchDocument(gql`
-    {
-      ...UserCard(size: $size)
+    query ($size: Int) {
+      ...UserCard(size: $size) @_apollo(fragmentRoot: true)
     }
 
     fragment UserCard($size: Int) on User {
@@ -132,7 +132,7 @@ test("passes variables for fragment variables that are not used in the fragment"
   `);
 });
 
-test("only passes the variables of the fragment selected by fragmentName", () => {
+test("only declares and passes the variables of the fragment selected by fragmentName", () => {
   const document = getFragmentQueryDocument(
     gql`
       fragment UserAvatar($avatarSize: Int) on User {
@@ -148,8 +148,8 @@ test("only passes the variables of the fragment selected by fragmentName", () =>
   );
 
   expect(document).toMatchDocument(gql`
-    {
-      ...UserCard(size: $size)
+    query ($size: Int) {
+      ...UserCard(size: $size) @_apollo(fragmentRoot: true)
     }
 
     fragment UserAvatar($avatarSize: Int) on User {
@@ -179,8 +179,8 @@ test("passes the variables of a nested fragment selected by fragmentName", () =>
   );
 
   expect(document).toMatchDocument(gql`
-    {
-      ...UserAvatar(avatarSize: $avatarSize)
+    query ($avatarSize: Int) {
+      ...UserAvatar(avatarSize: $avatarSize) @_apollo(fragmentRoot: true)
     }
 
     fragment UserAvatar($avatarSize: Int) on User {
@@ -194,7 +194,7 @@ test("passes the variables of a nested fragment selected by fragmentName", () =>
   `);
 });
 
-test("does not pass arguments when the fragment selected by fragmentName declares no variables", () => {
+test("does not declare operation variables or pass arguments when the fragment selected by fragmentName declares no variables", () => {
   const document = getFragmentQueryDocument(
     gql`
       fragment UserAvatar($avatarSize: Int) on User {
@@ -211,7 +211,7 @@ test("does not pass arguments when the fragment selected by fragmentName declare
 
   expect(document).toMatchDocument(gql`
     {
-      ...UserCard
+      ...UserCard @_apollo(fragmentRoot: true)
     }
 
     fragment UserAvatar($avatarSize: Int) on User {

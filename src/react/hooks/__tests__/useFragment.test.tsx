@@ -1717,7 +1717,7 @@ describe("useFragment", () => {
     await expect(takeSnapshot).not.toRerender();
   });
 
-  it("warns when passing parent object to `from` when key fields are missing", async () => {
+  it("warns once when passing parent object to `from` when key fields are missing", async () => {
     using _ = spyOnConsole("warn");
 
     interface Fragment {
@@ -1736,7 +1736,7 @@ describe("useFragment", () => {
     });
 
     using _disabledAct = disableActEnvironment();
-    const { takeSnapshot } = await renderHookToSnapshotStream(
+    const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
       () => useFragment({ fragment, from: { __typename: "User" } }),
       {
         wrapper: ({ children }) => (
@@ -1750,6 +1750,24 @@ describe("useFragment", () => {
 
       expect(data).toStrictEqualTyped({});
       // TODO: Update when https://github.com/apollographql/apollo-client/issues/12003 is fixed
+      expect(complete).toBe(true);
+    }
+
+    await rerender();
+
+    {
+      const { data, complete } = await takeSnapshot();
+
+      expect(data).toStrictEqualTyped({});
+      expect(complete).toBe(true);
+    }
+
+    await rerender();
+
+    {
+      const { data, complete } = await takeSnapshot();
+
+      expect(data).toStrictEqualTyped({});
       expect(complete).toBe(true);
     }
 

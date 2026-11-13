@@ -14,11 +14,7 @@ import type {
   StoreObject,
   StoreValue,
 } from "@apollo/client/utilities";
-import {
-  addTypenameToDocument,
-  canonicalStringify,
-  isReference,
-} from "@apollo/client/utilities";
+import { addTypenameToDocument, isReference } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
   FragmentMap,
@@ -29,7 +25,7 @@ import {
   cloneDeep,
   getDefaultValues,
   getFragmentFromSelection,
-  getFragmentVariables,
+  getFragmentScope,
   getOperationDefinition,
   handleIncrementalSymbol,
   isArray,
@@ -38,6 +34,7 @@ import {
   isStreamField,
   makeReference,
   resultKeyNameFromField,
+  rootFragmentVariablesSymbol,
   shouldInclude,
   streamInfoSymbol,
 } from "@apollo/client/utilities/internal";
@@ -53,6 +50,7 @@ import {
   extractFragmentContext,
   fieldNameFromStoreName,
   makeProcessedFieldsMerger,
+  makeVarString,
   storeValueIsStoreObject,
 } from "./helpers.js";
 import type { InMemoryCache } from "./inMemoryCache.js";
@@ -67,13 +65,14 @@ import type {
   MergeTree,
   NormalizedCache,
   ReadMergeModifyContext,
+  VarString,
 } from "./types.js";
 
 export interface WriteContext extends ReadMergeModifyContext {
   readonly written: {
     [dataId: string]: Array<{
       selectionSet: SelectionSetNode;
-      varString: string | undefined;
+      varString: VarString | undefined;
     }>;
   };
   readonly fragmentMap: FragmentMap;
@@ -161,8 +160,10 @@ export class StoreWriter {
       overwrite,
       extensions,
       [handleIncrementalSymbol]: incrementalInfo,
+      [rootFragmentVariablesSymbol]: rootFragmentVariables,
     }: Cache.WriteOptions<TData, TVariables> & {
       [handleIncrementalSymbol]?: DiffIncrementalInfo;
+      [rootFragmentVariablesSymbol]?: OperationVariables;
     }
   ): Reference | undefined {
     const operationDefinition = getOperationDefinition(query)!;
@@ -179,9 +180,9 @@ export class StoreWriter {
       merge<T>(existing: T, incoming: T) {
         return merger.merge(existing, incoming) as T;
       },
-      variables: variables as OperationVariables,
-      varString: canonicalStringify(variables),
-      operationVariables: variables,
+      variables,
+      variablesScope: rootFragmentVariables ?? variables,
+      varString: makeVarString({ variables, scope: rootFragmentVariables }),
       ...extractFragmentContext(query, this.fragments),
       overwrite: !!overwrite,
       incomingById: new Map(),
@@ -319,7 +320,7 @@ export class StoreWriter {
       const options = normalizeReadFieldOptions(
         args,
         incoming,
-        context.variables
+        context.variablesScope
       );
 
       if (isReference(options.from)) {
@@ -365,7 +366,7 @@ export class StoreWriter {
           typename,
           fieldName: field.name.value,
           field,
-          variables: context.variables,
+          variables: context.variablesScope,
         });
 
         const childTree = getChildMergeTree(mergeTree, storeFieldName);
@@ -414,19 +415,19 @@ export class StoreWriter {
             typename,
             merge,
             path,
-            variables: context.variables,
+            variables: context.variablesScope,
           };
         } else if (
           context.extensions?.[streamInfoSymbol] &&
           Array.isArray(incomingValue) &&
-          isStreamField(field, context.variables)
+          isStreamField(field, context.variablesScope)
         ) {
           childTree.info = {
             field,
             typename,
             merge: defaultStreamFieldMergeFn,
             path,
-            variables: context.variables,
+            variables: context.variablesScope,
           };
         } else {
           maybeRecycleChildMergeTree(mergeTree, storeFieldName);
@@ -586,7 +587,8 @@ export class StoreWriter {
       | "isDeferPending"
       | "lookupFragment"
       | "variables"
-      | "operationVariables"
+      | "variablesScope"
+      | "varString"
     >,
   >(
     selectionSet: SelectionSetNode,
@@ -628,7 +630,7 @@ export class StoreWriter {
       visitedNode.visited = true;
 
       selectionSet.selections.forEach((selection) => {
-        if (!shouldInclude(selection, inheritedContext.variables)) return;
+        if (!shouldInclude(selection, inheritedContext.variablesScope)) return;
 
         let { clientOnly, deferred } = inheritedContext;
         if (
@@ -644,7 +646,7 @@ export class StoreWriter {
             if (name === "defer") {
               const args = argumentsObjectFromField(
                 dir,
-                inheritedContext.variables
+                inheritedContext.variablesScope
               );
               // The @defer directive takes an optional args.if boolean
               // argument, similar to @include(if: boolean). Note that
@@ -700,30 +702,35 @@ export class StoreWriter {
 
           if (!fragment) return;
 
-          const variables =
+          const variablesScope =
             (
               selection.kind === Kind.FRAGMENT_SPREAD &&
               fragment.kind === Kind.FRAGMENT_DEFINITION
             ) ?
-              getFragmentVariables(selection, {
+              getFragmentScope(selection, {
                 fragment,
-                variables: context.operationVariables,
-                parentScope: inheritedContext.variables,
+                variables: context.variables,
+                parentScope: inheritedContext.variablesScope,
               })
-            : inheritedContext.variables;
+            : inheritedContext.variablesScope;
 
-          if (policies.fragmentMatches(fragment, typename, result, variables)) {
+          if (
+            policies.fragmentMatches(fragment, typename, result, variablesScope)
+          ) {
             let fragmentContext = getContextFlavor(
               inheritedContext,
               clientOnly,
               deferred
             );
 
-            if (variables !== inheritedContext.variables) {
+            if (variablesScope !== inheritedContext.variablesScope) {
               fragmentContext = {
                 ...fragmentContext,
-                variables,
-                varString: canonicalStringify(variables),
+                variablesScope,
+                varString: makeVarString({
+                  variables: context.variables,
+                  scope: variablesScope,
+                }),
                 flavors: new Map(),
               };
             }

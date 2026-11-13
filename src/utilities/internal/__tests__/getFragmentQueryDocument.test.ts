@@ -125,7 +125,7 @@ test("will create a query document where the single fragment is spread in the ro
     `)
   ).toMatchDocument(gql`
     {
-      ...foo
+      ...foo @_apollo(fragmentRoot: true)
     }
 
     fragment foo on Foo {
@@ -165,7 +165,7 @@ test("will create a query document where the named fragment is spread in the roo
     )
   ).toMatchDocument(gql`
     {
-      ...foo
+      ...foo @_apollo(fragmentRoot: true)
     }
 
     fragment foo on Foo {
@@ -217,7 +217,7 @@ test("will create a query document where the named fragment is spread in the roo
     )
   ).toMatchDocument(gql`
     {
-      ...bar
+      ...bar @_apollo(fragmentRoot: true)
     }
 
     fragment foo on Foo {
@@ -269,7 +269,7 @@ test("will create a query document where the named fragment is spread in the roo
     )
   ).toMatchDocument(gql`
     {
-      ...baz
+      ...baz @_apollo(fragmentRoot: true)
     }
 
     fragment foo on Foo {

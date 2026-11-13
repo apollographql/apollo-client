@@ -38,6 +38,7 @@ export {
   executeWithDefaultContext,
 } from "./link.js";
 export { markAsStreaming } from "./markAsStreaming.js";
+export type { WithFragmentInfo } from "./WithFragmentInfo.js";
 export { wait } from "./wait.js";
 
 export { friendListSchemaGraphQL17Alpha2 } from "./schemas/friendList.graphql17Alpha2.js";

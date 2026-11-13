@@ -11,18 +11,17 @@ import type {
 } from "graphql";
 import { Kind } from "graphql";
 
-import type { ObservableQuery } from "@apollo/client";
-import type { OperationVariables } from "@apollo/client";
-import type { FragmentMap } from "@apollo/client/utilities/internal";
+import type { ObservableQuery, OperationVariables } from "@apollo/client";
 
 import { createFragmentMap } from "./createFragmentMap.js";
 import { getFragmentDefinitions } from "./getFragmentDefinitions.js";
 import { getFragmentFromSelection } from "./getFragmentFromSelection.js";
-import { getFragmentVariables } from "./getFragmentVariables.js";
+import { getFragmentScope } from "./getFragmentScope.js";
 import { getMainDefinition } from "./getMainDefinition.js";
 import { isField } from "./isField.js";
 import { resultKeyNameFromField } from "./resultKeyNameFromField.js";
 import { shouldInclude } from "./shouldInclude.js";
+import type { FragmentMap } from "./types/FragmentMap.js";
 
 // Returns true if aResult and bResult are deeply equal according to the fields
 // selected by the given query, ignoring any fields marked as @nonreactive.
@@ -30,14 +29,15 @@ export function equalByQuery(
   query: DocumentNode,
   { data: aData, ...aRest }: Partial<ObservableQuery.Result<unknown>>,
   { data: bData, ...bRest }: Partial<ObservableQuery.Result<unknown>>,
-  variables?: OperationVariables
+  variables?: OperationVariables,
+  rootFragmentVariables?: OperationVariables
 ): boolean {
   return (
     equal(aRest, bRest) &&
     equalBySelectionSet(getMainDefinition(query).selectionSet, aData, bData, {
       fragmentMap: createFragmentMap(getFragmentDefinitions(query)),
       variables,
-      operationVariables: variables,
+      variablesScope: rootFragmentVariables ?? variables,
     })
   );
 }
@@ -47,7 +47,7 @@ export function equalByQuery(
 interface CompareContext<TVariables extends OperationVariables> {
   fragmentMap: FragmentMap;
   variables: TVariables | undefined;
-  operationVariables: TVariables | undefined;
+  variablesScope: TVariables | undefined;
 }
 
 function equalBySelectionSet(
@@ -72,7 +72,7 @@ function equalBySelectionSet(
     seenSelections.add(selection);
 
     // Ignore @skip(if: true) and @include(if: false) fields.
-    if (!shouldInclude(selection, context.variables)) return true;
+    if (!shouldInclude(selection, context.variablesScope)) return true;
 
     // If the field or (named) fragment spread has a @nonreactive directive on
     // it, we don't care if it's different, so we pretend it's the same.
@@ -131,12 +131,12 @@ function equalBySelectionSet(
           selection.kind === Kind.FRAGMENT_SPREAD &&
           fragment.kind === Kind.FRAGMENT_DEFINITION
         ) {
-          const variables = getFragmentVariables(selection, {
+          const variablesScope = getFragmentScope(selection, {
             fragment,
-            variables: context.operationVariables,
-            parentScope: context.variables,
+            variables: context.variables,
+            parentScope: context.variablesScope,
           });
-          fragmentContext = { ...fragmentContext, variables };
+          fragmentContext = { ...fragmentContext, variablesScope };
         }
 
         return equalBySelectionSet(

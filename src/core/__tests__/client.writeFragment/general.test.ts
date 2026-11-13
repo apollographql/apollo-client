@@ -95,3 +95,27 @@ test("can use `from` with writeFragment", async () => {
     },
   });
 });
+
+test("does not throw when writing null data", async () => {
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  expect(() =>
+    client.writeFragment({
+      data: null,
+      id: "User:1",
+      fragment: gql`
+        fragment UserFields on User {
+          id
+        }
+      `,
+    })
+  ).not.toThrow();
+
+  expect(client.extract()).toStrictEqual({
+    __META: { extraRootIds: ["User:1"] },
+    "User:1": {},
+  });
+});

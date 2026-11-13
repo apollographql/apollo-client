@@ -5,6 +5,7 @@ import {
 } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { MockLink } from "@apollo/client/testing";
+import { fragmentInfoSymbol } from "@apollo/client/utilities/internal";
 
 enableExperimentalFragmentVariables();
 
@@ -42,8 +43,26 @@ test("binds different fragment arguments at different paths", async () => {
 
   await expect(client.query({ query })).resolves.toStrictEqualTyped({
     data: {
-      lead: { __typename: "User", id: "1", avatar: "lead.png" },
-      members: [{ __typename: "User", id: "2", avatar: "member.png" }],
+      lead: {
+        __typename: "User",
+        id: "1",
+        avatar: "lead.png",
+        [fragmentInfoSymbol]: {
+          operationVariables: {},
+          fragments: { UserCard: { variables: { size: 96 } } },
+        },
+      },
+      members: [
+        {
+          __typename: "User",
+          id: "2",
+          avatar: "member.png",
+          [fragmentInfoSymbol]: {
+            operationVariables: {},
+            fragments: { UserCard: { variables: { size: 32 } } },
+          },
+        },
+      ],
     },
   });
 
@@ -98,7 +117,15 @@ test("passes an operation variable through a fragment spread", async () => {
     client.query({ query, variables: { n: 96 } })
   ).resolves.toStrictEqualTyped({
     data: {
-      lead: { __typename: "User", id: "1", avatar: "lead.png" },
+      lead: {
+        __typename: "User",
+        id: "1",
+        avatar: "lead.png",
+        [fragmentInfoSymbol]: {
+          operationVariables: { n: 96 },
+          fragments: { UserCard: { variables: { size: 96 } } },
+        },
+      },
     },
   });
 
@@ -147,8 +174,26 @@ test("reads bound fragment arguments from the cache without a network request", 
 
   await expect(client.query({ query })).resolves.toStrictEqualTyped({
     data: {
-      lead: { __typename: "User", id: "1", avatar: "lead.png" },
-      members: [{ __typename: "User", id: "2", avatar: "member.png" }],
+      lead: {
+        __typename: "User",
+        id: "1",
+        avatar: "lead.png",
+        [fragmentInfoSymbol]: {
+          operationVariables: {},
+          fragments: { UserCard: { variables: { size: 96 } } },
+        },
+      },
+      members: [
+        {
+          __typename: "User",
+          id: "2",
+          avatar: "member.png",
+          [fragmentInfoSymbol]: {
+            operationVariables: {},
+            fragments: { UserCard: { variables: { size: 32 } } },
+          },
+        },
+      ],
     },
   });
 });

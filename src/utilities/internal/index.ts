@@ -2,6 +2,8 @@ export type { DecoratedPromise } from "./types/DecoratedPromise.js";
 export type { DeepOmit } from "./types/DeepOmit.js";
 export type { Exact } from "./types/Exact.js";
 export type { ExtensionsWithStreamInfo } from "./types/ExtensionsWithStreamDetails.js";
+export type { FragmentInfo } from "./types/FragmentInfo.js";
+export type { ObjectWithFragmentInfo } from "./types/ObjectWithFragmentInfo.js";
 export type { FragmentMap } from "./types/FragmentMap.js";
 export type { FragmentMapFunction } from "./types/FragmentMapFunction.js";
 export type { FulfilledPromise } from "./types/FulfilledPromise.js";
@@ -45,6 +47,7 @@ export { getFragmentFromSelection } from "./getFragmentFromSelection.js";
 export { getFragmentQueryDocument } from "./getFragmentQueryDocument.js";
 export { getFragmentDefinition } from "./getFragmentDefinition.js";
 export { getFragmentDefinitions } from "./getFragmentDefinitions.js";
+export { getFragmentScope } from "./getFragmentScope.js";
 export { getFragmentVariables } from "./getFragmentVariables.js";
 export { getGraphQLErrorsFromResult } from "./getGraphQLErrorsFromResult.js";
 export { getMainDefinition } from "./getMainDefinition.js";
@@ -60,6 +63,7 @@ export { isDeferredFragment } from "./isDeferredFragment.js";
 export { isDocumentNode } from "./isDocumentNode.js";
 export { isField } from "./isField.js";
 export { isNonEmptyArray } from "./isNonEmptyArray.js";
+export { isNonEmptyObject } from "./isNonEmptyObject.js";
 export { isNonNullObject } from "./isNonNullObject.js";
 export { isPlainObject } from "./isPlainObject.js";
 export { isStreamField } from "./isStreamField.js";
@@ -90,8 +94,11 @@ export { canonicalStringify } from "./canonicalStringify.js";
 export { mapObservableFragmentMemoized } from "./mapObservableFragment.js";
 export {
   extensionsSymbol,
+  fragmentInfoSymbol,
   handleIncrementalSymbol,
+  rootFragmentVariablesSymbol,
   streamInfoSymbol,
+  supportsFragmentVariablesSymbol,
   variablesUnknownSymbol,
 } from "./constants.js";
 export { bindCacheKey } from "./bindCacheKey.js";

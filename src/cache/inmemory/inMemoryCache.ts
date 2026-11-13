@@ -32,6 +32,8 @@ import {
   getOperationDefinition,
   isPlainObject,
   matchScalarList,
+  rootFragmentVariablesSymbol,
+  supportsFragmentVariablesSymbol,
   unwrapScalarType,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
@@ -115,6 +117,9 @@ export class InMemoryCache extends ApolloCache {
   // in development and expected to remain logically immutable in production.
   public readonly assumeImmutableResults = true;
 
+  /** @internal */
+  public readonly [supportsFragmentVariablesSymbol] = true;
+
   // Dynamically imported code can augment existing typePolicies or
   // possibleTypes by calling cache.policies.addTypePolicies or
   // cache.policies.addPossibletypes.
@@ -182,7 +187,11 @@ export class InMemoryCache extends ApolloCache {
         max:
           cacheSizes["inMemoryCache.maybeBroadcastWatch"] ||
           defaultCacheSizes["inMemoryCache.maybeBroadcastWatch"],
-        makeCacheKey: (c: Cache.WatchOptions) => {
+        makeCacheKey: (
+          c: Cache.WatchOptions & {
+            [rootFragmentVariablesSymbol]?: OperationVariables;
+          }
+        ) => {
           // Return a cache key (thus enabling result caching) only if we're
           // currently using a data store that can track cache dependencies.
           const store = c.optimistic ? this.optimisticData : this.data;
@@ -198,7 +207,12 @@ export class InMemoryCache extends ApolloCache {
               // separation is to include c.callback in the cache key for
               // maybeBroadcastWatch calls. See issue #5733.
               c.callback,
-              canonicalStringify({ optimistic, id, variables })
+              canonicalStringify({
+                optimistic,
+                id,
+                variables,
+                rootFragmentVariables: c[rootFragmentVariablesSymbol],
+              })
             );
           }
         },
@@ -428,15 +442,20 @@ export class InMemoryCache extends ApolloCache {
   public read<TData = unknown>(
     options: Cache.ReadOptions<TData, OperationVariables> & {
       returnPartialData: true;
+      [rootFragmentVariablesSymbol]?: OperationVariables | undefined;
     }
   ): TData | DeepPartial<TData> | null;
 
   public read<TData = unknown>(
-    options: Cache.ReadOptions<TData, OperationVariables>
+    options: Cache.ReadOptions<TData, OperationVariables> & {
+      [rootFragmentVariablesSymbol]?: OperationVariables | undefined;
+    }
   ): TData | null;
 
   public read<TData = unknown>(
-    options: Cache.ReadOptions<TData, OperationVariables>
+    options: Cache.ReadOptions<TData, OperationVariables> & {
+      [rootFragmentVariablesSymbol]?: OperationVariables | undefined;
+    }
   ): TData | DeepPartial<TData> | null {
     const {
       query,
@@ -466,6 +485,7 @@ export class InMemoryCache extends ApolloCache {
   >(
     options: Cache.WriteOptions<TData, TVariables> & {
       [handleIncrementalSymbol]?: DiffIncrementalInfo | undefined;
+      [rootFragmentVariablesSymbol]?: OperationVariables | undefined;
     }
   ): Reference | undefined {
     const { query, variables } = options;
@@ -520,13 +540,18 @@ export class InMemoryCache extends ApolloCache {
   >(
     query: Cache.DiffOptions<TData, TVariables> & {
       [handleIncrementalSymbol]: DiffIncrementalInfo | undefined;
+      [rootFragmentVariablesSymbol]?: OperationVariables | undefined;
     }
   ): Cache.InternalDiffResultWithDataState<TData>;
 
   public diff<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
-  >(query: Cache.DiffOptions<TData, TVariables>): Cache.DiffResult<TData>;
+  >(
+    query: Cache.DiffOptions<TData, TVariables> & {
+      [rootFragmentVariablesSymbol]?: OperationVariables | undefined;
+    }
+  ): Cache.DiffResult<TData>;
 
   public diff<
     TData = unknown,
@@ -546,7 +571,11 @@ export class InMemoryCache extends ApolloCache {
   public watch<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
-  >(watch: Cache.WatchOptions<TData, TVariables>): () => void {
+  >(
+    watch: Cache.WatchOptions<TData, TVariables> & {
+      [rootFragmentVariablesSymbol]?: OperationVariables | undefined;
+    }
+  ): () => void {
     if (!this.watches.size) {
       // In case we previously called forgetCache(this) because
       // this.watches became empty (see below), reattach this cache to any

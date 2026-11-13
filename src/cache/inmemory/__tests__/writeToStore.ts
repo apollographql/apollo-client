@@ -3224,6 +3224,7 @@ describe("writing to the store", () => {
       }
     ) {
       const { selectionSet } = getMainDefinition(query);
+      const variables = { true: true, false: false };
 
       const flat = writer["flattenFields"](
         selectionSet,
@@ -3238,10 +3239,8 @@ describe("writing to the store", () => {
           clientOnly: false,
           deferred: false,
           flavors: new Map(),
-          variables: {
-            true: true,
-            false: false,
-          },
+          variables,
+          variablesScope: variables,
         },
         []
       );

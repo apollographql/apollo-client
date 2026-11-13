@@ -11,7 +11,7 @@ import { getFragmentQueryDocument } from "@apollo/client/utilities/internal";
 disableFragmentWarnings();
 enableExperimentalFragmentVariables();
 
-test("does not pass arguments to the root fragment spread for fragment variables", () => {
+test("declares operation variables but does not pass arguments to the root fragment spread for fragment variables", () => {
   const document = getFragmentQueryDocument(gql`
     fragment UserCard($size: Int) on User {
       id
@@ -20,8 +20,8 @@ test("does not pass arguments to the root fragment spread for fragment variables
   `);
 
   expect(document).toMatchDocument(gql`
-    {
-      ...UserCard
+    query ($size: Int) {
+      ...UserCard @_apollo(fragmentRoot: true)
     }
 
     fragment UserCard($size: Int) on User {
@@ -36,6 +36,39 @@ test("does not pass arguments to the root fragment spread for fragment variables
     {
       kind: Kind.FRAGMENT_SPREAD,
       name: { kind: Kind.NAME, value: "UserCard" },
+      directives: [
+        {
+          kind: Kind.DIRECTIVE,
+          name: { kind: Kind.NAME, value: "_apollo" },
+          arguments: [
+            {
+              kind: Kind.ARGUMENT,
+              name: { kind: Kind.NAME, value: "fragmentRoot" },
+              value: { kind: Kind.BOOLEAN, value: true },
+            },
+          ],
+        },
+      ],
     },
   ]);
+});
+
+test("declares operation variables without default values for fragment variables with default values", () => {
+  const document = getFragmentQueryDocument(gql`
+    fragment UserCard($size: Int = 48) on User {
+      id
+      avatar(size: $size)
+    }
+  `);
+
+  expect(document).toMatchDocument(gql`
+    query ($size: Int) {
+      ...UserCard @_apollo(fragmentRoot: true)
+    }
+
+    fragment UserCard($size: Int = 48) on User {
+      id
+      avatar(size: $size)
+    }
+  `);
 });

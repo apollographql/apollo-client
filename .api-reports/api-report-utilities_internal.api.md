@@ -141,16 +141,24 @@ export namespace DeepMerger {
     export interface Options {
         // (undocumented)
         arrayMerge?: DeepMerger.ArrayMergeStrategy;
-        // Warning: (ae-forgotten-export) The symbol "ReconcilerFunction" needs to be exported by the entry point index.d.ts
-        //
         // (undocumented)
-        reconciler?: ReconcilerFunction;
+        includeSymbols?: boolean;
     }
 }
 
 // @internal @deprecated (undocumented)
 export class DeepMerger {
-    constructor(options?: DeepMerger.Options);
+    constructor(options: DeepMerger.Options & {
+        includeSymbols?: false;
+        reconciler: ReconcilerFunction<string | number>;
+    });
+    constructor(options: DeepMerger.Options & {
+        includeSymbols: true;
+        reconciler: ReconcilerFunction<PropertyKey>;
+    });
+    constructor(options?: DeepMerger.Options & {
+        reconciler?: never;
+    });
     // (undocumented)
     isObject: typeof isNonNullObject;
     // (undocumented)
@@ -221,7 +229,7 @@ export namespace DocumentationTypes {
 }
 
 // @public (undocumented)
-export function equalByQuery(query: DocumentNode, input: Partial<ObservableQuery.Result<unknown>>, input2: Partial<ObservableQuery.Result<unknown>>, variables?: OperationVariables): boolean;
+export function equalByQuery(query: DocumentNode, input: Partial<ObservableQuery.Result<unknown>>, input2: Partial<ObservableQuery.Result<unknown>>, variables?: OperationVariables, rootFragmentVariables?: OperationVariables): boolean;
 
 // @public (undocumented)
 export type Exact<in out T> = (x: T) => T;
@@ -242,6 +250,19 @@ export function filterMap<T, R>(fn: (value: T, context: undefined) => R | undefi
 
 // @public (undocumented)
 export function filterMap<T, R, Context>(fn: (value: T, context: Context) => R | undefined, makeContext: () => NoInfer<Context>): OperatorFunction<T, R>;
+
+// @internal @deprecated
+export interface FragmentInfo {
+    // (undocumented)
+    fragments: Record<string, {
+        variables: OperationVariables;
+    }>;
+    // (undocumented)
+    operationVariables: OperationVariables;
+}
+
+// @internal @deprecated
+export const fragmentInfoSymbol: unique symbol;
 
 // @internal @deprecated
 export interface FragmentMap {
@@ -321,12 +342,18 @@ export function getFragmentFromSelection(selection: SelectionNode, fragmentMap?:
 // @internal @deprecated
 export function getFragmentQueryDocument(document: DocumentNode, fragmentName?: string): DocumentNode;
 
-// @public (undocumented)
-export function getFragmentVariables(fragmentSpread: FragmentSpreadNode, input: {
+// @internal @deprecated (undocumented)
+export function getFragmentScope(fragmentSpread: FragmentSpreadNode, input: {
     fragment: FragmentDefinitionNode;
     variables: OperationVariables | undefined;
-    parentScope?: OperationVariables;
+    parentScope: OperationVariables | undefined;
 }): OperationVariables;
+
+// @internal @deprecated (undocumented)
+export function getFragmentVariables(fragmentSpread: FragmentSpreadNode, input: {
+    fragment: FragmentDefinitionNode;
+    scope?: OperationVariables;
+}): OperationVariables | undefined;
 
 // @internal @deprecated (undocumented)
 export function getGraphQLErrorsFromResult(result: {
@@ -423,7 +450,10 @@ Exclude<V, undefined>
 export function isNonEmptyArray<T>(value: ArrayLike<T> | null | undefined): value is Array<T>;
 
 // @internal @deprecated (undocumented)
-export function isNonNullObject(obj: unknown): obj is Record<string | number, any>;
+export function isNonEmptyObject<T extends object>(obj: T | undefined): obj is T;
+
+// @internal @deprecated (undocumented)
+export function isNonNullObject(obj: unknown): obj is Record<string | number | symbol, any>;
 
 // @internal @deprecated (undocumented)
 export function isPlainObject(obj: unknown): obj is Record<string | number, any>;
@@ -449,7 +479,8 @@ export function makeStreamInfoTrie(): StreamInfoTrie;
 export function makeUniqueId(prefix: string): string;
 
 // @public (undocumented)
-export const mapObservableFragmentMemoized: <From, To>(observable: ApolloCache_2.ObservableFragment<From>, _cacheKey: symbol, mapFn: (from: ApolloCache_2.WatchFragmentResult<From>) => ApolloCache_2.WatchFragmentResult<To>) => ApolloCache_2.ObservableFragment<To>;
+export function mapObservableFragmentMemoized<From, To>(observable: ApolloCache_2.ObservableFragment<From>,
+_cacheKey: symbol, mapFn: (from: ApolloCache_2.WatchFragmentResult<From>) => ApolloCache_2.WatchFragmentResult<To>): ApolloCache_2.ObservableFragment<To>;
 
 // @internal @deprecated (undocumented)
 export function matchScalarList(scalarType: ScalarType): RegExpMatchArray | null;
@@ -461,12 +492,18 @@ export function maybeDeepFreeze<T>(obj: T): T;
 export function mergeDeep<T extends any[]>(...sources: T): TupleToIntersection<T>;
 
 // @internal @deprecated (undocumented)
-export function mergeDeepArray<T>(sources: T[]): T;
+export function mergeDeepArray<T>(sources: T[], options?: DeepMerger.Options): T;
 
 // Warning: (ae-forgotten-export) The symbol "OptionsUnion" needs to be exported by the entry point index.d.ts
 //
 // @internal @deprecated (undocumented)
 export function mergeOptions<TDefaultOptions extends Partial<OptionsUnion<any, any>>, TOptions extends TDefaultOptions>(defaults: TDefaultOptions | Partial<TDefaultOptions> | undefined, options: TOptions | Partial<TOptions>): TOptions & TDefaultOptions;
+
+// @internal @deprecated
+export interface ObjectWithFragmentInfo {
+    // (undocumented)
+    [fragmentInfoSymbol]?: FragmentInfo;
+}
 
 // @internal @deprecated (undocumented)
 export function omitDeep<T, K extends string>(value: T, key: K): DeepOmit<T, K>;
@@ -506,7 +543,7 @@ export type Primitive = null | undefined | string | number | boolean | symbol | 
 // Warning: (ae-incompatible-release-tags) The symbol "ReconcilerFunction" is marked as @public, but its signature references "DeepMerger" which is marked as @internal
 //
 // @public (undocumented)
-type ReconcilerFunction = (this: DeepMerger, target: Record<string | number, any>, source: Record<string | number, any>, property: string | number) => any;
+type ReconcilerFunction<TKey extends PropertyKey = string | number> = (this: DeepMerger, target: Record<TKey, any>, source: Record<TKey, any>, property: TKey) => any;
 
 // Warning: (ae-forgotten-export) The symbol "globalCaches" needs to be exported by the entry point index.d.ts
 //
@@ -539,13 +576,25 @@ export type RemoveIndexSignature<T> = {
 };
 
 // @public (undocumented)
-export function removeMaskedFragmentSpreads(document: DocumentNode): DocumentNode;
+export function removeMaskedFragmentSpreads(document: DocumentNode, input?: removeMaskedFragmentSpreads.Options): DocumentNode;
+
+// @public (undocumented)
+export namespace removeMaskedFragmentSpreads {
+    // (undocumented)
+    export interface Options {
+        // @internal @deprecated
+        mode?: "remove" | "mark";
+    }
+}
 
 // @public (undocumented)
 type ReplaceUndefinedWithDefault<Value, Default> = Value extends any ? Value extends undefined ? Default : Value : never;
 
 // @internal @deprecated (undocumented)
 export function resultKeyNameFromField(field: FieldNode): string;
+
+// @internal @deprecated
+export const rootFragmentVariablesSymbol: unique symbol;
 
 // @internal @deprecated (undocumented)
 export function shouldInclude(input: SelectionNode, variables?: Record<string, any>): boolean;
@@ -592,6 +641,9 @@ export type StreamInfoTrie = Trie<{
 // @internal @deprecated (undocumented)
 export function stringifyForDisplay(value: any, space?: number): string;
 
+// @internal @deprecated
+export const supportsFragmentVariablesSymbol: unique symbol;
+
 // @internal @deprecated (undocumented)
 export function toDiffWithDataState<TData>(diff: Cache_2.DiffResult<TData> | Cache_2.InternalDiffResultWithDataState<TData>): Cache_2.InternalDiffResultWithDataState<TData>;
 
@@ -624,6 +676,7 @@ export const variablesUnknownSymbol: unique symbol;
 
 // Warnings were encountered during analysis:
 //
+// src/utilities/internal/DeepMerger.ts:51:7 - (ae-forgotten-export) The symbol "ReconcilerFunction" needs to be exported by the entry point index.d.ts
 // src/utilities/internal/getStoreKeyName.ts:89:1 - (ae-forgotten-export) The symbol "storeKeyNameStringify" needs to be exported by the entry point index.d.ts
 // src/utilities/internal/types/ExtensionsWithStreamDetails.ts:11:5 - (ae-incompatible-release-tags) The symbol "deref" is marked as @public, but its signature references "StreamInfoTrie" which is marked as @internal
 

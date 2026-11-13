@@ -12,8 +12,10 @@ import type { ApolloCache, MissingTree } from "@apollo/client/cache";
 import type { MaybeMasked } from "@apollo/client/masking";
 import type {
   DocumentationTypes as UtilityDocumentationTypes,
+  ObjectWithFragmentInfo,
   VariablesOption,
 } from "@apollo/client/utilities/internal";
+import { fragmentInfoSymbol } from "@apollo/client/utilities/internal";
 
 import { useDeepMemo, wrapHook } from "./internal/index.js";
 import { useApolloClient } from "./useApolloClient.js";
@@ -201,7 +203,7 @@ function useFragment_<TData, TVariables extends OperationVariables>(
   const { from, ...rest } = options;
   const { cache } = client;
 
-  // We calculate the cache id seperately because we don't want changes to non
+  // We calculate the cache id separately because we don't want changes to non
   // key fields in the `from` property to recreate the observable. If the cache
   // identifier stays the same between renders, we want to reuse the existing
   // subscription.
@@ -217,15 +219,25 @@ function useFragment_<TData, TVariables extends OperationVariables>(
     return Array.isArray(from) ? ids : ids[0];
   }, [cache, from]);
 
+  // `useDeepMemo` does not compare symbol keys, so the fragment info is
+  // passed as a separate dependency to recreate the observable when it changes.
+  const fragmentInfo =
+    Array.isArray(from) ?
+      from.map(
+        (value) =>
+          (value as ObjectWithFragmentInfo | null)?.[fragmentInfoSymbol]
+      )
+    : (from as ObjectWithFragmentInfo | null)?.[fragmentInfoSymbol];
+
   const stableOptions = useDeepMemo(
-    () => ({ ...rest, from: ids as any }),
-    [rest, ids]
+    () => ({ ...rest, from }),
+    [rest, ids, fragmentInfo]
   );
 
   const observable = React.useMemo(
     () => client.watchFragment(stableOptions),
     [client, stableOptions]
-  );
+  ) as ApolloCache.ObservableFragment<any>;
 
   // Unfortunately we forgot to update the use case of `from: null` on
   // useFragment in 4.0 to match `useSuspenseFragment`. As such, we need to

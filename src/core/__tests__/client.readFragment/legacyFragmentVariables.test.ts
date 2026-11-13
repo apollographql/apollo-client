@@ -5,6 +5,7 @@ import {
   gql,
 } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
+import { fragmentInfoSymbol } from "@apollo/client/utilities/internal";
 
 enableExperimentalFragmentVariables();
 
@@ -64,5 +65,13 @@ test("uses variables in a nested fragment that declares variables", () => {
       id: "User:1",
       variables: { size: 96 },
     })
-  ).toStrictEqualTyped({ __typename: "User", id: "1", avatar: "large.png" });
+  ).toStrictEqualTyped({
+    __typename: "User",
+    id: "1",
+    avatar: "large.png",
+    [fragmentInfoSymbol]: {
+      operationVariables: { size: 96 },
+      fragments: {},
+    },
+  });
 });

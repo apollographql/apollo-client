@@ -1,6 +1,6 @@
 import type { FragmentSpreadNode } from "graphql";
 import { Kind, visit } from "graphql";
-import { of } from "rxjs";
+import { delay, of } from "rxjs";
 
 import type { FetchPolicy, TypedDocumentNode } from "@apollo/client";
 import {
@@ -3224,7 +3224,7 @@ describe("client.watchQuery", () => {
               age: 30,
             },
           },
-        });
+        }).pipe(delay(20));
       }),
     });
 

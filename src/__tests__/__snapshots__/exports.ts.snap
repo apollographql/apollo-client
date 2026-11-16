@@ -479,6 +479,7 @@ Array [
   "getOperationName",
   "getQueryDefinition",
   "getStoreKeyName",
+  "getUnmaskDirective",
   "graphQLResultHasError",
   "handleIncrementalSymbol",
   "hasDirectives",

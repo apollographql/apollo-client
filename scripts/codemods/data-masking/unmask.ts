@@ -1,5 +1,10 @@
 import type { Collection, Transform, TemplateLiteral } from "jscodeshift";
-import type { DirectiveNode, DocumentNode } from "graphql";
+import type {
+  DirectiveNode,
+  DocumentNode,
+  FragmentDefinitionNode,
+  FragmentSpreadNode,
+} from "graphql";
 import { Kind, parse, visit, print } from "graphql";
 import path from "node:path";
 
@@ -8,19 +13,29 @@ const TRAILING_WHITESPACE = /(?<=[\S\n])[\s\t]*$/;
 
 const DEFAULT_TAGS = ["gql", "graphql"];
 
+type Target = "spread" | "definition";
+
 const transform: Transform = function transform(file, api, options) {
-  const { tag = DEFAULT_TAGS, mode } = options;
+  const { tag = DEFAULT_TAGS, mode, target = "spread" } = options;
 
   if (mode && mode !== "migrate") {
     console.warn(
-      `The option --mode '${mode}' is not supported. Please use --mode 'migrate' to enable migrate mode for the @ummask directive.`
+      `The option --mode '${mode}' is not supported. Please use --mode 'migrate' to enable migrate mode for the @unmask directive.`
     );
+  }
+
+  if (target !== "spread" && target !== "definition") {
+    console.warn(
+      `The option --target '${target}' is not supported. Please use --target 'spread' or --target 'definition'.`
+    );
+
+    return file.source;
   }
 
   const extname = path.extname(file.path);
 
   if (extname === ".graphql" || extname === ".gql") {
-    return transformGraphQLFile(file.source, mode);
+    return transformGraphQLFile(file.source, mode, target);
   }
 
   const j = api.jscodeshift;
@@ -67,7 +82,7 @@ const transform: Transform = function transform(file, api, options) {
         return templateElement;
       }
 
-      const modifiedDocument = addUnmaskDirective(document, mode);
+      const modifiedDocument = addUnmaskDirective(document, mode, target);
 
       if (modifiedDocument === document) {
         return templateElement;
@@ -122,45 +137,56 @@ function applyIndentationFromOriginalQuery(
   );
 }
 
-function addUnmaskDirective(document: DocumentNode, mode: string | undefined) {
-  return visit(document, {
-    FragmentSpread: (node) => {
-      if (
-        node.directives?.some((directive) => directive.name.value === "unmask")
-      ) {
-        return;
-      }
+function addUnmaskDirective(
+  document: DocumentNode,
+  mode: string | undefined,
+  target: Target
+) {
+  function addDirective<
+    TNode extends FragmentSpreadNode | FragmentDefinitionNode,
+  >(node: TNode): TNode | undefined {
+    if (
+      node.directives?.some((directive) => directive.name.value === "unmask")
+    ) {
+      return;
+    }
 
-      return {
-        ...node,
-        directives: [
-          ...(node.directives || []),
-          {
-            kind: Kind.DIRECTIVE,
-            name: { kind: Kind.NAME, value: "unmask" },
-            arguments:
-              mode === "migrate" ?
-                [
-                  {
-                    kind: Kind.ARGUMENT,
-                    name: { kind: Kind.NAME, value: "mode" },
-                    value: { kind: Kind.STRING, value: "migrate" },
-                  },
-                ]
-              : undefined,
-          } satisfies DirectiveNode,
-        ],
-      };
-    },
-  });
+    return {
+      ...node,
+      directives: [
+        ...(node.directives || []),
+        {
+          kind: Kind.DIRECTIVE,
+          name: { kind: Kind.NAME, value: "unmask" },
+          arguments:
+            mode === "migrate" ?
+              [
+                {
+                  kind: Kind.ARGUMENT,
+                  name: { kind: Kind.NAME, value: "mode" },
+                  value: { kind: Kind.STRING, value: "migrate" },
+                },
+              ]
+            : undefined,
+        } satisfies DirectiveNode,
+      ],
+    };
+  }
+
+  return visit(
+    document,
+    target === "definition" ?
+      { FragmentDefinition: addDirective }
+    : { FragmentSpread: addDirective }
+  );
 }
 
 function getMatch(str: string, match: RegExp) {
   return str.match(match)?.at(0) ?? "";
 }
 
-function transformGraphQLFile(source: string, mode: string) {
-  return print(addUnmaskDirective(parse(source), mode));
+function transformGraphQLFile(source: string, mode: string, target: Target) {
+  return print(addUnmaskDirective(parse(source), mode, target));
 }
 
 export default transform;

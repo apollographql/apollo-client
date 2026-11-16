@@ -1,4 +1,5 @@
 import { gql, InMemoryCache } from "@apollo/client";
+import { createFragmentRegistry } from "@apollo/client/cache";
 import { maskOperation } from "@apollo/client/masking";
 import { spyOnConsole, withProdMode } from "@apollo/client/testing/internal";
 import { __DEV__ } from "@apollo/client/utilities/environment";
@@ -3013,4 +3014,262 @@ test('unmasks results with warnings with primitive arrays with @unmask(mode: "mi
       amenities: ["pool", "hot tub", "backyard"],
     },
   });
+});
+
+test("does not mask named fragment fields and returns original object when using `@unmask` on the fragment definition", () => {
+  const query = gql`
+    query UnmaskedQuery {
+      currentUser {
+        id
+        name
+        ...UserFields
+      }
+    }
+
+    fragment UserFields on User @unmask {
+      age
+    }
+  `;
+
+  const queryData = deepFreeze({
+    currentUser: {
+      __typename: "User",
+      id: 1,
+      name: "Test User",
+      age: 30,
+    },
+  });
+
+  const data = maskOperation(queryData, query, new InMemoryCache());
+
+  expect(data).toBe(queryData);
+});
+
+test('warns when accessing unmasked fields when using `@unmask(mode: "migrate")` on the fragment definition', () => {
+  using _ = spyOnConsole("warn");
+  const query = gql`
+    query UnmaskedQuery {
+      currentUser {
+        id
+        name
+        ...UserFields
+      }
+    }
+
+    fragment UserFields on User @unmask(mode: "migrate") {
+      age
+    }
+  `;
+
+  const data = maskOperation(
+    deepFreeze({
+      currentUser: {
+        __typename: "User",
+        id: 1,
+        name: "Test User",
+        age: 30,
+      },
+    }),
+    query,
+    new InMemoryCache()
+  );
+
+  data.currentUser.__typename;
+  data.currentUser.id;
+  data.currentUser.name;
+
+  expect(console.warn).not.toHaveBeenCalled();
+
+  data.currentUser.age;
+
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+    "query 'UnmaskedQuery'",
+    "currentUser.age"
+  );
+
+  data.currentUser.age;
+
+  // Ensure we only warn once for each masked field
+  expect(console.warn).toHaveBeenCalledTimes(1);
+
+  expect(data).toStrictEqual({
+    currentUser: {
+      __typename: "User",
+      id: 1,
+      name: "Test User",
+      age: 30,
+    },
+  });
+});
+
+test("masks child fragments of a fragment definition with `@unmask` unless the child fragment definition uses `@unmask`", () => {
+  using _ = spyOnConsole("warn");
+
+  const query = gql`
+    query UnmaskedQuery {
+      currentUser {
+        id
+        name
+        ...UserFields
+      }
+    }
+
+    fragment UserFields on User @unmask {
+      age
+      ...UserSubfields
+      ...UserSubfields2
+    }
+
+    fragment UserSubfields on User {
+      username
+    }
+
+    fragment UserSubfields2 on User @unmask {
+      email
+    }
+  `;
+
+  const data = maskOperation(
+    deepFreeze({
+      currentUser: {
+        __typename: "User",
+        id: 1,
+        name: "Test User",
+        age: 30,
+        username: "testuser",
+        email: "test@example.com",
+      },
+    }),
+    query,
+    new InMemoryCache()
+  );
+
+  expect(data).toStrictEqual({
+    currentUser: {
+      __typename: "User",
+      id: 1,
+      name: "Test User",
+      age: 30,
+      email: "test@example.com",
+    },
+  });
+  expect(console.warn).not.toHaveBeenCalled();
+});
+
+test('`@unmask` on the fragment spread takes precedence over `@unmask(mode: "migrate")` on the fragment definition', () => {
+  using _ = spyOnConsole("warn");
+  const query = gql`
+    query UnmaskedQuery {
+      currentUser {
+        id
+        name
+        ...UserFields @unmask
+      }
+    }
+
+    fragment UserFields on User @unmask(mode: "migrate") {
+      age
+    }
+  `;
+
+  const queryData = deepFreeze({
+    currentUser: {
+      __typename: "User",
+      id: 1,
+      name: "Test User",
+      age: 30,
+    },
+  });
+
+  const data = maskOperation(queryData, query, new InMemoryCache());
+
+  data.currentUser.age;
+
+  expect(console.warn).not.toHaveBeenCalled();
+  expect(data).toBe(queryData);
+});
+
+test('`@unmask(mode: "migrate")` on the fragment spread takes precedence over `@unmask` on the fragment definition', () => {
+  using _ = spyOnConsole("warn");
+  const query = gql`
+    query UnmaskedQuery {
+      currentUser {
+        id
+        name
+        ...UserFields @unmask(mode: "migrate")
+      }
+    }
+
+    fragment UserFields on User @unmask {
+      age
+    }
+  `;
+
+  const data = maskOperation(
+    deepFreeze({
+      currentUser: {
+        __typename: "User",
+        id: 1,
+        name: "Test User",
+        age: 30,
+      },
+    }),
+    query,
+    new InMemoryCache()
+  );
+
+  data.currentUser.age;
+
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+    "query 'UnmaskedQuery'",
+    "currentUser.age"
+  );
+
+  expect(data).toStrictEqual({
+    currentUser: {
+      __typename: "User",
+      id: 1,
+      name: "Test User",
+      age: 30,
+    },
+  });
+});
+
+test("does not mask fragment fields when using `@unmask` on a fragment definition from the fragment registry", () => {
+  const fragments = createFragmentRegistry(gql`
+    fragment UserFields on User @unmask {
+      age
+    }
+  `);
+
+  const query = gql`
+    query UnmaskedQuery {
+      currentUser {
+        id
+        name
+        ...UserFields
+      }
+    }
+  `;
+
+  const queryData = deepFreeze({
+    currentUser: {
+      __typename: "User",
+      id: 1,
+      name: "Test User",
+      age: 30,
+    },
+  });
+
+  const data = maskOperation(
+    queryData,
+    query,
+    new InMemoryCache({ fragments })
+  );
+
+  expect(data).toBe(queryData);
 });

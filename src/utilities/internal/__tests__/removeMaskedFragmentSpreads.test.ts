@@ -69,13 +69,15 @@ test("removes masked fragment spreads inside fragment definitions", () => {
   `);
 });
 
-test("keeps fragment spreads with @unmask", () => {
+test("keeps fragment spreads with @unmask on the fragment spread or the fragment definition", () => {
   const query = gql`
     query {
       user {
         id
         ...UserFields @unmask
         ...UserAvatar @unmask(mode: "migrate")
+        ...UserProfile
+        ...UserContact
       }
     }
 
@@ -85,6 +87,14 @@ test("keeps fragment spreads with @unmask", () => {
 
     fragment UserAvatar on User {
       avatar
+    }
+
+    fragment UserProfile on User @unmask {
+      bio
+    }
+
+    fragment UserContact on User @unmask(mode: "migrate") {
+      email
     }
   `;
 
@@ -721,4 +731,28 @@ test("checks each fragment for variables once in mark mode when many fragments s
   // Without memoization, the bottom fragment is walked once for every path
   // to it (2 ** depth times).
   expect(selectionSetReads).toBeLessThanOrEqual(2);
+});
+
+test("keeps fragment spreads to fragment definitions with @unmask that use operation variables in mark mode", () => {
+  const query = gql`
+    query ($size: Int) {
+      user {
+        id
+        ...UserAvatar
+        ...UserProfile
+      }
+    }
+
+    fragment UserAvatar on User @unmask {
+      avatar(size: $size)
+    }
+
+    fragment UserProfile on User @unmask(mode: "migrate") {
+      bio
+    }
+  `;
+
+  expect(removeMaskedFragmentSpreads(query, { mode: "mark" })).toMatchDocument(
+    query
+  );
 });

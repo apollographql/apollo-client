@@ -10,6 +10,7 @@ import { __DEV__ } from "@apollo/client/utilities/environment";
 
 import { createDirectiveNode } from "./createDirectiveNode.js";
 import { createFragmentMap } from "./createFragmentMap.js";
+import { getUnmaskDirective } from "./getUnmaskDirective.js";
 import type { FragmentMap } from "./types/FragmentMap.js";
 
 export declare namespace removeMaskedFragmentSpreads {
@@ -38,13 +39,13 @@ export function removeMaskedFragmentSpreads(
 
   return visit(document, {
     FragmentSpread(node) {
-      if (!node.directives?.some(({ name }) => name.value === "unmask")) {
+      const fragment = getFragment(fragments, node.name.value);
+
+      if (!getUnmaskDirective(node, fragment)) {
         switch (mode) {
           case "remove":
             return null;
           case "mark": {
-            const fragment = getFragment(fragments, node.name.value);
-
             if (
               !fragment ||
               (!node.arguments?.length &&

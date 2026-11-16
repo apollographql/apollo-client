@@ -1225,3 +1225,119 @@ test('unmasks results with warnings with primitive arrays with @unmask(mode: "mi
     amenities: ["pool", "hot tub", "backyard"],
   });
 });
+
+test("does not mask named fragments and returns original object when using `@unmask` on the fragment definition", () => {
+  const fragment = gql`
+    fragment UnmaskedFragment on User {
+      id
+      name
+      ...UserFields
+    }
+
+    fragment UserFields on User @unmask {
+      age
+    }
+  `;
+
+  const fragmentData = deepFreeze({
+    __typename: "User",
+    id: 1,
+    name: "Test User",
+    age: 30,
+  });
+
+  const data = maskFragment(
+    fragmentData,
+    fragment,
+    new InMemoryCache(),
+    "UnmaskedFragment"
+  );
+
+  expect(data).toBe(fragmentData);
+});
+
+test('warns when accessing unmasked fields when using `@unmask(mode: "migrate")` on the fragment definition', () => {
+  using _ = spyOnConsole("warn");
+  const fragment = gql`
+    fragment UnmaskedFragment on User {
+      id
+      name
+      ...UserFields
+    }
+
+    fragment UserFields on User @unmask(mode: "migrate") {
+      age
+    }
+  `;
+
+  const data = maskFragment(
+    deepFreeze({
+      __typename: "User",
+      id: 1,
+      name: "Test User",
+      age: 30,
+    }),
+    fragment,
+    new InMemoryCache(),
+    "UnmaskedFragment"
+  );
+
+  data.__typename;
+  data.id;
+  data.name;
+
+  expect(console.warn).not.toHaveBeenCalled();
+
+  data.age;
+
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+    "fragment 'UnmaskedFragment'",
+    "age"
+  );
+
+  data.age;
+
+  // Ensure we only warn once for each masked field
+  expect(console.warn).toHaveBeenCalledTimes(1);
+
+  expect(data).toStrictEqual({
+    __typename: "User",
+    id: 1,
+    name: "Test User",
+    age: 30,
+  });
+});
+
+test("masks the fields of the requested fragment's child fragments when only the requested fragment definition uses `@unmask`", () => {
+  const fragment = gql`
+    fragment UserFields on User @unmask {
+      id
+      name
+      ...ProfileFields
+    }
+
+    fragment ProfileFields on User {
+      age
+    }
+  `;
+
+  const data = maskFragment(
+    deepFreeze({
+      __typename: "User",
+      id: 1,
+      name: "Test User",
+      age: 30,
+    }),
+    fragment,
+    new InMemoryCache(),
+    "UserFields"
+  );
+
+  expect(data).toStrictEqual({
+    __typename: "User",
+    id: 1,
+    name: "Test User",
+  });
+});

@@ -2916,6 +2916,483 @@ describe("client.watchQuery", () => {
     expect(console.warn).toHaveBeenCalledTimes(1);
     expect(console.warn).toHaveBeenCalledWith(NO_CACHE_WARNING, "MaskedQuery");
   });
+
+  test("does not mask fragments marked with @unmask on the fragment definition", async () => {
+    interface Query {
+      currentUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+        age: number;
+      };
+    }
+
+    const query: TypedDocumentNode<Query, Record<string, never>> = gql`
+      query UnmaskedQuery {
+        currentUser {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User @unmask {
+        age
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: {
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: 30,
+            },
+          },
+        },
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const stream = new ObservableStream(client.watchQuery({ query }));
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+          age: 30,
+        },
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+  });
+
+  test("warns when accessing a unmasked field while using @unmask with mode: 'migrate' on the fragment definition", async () => {
+    using consoleSpy = spyOnConsole("warn");
+
+    interface Query {
+      currentUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+        age: number;
+      };
+    }
+
+    const query: TypedDocumentNode<Query, Record<string, never>> = gql`
+      query UnmaskedQuery {
+        currentUser {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User @unmask(mode: "migrate") {
+        age
+        name
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: {
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: 34,
+            },
+          },
+        },
+        delay: 20,
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const stream = new ObservableStream(client.watchQuery({ query }));
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    const { data, dataState } = await stream.takeNext();
+
+    invariant(dataState === "complete", "dataState should be complete");
+
+    data.currentUser.__typename;
+    data.currentUser.id;
+    data.currentUser.name;
+
+    expect(consoleSpy.warn).not.toHaveBeenCalled();
+
+    data.currentUser.age;
+
+    expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
+    expect(consoleSpy.warn).toHaveBeenCalledWith(
+      "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+      "query 'UnmaskedQuery'",
+      "currentUser.age"
+    );
+
+    // Ensure we only warn once
+    data.currentUser.age;
+    expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
+
+    expect(data).toStrictEqual({
+      currentUser: {
+        __typename: "User",
+        id: 1,
+        name: "Test User",
+        age: 34,
+      },
+    });
+  });
+
+  test("triggers update when updating field in fragment with @unmask on the fragment definition", async () => {
+    interface Query {
+      currentUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+        age: number;
+      };
+    }
+
+    const query: TypedDocumentNode<Query, Record<string, never>> = gql`
+      query UnmaskedQuery {
+        currentUser {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User @unmask {
+        age
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: {
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: 30,
+            },
+          },
+        },
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const stream = new ObservableStream(client.watchQuery({ query }));
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+          age: 30,
+        },
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    client.writeQuery({
+      query,
+      data: {
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+          age: 35,
+        },
+      },
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+          age: 35,
+        },
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    await expect(stream).not.toEmitAnything();
+  });
+
+  test("can lookup fragments with @unmask on the fragment definition from the fragment registry in queries", async () => {
+    const fragments = createFragmentRegistry();
+
+    interface Query {
+      currentUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+        age: number;
+      };
+    }
+
+    const query: TypedDocumentNode<Query, Record<string, never>> = gql`
+      query UnmaskedQuery {
+        currentUser {
+          id
+          name
+          ...UserFields
+        }
+      }
+    `;
+
+    fragments.register(gql`
+      fragment UserFields on User @unmask {
+        age
+      }
+    `);
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache({ fragments }),
+      link: new ApolloLink(() => {
+        return of({
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: 30,
+            },
+          },
+        });
+      }),
+    });
+
+    const stream = new ObservableStream(client.watchQuery({ query }));
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+          age: 30,
+        },
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+  });
+
+  test("does not warn on no-cache queries when all fragment definitions use `@unmask`", async () => {
+    using _ = spyOnConsole("warn");
+
+    interface Query {
+      currentUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+        age: number;
+        username: string;
+      };
+    }
+
+    const query: TypedDocumentNode<Query, Record<string, never>> = gql`
+      query MaskedQuery {
+        currentUser {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User @unmask {
+        age
+        ...ProfileFields
+      }
+
+      fragment ProfileFields on User @unmask(mode: "migrate") {
+        username
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: {
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: 30,
+              username: "testuser",
+            },
+          },
+        },
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const observable = client.watchQuery({ query, fetchPolicy: "no-cache" });
+    const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    const { data, dataState } = await stream.takeNext();
+
+    invariant(dataState === "complete", "dataState should be complete");
+
+    expect(console.warn).not.toHaveBeenCalled();
+
+    expect(data).toStrictEqual({
+      currentUser: {
+        __typename: "User",
+        id: 1,
+        name: "Test User",
+        age: 30,
+        username: "testuser",
+      },
+    });
+
+    // `toStrictEqual` reads `username`, which comes from a fragment with
+    // `@unmask(mode: "migrate")` on the fragment definition.
+    expect(console.warn).toHaveBeenCalledTimes(1);
+    expect(console.warn).toHaveBeenCalledWith(
+      "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+      "query 'MaskedQuery'",
+      "currentUser.username"
+    );
+  });
+
+  test("removes @unmask from fragment definitions in the query sent to the link", async () => {
+    const query = gql`
+      query UnmaskedQuery {
+        currentUser {
+          id
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User @unmask {
+        age
+      }
+    `;
+
+    const link = new ApolloLink((operation) => {
+      expect(operation.query).toMatchDocument(gql`
+        query UnmaskedQuery {
+          currentUser {
+            id
+            ...UserFields
+            __typename
+          }
+        }
+
+        fragment UserFields on User {
+          age
+          __typename
+        }
+      `);
+
+      return of({
+        data: { currentUser: { __typename: "User", id: 1, age: 30 } },
+      });
+    });
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link,
+    });
+
+    const { data } = await client.query({ query });
+
+    expect(data).toStrictEqual({
+      currentUser: { __typename: "User", id: 1, age: 30 },
+    });
+  });
 });
 
 describe("client.watchFragment", () => {
@@ -4037,6 +4514,135 @@ describe("client.watchFragment", () => {
       }),
       expect(profileFieldsStream).not.toEmitAnything(),
     ]);
+  });
+
+  test("does not mask watched fragments with @unmask on the child fragment definition", async () => {
+    type UserFieldsFragment = {
+      __typename: "User";
+      id: number;
+      name: string;
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
+    const fragment: TypedDocumentNode<
+      UserFieldsFragment,
+      Record<string, never>
+    > = gql`
+      fragment UserFields on User {
+        id
+        name
+        ...ProfileFields
+      }
+
+      fragment ProfileFields on User @unmask {
+        age
+      }
+    `;
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+    });
+
+    client.writeFragment({
+      fragment,
+      fragmentName: "UserFields",
+      data: {
+        __typename: "User",
+        id: 1,
+        name: "Test User",
+        age: 30,
+      },
+    });
+
+    const stream = new ObservableStream(
+      client.watchFragment({
+        fragment,
+        fragmentName: "UserFields",
+        from: { __typename: "User", id: 1 },
+      })
+    );
+
+    await expect(stream).toEmitTypedValue({
+      data: { __typename: "User", id: 1, name: "Test User", age: 30 },
+      dataState: "complete",
+      complete: true,
+    });
+  });
+
+  test("triggers update to watched fragment when updating field in child fragment with @unmask on the fragment definition", async () => {
+    type UserFieldsFragment = {
+      __typename: "User";
+      id: number;
+      name: string;
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
+    const fragment: TypedDocumentNode<
+      UserFieldsFragment,
+      Record<string, never>
+    > = gql`
+      fragment UserFields on User {
+        id
+        name
+        ...ProfileFields
+      }
+
+      fragment ProfileFields on User @unmask {
+        age
+      }
+    `;
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+    });
+
+    client.writeFragment({
+      fragment,
+      fragmentName: "UserFields",
+      data: {
+        __typename: "User",
+        id: 1,
+        name: "Test User",
+        age: 30,
+      },
+    });
+
+    const stream = new ObservableStream(
+      client.watchFragment({
+        fragment,
+        fragmentName: "UserFields",
+        from: { __typename: "User", id: 1 },
+      })
+    );
+
+    await expect(stream).toEmitTypedValue({
+      data: { __typename: "User", id: 1, name: "Test User", age: 30 },
+      dataState: "complete",
+      complete: true,
+    });
+
+    client.writeFragment({
+      fragment,
+      fragmentName: "UserFields",
+      data: {
+        __typename: "User",
+        id: 1,
+        name: "Test User",
+        age: 35,
+      },
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: { __typename: "User", id: 1, name: "Test User", age: 35 },
+      dataState: "complete",
+      complete: true,
+    });
+
+    await expect(stream).not.toEmitAnything();
   });
 });
 

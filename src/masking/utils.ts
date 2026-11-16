@@ -1,8 +1,9 @@
-import type { FragmentSpreadNode } from "graphql";
+import type { FragmentDefinitionNode, FragmentSpreadNode } from "graphql";
 import { Kind } from "graphql";
 import { Slot } from "optimism";
 
 import { __DEV__ } from "@apollo/client/utilities/environment";
+import { getUnmaskDirective } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 // Contextual slot that allows us to disable accessor warnings on fields when in
@@ -11,11 +12,10 @@ import { invariant } from "@apollo/client/utilities/invariant";
 export const disableWarningsSlot = new Slot<boolean>();
 
 export function getFragmentMaskMode(
-  fragment: FragmentSpreadNode
+  spread: FragmentSpreadNode,
+  fragment?: FragmentDefinitionNode | null
 ): "mask" | "migrate" | "unmask" {
-  const directive = fragment.directives?.find(
-    ({ name }) => name.value === "unmask"
-  );
+  const directive = getUnmaskDirective(spread, fragment);
 
   if (!directive) {
     return "mask";

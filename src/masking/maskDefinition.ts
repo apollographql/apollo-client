@@ -178,7 +178,7 @@ function maskSelectionSet(
         fragmentName
       );
 
-      const mode = getFragmentMaskMode(selection);
+      const mode = getFragmentMaskMode(selection, fragment);
       const fragmentInfo = (data as ObjectWithFragmentInfo)[fragmentInfoSymbol];
 
       if (fragmentInfo) {

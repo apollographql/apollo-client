@@ -24,7 +24,7 @@ import {
   tap,
 } from "rxjs";
 
-import type { Cache } from "@apollo/client/cache";
+import type { ApolloCache, Cache } from "@apollo/client/cache";
 import { canonicalStringify } from "@apollo/client/cache";
 import {
   CombinedGraphQLErrors,
@@ -47,16 +47,22 @@ import {
   print,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import type { ExtensionsWithStreamInfo } from "@apollo/client/utilities/internal";
+import type {
+  ExtensionsWithStreamInfo,
+  FragmentMapFunction,
+} from "@apollo/client/utilities/internal";
 import {
   AutoCleanedWeakCache,
   checkDocument,
   coerceScalarFieldsToParsed,
+  createFragmentMap,
   extensionsSymbol,
   filterMap,
   getDefaultValues,
+  getFragmentDefinitions,
   getOperationDefinition,
   getOperationName,
+  getUnmaskDirective,
   graphQLResultHasError,
   hasDirectives,
   hasForcedResolvers,
@@ -520,7 +526,7 @@ export class QueryManager {
         hasForcedResolvers: hasForcedResolvers(document),
         hasNonreactiveDirective: hasDirectives(["nonreactive"], document),
         hasIncrementalDirective: hasDirectives(["defer"], document),
-        nonReactiveQuery: addNonReactiveToNamedFragments(document),
+        nonReactiveQuery: addNonReactiveToNamedFragments(document, this.cache),
         clientQuery: hasDirectives(["client"], document) ? document : null,
         serverQuery: removeDirectivesFromDocument(
           [
@@ -1529,7 +1535,7 @@ export class QueryManager {
       if (
         this.dataMasking &&
         fetchPolicy === "no-cache" &&
-        !isFullyUnmaskedOperation(document) &&
+        !isFullyUnmaskedOperation(document, this.cache) &&
         !this.noCacheWarningsByCause.has(cause)
       ) {
         this.noCacheWarningsByCause.add(cause);
@@ -1848,14 +1854,25 @@ interface ObservableAndInfo<TData> {
   observable: Observable<QueryNotification.Value<TData>>;
 }
 
-function isFullyUnmaskedOperation(document: DocumentNode) {
+function createFragmentLookup(
+  document: DocumentNode,
+  cache: ApolloCache
+): FragmentMapFunction {
+  const fragmentMap = createFragmentMap(getFragmentDefinitions(document));
+
+  return (fragmentName) =>
+    Object.hasOwn(fragmentMap, fragmentName) ?
+      fragmentMap[fragmentName]
+    : cache.lookupFragment(fragmentName);
+}
+
+function isFullyUnmaskedOperation(document: DocumentNode, cache: ApolloCache) {
+  const lookupFragment = createFragmentLookup(document, cache);
   let isUnmasked = true;
 
   visit(document, {
     FragmentSpread: (node) => {
-      isUnmasked =
-        !!node.directives &&
-        node.directives.some((directive) => directive.name.value === "unmask");
+      isUnmasked = !!getUnmaskDirective(node, lookupFragment(node.name.value));
 
       if (!isUnmasked) {
         return BREAK;
@@ -1866,14 +1883,17 @@ function isFullyUnmaskedOperation(document: DocumentNode) {
   return isUnmasked;
 }
 
-function addNonReactiveToNamedFragments(document: DocumentNode) {
+function addNonReactiveToNamedFragments(
+  document: DocumentNode,
+  cache: ApolloCache
+) {
+  const lookupFragment = createFragmentLookup(document, cache);
+
   return visit(document, {
     FragmentSpread: (node) => {
       // Do not add `@nonreactive` if the fragment is marked with `@unmask`
       // since we want to react to changes in this fragment.
-      if (
-        node.directives?.some((directive) => directive.name.value === "unmask")
-      ) {
+      if (getUnmaskDirective(node, lookupFragment(node.name.value))) {
         return;
       }
 

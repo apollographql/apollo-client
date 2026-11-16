@@ -401,6 +401,9 @@ export const getStoreKeyName: ((fieldName: string, args?: Record<string, any> | 
     setStringify(s: typeof storeKeyNameStringify): (value: any) => string;
 };
 
+// @internal @deprecated
+export function getUnmaskDirective(spread: FragmentSpreadNode, fragment: FragmentDefinitionNode | null | undefined): DirectiveNode | undefined;
+
 // @public (undocumented)
 const globalCaches: {
     print?: () => number;

@@ -118,7 +118,65 @@ class IncrementalRequest<TData>
   /** @internal */
   tracksPending = true;
 
-  constructor({ query }: Incremental.StartRequestOptions) {
+  private serverData: any = {};
+  private cache?: any;
+
+  private identify = (obj: any): string | undefined => {
+    if (!obj || typeof obj !== "object") {
+      return undefined;
+    }
+    if (this.cache?.identify) {
+      try {
+        const id = this.cache.identify(obj);
+        if (id) return id;
+      } catch {}
+    }
+    const id = obj.id ?? obj._id;
+    if (id !== undefined) {
+      return (obj.__typename ? `${obj.__typename}:` : "") + id;
+    }
+  };
+
+  private resolvePath(path: Incremental.Path): Incremental.Path {
+    if (!path || !path.some((seg) => typeof seg === "number")) {
+      return path;
+    }
+
+    let serverCurrent = this.serverData;
+    let cacheCurrent = this.data;
+    const resolvedPath: Array<string | number> = [];
+
+    for (let k = 0; k < path.length; k++) {
+      const seg = path[k];
+      if (
+        typeof seg === "number" &&
+        Array.isArray(serverCurrent) &&
+        Array.isArray(cacheCurrent)
+      ) {
+        const target = serverCurrent[seg];
+        const targetId = this.identify(target);
+        if (targetId) {
+          const cacheIndex = cacheCurrent.findIndex(
+            (item) => this.identify(item) === targetId
+          );
+          if (cacheIndex !== -1) {
+            resolvedPath.push(cacheIndex);
+            serverCurrent = target;
+            cacheCurrent = cacheCurrent[cacheIndex];
+            continue;
+          }
+        }
+      }
+      resolvedPath.push(seg);
+      serverCurrent = serverCurrent?.[seg as any];
+      cacheCurrent = cacheCurrent?.[seg as any];
+    }
+
+    return resolvedPath;
+  }
+
+  constructor({ query, cache }: Incremental.StartRequestOptions) {
+    this.cache = cache;
     visit(query, {
       Directive: (node) => {
         const name = node.name.value;
@@ -275,11 +333,18 @@ class IncrementalRequest<TData>
             extensions: incremental.extensions,
             errors: incremental.errors,
           },
+          this.resolvePath(path)
+        );
+        this.mergeServer(
+          {
+            data,
+          },
           path
         );
       }
     } else {
       this.merge(chunk);
+      this.mergeServer(chunk);
     }
 
     if ("completed" in chunk && chunk.completed) {
@@ -341,6 +406,19 @@ class IncrementalRequest<TData>
     }
 
     return result;
+  }
+
+  private mergeServer(
+    normalized: FormattedExecutionResult<TData>,
+    atPath?: DeepMerger.MergeOptions["atPath"]
+  ) {
+    if (normalized.data !== undefined) {
+      this.serverData = new DeepMerger({ arrayMerge: "truncate" }).merge(
+        this.serverData,
+        normalized.data,
+        { atPath }
+      );
+    }
   }
 
   private merge(

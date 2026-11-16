@@ -132,6 +132,7 @@ export class QueryInfo<
         TData & Record<string, unknown>
       >({
         query,
+        cache: this.cache,
       }) as Incremental.IncrementalRequest<
         Record<string, unknown>,
         DataValue.Complete<TData> | DataValue.Streaming<TData>

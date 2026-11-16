@@ -1112,3 +1112,136 @@ test("ignores `data` property added to subsequent chunks by misbehaving servers"
     partial: false,
   });
 });
+
+test("preserves deferred patch targeting on modified cached lists after a cache prepend (#13530)", async () => {
+  interface Message {
+    __typename: "Message";
+    id: string;
+    text: string;
+    name?: string;
+  }
+
+  const query = gql`
+    fragment MessageName on Message {
+      name
+    }
+
+    query Messages {
+      messages {
+        id
+        text
+        ...MessageName @defer
+      }
+    }
+  `;
+  const stream = mockDefer20220824();
+  const cache = new InMemoryCache();
+  const client = new ApolloClient({
+    cache,
+    link: stream.httpLink,
+    incrementalHandler: new Defer20220824Handler(),
+  });
+  const results = new ObservableStream(
+    client.watchQuery<{ messages: Message[] }>({
+      query,
+      returnPartialData: true,
+    })
+  );
+
+  try {
+    expect((await results.takeNext()).networkStatus).toBe(
+      NetworkStatus.loading
+    );
+
+    const messages: Message[] = [
+      {
+        __typename: "Message",
+        id: "1",
+        text: "Message 1",
+      },
+    ];
+
+    stream.enqueueInitialChunk({ data: { messages }, hasNext: true });
+
+    expect((await results.takeNext()).data).toEqual({ messages });
+
+    const newMessage: Message = {
+      __typename: "Message",
+      id: "2",
+      text: "Message 2",
+      name: "Non-deferred sender",
+    };
+
+    // Prepend a new message to the list in cache while the deferred patch is in flight
+    cache.modify({
+      fields: {
+        messages(existingMessages = []) {
+          const newReference = cache.writeFragment({
+            fragment: gql`
+              fragment SentMessage on Message {
+                id
+                text
+                name
+              }
+            `,
+            data: newMessage,
+          });
+          return [newReference, ...existingMessages];
+        },
+      },
+    });
+
+    // The server's paths still refer to the original response.
+    stream.enqueueSubsequentChunk({
+      incremental: [
+        {
+          path: ["messages", 0],
+          data: { name: "Deferred sender 1" },
+        },
+      ],
+      hasNext: false,
+    });
+
+    expect((await results.takeNext()).networkStatus).toBe(NetworkStatus.ready);
+
+    expect(cache.readQuery({ query, returnPartialData: true })).toEqual({
+      messages: [
+        {
+          __typename: "Message",
+          id: "2",
+          text: "Message 2",
+          name: "Non-deferred sender",
+        },
+        {
+          __typename: "Message",
+          id: "1",
+          text: "Message 1",
+          name: "Deferred sender 1",
+        },
+      ],
+    });
+    expect(
+      cache.readFragment({
+        id: "Message:2",
+        fragment: gql`
+          fragment MessageName on Message {
+            name
+          }
+        `,
+      })
+    ).toEqual({ __typename: "Message", name: "Non-deferred sender" });
+    expect(
+      cache.readFragment({
+        id: "Message:1",
+        fragment: gql`
+          fragment MessageName on Message {
+            name
+          }
+        `,
+      })
+    ).toEqual({ __typename: "Message", name: "Deferred sender 1" });
+  } finally {
+    results.unsubscribe();
+    client.stop();
+  }
+});

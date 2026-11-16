@@ -35,6 +35,7 @@ export declare namespace Incremental {
   /** @internal */
   export interface StartRequestOptions {
     query: DocumentNode;
+    cache?: any;
   }
 
   export interface IncrementalRequest<

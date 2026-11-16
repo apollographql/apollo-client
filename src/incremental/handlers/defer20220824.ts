@@ -66,19 +66,76 @@ class DeferRequest<TData extends Record<string, unknown>>
   private hasDefer: boolean;
   public hasNext = true;
   private hasFailedDefer = false;
+  private cache?: any;
 
-  constructor({ query }: Incremental.StartRequestOptions) {
+  constructor({ query, cache }: Incremental.StartRequestOptions) {
     this.hasDefer = hasDirectives(["defer"], query);
+    this.cache = cache;
   }
 
   private errors: Array<GraphQLFormattedError> = [];
   private extensions: Record<string, any> = {};
   private data: any = {};
+  private serverData: any = {};
   // This tracks paths for `@stream` arrays that returns items: null due to
   // errors thrown for non-null array items. We stop processing future updates
   // to these stream arrays to prevent creating sparse arrays or inserting
   // `null` for an expected non-null value which could cause runtime crashes.
   private ignoredImpossibleStreamPaths = new Set<string>();
+
+  private identify = (obj: any): string | undefined => {
+    if (!obj || typeof obj !== "object") {
+      return undefined;
+    }
+    if (this.cache?.identify) {
+      try {
+        const id = this.cache.identify(obj);
+        if (id) return id;
+      } catch {}
+    }
+    const id = obj.id ?? obj._id;
+    if (id !== undefined) {
+      return (obj.__typename ? `${obj.__typename}:` : "") + id;
+    }
+  };
+
+  private resolvePath(path: Incremental.Path): Incremental.Path {
+    if (!path || !path.some((seg) => typeof seg === "number")) {
+      return path;
+    }
+
+    let serverCurrent = this.serverData;
+    let cacheCurrent = this.data;
+    const resolvedPath: Array<string | number> = [];
+
+    for (let k = 0; k < path.length; k++) {
+      const seg = path[k];
+      if (
+        typeof seg === "number" &&
+        Array.isArray(serverCurrent) &&
+        Array.isArray(cacheCurrent)
+      ) {
+        const target = serverCurrent[seg];
+        const targetId = this.identify(target);
+        if (targetId) {
+          const cacheIndex = cacheCurrent.findIndex(
+            (item) => this.identify(item) === targetId
+          );
+          if (cacheIndex !== -1) {
+            resolvedPath.push(cacheIndex);
+            serverCurrent = target;
+            cacheCurrent = cacheCurrent[cacheIndex];
+            continue;
+          }
+        }
+      }
+      resolvedPath.push(seg);
+      serverCurrent = serverCurrent?.[seg as any];
+      cacheCurrent = cacheCurrent?.[seg as any];
+    }
+
+    return resolvedPath;
+  }
 
   private merge(
     normalized: FormattedExecutionResult<TData>,
@@ -95,6 +152,19 @@ class DeferRequest<TData extends Record<string, unknown>>
       this.errors.push(...normalized.errors);
     }
     Object.assign(this.extensions, normalized.extensions);
+  }
+
+  private mergeServer(
+    normalized: FormattedExecutionResult<TData>,
+    atPath?: DeepMerger.MergeOptions["atPath"]
+  ) {
+    if (normalized.data !== undefined) {
+      this.serverData = new DeepMerger({ arrayMerge: "truncate" }).merge(
+        this.serverData,
+        normalized.data,
+        { atPath }
+      );
+    }
   }
 
   handle(
@@ -140,19 +210,22 @@ class DeferRequest<TData extends Record<string, unknown>>
         if (path && typeof path.at(-1) === "number" && Array.isArray(data)) {
           const startingIdx = path.at(-1) as number;
           data.forEach((item, idx) => {
-            this.merge({ data: item }, [
-              ...path!.slice(0, -1),
-              startingIdx + idx,
-            ]);
+            const serverItemPath = [...path!.slice(0, -1), startingIdx + idx];
+            this.merge({ data: item }, this.resolvePath(serverItemPath));
+            this.mergeServer({ data: item }, serverItemPath);
           });
         } else {
-          this.merge({ data }, path);
+          this.merge({ data }, path ? this.resolvePath(path) : path);
+          if (path) {
+            this.mergeServer({ data }, path);
+          }
         }
 
         this.merge({ errors, extensions });
       }
     } else {
       this.merge(chunk);
+      this.mergeServer(chunk);
     }
 
     const result: FormattedExecutionResult<TData> = { data: this.data };

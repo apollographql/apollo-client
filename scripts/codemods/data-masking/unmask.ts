@@ -13,7 +13,7 @@ const transform: Transform = function transform(file, api, options) {
 
   if (mode && mode !== "migrate") {
     console.warn(
-      `The option --mode '${mode}' is not supported. Please use --mode 'migrate' to enable migrate mode for the @ummask directive.`
+      `The option --mode '${mode}' is not supported. Please use --mode 'migrate' to enable migrate mode for the @unmask directive.`
     );
   }
 

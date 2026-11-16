@@ -1541,7 +1541,7 @@ export class QueryManager {
         this.noCacheWarningsByCause.add(cause);
 
         invariant.warn(
-          '[%s]: Fragments masked by data masking are inaccessible when using fetch policy "no-cache". Please add `@unmask` to each fragment spread to access the data.',
+          '[%s]: Fragments masked by data masking are inaccessible when using fetch policy "no-cache". Please add `@unmask` to each fragment spread or fragment definition to access the data.',
           getOperationName(document, `Unnamed ${operationType ?? "operation"}`)
         );
       }

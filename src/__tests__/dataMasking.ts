@@ -26,7 +26,7 @@ import { fragmentInfoSymbol } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 const NO_CACHE_WARNING =
-  '[%s]: Fragments masked by data masking are inaccessible when using fetch policy "no-cache". Please add `@unmask` to each fragment spread to access the data.';
+  '[%s]: Fragments masked by data masking are inaccessible when using fetch policy "no-cache". Please add `@unmask` to each fragment spread or fragment definition to access the data.';
 
 describe("client.watchQuery", () => {
   test("masks queries when dataMasking is `true`", async () => {

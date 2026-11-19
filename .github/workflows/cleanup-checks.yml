@@ -22,11 +22,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        uses: actions/checkout@v7.0.0
         with:
           persist-credentials: false
       - name: add label
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        uses: actions/github-script@v9.0.0
         with:
           script: |
             const script = (await import('${{ github.workspace }}/.github/workflows/cleanup-checks.mjs')).setup({context,core,github,exec,glob,io})
@@ -42,14 +42,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        uses: actions/checkout@v7.0.0
         with:
           # git-auto-commit-action requires persist-credentials set to true
           # https://github.com/stefanzweifel/git-auto-commit-action#action-does-not-push-commit-to-repository-authentication-issue
           persist-credentials: true
 
       - name: Setup Node.js
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        uses: actions/setup-node@v6.4.0
         with:
           node-version: "24.x"
 
@@ -70,7 +70,7 @@ jobs:
         run: npm run update-size-limits
 
       - name: Commit changes back
-        uses: stefanzweifel/git-auto-commit-action@04702edda442b2e678b25b537cec683a1493fcb9 # v7
+        uses: stefanzweifel/git-auto-commit-action@v7.1.0
         with:
           commit_message: "Clean up Prettier, Size-limit, and Api-Extractor"
           push_options: ""

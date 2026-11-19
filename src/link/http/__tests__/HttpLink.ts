@@ -1933,7 +1933,7 @@ describe("HttpLink", () => {
           expect.objectContaining({
             headers: {
               accept:
-                "multipart/mixed;boundary=graphql;subscriptionSpec=1.0,multipart/mixed;deferSpec=20220824,application/graphql-response+json,application/json;q=0.9",
+                "multipart/mixed;subscriptionSpec=1.0,multipart/mixed;deferSpec=20220824,application/graphql-response+json,application/json;q=0.9",
               "content-type": "application/json",
             },
           })
@@ -2028,7 +2028,7 @@ describe("HttpLink", () => {
             headers: {
               "content-type": "application/json",
               accept:
-                "multipart/mixed;boundary=graphql;subscriptionSpec=1.0,application/graphql-response+json,application/json;q=0.9",
+                "multipart/mixed;subscriptionSpec=1.0,application/graphql-response+json,application/json;q=0.9",
             },
           })
         );

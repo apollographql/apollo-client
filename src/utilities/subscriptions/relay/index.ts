@@ -79,8 +79,7 @@ function generateOptionsForMultipartSubscription(
     headers: {
       ...(headers || {}),
       ...fallbackHttpConfig.headers,
-      accept:
-        "multipart/mixed;boundary=graphql;subscriptionSpec=1.0,application/json",
+      accept: "multipart/mixed;subscriptionSpec=1.0,application/json",
     },
   };
   return options;

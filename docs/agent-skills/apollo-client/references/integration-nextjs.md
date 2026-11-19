@@ -58,10 +58,16 @@ You can now use the `getClient` function or the `query` shortcut in your server 
 ```typescript
 import { query } from "./ApolloClient";
 
-async function UserProfile({ userId }: { userId: string }) {
+// app/users/[id]/page.tsx
+export default async function UserPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
   const { data } = await query({
     query: GET_USER,
-    variables: { id: userId },
+    variables: { id },
   });
 
   return <div>{data.user.name}</div>;
@@ -150,19 +156,37 @@ export default function RootLayout({
 
 ### Step 3: Use Apollo Client Hooks in Client Components
 
-For optimal streaming SSR, use suspense-enabled hooks like `useSuspenseQuery` and `useFragment`:
+For optimal streaming SSR, use suspense-enabled hooks like `useSuspenseQuery` and `useFragment`.
 
-```typescript
+A page is a Server Component and cannot call hooks. The page renders one Client Component that calls the query hook for the route. Treat that Client Component as the route component: it is the only component that calls a query hook, and its children read their data from fragments. See [Where Data Comes From](../SKILL.md#where-data-comes-from).
+
+```tsx
+// app/users/[id]/page.tsx
+import { UserPageContent } from "./UserPageContent";
+
+export default async function UserPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+
+  return <UserPageContent id={id} />;
+}
+```
+
+```tsx
+// app/users/[id]/UserPageContent.tsx
 "use client";
 
 import { useSuspenseQuery } from "@apollo/client/react";
 
-export function UserProfile({ userId }: { userId: string }) {
-  const { data } = useSuspenseQuery(GET_USER, {
-    variables: { id: userId },
+export function UserPageContent({ id }: { id: string }) {
+  const { data } = useSuspenseQuery(USER_PAGE_QUERY, {
+    variables: { id },
   });
 
-  return <div>{data.user.name}</div>;
+  return <UserProfile user={data.user} />;
 }
 ```
 
@@ -176,11 +200,18 @@ You can preload data in React Server Components to populate the cache of your Cl
 import { PreloadQuery } from "./ApolloClient";
 import { Suspense } from "react";
 
-export default async function Page() {
+// app/users/[id]/page.tsx
+export default async function UserPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+
   return (
-    <PreloadQuery query={GET_USER} variables={{ id: "1" }}>
+    <PreloadQuery query={USER_PAGE_QUERY} variables={{ id }}>
       <Suspense fallback={<>Loading...</>}>
-        <ClientChild />
+        <UserPageContent id={id} />
       </Suspense>
     </PreloadQuery>
   );
@@ -189,17 +220,20 @@ export default async function Page() {
 
 ### Step 2: Consume with useSuspenseQuery in Client Components
 
+`UserPageContent` reads the preloaded route query. Use the same query and variables as `PreloadQuery`. Child components read their data from fragments.
+
 ```tsx
+// app/users/[id]/UserPageContent.tsx
 "use client";
 
 import { useSuspenseQuery } from "@apollo/client/react";
 
-export function ClientChild() {
-  const { data } = useSuspenseQuery(GET_USER, {
-    variables: { id: "1" },
+export function UserPageContent({ id }: { id: string }) {
+  const { data } = useSuspenseQuery(USER_PAGE_QUERY, {
+    variables: { id },
   });
 
-  return <div>{data.user.name}</div>;
+  return <UserProfile user={data.user} />;
 }
 ```
 
@@ -210,10 +244,10 @@ export function ClientChild() {
 For advanced use cases, you can use `PreloadQuery` with `useReadQuery` to avoid request waterfalls:
 
 ```tsx
-<PreloadQuery query={GET_USER} variables={{ id: "1" }}>
+<PreloadQuery query={USER_PAGE_QUERY} variables={{ id }}>
   {(queryRef) => (
     <Suspense fallback={<>Loading...</>}>
-      <ClientChild queryRef={queryRef} />
+      <UserPageContent queryRef={queryRef} />
     </Suspense>
   )}
 </PreloadQuery>
@@ -230,11 +264,15 @@ import {
   QueryRef,
 } from "@apollo/client/react";
 
-export function ClientChild({ queryRef }: { queryRef: QueryRef<TQueryData> }) {
+export function UserPageContent({
+  queryRef,
+}: {
+  queryRef: QueryRef<UserPageQuery, UserPageQueryVariables>;
+}) {
   const { refetch } = useQueryRefHandlers(queryRef);
   const { data } = useReadQuery(queryRef);
 
-  return <div>{data.user.name}</div>;
+  return <UserProfile user={data.user} />;
 }
 ```
 

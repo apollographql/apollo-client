@@ -109,8 +109,11 @@ const client = new ApolloClient({
 ### Basic @client Fields
 
 ```tsx
-const GET_USER_WITH_LOCAL = gql`
-  query GetUserWithLocal($id: ID!) {
+const USER_PAGE_QUERY: TypedDocumentNode<
+  UserPageQuery,
+  UserPageQueryVariables
+> = gql`
+  query UserPage($id: ID!) {
     user(id: $id) {
       id
       name
@@ -122,15 +125,18 @@ const GET_USER_WITH_LOCAL = gql`
   }
 `;
 
-function UserCard({ userId }: { userId: string }) {
-  const { data } = useQuery(GET_USER_WITH_LOCAL, {
-    variables: { id: userId },
+export function UserPage({ params }: { params: { id: string } }) {
+  const { data, dataState, loading, error } = useQuery(USER_PAGE_QUERY, {
+    variables: { id: params.id },
   });
 
+  if (error) return <p>Error: {error.message}</p>;
+  if (dataState === "empty") return loading ? <p>Loading...</p> : null;
+
   return (
-    <div className={data?.user.isSelected ? "selected" : ""}>
-      <h2>{data?.user.displayName}</h2>
-      <p>{data?.user.email}</p>
+    <div className={data.user.isSelected ? "selected" : ""}>
+      <h2>{data.user.displayName}</h2>
+      <p>{data.user.email}</p>
     </div>
   );
 }
@@ -222,25 +228,36 @@ const client = new ApolloClient({
 ### Using Local Query Fields
 
 ```tsx
-const GET_AUTH_STATE = gql`
-  query GetAuthState {
+const ROOT_ROUTE_QUERY: TypedDocumentNode<
+  RootRouteQuery,
+  RootRouteQueryVariables
+> = gql`
+  query RootRoute {
     isLoggedIn @client
     currentUser @client {
       id
-      name
-      email
+      ...UserMenu_user
     }
   }
+  ${USER_MENU_FRAGMENT}
 `;
 
-function AuthStatus() {
-  const { data } = useQuery(GET_AUTH_STATE);
+// Auth state is app shell data, so the root route queries it
+export function RootRoute() {
+  const { data, dataState } = useQuery(ROOT_ROUTE_QUERY);
 
-  if (!data?.isLoggedIn) {
-    return <LoginButton />;
-  }
-
-  return <UserMenu user={data.currentUser} />;
+  return (
+    <>
+      <header>
+        {dataState !== "empty" && data.isLoggedIn ?
+          <UserMenu user={data.currentUser} />
+        : <LoginButton />}
+      </header>
+      <main>
+        <Outlet />
+      </main>
+    </>
+  );
 }
 ```
 

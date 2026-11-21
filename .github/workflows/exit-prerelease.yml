@@ -28,7 +28,7 @@ jobs:
       # Check out the repository, using the Github Actions Bot app's token so
       # that we can push later.
       - name: Checkout repo
-        uses: actions/checkout@v7.0.0
+        uses: actions/checkout@v7.0.1
         with:
           token: ${{ steps.github-actions-bot-app-token.outputs.token }}
           # Checkout release branch entered when workflow was kicked off

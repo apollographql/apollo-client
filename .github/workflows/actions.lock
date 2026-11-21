@@ -47,7 +47,7 @@ workflows:
         - 'actions/create-github-app-token@v3.2.0'
         - 'actions/setup-node@v6.4.0'
         - 'andstor/file-existence-action@v3.1.0'
-        - 'changesets/action@v1.8.0'
+        - 'changesets/action@v2.1.2'
     '.github/workflows/publish-pr-releases.yml':
         - 'actions/checkout@v7.0.0'
         - 'actions/setup-node@v6.4.0'
@@ -58,7 +58,7 @@ workflows:
         - 'actions/setup-node@v6.4.0'
         - 'andstor/file-existence-action@v3.1.0'
         - 'benc-uk/workflow-dispatch@v1.3.1'
-        - 'changesets/action@v1.8.0'
+        - 'changesets/action@v2.1.2'
     '.github/workflows/scheduled-test-canary.yml':
         - 'actions/checkout@v7.0.0'
         - 'actions/setup-node@v6.4.0'
@@ -128,9 +128,9 @@ dependencies:
         commit: 'sha1-7a027648b88c2413826b6ddd6c76114894dc5ec4'
         owner_id: 14982936
         repo_id: 278745987
-    'changesets/action@v1.8.0':
-        ref: 'v1.8.0'
-        commit: 'sha1-63a615b9cd06ba9a3e6d13796c7fbcb080a60a0b'
+    'changesets/action@v2.1.2':
+        ref: 'v2.1.2'
+        commit: 'sha1-ae32849d5ba541f9ae29e40e22a623bc13562f51'
         owner_id: 51163350
         repo_id: 202093906
     'dessant/lock-threads@v6.0.2':

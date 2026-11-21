@@ -33,7 +33,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6.4.0
         with:
-          node-version: "24.x"
+          node-version: "26.x"
 
       - name: Get upstream skills repository HEAD
         id: skills-head

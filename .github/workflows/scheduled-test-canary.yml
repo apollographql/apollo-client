@@ -32,7 +32,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v6.4.0
         with:
-          node-version: "24.x"
+          node-version: "26.x"
       - run: npm ci
       - run: |
           npm install react@${MATRIX_TAG} react-dom@${MATRIX_TAG}

@@ -286,12 +286,10 @@ export declare namespace useLazyQuery {
        * `;
        *
        * function Hello() {
-       *   const [loadGreeting, { called, loading, data }] = useLazyQuery(GET_GREETING, {
-       *     variables: { language: "english" },
-       *   });
+       *   const [loadGreeting, { called, loading, data }] = useLazyQuery(GET_GREETING);
        *   if (called && loading) return <p>Loading ...</p>;
        *   if (!called) {
-       *     return <button onClick={() => loadGreeting()}>Load greeting</button>;
+       *     return <button onClick={() => loadGreeting({ variables: { language: "english" } })}>Load greeting</button>;
        *   }
        *   return <h1>Hello {data.greeting.message}!</h1>;
        * }

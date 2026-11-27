@@ -1115,6 +1115,17 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           subscription.unsubscribe();
           finalize();
 
+          // The cache watch schedules a notification for the merged result on
+          // a `setTimeout`, so it lands after this promise settles. A caller
+          // that reads the current result right away then starts the next
+          // `fetchMore` from a stale offset, and the deferred notification is
+          // dropped once that operation is running. Deliver the pending cache
+          // update here so every page is visible before `fetchMore` resolves.
+          // See https://github.com/apollographql/apollo-client/issues/13536
+          if (this.dirty && !this.activeOperations.size) {
+            this.notify(true);
+          }
+
           if (isCached && !wasUpdated) {
             const lastResult = this.getCurrentResult();
 

@@ -1585,6 +1585,78 @@ describe("fetchMore on an observable query", () => {
     expect(count()).toBe(beforeQueryCount);
   });
 
+  it("delivers the merged result before fetchMore resolves so the next fetchMore can page from it", async () => {
+    // https://github.com/apollographql/apollo-client/issues/13536
+    interface PaginatedData {
+      products: Array<{ __typename: "Product"; id: number }>;
+    }
+
+    const paginatedQuery: TypedDocumentNode<
+      PaginatedData,
+      { offset?: number }
+    > = gql`
+      query PaginatedProducts($offset: Int) {
+        products(offset: $offset) {
+          id
+        }
+      }
+    `;
+
+    const linkOffsets: Array<number | undefined> = [];
+
+    const link = new ApolloLink((operation) => {
+      const offset = operation.variables.offset as number | undefined;
+      linkOffsets.push(offset);
+      return new Observable<any>((observer) => {
+        observer.next({
+          data: {
+            products: [
+              { __typename: "Product" as const, id: (offset ?? 0) + 1 },
+            ],
+          },
+        });
+        observer.complete();
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache({
+        typePolicies: {
+          Query: { fields: { products: offsetLimitPagination() } },
+        },
+      }),
+    });
+
+    const observable = client.watchQuery({
+      query: paginatedQuery,
+      variables: { offset: 0 },
+      fetchPolicy: "cache-first",
+    });
+    const stream = new ObservableStream(observable);
+
+    let event = await stream.takeNext();
+    while (event.loading) {
+      event = await stream.takeNext();
+    }
+
+    const offset = () =>
+      observable.getCurrentResult().data?.products?.length ?? 0;
+
+    // Both calls derive their offset from the current result. The second one
+    // runs as soon as the first promise resolves, without waiting a tick.
+    await observable.fetchMore({ variables: { offset: offset() } });
+    await observable.fetchMore({ variables: { offset: offset() } });
+
+    expect(linkOffsets).toEqual([0, 1, 2]);
+
+    const result = observable.getCurrentResult();
+    expect(result.data?.products?.map((product) => product.id)).toEqual([
+      1, 2, 3,
+    ]);
+    expect(result.networkStatus).toBe(NetworkStatus.ready);
+  });
+
   it("delivers all loading states even if data unchanged", async () => {
     type TEmptyItems = {
       emptyItems: Array<{

@@ -23,7 +23,7 @@ jobs:
       contents: write
 
     steps:
-      - uses: actions/create-github-app-token@v1.12.0
+      - uses: actions/create-github-app-token@v3.4.0
         id: github-actions-bot-app-token
         with:
           app-id: 819772

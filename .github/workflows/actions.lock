@@ -4,73 +4,73 @@
 version: 'v0.0.3'
 workflows:
     '.github/workflows/api-extractor.yml':
-        - 'actions/checkout@v7.0.0'
+        - 'actions/checkout@v7.0.1'
         - 'actions/setup-node@v6.4.0'
     '.github/workflows/arethetypeswrong.yml':
-        - 'actions/checkout@v7.0.0'
+        - 'actions/checkout@v7.0.1'
         - 'actions/setup-node@v6.4.0'
     '.github/workflows/change-prerelease-tag.yml':
-        - 'actions/checkout@v7.0.0'
+        - 'actions/checkout@v7.0.1'
         - 'actions/create-github-app-token@v1.12.0'
         - 'actions/setup-node@v6.4.0'
         - 'restackio/update-json-file-action@2.1'
     '.github/workflows/cleanup-checks.yml':
-        - 'actions/checkout@v7.0.0'
+        - 'actions/checkout@v7.0.1'
         - 'actions/github-script@v9.0.0'
         - 'actions/setup-node@v6.4.0'
         - 'stefanzweifel/git-auto-commit-action@v7.1.0'
     '.github/workflows/close-stale-issues.yml':
         - 'actions/stale@v10.4.0'
     '.github/workflows/compare-build-output.yml':
-        - 'actions/checkout@v7.0.0'
+        - 'actions/checkout@v7.0.1'
         - 'actions/setup-node@v6.4.0'
     '.github/workflows/copilot-setup-steps.yml':
         - 'actions/cache@v6.1.0'
-        - 'actions/checkout@v7.0.0'
+        - 'actions/checkout@v7.0.1'
         - 'actions/setup-node@v6.4.0'
     '.github/workflows/docmodel.yml':
-        - 'actions/checkout@v7.0.0'
+        - 'actions/checkout@v7.0.1'
         - 'actions/setup-node@v6.4.0'
-        - 'actions/upload-artifact@v7.0.1'
+        - 'actions/upload-artifact@v7.0.2'
     '.github/workflows/exit-prerelease.yml':
-        - 'actions/checkout@v7.0.0'
+        - 'actions/checkout@v7.0.1'
         - 'actions/create-github-app-token@v1.12.0'
         - 'actions/setup-node@v6.4.0'
     '.github/workflows/issue-close-user-survey.yml': []
     '.github/workflows/knip.yml':
-        - 'actions/checkout@v7.0.0'
+        - 'actions/checkout@v7.0.1'
         - 'actions/setup-node@v6.4.0'
     '.github/workflows/lock.yml':
         - 'dessant/lock-threads@v6.0.2'
     '.github/workflows/prerelease.yml':
-        - 'actions/checkout@v7.0.0'
+        - 'actions/checkout@v7.0.1'
         - 'actions/create-github-app-token@v3.2.0'
         - 'actions/setup-node@v6.4.0'
         - 'andstor/file-existence-action@v3.1.0'
         - 'changesets/action@v1.8.0'
     '.github/workflows/publish-pr-releases.yml':
-        - 'actions/checkout@v7.0.0'
+        - 'actions/checkout@v7.0.1'
         - 'actions/setup-node@v6.4.0'
         - 'karpikpl/list-changed-files-action@1.1.4'
     '.github/workflows/release.yml':
-        - 'actions/checkout@v7.0.0'
+        - 'actions/checkout@v7.0.1'
         - 'actions/create-github-app-token@v3.2.0'
         - 'actions/setup-node@v6.4.0'
         - 'andstor/file-existence-action@v3.1.0'
-        - 'benc-uk/workflow-dispatch@v1.3.1'
+        - 'benc-uk/workflow-dispatch@v1.3.3'
         - 'changesets/action@v1.8.0'
     '.github/workflows/scheduled-test-canary.yml':
-        - 'actions/checkout@v7.0.0'
+        - 'actions/checkout@v7.0.1'
         - 'actions/setup-node@v6.4.0'
     '.github/workflows/size-limit.yml':
-        - 'actions/checkout@v7.0.0'
+        - 'actions/checkout@v7.0.1'
         - 'actions/setup-node@v6.4.0'
         - 'andresz1/size-limit-action@v1.6.1'
     '.github/workflows/sync-skill.yml':
         - 'actions/create-github-app-token@v1.12.0'
-        - 'benc-uk/workflow-dispatch@v1.3.1'
+        - 'benc-uk/workflow-dispatch@v1.3.3'
     '.github/workflows/zizmor.yml':
-        - 'actions/checkout@v7.0.0'
+        - 'actions/checkout@v7.0.1'
         - 'zizmorcore/zizmor-action@v0.8.1'
 dependencies:
     'actions/cache@v6.1.0':
@@ -78,9 +78,9 @@ dependencies:
         commit: 'sha1-55cc8345863c7cc4c66a329aec7e433d2d1c52a9'
         owner_id: 44036562
         repo_id: 215566462
-    'actions/checkout@v7.0.0':
-        ref: 'v7.0.0'
-        commit: 'sha1-9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0'
+    'actions/checkout@v7.0.1':
+        ref: 'v7.0.1'
+        commit: 'sha1-3d3c42e5aac5ba805825da76410c181273ba90b1'
         owner_id: 44036562
         repo_id: 197814629
     'actions/create-github-app-token@v1.12.0':
@@ -108,9 +108,9 @@ dependencies:
         commit: 'sha1-1e223db275d687790206a7acac4d1a11bd6fe629'
         owner_id: 44036562
         repo_id: 200437066
-    'actions/upload-artifact@v7.0.1':
-        ref: 'v7.0.1'
-        commit: 'sha1-043fb46d1a93c77aae656e7c1c64a875d1fc6a0a'
+    'actions/upload-artifact@v7.0.2':
+        ref: 'v7.0.2'
+        commit: 'sha1-cf430e030ddbb5b0abf93d22962f4752f3646cd9'
         owner_id: 44036562
         repo_id: 192625955
     'andresz1/size-limit-action@v1.6.1':
@@ -123,9 +123,9 @@ dependencies:
         commit: 'sha1-558493d6c74bf472d87c84eab196434afc2fa029'
         owner_id: 21249611
         repo_id: 243778488
-    'benc-uk/workflow-dispatch@v1.3.1':
-        ref: 'v1.3.1'
-        commit: 'sha1-7a027648b88c2413826b6ddd6c76114894dc5ec4'
+    'benc-uk/workflow-dispatch@v1.3.3':
+        ref: 'v1.3.3'
+        commit: 'sha1-d004979be141727c7a17c28f603e2facc40d0855'
         owner_id: 14982936
         repo_id: 278745987
     'changesets/action@v1.8.0':
